@@ -40,6 +40,7 @@ export function ArenaDashboard() {
   const [error, setError] = useState<string>("");
   const [activeTheme, setActiveTheme] = useState<string>("clock");
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
+  const [panesPerRow, setPanesPerRow] = useState<number>(2);
 
   useEffect(() => {
     let cancelled = false;
@@ -119,7 +120,15 @@ export function ArenaDashboard() {
     <main className="arena-shell">
       <header className="hero">
         <p className="hero-kicker">Capability Benchmark</p>
-        <h1>Model Capability Benchmark</h1>
+        <h1 className="hero-title">Model Capability Benchmark</h1>
+        <a
+          className="author-link"
+          href="https://x.com/LufzzLiz"
+          target="_blank"
+          rel="noreferrer"
+        >
+          by岚叔
+        </a>
         <p className="hero-sub">
           Standardized tasks, constraints, and runtime containers for apples-to-apples model comparison.
         </p>
@@ -160,6 +169,30 @@ export function ArenaDashboard() {
           </div>
         </div>
 
+        <div className="row">
+          <span className="label">Per Row</span>
+          <div className="range-wrap">
+            <input
+              type="range"
+              min={1}
+              max={6}
+              step={1}
+              value={panesPerRow}
+              onChange={(event) => setPanesPerRow(Number(event.target.value))}
+              className="range-input"
+              aria-label="Panes per row"
+            />
+            <div className="range-ticks" aria-hidden="true">
+              <span>1</span>
+              <span>2</span>
+              <span>3</span>
+              <span>4</span>
+              <span>5</span>
+              <span>6</span>
+            </div>
+          </div>
+        </div>
+
         <div className="stats">
           <div>
             <p>当前主题</p>
@@ -177,6 +210,10 @@ export function ArenaDashboard() {
             <p>行数上限</p>
             <strong>{payload?.constraints.maxLines ?? "-"}</strong>
           </div>
+          <div>
+            <p>每行窗格</p>
+            <strong>{panesPerRow}</strong>
+          </div>
         </div>
       </section>
 
@@ -187,7 +224,10 @@ export function ArenaDashboard() {
         </div>
       ) : null}
 
-      <section className="arena-grid">
+      <section
+        className="arena-grid"
+        style={{ gridTemplateColumns: `repeat(${panesPerRow}, minmax(0, 1fr))` }}
+      >
         {filtered.map((item) => (
           <article className="panel card" key={item.id}>
             <div className="card-top">

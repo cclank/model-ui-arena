@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Click Fireworks</title>
+  <style>
+    :root {
+      --bg0: #030712;
+      --bg1: #09152f;
+      --panel: rgba(9, 16, 38, 0.68);
+      --line: rgba(170, 200, 255, 0.22);
+      --text: #e7efff;
+      --muted: #9fb0d1;
+      --accent: #9ad1ff;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; overflow: hidden; background: radial-gradient(circle at 50% 110%, var(--bg1), var(--bg0) 58%); }
+    body { font-family: "Trebuchet MS", "Segoe UI", sans-serif; }
+    canvas { position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; }
+    .hud {
+      position: fixed;
+      left: 50%; top: 14px; transform: translateX(-50%);
+      width: min(92vw, 640px);
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(20, 34, 70, 0.65), var(--panel));
+      border-radius: 14px;
+      padding: 11px 14px;
+      color: var(--text);
+      backdrop-filter: blur(7px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      pointer-events: none;
+    }
+    .title { margin: 0; font-size: clamp(15px, 2.8vw, 18px); letter-spacing: 0.05em; text-transform: uppercase; }
+    .sub { margin: 5px 0 0; color: var(--muted); font-size: clamp(12px, 2.4vw, 13px); }
+    .hint { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <canvas id="sky"></canvas>
+  <section class="hud" aria-hidden="true">
+    <h1 class="title">Festival Night</h1>
+    <p class="sub"><span class="hint">Click or tap anywhere</span> to launch fireworks. Rapid clicks stack smoothly.</p>
+  </section>
+
+  <script>
+    const canvas = document.getElementById("sky");
+    const ctx = canvas.getContext("2d", { alpha: false });
+
+    let w = 0, h = 0, dpr = 1;
+    const rockets = [];
+    const sparks = [];
+    const stars = [];
+    const MAX_SPARKS = 3600;
+    let lastTime = 0;
+
+    const rand = (a, b) => a + Math.random() * (b - a);
+
+    function resize() {
+      dpr = Math.min(2, window.devicePixelRatio || 1);
+      w = innerWidth;
+      h = innerHeight;
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      makeStars();
+      ctx.fillStyle = "#030712";
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    function makeStars() {
+      stars.length = 0;
+      const n = Math.max(60, Math.floor((w * h) / 12000));
+      for (let i = 0; i < n; i++) {
+        stars.push({ x: rand(0, w), y: rand(0, h * 0.8), r: rand(0.5, 1.8), t: rand(0, 6.28), s: rand(0.5, 2.2) });
+      }
+    }
+
+    function launch(tx, ty) {
+      const hue = rand(0, 360);
+      const sx = tx + rand(-45, 45);
+      rockets.push({
+        x: sx,
+        y: h + 10,
+        vx: (tx - sx) * rand(0.012, 0.02),
+        vy: -rand(7.5, 10.2),
+        g: rand(0.09, 0.12),
+        tx,
+        ty: Math.min(ty, h - 70),
+        hue,
+        exploded: false
+      });
+    }
+
+    function explode(x, y, hue) {
+      const count = Math.floor(rand(64, 106));
+      for (let i = 0; i < count; i++) {
+        const a = rand(0, Math.PI * 2);
+        const speed = rand(1.4, 6.8);
+        sparks.push({
+          x,
+          y,
+          vx: Math.cos(a) * speed,
+          vy: Math.sin(a) * speed,
+          drag: rand(0.962, 0.985),
+          g: rand(0.022, 0.05),
+          life: rand(46, 78),
+          max: 78,
+          size: rand(1.2, 2.8),
+          hue: hue + rand(-24, 24),
+          tw: rand(0, 6.28)
+        });
+      }
+      for (let i = 0; i < 26; i++) {
+        sparks.push({
+          x,
+          y,
+          vx: rand(-1.6, 1.6),
+          vy: rand(-1.2, 1.2),
+          drag: 0.95,
+          g: 0.015,
+          life: rand(24, 40),
+          max: 40,
+          size: rand(0.6, 1.2),
+          hue,
+          tw: rand(0, 6.28)
+        });
+      }
+      if (sparks.length > MAX_SPARKS) sparks.splice(0, sparks.length - MAX_SPARKS);
+    }
+
+    function drawStars(t) {
+      for (const s of stars) {
+        const alpha = 0.35 + Math.sin(t * 0.001 * s.s + s.t) * 0.25;
+        ctx.fillStyle = `rgba(190,210,255,${alpha.toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function frame(t) {
+      const dt = Math.min(1.7, (t - lastTime) / 16.666 || 1);
+      lastTime = t;
+
+      ctx.fillStyle = "rgba(3,7,18,0.24)";
+      ctx.fillRect(0, 0, w, h);
+      drawStars(t);
+
+      for (let i = rockets.length - 1; i >= 0; i--) {
+        const r = rockets[i];
+        r.x += r.vx * dt;
+        r.y += r.vy * dt;
+        r.vy += r.g * dt;
+
+        sparks.push({ x: r.x, y: r.y, vx: rand(-0.22, 0.22), vy: rand(0.4, 1.1), drag: 0.92, g: 0.01, life: 18, max: 18, size: 1, hue: r.hue, tw: rand(0, 6.28) });
+
+        const reached = (r.vy > -1.4 || r.y <= r.ty);
+        if (!r.exploded && reached) {
+          explode(r.x, r.y, r.hue);
+          r.exploded = true;
+          rockets.splice(i, 1);
+        } else {
+          ctx.fillStyle = `hsl(${r.hue} 100% 72%)`;
+          ctx.beginPath();
+          ctx.arc(r.x, r.y, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      ctx.globalCompositeOperation = "lighter";
+      for (let i = sparks.length - 1; i >= 0; i--) {
+        const p = sparks[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vx *= p.drag;
+        p.vy = p.vy * p.drag + p.g * dt;
+        p.life -= dt;
+
+        if (p.life <= 0) {
+          sparks.splice(i, 1);
+          continue;
+        }
+
+        const k = p.life / p.max;
+        const flicker = 0.75 + Math.sin(t * 0.02 + p.tw) * 0.25;
+        ctx.fillStyle = `hsla(${p.hue},100%,${58 + k * 22}%,${(k * flicker).toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * (0.45 + k), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalCompositeOperation = "source-over";
+
+      requestAnimationFrame(frame);
+    }
+
+    function burst(x, y) {
+      launch(x, y);
+      if (Math.random() < 0.45) launch(x + rand(-36, 36), y + rand(-34, 20));
+    }
+
+    window.addEventListener("pointerdown", e => burst(e.clientX, e.clientY));
+    window.addEventListener("keydown", e => { if (e.code === "Space") burst(rand(w * 0.2, w * 0.8), rand(h * 0.2, h * 0.62)); });
+    window.addEventListener("resize", resize);
+
+    resize();
+    for (let i = 0; i < 3; i++) setTimeout(() => burst(rand(w * 0.3, w * 0.7), rand(h * 0.2, h * 0.55)), i * 340 + 120);
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Opus Recorder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(160deg, #0a0a1a, #1a1a3e);
+            font-family: 'Helvetica Neue', sans-serif;
+            color: #e8e8f0
+        }
+
+        .recorder {
+            width: min(90vw, 360px);
+            background: linear-gradient(145deg, #16162e, #1e1e42);
+            border-radius: 24px;
+            padding: 28px 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .5)
+        }
+
+        .header {
+            text-align: center;
+            font-size: 13px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            opacity: .4;
+            margin-bottom: 20px
+        }
+
+        .vis {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .03);
+            overflow: hidden;
+            padding: 0 8px
+        }
+
+        .bar {
+            width: 3px;
+            border-radius: 2px;
+            background: linear-gradient(to top, #6c63ff, #e74c7a);
+            transition: height .08s;
+            min-height: 4px
+        }
+
+        .timer {
+            text-align: center;
+            font-size: clamp(36px, 8vw, 52px);
+            font-weight: 200;
+            letter-spacing: 6px;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 6px
+        }
+
+        .status {
+            text-align: center;
+            font-size: 12px;
+            letter-spacing: 2px;
+            margin-bottom: 24px;
+            height: 18px
+        }
+
+        .status .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+            vertical-align: middle
+        }
+
+        .status .dot.rec {
+            background: #e74c3c;
+            animation: pulse 1s infinite
+        }
+
+        .status .dot.pause {
+            background: #f39c12
+        }
+
+        .status .dot.idle {
+            background: #555
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .3
+            }
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 20px
+        }
+
+        .btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s
+        }
+
+        .btn:active {
+            transform: scale(.92)
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, .4)
+        }
+
+        .btn-start:hover {
+            box-shadow: 0 6px 20px rgba(231, 76, 60, .6)
+        }
+
+        .btn-pause {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(243, 156, 18, .3)
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #555, #444);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .3)
+        }
+
+        .btn:disabled {
+            opacity: .3;
+            cursor: not-allowed;
+            transform: none
+        }
+
+        .summary {
+            background: rgba(255, 255, 255, .04);
+            border-radius: 12px;
+            padding: 16px;
+            display: none;
+            animation: fadeIn .4s
+        }
+
+        .summary h3 {
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            opacity: .6
+        }
+
+        .summary .row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .05)
+        }
+
+        .summary .row:last-child {
+            border: none
+        }
+
+        .summary .label {
+            opacity: .5
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .confirm {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, .6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 99
+        }
+
+        .confirm-box {
+            background: #1e1e42;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            width: min(80vw, 280px)
+        }
+
+        .confirm-box p {
+            margin-bottom: 16px;
+            font-size: 14px;
+            opacity: .8
+        }
+
+        .confirm-box .btns {
+            display: flex;
+            gap: 10px;
+            justify-content: center
+        }
+
+        .confirm-box .cbtn {
+            padding: 8px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            color: #fff
+        }
+
+        .cbtn-yes {
+            background: #e74c3c
+        }
+
+        .cbtn-no {
+            background: #555
+        }
+    </style>
+</head>
+
+<body>
+    <div class="recorder">
+        <div class="header">Voice Recorder</div>
+        <div class="vis" id="vis"></div>
+        <div class="timer" id="timer">00:00</div>
+        <div class="status" id="status"><span class="dot idle"></span>就绪</div>
+        <div class="controls">
+            <button class="btn btn-start" id="startBtn" onclick="startRec()">●</button>
+            <button class="btn btn-pause" id="pauseBtn" onclick="pauseRec()" disabled>⏸</button>
+            <button class="btn btn-stop" id="stopBtn" onclick="tryStop()" disabled>■</button>
+        </div>
+        <div class="summary" id="summary">
+            <h3>录音摘要</h3>
+            <div class="row"><span class="label">时长</span><span id="sumDur">--</span></div>
+            <div class="row"><span class="label">状态</span><span id="sumSt">--</span></div>
+            <div class="row"><span class="label">时间</span><span id="sumTime">--</span></div>
+        </div>
+    </div>
+    <div class="confirm" id="confirm">
+        <div class="confirm-box">
+            <p>确定要停止录音吗？</p>
+            <div class="btns">
+                <button class="cbtn cbtn-yes" onclick="stopRec()">确定</button>
+                <button class="cbtn cbtn-no" onclick="hideConfirm()">取消</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const vis = document.getElementById('vis'), timerEl = document.getElementById('timer'), statusEl = document.getElementById('status'), summaryEl = document.getElementById('summary');
+        const startBtn = document.getElementById('startBtn'), pauseBtn = document.getElementById('pauseBtn'), stopBtn = document.getElementById('stopBtn');
+        let state = 'idle', elapsed = 0, interval = null, bars = [];
+        const NBARS = 50;
+        for (let i = 0; i < NBARS; i++) { const b = document.createElement('div'); b.className = 'bar'; b.style.height = '4px'; vis.appendChild(b); bars.push(b) }
+        function fmt(t) { const m = Math.floor(t / 60), s = t % 60; return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0') }
+        function animBars() { bars.forEach(b => { if (state === 'recording') { b.style.height = Math.random() * 60 + 6 + 'px' } else if (state === 'paused') { b.style.height = Math.max(4, parseFloat(b.style.height) * .92) + 'px' } else { b.style.height = '4px' } }) }
+        function setStatus(dot, txt) { statusEl.innerHTML = `<span class="dot ${dot}"></span>${txt}` }
+        function startRec() {
+            if (state === 'idle') { elapsed = 0; summaryEl.style.display = 'none' }
+            state = 'recording'; setStatus('rec', '录音中...');
+            startBtn.disabled = true; pauseBtn.disabled = false; stopBtn.disabled = false;
+            interval = setInterval(() => { elapsed++; timerEl.textContent = fmt(elapsed) }, 1000)
+        }
+        function pauseRec() {
+            if (state !== 'recording') return; state = 'paused'; setStatus('pause', '已暂停');
+            clearInterval(interval); startBtn.disabled = false; startBtn.textContent = '▶'
+        }
+        function tryStop() { document.getElementById('confirm').style.display = 'flex' }
+        function hideConfirm() { document.getElementById('confirm').style.display = 'none' }
+        function stopRec() {
+            hideConfirm(); state = 'idle'; clearInterval(interval);
+            setStatus('idle', '已完成'); startBtn.disabled = false; startBtn.textContent = '●';
+            pauseBtn.disabled = true; stopBtn.disabled = true;
+            document.getElementById('sumDur').textContent = fmt(elapsed);
+            document.getElementById('sumSt').textContent = '录音完成';
+            document.getElementById('sumTime').textContent = new Date().toLocaleTimeString('zh-CN');
+            summaryEl.style.display = 'block'
+        }
+        function loop() { animBars(); requestAnimationFrame(loop) }
+        loop();
+    </script>
+</body>
+
+</html>

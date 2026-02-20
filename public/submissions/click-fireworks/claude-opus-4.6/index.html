@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Opus Fireworks</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            overflow: hidden;
+            background: #0a0a1a;
+            cursor: crosshair
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh
+        }
+
+        .hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, .3);
+            font-family: 'Helvetica Neue', sans-serif;
+            font-size: 13px;
+            letter-spacing: 2px;
+            pointer-events: none;
+            transition: opacity 1s
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #fff;
+            border-radius: 50%
+        }
+    </style>
+</head>
+
+<body>
+    <div class="stars" id="stars"></div>
+    <canvas id="c"></canvas>
+    <div class="hint" id="hint">点击任意位置放烟花 ✨</div>
+    <script>
+        const cvs = document.getElementById('c'), ctx = cvs.getContext('2d');
+        let W, H; function resize() { W = cvs.width = innerWidth; H = cvs.height = innerHeight }
+        resize(); window.addEventListener('resize', resize);
+        // Stars
+        const starsEl = document.getElementById('stars');
+        for (let i = 0; i < 80; i++) { const s = document.createElement('div'); s.className = 'star'; s.style.left = Math.random() * 100 + '%'; s.style.top = Math.random() * 70 + '%'; s.style.opacity = Math.random() * .5 + .1; s.style.animationDuration = Math.random() * 3 + 2 + 's'; starsEl.appendChild(s) }
+        // Fireworks
+        const rockets = [], particles = [];
+        const palettes = [
+            ['#ff6b6b', '#feca57', '#ff9ff3', '#54a0ff'],
+            ['#00d2d3', '#7efff5', '#01a3a4', '#c7ecee'],
+            ['#f368e0', '#ff9ff3', '#a29bfe', '#6c5ce7'],
+            ['#ff6348', '#ffa502', '#ff7979', '#ffbe76'],
+            ['#2ed573', '#7bed9f', '#26de81', '#20bf6b'],
+            ['#eccc68', '#ffa502', '#ff6348', '#ff4757']
+        ];
+        function Rocket(x, y, tx, ty) {
+            this.x = x; this.y = y; this.tx = tx; this.ty = ty;
+            this.speed = Math.random() * 3 + 8; this.angle = Math.atan2(ty - y, tx - x);
+            this.vx = Math.cos(this.angle) * this.speed; this.vy = Math.sin(this.angle) * this.speed;
+            this.trail = []; this.alive = true; this.brightness = Math.random() * 30 + 70;
+        }
+        Rocket.prototype.update = function () {
+            this.trail.push({ x: this.x, y: this.y, a: 1 });
+            if (this.trail.length > 12) this.trail.shift();
+            this.trail.forEach(t => t.a *= 0.85);
+            this.x += this.vx; this.y += this.vy;
+            const d = Math.hypot(this.tx - this.x, this.ty - this.y);
+            if (d < this.speed * 2) { this.alive = false; explode(this.tx, this.ty) }
+        };
+        Rocket.prototype.draw = function () {
+            this.trail.forEach(t => { ctx.beginPath(); ctx.arc(t.x, t.y, 1.5, 0, Math.PI * 2); ctx.fillStyle = `rgba(255,${this.brightness + 150},100,${t.a})`; ctx.fill() });
+            ctx.beginPath(); ctx.arc(this.x, this.y, 2.5, 0, Math.PI * 2); ctx.fillStyle = `rgba(255,255,230,0.9)`; ctx.fill();
+        };
+        function Particle(x, y, color, type) {
+            this.x = x; this.y = y; this.color = color;
+            const a = Math.random() * Math.PI * 2;
+            const sp = type === 'ring' ? Math.random() * 2 + 4 : Math.random() * 5 + 1;
+            this.vx = Math.cos(a) * sp; this.vy = Math.sin(a) * sp;
+            this.life = 1; this.decay = Math.random() * 0.015 + 0.01;
+            this.size = Math.random() * 2.5 + 1;
+            this.trail = [];
+            this.twinkle = Math.random() > .6;
+        }
+        Particle.prototype.update = function () {
+            this.trail.push({ x: this.x, y: this.y, a: this.life * .5 });
+            if (this.trail.length > 5) this.trail.shift();
+            this.vx *= 0.98; this.vy *= 0.98; this.vy += 0.03;
+            this.x += this.vx; this.y += this.vy; this.life -= this.decay;
+        };
+        Particle.prototype.draw = function () {
+            this.trail.forEach(t => { ctx.beginPath(); ctx.arc(t.x, t.y, this.size * .5, 0, Math.PI * 2); ctx.fillStyle = this.color.replace('1)', t.a + ')'); ctx.fill() });
+            const a = this.twinkle ? this.life * (0.7 + Math.sin(Date.now() * 0.01) * .3) : this.life;
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = this.color.replace('1)', a + ')'); ctx.fill();
+            ctx.shadowBlur = 8; ctx.shadowColor = this.color.replace('1)', '0.4)'); ctx.fill(); ctx.shadowBlur = 0;
+        };
+        function hexToRgba(hex) { const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16); return `rgba(${r},${g},${b},1)` }
+        function explode(x, y) {
+            const pal = palettes[Math.floor(Math.random() * palettes.length)];
+            const count = Math.floor(Math.random() * 40) + 50;
+            const type = Math.random() > .5 ? 'ring' : 'burst';
+            for (let i = 0; i < count; i++) {
+                const c = pal[Math.floor(Math.random() * pal.length)];
+                particles.push(new Particle(x, y, hexToRgba(c), type));
+            }
+        }
+        function launch(tx, ty) {
+            const sx = tx + Math.random() * 60 - 30;
+            rockets.push(new Rocket(sx, H, tx, ty));
+        }
+        cvs.addEventListener('click', e => { launch(e.clientX, e.clientY); document.getElementById('hint').style.opacity = '0' });
+        cvs.addEventListener('touchstart', e => { e.preventDefault(); const t = e.touches[0]; launch(t.clientX, t.clientY); document.getElementById('hint').style.opacity = '0' }, { passive: false });
+        function loop() {
+            ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = 'rgba(10,10,26,0.2)'; ctx.fillRect(0, 0, W, H);
+            ctx.globalCompositeOperation = 'lighter';
+            for (let i = rockets.length - 1; i >= 0; i--) { rockets[i].update(); rockets[i].draw(); if (!rockets[i].alive) rockets.splice(i, 1) }
+            for (let i = particles.length - 1; i >= 0; i--) { particles[i].update(); particles[i].draw(); if (particles[i].life <= 0) particles.splice(i, 1) }
+            if (particles.length > 800) { particles.splice(0, particles.length - 800) }
+            requestAnimationFrame(loop);
+        }
+        loop();
+    </script>
+</body>
+
+</html>

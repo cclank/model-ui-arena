@@ -1,0 +1,287 @@
+<!--
+设计说明：
+1. 采用暗黑模式的高科技金融数据面板设计，通过醒目的红绿配色（红跌绿涨）迅速传递盈亏信息。
+2. 数字采用了类似流式传输的抖动刷新效果，增加实时盯盘的临场感与紧张感。
+3. 每只股票带有一个由 SVG 绘制的微型平滑曲线走势图，背景附带微弱渐变光晕以凸显重点。
+4. 顶部设有整体市场情绪和风险波动提示组件，完整功能封装于单文件内。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Panel</title>
+    <style>
+        :root {
+            --bg: #09090b;
+            --card: #18181b;
+            --border: #27272a;
+            --up: #10b981;
+            --up-bg: rgba(16, 185, 129, 0.1);
+            --down: #ef4444;
+            --down-bg: rgba(239, 68, 68, 0.1);
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg);
+            color: var(--text-main);
+            font-family: -apple-system, sans-serif;
+        }
+
+        .panel {
+            width: 100%;
+            max-width: 390px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--up);
+            box-shadow: 0 0 10px var(--up);
+            animation: blink 1s infinite alternate;
+        }
+
+        .ticker-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            background: var(--border);
+        }
+
+        .ticker-item {
+            padding: 16px 20px;
+            background: var(--card);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.2s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ticker-item:hover {
+            background: #1f1f22;
+        }
+
+        .info-group {
+            flex: 1;
+        }
+
+        .symbol {
+            font-size: 1.1rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .name {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .chart-container {
+            width: 80px;
+            height: 30px;
+            margin: 0 16px;
+            opacity: 0.8;
+        }
+
+        .price-group {
+            text-align: right;
+            min-width: 80px;
+        }
+
+        .price {
+            font-size: 1.2rem;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            transition: color 0.3s;
+        }
+
+        .change {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-top: 4px;
+            transition: all 0.3s;
+        }
+
+        .up .change {
+            background: var(--up-bg);
+            color: var(--up);
+        }
+
+        .down .change {
+            background: var(--down-bg);
+            color: var(--down);
+        }
+
+        .flash-up {
+            animation: flash-g 0.5s;
+        }
+
+        .flash-down {
+            animation: flash-r 0.5s;
+        }
+
+        .risk-banner {
+            padding: 12px 20px;
+            background: rgba(245, 158, 11, 0.1);
+            margin: 0;
+            color: #fbbf24;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @keyframes blink {
+            from {
+                opacity: 1
+            }
+
+            to {
+                opacity: 0.3
+            }
+        }
+
+        @keyframes flash-g {
+            0% {
+                background: rgba(16, 185, 129, 0.2);
+            }
+
+            100% {
+                background: var(--card);
+            }
+        }
+
+        @keyframes flash-r {
+            0% {
+                background: rgba(239, 68, 68, 0.2);
+            }
+
+            100% {
+                background: var(--card);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="panel">
+        <div class="header">
+            <h2>Markets Live</h2>
+            <div style="font-size: 0.85rem; color: var(--text-muted);"><span class="status-dot"></span> Streaming</div>
+        </div>
+
+        <div class="risk-banner">
+            <span>⚠️ 波动率预警：科技板块今日面临剧烈波动</span>
+        </div>
+
+        <div class="ticker-list" id="list">
+            <!-- Template -->
+        </div>
+    </div>
+
+    <script>
+        const stocks = [
+            { id: 'AAPL', name: 'Apple Inc.', price: 185.92, basePrice: 185.00, history: [40, 50, 45, 60, 55, 70, 65, 80], dir: 1 },
+            { id: 'TSLA', name: 'Tesla Inc.', price: 210.45, basePrice: 215.00, history: [80, 75, 85, 60, 50, 40, 45, 30], dir: -1 },
+            { id: 'NVDA', name: 'NVIDIA Corp', price: 890.10, basePrice: 880.00, history: [10, 20, 30, 25, 40, 50, 70, 90], dir: 1 }
+        ];
+
+        function createSVGChart(data, color) {
+            const max = Math.max(...data), min = Math.min(...data);
+            const range = max - min || 1;
+            const pts = data.map((d, i) => `${(i / (data.length - 1)) * 80},${30 - ((d - min) / range) * 30}`).join(' L ');
+            return `<svg viewBox="0 0 80 30" class="chart-container" preserveAspectRatio="none">
+            <path d="M 0,${30 - ((data[0] - min) / range) * 30} L ${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
+        }
+
+        const listEl = document.getElementById('list');
+
+        function renderItem(s) {
+            const change = s.price - s.basePrice;
+            const pct = (change / s.basePrice * 100).toFixed(2);
+            const isUp = change >= 0;
+            const cls = isUp ? 'up' : 'down';
+            const sign = isUp ? '+' : '';
+            const color = isUp ? '#10b981' : '#ef4444';
+
+            return `
+        <div class="ticker-item ${cls}" id="row-${s.id}">
+          <div class="info-group">
+            <div class="symbol">${s.id}</div>
+            <div class="name">${s.name}</div>
+          </div>
+          ${createSVGChart(s.history, color)}
+          <div class="price-group">
+            <div class="price" id="price-${s.id}">$${s.price.toFixed(2)}</div>
+            <div class="change">${sign}${change.toFixed(2)} (${sign}${pct}%)</div>
+          </div>
+        </div>
+      `;
+        }
+
+        stocks.forEach(s => listEl.innerHTML += renderItem(s));
+
+        // Simulate streaming data
+        setInterval(() => {
+            const idx = Math.floor(Math.random() * stocks.length);
+            const s = stocks[idx];
+            const oldPrice = s.price;
+            // Random walk
+            const diff = (Math.random() - 0.45 * (s.price > s.basePrice ? 1.1 : 0.9)) * 1.5;
+            s.price = Math.max(0.01, s.price + diff);
+
+            s.history.shift();
+            s.history.push(s.price);
+
+            const row = document.getElementById(`row-${s.id}`);
+            row.outerHTML = renderItem(s);
+
+            const newRow = document.getElementById(`row-${s.id}`);
+            newRow.classList.add(s.price >= oldPrice ? 'flash-up' : 'flash-down');
+        }, 1200);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,106 @@
+<!-- 简约时钟实现 -->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>简约时钟</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #1a2a6c;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+    .clock-container {
+      text-align: center;
+    }
+    .analog-clock {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      background: rgba(0,0,0,0.2);
+    }
+    .hand {
+      position: absolute;
+      transform-origin: bottom center;
+      left: 50%;
+      border-radius: 4px;
+    }
+    .hour-hand { width: 4px; height: 50px; background: #fff; top: 50px; transform: translateX(-50%); }
+    .minute-hand { width: 3px; height: 70px; background: #ccc; top: 30px; transform: translateX(-50%); }
+    .second-hand { width: 1px; height: 80px; background: red; top: 20px; transform: translateX(-50%); }
+    .center-dot {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #fff;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .digital-time {
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+    }
+    .date-display {
+      color: white;
+      margin-top: 10px;
+    }
+    .marker {
+      position: absolute;
+      width: 2px;
+      height: 8px;
+      background: #fff;
+      left: 50%;
+      top: 5px;
+      transform-origin: bottom center;
+    }
+  </style>
+</head>
+<body>
+  <div class="clock-container">
+    <div class="analog-clock" id="analogClock">
+      <div class="hand hour-hand" id="hourHand"></div>
+      <div class="hand minute-hand" id="minuteHand"></div>
+      <div class="hand second-hand" id="secondHand"></div>
+      <div class="center-dot"></div>
+    </div>
+    <div class="digital-time" id="digitalTime">00:00:00</div>
+    <div class="date-display" id="dateDisplay">2026年02月20日</div>
+  </div>
+
+  <script>
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+
+      document.getElementById('digitalTime').textContent = `${hours}:${minutes}:${seconds}`;
+
+      const dateStr = `${now.getFullYear()}年${(now.getMonth()+1).toString().padStart(2, '0')}月${now.getDate().toString().padStart(2, '0')}日`;
+      document.getElementById('dateDisplay').textContent = dateStr;
+
+      const secDeg = seconds * 6;
+      const minDeg = minutes * 6 + seconds * 0.1;
+      const hrDeg = (hours % 12) * 30 + minutes * 0.5;
+
+      document.getElementById('hourHand').style.transform = `translateX(-50%) rotate(${hrDeg}deg)`;
+      document.getElementById('minuteHand').style.transform = `translateX(-50%) rotate(${minDeg}deg)`;
+      document.getElementById('secondHand').style.transform = `translateX(-50%) rotate(${secDeg}deg)`;
+    }
+
+    updateClock();
+    setInterval(updateClock, 1000);
+  </script>
+</body>
+</html>

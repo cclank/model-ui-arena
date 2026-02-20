@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Opus Weather</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Helvetica Neue', sans-serif;
+            transition: background 0.8s
+        }
+
+        .sunny {
+            background: linear-gradient(135deg, #4facfe, #00f2fe)
+        }
+
+        .rainy {
+            background: linear-gradient(135deg, #4b6cb7, #596881)
+        }
+
+        .cloudy {
+            background: linear-gradient(135deg, #8e9eab, #eef2f3)
+        }
+
+        .card {
+            width: min(88vw, 360px);
+            border-radius: 24px;
+            padding: 28px 24px;
+            color: #fff;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, .12);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .2);
+            animation: fadeUp .5s
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow-x: auto
+        }
+
+        .tab {
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, .3);
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            white-space: nowrap;
+            transition: all .2s
+        }
+
+        .tab.active {
+            background: rgba(255, 255, 255, .25);
+            border-color: transparent
+        }
+
+        .city-name {
+            font-size: clamp(20px, 5vw, 26px);
+            font-weight: 600;
+            margin-bottom: 4px
+        }
+
+        .desc {
+            font-size: 13px;
+            opacity: .7;
+            margin-bottom: 16px
+        }
+
+        .temp-wrap {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            margin-bottom: 20px
+        }
+
+        .temp {
+            font-size: clamp(56px, 14vw, 72px);
+            font-weight: 200;
+            line-height: 1
+        }
+
+        .temp-unit {
+            font-size: 20px;
+            opacity: .6;
+            margin-top: 8px
+        }
+
+        .icon {
+            font-size: clamp(40px, 10vw, 56px);
+            margin-left: auto;
+            animation: float 3s ease-in-out infinite
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(-8px)
+            }
+        }
+
+        .details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 18px
+        }
+
+        .detail {
+            text-align: center;
+            background: rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            padding: 10px 6px
+        }
+
+        .detail .val {
+            font-size: 16px;
+            font-weight: 600
+        }
+
+        .detail .lbl {
+            font-size: 11px;
+            opacity: .5;
+            margin-top: 2px
+        }
+
+        .trend {
+            background: rgba(255, 255, 255, .08);
+            border-radius: 12px;
+            padding: 14px
+        }
+
+        .trend-title {
+            font-size: 11px;
+            opacity: .5;
+            margin-bottom: 8px;
+            letter-spacing: 1px
+        }
+
+        .trend-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            height: 50px
+        }
+
+        .trend-bar {
+            flex: 1;
+            background: linear-gradient(to top, rgba(255, 255, 255, .2), rgba(255, 255, 255, .5));
+            border-radius: 4px 4px 0 0;
+            transition: height .4s;
+            position: relative
+        }
+
+        .trend-bar span {
+            position: absolute;
+            top: -16px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            opacity: .7
+        }
+
+        .rain-drop {
+            position: fixed;
+            width: 2px;
+            background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, .4));
+            pointer-events: none;
+            z-index: 0;
+            border-radius: 0 0 1px 1px
+        }
+
+        .cloud {
+            position: fixed;
+            background: rgba(255, 255, 255, .15);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0
+        }
+
+        .content {
+            position: relative;
+            z-index: 1
+        }
+    </style>
+</head>
+
+<body class="sunny">
+    <div id="fx"></div>
+    <div class="content">
+        <div class="card" id="card">
+            <div class="tabs" id="tabs"></div>
+            <div class="city-name" id="cityName"></div>
+            <div class="desc" id="desc"></div>
+            <div class="temp-wrap">
+                <div class="temp" id="temp"></div>
+                <div class="temp-unit">°C</div>
+                <div class="icon" id="icon"></div>
+            </div>
+            <div class="details" id="details"></div>
+            <div class="trend">
+                <div class="trend-title">24小时趋势</div>
+                <div class="trend-chart" id="trend"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const cities = [
+            { name: '上海', temp: 28, desc: '晴朗', type: 'sunny', icon: '☀️', wind: '东南风 3级', humidity: '62%', uv: '强', trend: [24, 25, 27, 28, 29, 28, 27, 26] },
+            { name: '北京', temp: 15, desc: '多云转阴', type: 'cloudy', icon: '⛅', wind: '北风 4级', humidity: '45%', uv: '弱', trend: [13, 14, 15, 15, 14, 13, 12, 11] },
+            { name: '深圳', temp: 22, desc: '小雨', type: 'rainy', icon: '🌧️', wind: '东风 2级', humidity: '88%', uv: '弱', trend: [21, 22, 22, 23, 22, 21, 20, 20] },
+            { name: '成都', temp: 18, desc: '阴天', type: 'cloudy', icon: '☁️', wind: '微风', humidity: '72%', uv: '弱', trend: [16, 17, 18, 18, 17, 17, 16, 15] },
+            { name: '杭州', temp: 26, desc: '晴间多云', type: 'sunny', icon: '🌤️', wind: '南风 2级', humidity: '55%', uv: '中', trend: [23, 24, 25, 26, 26, 25, 24, 23] }
+        ];
+        let cur = 0, drops = [], clouds = [];
+        const tabsEl = document.getElementById('tabs'), fxEl = document.getElementById('fx');
+        cities.forEach((c, i) => { const t = document.createElement('button'); t.className = 'tab' + (i === 0 ? ' active' : ''); t.textContent = c.name; t.onclick = () => select(i); tabsEl.appendChild(t) });
+        function select(i) {
+            cur = i; const c = cities[i];
+            document.querySelectorAll('.tab').forEach((t, j) => t.className = 'tab' + (j === i ? ' active' : ''));
+            document.body.className = c.type;
+            document.getElementById('cityName').textContent = c.name;
+            document.getElementById('desc').textContent = c.desc;
+            document.getElementById('temp').textContent = c.temp;
+            document.getElementById('icon').textContent = c.icon;
+            const d = document.getElementById('details');
+            d.innerHTML = [['💨', c.wind, '风力'], ['💧', c.humidity, '湿度'], ['☀️', c.uv, '紫外线']].map(([i, v, l]) => `<div class="detail"><div class="val">${i} ${v}</div><div class="lbl">${l}</div></div>`).join('');
+            const t = document.getElementById('trend');
+            const mn = Math.min(...c.trend), mx = Math.max(...c.trend) || 1;
+            t.innerHTML = c.trend.map((v, j) => `<div class="trend-bar" style="height:${((v - mn + 2) / (mx - mn + 4)) * 100}%"><span>${v}°</span></div>`).join('');
+            clearFx(); if (c.type === 'rainy') startRain(); else if (c.type === 'cloudy') startClouds()
+        }
+        function clearFx() { fxEl.innerHTML = ''; drops = []; clouds = [] }
+        function startRain() { for (let i = 0; i < 30; i++)addDrop() }
+        function addDrop() { const d = document.createElement('div'); d.className = 'rain-drop'; d.style.left = Math.random() * 100 + 'vw'; d.style.height = Math.random() * 20 + 10 + 'px'; d.style.animationDuration = Math.random() * 0.5 + 0.5 + 's'; d.style.top = '-20px'; fxEl.appendChild(d); const sp = Math.random() * 3 + 2; drops.push({ el: d, y: -20, sp }) }
+        function startClouds() { for (let i = 0; i < 5; i++) { const c = document.createElement('div'); c.className = 'cloud'; const s = Math.random() * 100 + 60; c.style.width = s + 'px'; c.style.height = s * .5 + 'px'; c.style.top = Math.random() * 40 + '%'; c.style.left = Math.random() * 100 + '%'; c.style.opacity = Math.random() * .2 + .05; fxEl.appendChild(c); clouds.push({ el: c, x: parseFloat(c.style.left), sp: (Math.random() - .5) * .02 }) } }
+        function animate() { drops.forEach(d => { d.y += d.sp; if (d.y > innerHeight) { d.y = -20; d.el.style.left = Math.random() * 100 + 'vw' } d.el.style.top = d.y + 'px' }); clouds.forEach(c => { c.x += c.sp; if (c.x > 105) c.x = -10; if (c.x < -10) c.x = 105; c.el.style.left = c.x + '%' }); requestAnimationFrame(animate) }
+        select(0); animate();
+    </script>
+</body>
+
+</html>

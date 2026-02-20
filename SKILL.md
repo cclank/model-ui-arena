@@ -18,7 +18,8 @@ Required themes:
 2. `recorder`
 3. `weather-card`
 4. `stock-panel`
-5. `carwash-decision`
+5. `click-fireworks`
+6. `carwash-decision`
 
 For each requested model, agent must generate and save one submission per theme.
 
@@ -46,6 +47,7 @@ Themes:
 2. `recorder`
 3. `weather-card`
 4. `stock-panel`
+5. `click-fireworks`
 
 File name must be:
 
@@ -143,14 +145,15 @@ Before finishing, agent must confirm:
 
 ### Example A: Full batch for one model
 
-Target model: `gpt-4.1`
+Target model: `gpt-5.3-codex`
 
 Create:
-1. `public/submissions/clock/gpt-4.1/index.html`
-2. `public/submissions/recorder/gpt-4.1/index.html`
-3. `public/submissions/weather-card/gpt-4.1/index.html`
-4. `public/submissions/stock-panel/gpt-4.1/index.html`
-5. `public/submissions/carwash-decision/gpt-4.1/response.md`
+1. `public/submissions/clock/gpt-5.3-codex/index.html`
+2. `public/submissions/recorder/gpt-5.3-codex/index.html`
+3. `public/submissions/weather-card/gpt-5.3-codex/index.html`
+4. `public/submissions/stock-panel/gpt-5.3-codex/index.html`
+5. `public/submissions/click-fireworks/gpt-5.3-codex/index.html`
+6. `public/submissions/carwash-decision/gpt-5.3-codex/response.md`
 
 ### Example B: Single custom reasoning task
 
@@ -168,3 +171,4 @@ If `<custom-theme>` is new, agent should:
 3. Do not introduce build-time dependencies for submissions.
 4. Keep outputs deterministic and reproducible.
 5. If overwriting same model output, clear only `public/submissions/<theme>/<model>/` before writing new files.
+6. Anti-cheating rule: never read or inspect other model directories under `public/submissions/<theme>/`; only write to the current target model directory.

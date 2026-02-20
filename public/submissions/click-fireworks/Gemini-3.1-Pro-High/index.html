@@ -1,0 +1,153 @@
+<!--
+设计说明：
+1. 采用 HTML5 Canvas 实现高性能烟花系统，设定为深邃的星空/庆典夜景。
+2. 每次点击都会在鼠标位置爆发多彩粒子，附带随机颜色、多角度分散、重力及空气阻力。
+3. 利用半透明黑色填充实现绚丽的彗星长尾拖影效果与粒子发光（globalCompositeOperation）。
+4. 内置基础对象回收机制与生命周期（越界与全透明销毁），保证即使连续疯狂点击内存也稳定、不卡死。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Night Sky Fireworks</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #060b19;
+            background-image: radial-gradient(circle at center, #111a30 0%, #03050a 100%);
+            overflow: hidden;
+            touch-action: none;
+            font-family: sans-serif;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .hint {
+            position: absolute;
+            font-size: 1.2rem;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 255, 255, 0.4);
+            pointer-events: none;
+            user-select: none;
+            transition: opacity 0.5s;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hint" id="hintBox">Tap anywhere to ignite</div>
+    <canvas id="fwCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('fwCanvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        const hintBox = document.getElementById('hintBox');
+
+        let w, h;
+        let particles = [];
+        const colors = ['#ff4b4b', '#ff8c00', '#ffd700', '#00ff00', '#00ffff', '#0000ff', '#ff00ff'];
+
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor(x, y, hue) {
+                this.x = x; this.y = y;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 8 + 2;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.friction = 0.96;
+                this.gravity = 0.08;
+                this.radius = Math.random() * 2 + 1;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.015 + 0.015;
+                this.color = hue
+                    ? `hsla(${hue}, 100%, 60%, `
+                    : (Math.random() > 0.3 ? colors[Math.floor(Math.random() * colors.length)].replace('rgb', 'rgba').replace(')', ',') : `hsla(${Math.random() * 360}, 100%, 60%, `);
+            }
+            update() {
+                this.vx *= this.friction;
+                this.vy *= this.friction;
+                this.vy += this.gravity;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                const a = Math.max(0, this.alpha);
+                ctx.fillStyle = this.color.includes('hsla') ? this.color + `${a})` : this.color.replace(/[\d.]+\)$/g, `${a})`);
+                ctx.fill();
+            }
+        }
+
+        function createFirework(x, y) {
+            if (hintBox) { hintBox.style.opacity = '0'; }
+            const count = window.innerWidth < 600 ? 50 : 80;
+            const baseHue = Math.random() * 360;
+            const isTheme = Math.random() > 0.5;
+            for (let i = 0; i < count; i++) {
+                if (particles.length > 1000) particles.shift(); // Hard limit to avoid memory leak
+                particles.push(new Particle(x, y, isTheme ? baseHue + Math.random() * 40 - 20 : null));
+            }
+        }
+
+        function loop() {
+            // Trail effect
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.globalCompositeOperation = 'lighter';
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.update();
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                } else {
+                    p.draw();
+                }
+            }
+            requestAnimationFrame(loop);
+        }
+
+        function handleInput(e) {
+            e.preventDefault();
+            const pt = e.touches ? e.touches[0] : e;
+            createFirework(pt.clientX, pt.clientY);
+        }
+
+        canvas.addEventListener('mousedown', handleInput);
+        canvas.addEventListener('touchstart', handleInput, { passive: false });
+
+        // Initial stars
+        ctx.fillStyle = '#060b19';
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = '#fff';
+        for (let i = 0; i < 50; i++) {
+            ctx.fillRect(Math.random() * w, Math.random() * h, Math.random() * 2, Math.random() * 2);
+        }
+
+        requestAnimationFrame(loop);
+    </script>
+</body>
+
+</html>

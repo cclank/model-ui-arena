@@ -1,0 +1,370 @@
+<!--
+设计说明：
+1. 采用玻璃拟态（Glassmorphism）和渐变卡片设计，支持自动切换三个预设城市及其天气状态。
+2. 背景及微动画（太阳呼吸、云朵漂浮、雨滴下落）会根据当前城市天气（晴、阴、雨）平滑过渡。
+3. 包含温度、天气描述、湿度与风速的直观展示，还附带了温度变化趋势的微型柱状图（mock 数据）。
+4. 移动端优先适配（390px），代码极致精简且无需外部依赖。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Card</title>
+    <style>
+        :root {
+            --bg-sunny: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            --bg-cloudy: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            --bg-rainy: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --font-color: #333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e2e8f0;
+            transition: background 0.8s ease;
+            overflow: hidden;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 350px;
+            border-radius: 24px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            position: relative;
+            overflow: hidden;
+            color: #1e293b;
+            transition: all 0.5s;
+        }
+
+        .card-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            opacity: 0.8;
+            transition: background 1s ease;
+        }
+
+        .sunny .card-bg {
+            background: var(--bg-sunny);
+        }
+
+        .cloudy .card-bg {
+            background: var(--bg-cloudy);
+        }
+
+        .rainy .card-bg {
+            background: var(--bg-rainy);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .city-select {
+            background: rgba(255, 255, 255, 0.5);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-weight: bold;
+            outline: none;
+        }
+
+        .main-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .temp {
+            font-size: 5rem;
+            font-weight: 200;
+            line-height: 1;
+            letter-spacing: -2px;
+        }
+
+        .desc {
+            font-size: 1.2rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        .details {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 15px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: #475569;
+        }
+
+        .trend-box {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            height: 50px;
+            gap: 4px;
+            padding: 0 10px;
+        }
+
+        .trend-bar {
+            width: 15%;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 4px 4px 0 0;
+            transition: height 0.5s;
+            position: relative;
+        }
+
+        /* Animations & Environments */
+        .sun {
+            display: none;
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 230, 0, 0.8);
+            border-radius: 50%;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            box-shadow: 0 0 40px rgba(255, 200, 0, 0.6);
+            animation: pulse 3s infinite alternate;
+        }
+
+        .sunny .sun {
+            display: block;
+        }
+
+        .cloud {
+            display: none;
+            width: 100px;
+            height: 40px;
+            background: #fff;
+            border-radius: 20px;
+            position: absolute;
+            top: 40px;
+            opacity: 0.8;
+            animation: float 6s infinite ease-in-out alternate;
+        }
+
+        .cloud::before,
+        .cloud::after {
+            content: '';
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+        }
+
+        .cloud::before {
+            width: 50px;
+            height: 50px;
+            top: -20px;
+            left: 15px;
+        }
+
+        .cloud::after {
+            width: 40px;
+            height: 40px;
+            top: -10px;
+            right: 15px;
+        }
+
+        .cloudy .cloud,
+        .rainy .cloud {
+            display: block;
+        }
+
+        .rainy .cloud {
+            background: #94a3b8;
+        }
+
+        .rainy .cloud::before,
+        .rainy .cloud::after {
+            background: #94a3b8;
+        }
+
+        .raindrop {
+            position: absolute;
+            width: 2px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.6);
+            animation: fall 1s linear infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            100% {
+                transform: scale(1.1);
+                box-shadow: 0 0 60px rgba(255, 200, 0, 0.8);
+            }
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateX(-10px);
+            }
+
+            100% {
+                transform: translateX(20px);
+            }
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(150px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card sunny" id="weatherCard">
+        <div class="card-bg"></div>
+        <div class="sun"></div>
+        <div class="cloud" style="left: -20px;"></div>
+        <div class="cloud" style="right: -40px; top: 70px; transform: scale(0.8); animation-delay: -2s;"></div>
+        <div id="rainContainer"></div>
+
+        <div class="header" style="position: relative; z-index: 10;">
+            <select class="city-select" id="citySelect" onchange="changeCity()">
+                <option value="beijing">北京 (Beijing)</option>
+                <option value="london">伦敦 (London)</option>
+                <option value="seattle">西雅图 (Seattle)</option>
+            </select>
+            <span style="font-size: 1.2rem;">🌡️</span>
+        </div>
+
+        <div class="main-info" style="position: relative; z-index: 10;">
+            <div class="temp"><span id="tempVal">28</span>°</div>
+            <div class="desc" id="descVal">晴空万里</div>
+        </div>
+
+        <div class="details" style="position: relative; z-index: 10;">
+            <div class="detail-item">
+                <span class="detail-label">风速</span>
+                <span id="windVal">12 km/h</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">湿度</span>
+                <span id="humVal">45%</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">气压</span>
+                <span>1012 hPa</span>
+            </div>
+        </div>
+
+        <div class="trend-box" id="trendBox" style="position: relative; z-index: 10;">
+            <!-- Bars dynamically generated -->
+        </div>
+    </div>
+
+    <script>
+        const db = {
+            beijing: { temp: 28, desc: '晴空万里', wind: '12 km/h', hum: '45%', type: 'sunny', trend: [60, 70, 80, 65, 75, 90] },
+            london: { temp: 15, desc: '小雨绵绵', wind: '20 km/h', hum: '88%', type: 'rainy', trend: [40, 45, 35, 50, 45, 40] },
+            seattle: { temp: 18, desc: '多云转晴', wind: '15 km/h', hum: '65%', type: 'cloudy', trend: [50, 55, 60, 50, 45, 55] }
+        };
+
+        const card = document.getElementById('weatherCard');
+        const select = document.getElementById('citySelect');
+        const rainContainer = document.getElementById('rainContainer');
+        let rainDrops = [];
+
+        function changeCity() {
+            const city = db[select.value];
+            document.getElementById('tempVal').innerText = city.temp;
+            document.getElementById('descVal').innerText = city.desc;
+            document.getElementById('windVal').innerText = city.wind;
+            document.getElementById('humVal').innerText = city.hum;
+
+            card.className = `card ${city.type}`;
+            renderTrend(city.trend);
+
+            if (city.type === 'rainy') startRain();
+            else stopRain();
+        }
+
+        function renderTrend(data) {
+            const box = document.getElementById('trendBox');
+            box.innerHTML = '';
+            data.forEach(val => {
+                const bar = document.createElement('div');
+                bar.className = 'trend-bar';
+                bar.style.height = `${val}%`;
+                box.appendChild(bar);
+            });
+        }
+
+        function startRain() {
+            if (rainDrops.length > 0) return;
+            for (let i = 0; i < 15; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'raindrop';
+                drop.style.left = `${Math.random() * 100}%`;
+                drop.style.animationDuration = `${0.5 + Math.random() * 0.5}s`;
+                drop.style.animationDelay = `${Math.random()}s`;
+                rainContainer.appendChild(drop);
+                rainDrops.push(drop);
+            }
+        }
+
+        function stopRain() {
+            rainContainer.innerHTML = '';
+            rainDrops = [];
+        }
+
+        // Init
+        changeCity();
+    </script>
+</body>
+
+</html>

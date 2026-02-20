@@ -51,6 +51,11 @@ export const THEMES: ThemeMeta[] = [
     objective: "数据可视化、涨跌表达、实时感"
   },
   {
+    id: "click-fireworks",
+    label: "点击放烟花",
+    objective: "点击交互响应、粒子动效表现、视觉冲击力"
+  },
+  {
     id: "carwash-decision",
     label: "开放题：洗车决策",
     objective: "单问答推理能力：直接结论 + 理由解释"

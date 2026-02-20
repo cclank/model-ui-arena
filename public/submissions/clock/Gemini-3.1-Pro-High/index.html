@@ -1,0 +1,169 @@
+<!-- 
+设计说明：
+1. 采用深色极简拟物风，结合了模拟表盘和数字时间的双重展示。
+2. 表盘背景加入了微弱的呼吸律动效果，秒针带有平滑且有节奏的转行动画。
+3. 整体布局居中且响应式适配移动端（390px），利用 CSS 变量实现了易于切换的日夜风格基础结构。
+4. 没有任何外部依赖，完全依靠原生 HTML、CSS 与 JS 完成高帧率渲染。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minimalist Clock</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --dial-bg: #1e293b;
+      --text-color: #f8fafc;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.4);
+      --hand-hr: #cbd5e1;
+      --hand-min: #94a3b8;
+      --hand-sec: #ef4444;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0; min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: var(--bg-color); color: var(--text-color);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      transition: background 0.5s ease;
+      overflow: hidden;
+    }
+    .clock-container {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 2rem; width: 100%; max-width: 390px; padding: 20px;
+    }
+    .analog-clock {
+      position: relative; width: 280px; height: 280px;
+      border-radius: 50%; background: var(--dial-bg);
+      box-shadow: 
+        inset 0 0 20px rgba(0,0,0,0.5),
+        0 0 0 8px rgba(255,255,255,0.05),
+        var(--shadow);
+      display: flex; justify-content: center; align-items: center;
+      animation: breathe 4s infinite alternate ease-in-out;
+    }
+    @keyframes breathe {
+      0% { box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 0 8px rgba(255,255,255,0.02), 0 10px 30px rgba(0,0,0,0.4); }
+      100% { box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 0 8px rgba(56,189,248,0.1), 0 10px 40px rgba(0,0,0,0.6); }
+    }
+    .center-dot {
+      position: absolute; width: 12px; height: 12px;
+      background: var(--hand-sec); border-radius: 50%; z-index: 10;
+      box-shadow: 0 0 4px rgba(0,0,0,0.5);
+    }
+    .hand {
+      position: absolute; bottom: 50%; left: 50%;
+      transform-origin: bottom center; border-radius: 4px; z-index: 5;
+    }
+    .hour { width: 6px; height: 70px; background: var(--hand-hr); margin-left: -3px; }
+    .minute { width: 4px; height: 100px; background: var(--hand-min); margin-left: -2px; }
+    .second { width: 2px; height: 110px; background: var(--hand-sec); margin-left: -1px; z-index: 6; }
+    .second::after {
+      content: ''; position: absolute; bottom: -20px; left: 0;
+      width: 2px; height: 20px; background: var(--hand-sec);
+    }
+    .markers {
+      position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+    }
+    .marker {
+      position: absolute; width: 4px; height: 12px; background: rgba(255,255,255,0.2);
+      top: 10px; left: 50%; margin-left: -2px; transform-origin: 50% 130px;
+    }
+    .marker.major { height: 16px; background: rgba(255,255,255,0.8); width: 6px; margin-left: -3px; }
+    
+    .digital-clock {
+      font-size: 3rem; font-weight: 300; letter-spacing: 2px;
+      text-shadow: 0 0 20px var(--accent-glow);
+      font-variant-numeric: tabular-nums;
+    }
+    .date-display {
+      font-size: 1rem; color: #94a3b8; margin-top: -1.5rem; letter-spacing: 1px;
+    }
+    
+    .theme-toggle {
+      position: absolute; top: 20px; right: 20px;
+      background: none; border: 1px solid rgba(255,255,255,0.2); color: var(--text-color);
+      padding: 8px 16px; border-radius: 20px; cursor: pointer;
+      font-size: 0.8rem; transition: all 0.3s;
+    }
+    .theme-toggle:hover { background: rgba(255,255,255,0.1); }
+    
+    body.light-mode {
+      --bg-color: #f1f5f9; --dial-bg: #ffffff; --text-color: #0f172a;
+      --hand-hr: #334155; --hand-min: #64748b;
+      --shadow: 0 10px 30px rgba(0,0,0,0.1);
+      --accent-glow: rgba(56, 189, 248, 0.2);
+    }
+    body.light-mode .marker { background: rgba(0,0,0,0.1); }
+    body.light-mode .marker.major { background: rgba(0,0,0,0.6); }
+    body.light-mode .theme-toggle { border-color: rgba(0,0,0,0.2); }
+    body.light-mode .theme-toggle:hover { background: rgba(0,0,0,0.05); }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Light Mode</button>
+  <div class="clock-container">
+    <div class="analog-clock" id="analogClock">
+      <div class="markers" id="markers"></div>
+      <div class="hand hour" id="hourHand"></div>
+      <div class="hand minute" id="minuteHand"></div>
+      <div class="hand second" id="secondHand"></div>
+      <div class="center-dot"></div>
+    </div>
+    <div class="digital-clock" id="digitalClock">00:00:00</div>
+    <div class="date-display" id="dateDisplay">--</div>
+  </div>
+
+  <script>
+    const markersContainer = document.getElementById('markers');
+    for(let i=0; i<60; i++) {
+        const marker = document.createElement('div');
+        marker.className = `marker ${i % 5 === 0 ? 'major' : ''}`;
+        marker.style.transform = `rotate(${i * 6}deg)`;
+        markersContainer.appendChild(marker);
+    }
+
+    const hourHand = document.getElementById('hourHand');
+    const minuteHand = document.getElementById('minuteHand');
+    const secondHand = document.getElementById('secondHand');
+    const digitalClock = document.getElementById('digitalClock');
+    const dateDisplay = document.getElementById('dateDisplay');
+    const themeBtn = document.getElementById('themeBtn');
+
+    function updateClock() {
+        const now = new Date();
+        const ms = now.getMilliseconds();
+        const sec = now.getSeconds();
+        const min = now.getMinutes();
+        const hr = now.getHours();
+
+        const smoothSec = sec + ms / 1000;
+        const secDeg = smoothSec * 6;
+        const minDeg = min * 6 + sec / 10;
+        const hrDeg = (hr % 12) * 30 + min / 2;
+
+        secondHand.style.transform = `rotate(${secDeg}deg)`;
+        minuteHand.style.transform = `rotate(${minDeg}deg)`;
+        hourHand.style.transform = `rotate(${hrDeg}deg)`;
+
+        digitalClock.textContent = `${hr.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+        
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        dateDisplay.textContent = now.toLocaleDateString('zh-CN', options);
+        
+        requestAnimationFrame(updateClock);
+    }
+
+    function toggleTheme() {
+        const isLight = document.body.classList.toggle('light-mode');
+        themeBtn.textContent = isLight ? 'Dark Mode' : 'Light Mode';
+    }
+
+    requestAnimationFrame(updateClock);
+  </script>
+</body>
+</html>

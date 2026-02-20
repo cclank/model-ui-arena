@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tape Room</title>
+  <style>
+    :root { --bg:#12100f; --panel:#1f1a17; --line:#534841; --text:#f7eee6; --accent:#ff6b5f; --good:#57d3a6; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; display:grid; place-items:center; font-family:"Trebuchet MS","Segoe UI",sans-serif; color:var(--text);
+      background:radial-gradient(circle at 10% 0%,#3b2e26 0,transparent 38%),radial-gradient(circle at 100% 90%,#2a3327 0,transparent 42%),var(--bg); }
+    .panel { width:min(94vw,460px); border:1px solid var(--line); border-radius:22px; background:linear-gradient(160deg,#221c18,#191512); box-shadow:0 20px 45px rgba(0,0,0,.4); padding:18px; }
+    .top { display:flex; justify-content:space-between; align-items:center; font-size:13px; letter-spacing:.06em; text-transform:uppercase; color:#e4d6ca; margin-bottom:10px; }
+    .state { display:flex; align-items:center; gap:8px; font-size:14px; color:#eaded3; }
+    .dot { width:10px; height:10px; border-radius:50%; background:#8a8179; }
+    .recording .dot { background:var(--accent); animation:blink 1s steps(1,end) infinite; }
+    .timer { margin:10px 0 14px; font-family:"Menlo","Consolas",monospace; font-size:clamp(34px,10vw,50px); letter-spacing:.08em; text-align:center; }
+    .wave { height:60px; border:1px solid #3f3630; border-radius:12px; display:flex; align-items:flex-end; justify-content:center; gap:4px; background:rgba(0,0,0,.22); padding:8px; margin-bottom:12px; }
+    .bar { width:6px; border-radius:8px; background:linear-gradient(#ffd0a8,#ff7f5e); min-height:4px; transition:height 130ms linear; }
+    .ring { --p:0%; height:10px; border-radius:999px; border:1px solid #4a4039; background:linear-gradient(90deg,var(--accent) var(--p),transparent 0),rgba(255,255,255,.06); margin:8px 0 14px; }
+    .controls { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+    button { border:1px solid #60544b; border-radius:999px; color:var(--text); background:#2a231e; padding:9px 10px; cursor:pointer; font-weight:600; }
+    button:disabled { opacity:.45; cursor:not-allowed; }
+    .primary { border-color:#b5554d; color:#ffd7d2; }
+    .summary { margin-top:12px; border:1px dashed #594e46; border-radius:12px; padding:10px; font-size:13px; color:#e7d9cc; line-height:1.55; }
+    .summary strong { color:var(--good); }
+    @keyframes blink { 50% { opacity:.25; } }
+    @media (max-width:390px) { .panel{padding:14px;border-radius:18px;} .wave{height:54px;} }
+  </style>
+</head>
+<body>
+  <section class="panel" id="panel">
+    <div class="top"><span>Tape Room</span><span id="session">Session #1</span></div>
+    <div class="state" id="stateView"><span class="dot"></span><span id="stateText">Idle</span></div>
+    <div class="timer" id="timer">00:00</div>
+    <div class="wave" id="wave"></div>
+    <div class="ring" id="ring"></div>
+    <div class="controls">
+      <button class="primary" id="startBtn">Start</button>
+      <button id="pauseBtn" disabled>Pause</button>
+      <button id="stopBtn" disabled>Stop</button>
+    </div>
+    <div class="summary" id="summary">录音尚未开始。点击 Start 开启一次新录音。</div>
+  </section>
+  <script>
+    const panel = document.getElementById("panel");
+    const stateText = document.getElementById("stateText");
+    const timer = document.getElementById("timer");
+    const ring = document.getElementById("ring");
+    const summary = document.getElementById("summary");
+    const session = document.getElementById("session");
+    const startBtn = document.getElementById("startBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const wave = document.getElementById("wave");
+    const bars = Array.from({ length: 34 }, () => { const b = document.createElement("span"); b.className = "bar"; wave.appendChild(b); return b; });
+
+    let state = "idle", seconds = 0, pauses = 0, takes = 1, timerId = null, waveId = null;
+    const format = (t) => `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
+
+    function sync() {
+      timer.textContent = format(seconds);
+      ring.style.setProperty("--p", `${Math.min(100, (seconds / 300) * 100)}%`);
+      panel.classList.toggle("recording", state === "recording");
+      stateText.textContent = state[0].toUpperCase() + state.slice(1);
+      startBtn.textContent = state === "paused" ? "Resume" : "Start";
+      startBtn.disabled = state === "recording";
+      pauseBtn.disabled = state !== "recording";
+      stopBtn.disabled = state === "idle" || state === "stopped";
+      session.textContent = `Session #${takes}`;
+    }
+
+    function animateWave() {
+      bars.forEach((bar, i) => {
+        const base = state === "recording" ? 10 : 4;
+        const power = state === "recording" ? 42 : 8;
+        const jitter = Math.sin((Date.now() / 140) + i) * 8;
+        bar.style.height = `${Math.max(4, base + Math.random() * power + jitter)}px`;
+      });
+      waveId = requestAnimationFrame(animateWave);
+    }
+
+    function setState(next) { state = next; sync(); }
+
+    startBtn.addEventListener("click", () => {
+      if (state === "idle" || state === "stopped") { seconds = 0; pauses = 0; summary.textContent = "录音进行中，结束后将生成摘要。"; }
+      if (!timerId) timerId = setInterval(() => { seconds += 1; sync(); }, 1000);
+      if (!waveId) waveId = requestAnimationFrame(animateWave);
+      setState("recording");
+    });
+
+    pauseBtn.addEventListener("click", () => {
+      if (state !== "recording") return;
+      pauses += 1;
+      clearInterval(timerId); timerId = null;
+      setState("paused");
+    });
+
+    stopBtn.addEventListener("click", () => {
+      if (state === "recording" && !window.confirm("确认停止本次录音吗？")) return;
+      clearInterval(timerId); timerId = null;
+      setState("stopped");
+      summary.innerHTML = `本次录音已保存。<br><strong>时长</strong> ${format(seconds)}<br><strong>状态</strong> ${pauses ? `中途暂停 ${pauses} 次` : "连续录制"}`;
+      takes += 1;
+    });
+
+    sync();
+    waveId = requestAnimationFrame(animateWave);
+  </script>
+</body>
+</html>

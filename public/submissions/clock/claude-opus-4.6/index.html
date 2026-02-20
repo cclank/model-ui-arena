@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Opus Clock</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Helvetica Neue', sans-serif;
+            transition: background 1s, color 1s;
+            overflow: hidden
+        }
+
+        body.day {
+            background: linear-gradient(135deg, #e8f0fe, #fce4ec);
+            color: #1a1a2e
+        }
+
+        body.night {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #e0e0e0
+        }
+
+        .clock-wrap {
+            position: relative;
+            width: min(70vw, 280px);
+            height: min(70vw, 280px)
+        }
+
+        .face {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            transition: box-shadow .8s, background .8s
+        }
+
+        body.day .face {
+            background: radial-gradient(circle, #fff, #f5f5f5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .12), inset 0 0 20px rgba(0, 0, 0, .04)
+        }
+
+        body.night .face {
+            background: radial-gradient(circle, #1e1e3f, #14142a);
+            box-shadow: 0 0 40px rgba(100, 100, 255, .15), inset 0 0 20px rgba(255, 255, 255, .03)
+        }
+
+        .center-dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            background: #e74c3c;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 0 0 6px rgba(231, 76, 60, .5)
+        }
+
+        .tick {
+            position: absolute;
+            top: 6px;
+            left: 50%;
+            transform-origin: 50% calc(min(35vw, 140px) - 6px);
+            width: 2px;
+            background: #888;
+            border-radius: 1px
+        }
+
+        .tick.major {
+            height: 16px;
+            width: 3px;
+            background: currentColor
+        }
+
+        .tick.minor {
+            height: 8px;
+            opacity: .4
+        }
+
+        .num {
+            position: absolute;
+            font-weight: 700;
+            font-size: clamp(11px, 3vw, 15px);
+            transform: translate(-50%, -50%)
+        }
+
+        .hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: 50% 100%;
+            border-radius: 3px;
+            transition: none
+        }
+
+        .hour-hand {
+            width: 5px;
+            height: 28%;
+            background: currentColor;
+            margin-left: -2.5px;
+            z-index: 3
+        }
+
+        .min-hand {
+            width: 3px;
+            height: 36%;
+            background: currentColor;
+            margin-left: -1.5px;
+            z-index: 4;
+            opacity: .85
+        }
+
+        .sec-hand {
+            width: 1.5px;
+            height: 40%;
+            background: #e74c3c;
+            margin-left: -.75px;
+            z-index: 5
+        }
+
+        .digital {
+            text-align: center;
+            margin-top: 24px;
+            font-size: clamp(28px, 6vw, 42px);
+            font-weight: 200;
+            letter-spacing: 4px;
+            font-variant-numeric: tabular-nums
+        }
+
+        .digital span {
+            opacity: .4;
+            font-size: .6em
+        }
+
+        .date {
+            text-align: center;
+            margin-top: 8px;
+            font-size: clamp(11px, 2.5vw, 14px);
+            opacity: .5;
+            letter-spacing: 2px
+        }
+
+        .period {
+            position: absolute;
+            top: 65%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: clamp(9px, 2vw, 11px);
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: .5
+        }
+
+        canvas#particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center
+        }
+    </style>
+</head>
+
+<body class="day">
+    <canvas id="particles"></canvas>
+    <div class="content">
+        <div class="clock-wrap">
+            <div class="face" id="face"></div>
+            <div class="center-dot"></div>
+            <div class="period" id="period"></div>
+        </div>
+        <div class="digital" id="digital"></div>
+        <div class="date" id="date"></div>
+    </div>
+    <script>
+        const face = document.getElementById('face'), digitalEl = document.getElementById('digital'), dateEl = document.getElementById('date'), periodEl = document.getElementById('period'), cvs = document.getElementById('particles'), ctx = cvs.getContext('2d');
+        function initFace() {
+            for (let i = 0; i < 60; i++) { const t = document.createElement('div'); t.className = 'tick ' + (i % 5 === 0 ? 'major' : 'minor'); t.style.transform = `rotate(${i * 6}deg)`; face.appendChild(t) }
+            [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].forEach((n, i) => { const el = document.createElement('div'); el.className = 'num'; const a = (i - 2) * 30 * Math.PI / 180, r = 42; el.style.top = 50 - r * Math.sin(Math.PI / 2 - a * 180 / Math.PI * Math.PI / 180) + '%'; const ang = (i * 30 - 60) * Math.PI / 180; el.style.left = 50 + 42 * Math.cos(ang) + '%'; el.style.top = 50 - 42 * Math.sin(ang) + '%'; el.textContent = n; face.appendChild(el) });
+            ['hour-hand', 'min-hand', 'sec-hand'].forEach(c => { const h = document.createElement('div'); h.className = 'hand ' + c; h.id = c; face.appendChild(h) })
+        }
+        function posNums() { const nums = face.querySelectorAll('.num');[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].forEach((n, i) => { const ang = (i * 30 - 90) * Math.PI / 180; nums[i].style.left = 50 + 38 * Math.cos(ang) + '%'; nums[i].style.top = 50 + 38 * Math.sin(ang) + '%' }) }
+        function update() {
+            const now = new Date(), h = now.getHours(), m = now.getMinutes(), s = now.getSeconds(), ms = now.getMilliseconds();
+            const sd = s + ms / 1000, md = m + sd / 60, hd = (h % 12) + md / 60;
+            document.getElementById('hour-hand').style.transform = `rotate(${hd * 30}deg)`;
+            document.getElementById('min-hand').style.transform = `rotate(${md * 6}deg)`;
+            document.getElementById('sec-hand').style.transform = `rotate(${sd * 6}deg)`;
+            const hh = String(h).padStart(2, '0'), mm = String(m).padStart(2, '0'), ss = String(s).padStart(2, '0');
+            digitalEl.innerHTML = `${hh}<span>:</span>${mm}<span>:</span>${ss}`;
+            const days = ['日', '一', '二', '三', '四', '五', '六'];
+            dateEl.textContent = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 星期${days[now.getDay()]}`;
+            periodEl.textContent = h >= 6 && h < 18 ? 'DAY' : 'NIGHT';
+            document.body.className = h >= 6 && h < 18 ? 'day' : 'night';
+            requestAnimationFrame(update)
+        }
+        let pts = [];
+        function initCanvas() { cvs.width = innerWidth; cvs.height = innerHeight; pts = Array.from({ length: 40 }, () => ({ x: Math.random() * cvs.width, y: Math.random() * cvs.height, r: Math.random() * 2 + .5, dx: (Math.random() - .5) * .3, dy: (Math.random() - .5) * .3, o: Math.random() * .3 + .1 })) }
+        function drawPts() { ctx.clearRect(0, 0, cvs.width, cvs.height); pts.forEach(p => { p.x += p.dx; p.y += p.dy; if (p.x < 0 || p.x > cvs.width) p.dx *= -1; if (p.y < 0 || p.y > cvs.height) p.dy *= -1; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fillStyle = `rgba(150,150,200,${p.o})`; ctx.fill() }); requestAnimationFrame(drawPts) }
+        initFace(); posNums(); update(); initCanvas(); drawPts();
+        window.addEventListener('resize', initCanvas);
+    </script>
+</body>
+
+</html>

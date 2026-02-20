@@ -1,0 +1,388 @@
+<!-- 
+设计说明：
+1. 录音机采用了现代极简的卡片风格，状态切换（录制、暂停、停止）清晰明了。
+2. 录制状态下拥有动态波形视觉反馈，红点闪烁提示正在录音。
+3. 停止后可以显示当前的录音摘要，包含状态提示和录音总时长。
+4. 加入了停止的二次确认机制（防误触），整体不依赖任何图片或外部资源库，原生实现。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Recorder</title>
+    <style>
+        :root {
+            --bg: #121212;
+            --card-bg: #1e1e1e;
+            --text: #f3f4f6;
+            --red: #ef4444;
+            --gray: #4b5563;
+            --blue: #3b82f6;
+            --green: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg);
+            color: var(--text);
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        .recorder-card {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 350px;
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--gray);
+        }
+
+        .status-badge.recording .status-dot {
+            background: var(--red);
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-badge.paused .status-dot {
+            background: var(--blue);
+        }
+
+        .status-badge.stopped .status-dot {
+            background: var(--green);
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        .timer {
+            font-size: 4rem;
+            font-weight: 200;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 2px;
+        }
+
+        .waveform {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            height: 60px;
+        }
+
+        .bar {
+            width: 4px;
+            height: 10px;
+            background: var(--gray);
+            border-radius: 2px;
+            transition: height 0.1s ease;
+        }
+
+        .recording .bar {
+            background: var(--red);
+        }
+
+        .paused .bar {
+            background: var(--blue);
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-main {
+            background: var(--red);
+            width: 72px;
+            height: 72px;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-main .icon {
+            width: 24px;
+            height: 24px;
+            background: #fff;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .recording .btn-main .icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+        }
+
+        .paused .btn-main .icon {
+            border-radius: 50%;
+        }
+
+        /* resume icon visually same as record here */
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .btn-secondary:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .summary {
+            display: none;
+            width: 100%;
+            text-align: center;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--green);
+            padding: 16px;
+            border-radius: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal button {
+            margin: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .modal .btn-confirm {
+            background: var(--red);
+            color: white;
+        }
+
+        .modal .btn-cancel {
+            background: #333;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="recorder-card" id="app">
+        <div class="status-badge" id="statusBadge">
+            <div class="status-dot"></div>
+            <span id="statusText">Ready</span>
+        </div>
+
+        <div class="timer" id="timer">00:00</div>
+
+        <div class="waveform" id="waveform"></div>
+
+        <div class="summary" id="summary">
+            <div>录音已保存</div>
+            <div style="font-size: 1.2rem; font-weight: bold; margin-top: 8px;" id="summaryTime"></div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-secondary" id="pauseBtn" disabled>暂停</button>
+            <button class="btn btn-main" id="mainBtn">
+                <div class="icon"></div>
+            </button>
+            <button class="btn btn-secondary" id="stopBtn" disabled>停止</button>
+        </div>
+
+        <div class="modal" id="stopModal">
+            <h4>是否结束录音？</h4>
+            <div>
+                <button class="btn-cancel" onclick="closeModal()">取消</button>
+                <button class="btn-confirm" onclick="confirmStop()">结束</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const statusBadge = document.getElementById('statusBadge');
+        const statusText = document.getElementById('statusText');
+        const timerEl = document.getElementById('timer');
+        const waveformEl = document.getElementById('waveform');
+        const mainBtn = document.getElementById('mainBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const summary = document.getElementById('summary');
+        const summaryTime = document.getElementById('summaryTime');
+        const stopModal = document.getElementById('stopModal');
+
+        let state = 'ready'; // ready, recording, paused, stopped
+        let seconds = 0;
+        let timerInt = null;
+        let waveInt = null;
+
+        for (let i = 0; i < 30; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            waveformEl.appendChild(bar);
+        }
+        const bars = document.querySelectorAll('.bar');
+
+        function animateWave() {
+            bars.forEach(bar => {
+                const height = state === 'recording' ? Math.random() * 40 + 10 : 10;
+                bar.style.height = `${height}px`;
+            });
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            timerEl.textContent = `${m}:${s}`;
+        }
+
+        mainBtn.onclick = () => {
+            if (state === 'ready' || state === 'stopped') {
+                startRecording();
+            } else if (state === 'recording') {
+                pauseRecording();
+            } else if (state === 'paused') {
+                resumeRecording();
+            }
+        };
+
+        pauseBtn.onclick = () => {
+            if (state === 'recording') pauseRecording();
+            else if (state === 'paused') resumeRecording();
+        };
+
+        stopBtn.onclick = () => {
+            if (state === 'recording' || state === 'paused') {
+                stopModal.classList.add('active');
+            }
+        };
+
+        function closeModal() { stopModal.classList.remove('active'); }
+        function confirmStop() { closeModal(); stopRecording(); }
+
+        function startRecording() {
+            state = 'recording'; seconds = 0; updateTimerDisplay();
+            summary.style.display = 'none';
+            updateUI(); timerInt = setInterval(() => { seconds++; updateTimerDisplay(); }, 1000);
+            waveInt = setInterval(animateWave, 100);
+        }
+
+        function pauseRecording() {
+            state = 'paused'; updateUI();
+            clearInterval(timerInt); clearInterval(waveInt);
+            bars.forEach(b => b.style.height = '10px');
+        }
+
+        function resumeRecording() {
+            state = 'recording'; updateUI();
+            timerInt = setInterval(() => { seconds++; updateTimerDisplay(); }, 1000);
+            waveInt = setInterval(animateWave, 100);
+        }
+
+        function stopRecording() {
+            state = 'stopped'; updateUI();
+            clearInterval(timerInt); clearInterval(waveInt);
+            bars.forEach(b => b.style.height = '10px');
+
+            summaryTime.textContent = timerEl.textContent;
+            summary.style.display = 'block';
+        }
+
+        function updateUI() {
+            statusBadge.className = `status-badge ${state}`;
+            waveformEl.className = `waveform ${state}`;
+
+            if (state === 'recording') {
+                statusText.textContent = 'Recording...';
+                pauseBtn.disabled = false; stopBtn.disabled = false;
+                pauseBtn.textContent = '暂停';
+            } else if (state === 'paused') {
+                statusText.textContent = 'Paused';
+                pauseBtn.textContent = '继续';
+            } else if (state === 'stopped' || state === 'ready') {
+                statusText.textContent = state === 'ready' ? 'Ready' : 'Stopped';
+                pauseBtn.disabled = true; stopBtn.disabled = true;
+                pauseBtn.textContent = '暂停';
+            }
+        }
+    </script>
+</body>
+
+</html>

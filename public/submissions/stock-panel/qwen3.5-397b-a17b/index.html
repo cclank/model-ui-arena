@@ -1,0 +1,122 @@
+<!-- 简约股票面板实现 -->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>股票监控面板</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #2d3436;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .stock-panel {
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      padding: 20px;
+      width: 100%;
+      max-width: 400px;
+      color: white;
+    }
+    h1 { text-align: center; margin-bottom: 20px; }
+    .stock-card {
+      background: rgba(255,255,255,0.9);
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 12px;
+      color: #2d3436;
+    }
+    .stock-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .stock-name { font-weight: bold; }
+    .stock-price { font-size: 1.3rem; font-weight: bold; }
+    .price-change.positive { color: #00b894; }
+    .price-change.negative { color: #e17055; }
+    .trend-chart { height: 40px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="stock-panel">
+    <h1>股票监控面板</h1>
+    <div class="stock-list" id="stockList"></div>
+  </div>
+
+  <script>
+    const stocks = [
+      { id: 'AAPL', name: '苹果', price: 182.52, change: 1.24, changePercent: 0.68, history: [180.1, 181.3, 181.8, 182.1, 182.0, 182.4, 182.5] },
+      { id: 'GOOGL', name: '谷歌', price: 142.87, change: -0.93, changePercent: -0.65, history: [144.2, 144.0, 143.8, 143.2, 143.0, 142.9, 142.9] },
+      { id: 'MSFT', name: '微软', price: 378.85, change: 2.15, changePercent: 0.57, history: [376.2, 376.8, 377.1, 377.5, 378.0, 378.5, 378.8] }
+    ];
+
+    function createTrendChart(data, width=200, height=40) {
+      if (!data || data.length === 0) return '';
+
+      const min = Math.min(...data);
+      const max = Math.max(...data);
+      const range = max - min || 1;
+      const xStep = width / (data.length - 1);
+      const yScale = (height - 10) / range;
+
+      let pathData = '';
+      let fillPathData = '';
+
+      data.forEach((value, index) => {
+        const x = index * xStep;
+        const y = height - ((value - min) * yScale);
+
+        if (index === 0) {
+          pathData += `M ${x},${y}`;
+          fillPathData += `M 0,${height} L ${x},${y}`;
+        } else {
+          pathData += ` L ${x},${y}`;
+          fillPathData += ` L ${x},${y}`;
+        }
+      });
+
+      fillPathData += ` L ${width},${height} Z`;
+      const color = data[data.length - 1] >= data[0] ? '#00b894' : '#e17055';
+
+      return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+        <path d="${fillPathData}" fill="${color}20"/>
+        <path d="${pathData}" stroke="${color}" stroke-width="2" fill="none"/>
+      </svg>`;
+    }
+
+    function renderStocks() {
+      const stockList = document.getElementById('stockList');
+      stockList.innerHTML = '';
+
+      stocks.forEach(stock => {
+        const isPositive = stock.change >= 0;
+        const changeClass = isPositive ? 'positive' : 'negative';
+        const changeSymbol = isPositive ? '+' : '';
+
+        const card = document.createElement('div');
+        card.className = 'stock-card';
+        card.innerHTML = `
+          <div class="stock-header">
+            <div class="stock-name">${stock.name} (${stock.id})</div>
+            <div class="stock-price">${stock.price.toFixed(2)}</div>
+          </div>
+          <div class="price-change ${changeClass}">
+            ${changeSymbol}${stock.change.toFixed(2)} (${changeSymbol}${stock.changePercent.toFixed(2)}%)
+          </div>
+          <div class="trend-chart">${createTrendChart(stock.history)}</div>
+        `;
+
+        stockList.appendChild(card);
+      });
+    }
+
+    renderStocks();
+  </script>
+</body>
+</html>

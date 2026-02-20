@@ -1,0 +1,164 @@
+<!-- 简约录音机实现 -->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>简约录音机</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #2c3e50;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .recorder-container {
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      padding: 25px;
+      width: 100%;
+      max-width: 350px;
+      color: white;
+    }
+    h1 { text-align: center; margin-bottom: 20px; }
+    .time-display {
+      font-size: 2.5rem;
+      text-align: center;
+      color: #3498db;
+      margin: 15px 0;
+    }
+    .status-display {
+      text-align: center;
+      color: #e74c3c;
+      margin: 10px 0;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .btn {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 25px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      min-width: 70px;
+    }
+    .btn-start { background: #2ecc71; color: white; }
+    .btn-pause { background: #f39c12; color: white; }
+    .btn-stop { background: #e74c3c; color: white; }
+    .summary {
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 20px;
+      text-align: center;
+      display: none;
+    }
+    .summary.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="recorder-container">
+    <h1>录音机</h1>
+    <div class="time-display" id="timer">00:00</div>
+    <div class="status-display" id="status">准备就绪</div>
+    <div class="controls">
+      <button class="btn btn-start" id="startBtn">开始</button>
+      <button class="btn btn-pause" id="pauseBtn" disabled>暂停</button>
+      <button class="btn btn-stop" id="stopBtn" disabled>停止</button>
+    </div>
+    <div class="summary" id="summary">
+      <h3>录音摘要</h3>
+      <p>时长: <span id="summaryDuration">00:00</span></p>
+    </div>
+  </div>
+
+  <script>
+    let state = 'stopped';
+    let startTime = null;
+    let elapsedTime = 0;
+    let timerInterval = null;
+
+    const timerDisplay = document.getElementById('timer');
+    const statusDisplay = document.getElementById('status');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const summary = document.getElementById('summary');
+    const summaryDuration = document.getElementById('summaryDuration');
+
+    function formatTime(ms) {
+      const totalSeconds = Math.floor(ms / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function updateTimer() {
+      const currentTime = new Date().getTime();
+      elapsedTime = currentTime - startTime;
+      timerDisplay.textContent = formatTime(elapsedTime);
+    }
+
+    function startRecording() {
+      state = 'recording';
+      startTime = new Date().getTime() - elapsedTime;
+      clearInterval(timerInterval);
+      timerInterval = setInterval(updateTimer, 1000);
+      updateButtonStates();
+      statusDisplay.textContent = '正在录音...';
+      statusDisplay.style.color = '#e74c3c';
+    }
+
+    function pauseRecording() {
+      state = 'paused';
+      clearInterval(timerInterval);
+      updateButtonStates();
+      statusDisplay.textContent = '已暂停';
+      statusDisplay.style.color = '#f39c12';
+    }
+
+    function stopRecording() {
+      state = 'stopped';
+      clearInterval(timerInterval);
+      summary.classList.add('active');
+      summaryDuration.textContent = formatTime(elapsedTime);
+      updateButtonStates();
+      statusDisplay.textContent = '已停止';
+      statusDisplay.style.color = '#95a5a6';
+    }
+
+    function updateButtonStates() {
+      startBtn.disabled = state !== 'stopped';
+      pauseBtn.disabled = state !== 'recording';
+      stopBtn.disabled = state === 'stopped';
+    }
+
+    startBtn.addEventListener('click', () => {
+      if (state === 'paused') {
+        startTime = new Date().getTime() - elapsedTime;
+        timerInterval = setInterval(updateTimer, 1000);
+        state = 'recording';
+        statusDisplay.textContent = '正在录音...';
+        statusDisplay.style.color = '#e74c3c';
+      } else {
+        elapsedTime = 0;
+        timerDisplay.textContent = '00:00';
+        startRecording();
+      }
+      updateButtonStates();
+    });
+
+    pauseBtn.addEventListener('click', pauseRecording);
+    stopBtn.addEventListener('click', stopRecording);
+
+    updateButtonStates();
+  </script>
+</body>
+</html>

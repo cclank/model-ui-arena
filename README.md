@@ -19,9 +19,9 @@ public/submissions/<theme>/<model>/<submission-file>
 例如：
 
 ```text
-public/submissions/clock/claude-3.7/index.html
-public/submissions/clock/gpt-4.1/index.html
-public/submissions/carwash-decision/gemini-2.0-flash/response.md
+public/submissions/clock/gemini-3.1-pro-high/index.html
+public/submissions/clock/gpt-5.3-codex/index.html
+public/submissions/carwash-decision/gemini-3.1-pro-high/response.md
 ```
 
 放好后会自动被页面读取并渲染（无需改前端代码）：
@@ -31,10 +31,11 @@ public/submissions/carwash-decision/gemini-2.0-flash/response.md
 
 硬性要求（按主题类型）：
 
-- 视觉主题（`clock` / `recorder` / `weather-card` / `stock-panel`）文件名必须是 `index.html`
+- 视觉主题（`clock` / `recorder` / `weather-card` / `stock-panel` / `click-fireworks`）文件名必须是 `index.html`
 - 问答主题（`carwash-decision`）文件名推荐 `response.md`（也支持 `answer.md` / `response.txt` / `answer.txt`）
-- 目录名必须是已支持主题之一（`clock` / `recorder` / `weather-card` / `stock-panel` / `carwash-decision`）
+- 目录名必须是已支持主题之一（`clock` / `recorder` / `weather-card` / `stock-panel` / `click-fireworks` / `carwash-decision`）
 - 一个模型一个目录（目录名就是模型名）
+- 反作弊：严禁查看 `public/submissions/<theme>/` 下其他模型目录；只能写入当前目标模型目录
 
 ## What This Project Solves
 
@@ -49,7 +50,7 @@ This project enforces a consistent benchmark surface so you can compare models f
 ## Core Features
 
 - Unified benchmark dashboard (single-page comparison)
-- Theme switching (Clock, Recorder, Weather Card, Stock Panel, Carwash Decision)
+- Theme switching (Clock, Recorder, Weather Card, Stock Panel, Click Fireworks, Carwash Decision)
 - Model filtering (multi-select)
 - Automatic submission discovery from filesystem
 - Constraint inspection per submission:
@@ -88,6 +89,7 @@ model-ui-arena/
       recorder.md
       weather-card.md
       stock-panel.md
+      click-fireworks.md
       carwash-decision.md
   public/
     submissions/
@@ -118,15 +120,18 @@ Example:
 ```text
 public/submissions/
   clock/
-    claude-3.7/index.html
-    gpt-4.1/index.html
-    gemini-2.0-flash/index.html
+    gpt-5.3-codex/index.html
+    gemini-3.1-pro-high/index.html
   carwash-decision/
-    claude-3.7/response.md
-    gpt-4.1/response.md
+    gpt-5.3-codex/response.md
+    gemini-3.1-pro-high/response.md
 ```
 
 The dashboard auto-loads and renders all discovered submissions.
+
+Anti-cheating policy:
+- Never read or inspect other model directories under `public/submissions/<theme>/`.
+- Only write to the current target model directory.
 
 ## Benchmark Themes
 
@@ -134,6 +139,7 @@ The dashboard auto-loads and renders all discovered submissions.
 - `recorder`
 - `weather-card`
 - `stock-panel`
+- `click-fireworks`
 - `carwash-decision`
 
 ## Prompt Workflow
@@ -141,7 +147,7 @@ The dashboard auto-loads and renders all discovered submissions.
 ### 1) Generate a complete benchmark prompt
 
 ```bash
-npm run prompt -- --theme clock --model claude-3.7 --max-lines 180 --language "HTML + CSS + JavaScript"
+npm run prompt -- --theme clock --model gpt-5.3-codex --max-lines 180 --language "HTML + CSS + JavaScript"
 ```
 
 ### 2) Send prompt to target model

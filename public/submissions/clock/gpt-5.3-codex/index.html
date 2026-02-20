@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Orbital Clock</title>
+  <style>
+    :root {
+      --bg-a: #0f1a3d;
+      --bg-b: #1f7ca3;
+      --face: rgba(255,255,255,0.14);
+      --ring: rgba(255,255,255,0.28);
+      --text: #f5fbff;
+      --muted: rgba(245,251,255,0.78);
+      --accent: #8df7ff;
+      --sec: #ffb36b;
+      --shadow: 0 30px 80px rgba(0,0,0,0.35);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: grid;
+      place-items: center;
+      font-family: "Avenir Next", "PingFang SC", "Helvetica Neue", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(60vmax 60vmax at 15% 10%, rgba(255,255,255,0.18), transparent 52%),
+        radial-gradient(55vmax 55vmax at 80% 95%, rgba(147,214,255,0.22), transparent 60%),
+        linear-gradient(145deg, var(--bg-a), var(--bg-b));
+      animation: sky 18s ease-in-out infinite alternate;
+      overflow: hidden;
+      padding: 16px;
+    }
+    @keyframes sky {
+      from { filter: saturate(105%); }
+      to { filter: saturate(135%) brightness(1.08); }
+    }
+    .panel {
+      width: min(94vw, 460px);
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(0,0,0,0.22);
+      border-radius: 28px;
+      padding: 22px 18px 18px;
+      backdrop-filter: blur(8px);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .clock {
+      position: relative;
+      width: min(74vw, 320px);
+      aspect-ratio: 1;
+      margin: 0 auto;
+      border-radius: 50%;
+      border: 2px solid var(--ring);
+      background:
+        radial-gradient(circle at 45% 35%, rgba(255,255,255,0.2), transparent 35%),
+        radial-gradient(circle, rgba(255,255,255,0.16) 0 58%, rgba(0,0,0,0.3) 100%);
+      box-shadow: inset 0 0 22px rgba(255,255,255,0.08), 0 16px 35px rgba(0,0,0,0.45);
+    }
+    .tick {
+      position: absolute;
+      left: 50%; top: 50%;
+      width: 2px;
+      height: 46%;
+      transform-origin: 50% 100%;
+      transform: translate(-50%, -100%) rotate(var(--deg));
+      opacity: 0.55;
+      animation: breathe 2.8s ease-in-out infinite;
+      animation-delay: var(--delay);
+    }
+    .tick::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 0;
+      width: 100%;
+      height: calc(var(--major) * 11px + 8px);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.75);
+    }
+    @keyframes breathe { 50% { opacity: 0.92; } }
+    .hand {
+      position: absolute;
+      left: 50%; top: 50%;
+      transform-origin: 50% calc(100% - 14px);
+      transform: translate(-50%, -100%) rotate(0deg);
+      border-radius: 99px;
+      will-change: transform;
+    }
+    .hour { width: 8px; height: 31%; background: #fff; }
+    .minute { width: 6px; height: 39%; background: var(--accent); }
+    .second {
+      width: 3px;
+      height: 42%;
+      background: linear-gradient(var(--sec), #ffd7a3);
+      box-shadow: 0 0 10px rgba(255,179,107,0.85);
+      transition: transform .25s ease-out;
+    }
+    .pin {
+      position: absolute;
+      left: 50%; top: 50%;
+      width: 16px; height: 16px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 0 5px rgba(255,255,255,0.18);
+    }
+    .digital {
+      margin-top: 18px;
+      font-size: clamp(28px, 9vw, 46px);
+      font-weight: 700;
+      letter-spacing: .08em;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 6px 16px rgba(0,0,0,0.35);
+    }
+    .meta {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: clamp(13px, 3.2vw, 16px);
+      letter-spacing: .03em;
+    }
+    .badge {
+      margin-top: 12px;
+      display: inline-block;
+      font-size: 12px;
+      padding: 6px 10px;
+      border: 1px solid rgba(255,255,255,0.34);
+      border-radius: 999px;
+      color: rgba(255,255,255,0.9);
+    }
+  </style>
+</head>
+<body>
+  <main class="panel">
+    <section class="clock" id="clock" aria-label="模拟时钟"></section>
+    <div class="digital" id="digital">00:00:00</div>
+    <div class="meta" id="meta">----年--月--日 · 星期-</div>
+    <div class="badge" id="phase">正在同步本地时间</div>
+  </main>
+
+  <script>
+    const clock = document.getElementById('clock');
+    const digital = document.getElementById('digital');
+    const meta = document.getElementById('meta');
+    const phase = document.getElementById('phase');
+
+    for (let i = 0; i < 60; i++) {
+      const t = document.createElement('i');
+      t.className = 'tick';
+      t.style.setProperty('--deg', `${i * 6}deg`);
+      t.style.setProperty('--major', i % 5 === 0 ? 1 : 0.35);
+      t.style.setProperty('--delay', `${(i % 10) * 0.15}s`);
+      clock.appendChild(t);
+    }
+
+    clock.insertAdjacentHTML('beforeend', '<i class="hand hour" id="h"></i><i class="hand minute" id="m"></i><i class="hand second" id="s"></i><i class="pin"></i>');
+    const h = document.getElementById('h');
+    const m = document.getElementById('m');
+    const s = document.getElementById('s');
+    const week = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function setTheme(hour) {
+      const root = document.documentElement.style;
+      if (hour >= 6 && hour < 18) {
+        root.setProperty('--bg-a', '#3d79cf');
+        root.setProperty('--bg-b', '#74d0f7');
+        phase.textContent = '白昼模式';
+      } else {
+        root.setProperty('--bg-a', '#0f1a3d');
+        root.setProperty('--bg-b', '#1c3768');
+        phase.textContent = '夜航模式';
+      }
+    }
+
+    function render() {
+      const now = new Date();
+      const hr = now.getHours(), min = now.getMinutes(), sec = now.getSeconds();
+      h.style.transform = `translate(-50%, -100%) rotate(${(hr % 12) * 30 + min * 0.5}deg)`;
+      m.style.transform = `translate(-50%, -100%) rotate(${min * 6 + sec * 0.1}deg)`;
+      s.style.transform = `translate(-50%, -100%) rotate(${sec * 6}deg)`;
+
+      digital.textContent = `${pad(hr)}:${pad(min)}:${pad(sec)}`;
+      meta.textContent = `${now.getFullYear()}年${pad(now.getMonth()+1)}月${pad(now.getDate())}日 · ${week[now.getDay()]}`;
+      setTheme(hr);
+    }
+
+    render();
+    setInterval(render, 1000);
+  </script>
+</body>
+</html>

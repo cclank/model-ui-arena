@@ -1,0 +1,170 @@
+<!-- 简约天气卡片实现 -->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>天气卡片</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #74b9ff;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .weather-app {
+      background: rgba(255,255,255,0.15);
+      border-radius: 15px;
+      padding: 25px;
+      width: 100%;
+      max-width: 350px;
+      color: white;
+    }
+    h1 { text-align: center; margin-bottom: 20px; }
+    .city-selector {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .city-btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.25);
+      color: white;
+      cursor: pointer;
+    }
+    .city-btn.active {
+      background: rgba(255,255,255,0.7);
+      color: #0984e3;
+    }
+    .weather-card {
+      background: rgba(255,255,255,0.9);
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+      color: #2d3436;
+    }
+    .weather-icon {
+      font-size: 3rem;
+      margin: 10px 0;
+      display: block;
+    }
+    .temperature {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .weather-description {
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+    }
+    .city-name {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .weather-details {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 15px;
+    }
+    .detail-item {
+      text-align: center;
+      padding: 8px;
+    }
+    .detail-label { font-size: 0.8rem; color: #636e72; margin-bottom: 3px; }
+    .detail-value { font-size: 1rem; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="weather-app" id="weatherApp">
+    <h1>天气卡片</h1>
+    <div class="city-selector">
+      <button class="city-btn active" data-city="beijing">北京</button>
+      <button class="city-btn" data-city="shanghai">上海</button>
+      <button class="city-btn" data-city="guangzhou">广州</button>
+    </div>
+    <div class="weather-card">
+      <div class="city-name" id="cityName">北京</div>
+      <span class="weather-icon" id="weatherIcon">☀️</span>
+      <div class="temperature" id="temperature">22°C</div>
+      <div class="weather-description" id="weatherDesc">晴朗</div>
+      <div class="weather-details">
+        <div class="detail-item">
+          <div class="detail-label">湿度</div>
+          <div class="detail-value" id="humidity">45%</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">风速</div>
+          <div class="detail-value" id="windSpeed">12 km/h</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const cities = {
+      beijing: {
+        name: '北京',
+        temperature: '22°C',
+        description: '晴朗',
+        humidity: '45%',
+        windSpeed: '12 km/h',
+        icon: '☀️'
+      },
+      shanghai: {
+        name: '上海',
+        temperature: '18°C',
+        description: '多云转小雨',
+        humidity: '78%',
+        windSpeed: '8 km/h',
+        icon: '🌧️'
+      },
+      guangzhou: {
+        name: '广州',
+        temperature: '26°C',
+        description: '阴天',
+        humidity: '65%',
+        windSpeed: '10 km/h',
+        icon: '☁️'
+      }
+    };
+
+    const cityNameEl = document.getElementById('cityName');
+    const weatherIconEl = document.getElementById('weatherIcon');
+    const temperatureEl = document.getElementById('temperature');
+    const weatherDescEl = document.getElementById('weatherDesc');
+    const humidityEl = document.getElementById('humidity');
+    const windSpeedEl = document.getElementById('windSpeed');
+    const cityButtons = document.querySelectorAll('.city-btn');
+
+    let currentCity = 'beijing';
+
+    function updateWeather(city) {
+      const data = cities[city];
+      cityNameEl.textContent = data.name;
+      weatherIconEl.textContent = data.icon;
+      temperatureEl.textContent = data.temperature;
+      weatherDescEl.textContent = data.description;
+      humidityEl.textContent = data.humidity;
+      windSpeedEl.textContent = data.windSpeed;
+    }
+
+    cityButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        cityButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        const city = button.getAttribute('data-city');
+        updateWeather(city);
+      });
+    });
+
+    updateWeather(currentCity);
+  </script>
+</body>
+</html>

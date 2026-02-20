@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Opus Stocks</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            min-height: 100vh;
+            background: #0b0b1a;
+            color: #e0e0e8;
+            font-family: 'Helvetica Neue', sans-serif;
+            padding: 16px
+        }
+
+        .header {
+            text-align: center;
+            padding: 12px 0 16px;
+            font-size: 13px;
+            letter-spacing: 3px;
+            opacity: .4;
+            text-transform: uppercase
+        }
+
+        .market {
+            text-align: center;
+            font-size: 11px;
+            opacity: .3;
+            margin-bottom: 16px
+        }
+
+        .stocks {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 400px;
+            margin: 0 auto
+        }
+
+        .stock {
+            background: linear-gradient(145deg, rgba(30, 30, 60, .8), rgba(20, 20, 45, .9));
+            border-radius: 16px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all .2s;
+            border: 1px solid rgba(255, 255, 255, .04)
+        }
+
+        .stock:hover {
+            border-color: rgba(255, 255, 255, .1);
+            transform: translateY(-1px)
+        }
+
+        .stock-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px
+        }
+
+        .stock-name {
+            font-weight: 600;
+            font-size: 15px
+        }
+
+        .stock-code {
+            font-size: 11px;
+            opacity: .4;
+            margin-top: 2px
+        }
+
+        .stock-price {
+            text-align: right
+        }
+
+        .price {
+            font-size: 20px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums
+        }
+
+        .change {
+            font-size: 12px;
+            margin-top: 2px;
+            font-variant-numeric: tabular-nums
+        }
+
+        .up {
+            color: #00d4aa
+        }
+
+        .down {
+            color: #ff6b6b
+        }
+
+        .chart {
+            height: 48px;
+            position: relative;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, .02)
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block
+        }
+
+        .stock-bottom {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            opacity: .4
+        }
+
+        .alert {
+            text-align: center;
+            margin-top: 16px;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            animation: pulse 2s infinite
+        }
+
+        .alert.warn {
+            background: rgba(255, 107, 107, .1);
+            color: #ff6b6b;
+            border: 1px solid rgba(255, 107, 107, .15)
+        }
+
+        .alert.ok {
+            background: rgba(0, 212, 170, .08);
+            color: #00d4aa;
+            border: 1px solid rgba(0, 212, 170, .12)
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .7
+            }
+        }
+
+        .ts {
+            text-align: center;
+            font-size: 10px;
+            opacity: .25;
+            margin-top: 14px;
+            font-variant-numeric: tabular-nums
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">Opus Stock Panel</div>
+    <div class="market" id="mkt"></div>
+    <div class="stocks" id="stocks"></div>
+    <div id="alerts"></div>
+    <div class="ts" id="ts"></div>
+    <script>
+        const data = [
+            { name: '贵州茅台', code: 'SH 600519', price: 1688.50, chg: 12.30, pct: 0.73, vol: '3.2万手', cap: '2.12万亿', trend: [1670, 1675, 1672, 1680, 1685, 1682, 1688, 1690, 1685, 1688] },
+            { name: '宁德时代', code: 'SZ 300750', price: 215.80, chg: -4.60, pct: -2.09, vol: '8.7万手', cap: '9352亿', trend: [220, 219, 218, 216, 217, 215, 214, 216, 215, 215] },
+            { name: '腾讯控股', code: 'HK 00700', price: 388.20, chg: 5.80, pct: 1.52, vol: '1.5亿股', cap: '3.73万亿', trend: [381, 383, 382, 385, 386, 384, 387, 386, 388, 388] },
+            { name: '比亚迪', code: 'SZ 002594', price: 312.45, chg: -1.25, pct: -0.40, vol: '4.1万手', cap: '9087亿', trend: [314, 313, 315, 313, 312, 314, 313, 311, 312, 312] },
+            { name: '中芯国际', code: 'SH 688981', price: 82.35, chg: 3.15, pct: 3.98, vol: '12.6万手', cap: '6484亿', trend: [79, 80, 79, 81, 80, 82, 81, 83, 82, 82] }
+        ];
+        const stocksEl = document.getElementById('stocks'), alertsEl = document.getElementById('alerts');
+        function drawChart(canvas, trend, up) {
+            const ctx = canvas.getContext('2d'), w = canvas.width = canvas.offsetWidth * 2, h = canvas.height = canvas.offsetHeight * 2;
+            ctx.scale(2, 2); const rw = canvas.offsetWidth, rh = canvas.offsetHeight;
+            const mn = Math.min(...trend), mx = Math.max(...trend), range = mx - mn || 1;
+            ctx.beginPath();
+            trend.forEach((v, i) => { const x = i / (trend.length - 1) * rw, y = rh - ((v - mn) / range) * (rh - 8) - 4; i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y) });
+            ctx.strokeStyle = up ? '#00d4aa' : '#ff6b6b'; ctx.lineWidth = 1.5; ctx.stroke();
+            const last = trend.length - 1;
+            ctx.lineTo(last / (trend.length - 1) * rw, rh); ctx.lineTo(0, rh); ctx.closePath();
+            const grd = ctx.createLinearGradient(0, 0, 0, rh);
+            grd.addColorStop(0, (up ? 'rgba(0,212,170,' : 'rgba(255,107,107,') + '.15)');
+            grd.addColorStop(1, 'transparent'); ctx.fillStyle = grd; ctx.fill();
+        }
+        function render() {
+            stocksEl.innerHTML = '';
+            data.forEach((s, i) => {
+                const up = s.chg >= 0, sign = up ? '+' : '';
+                const div = document.createElement('div'); div.className = 'stock';
+                div.innerHTML = `<div class="stock-top"><div><div class="stock-name">${s.name}</div><div class="stock-code">${s.code}</div></div><div class="stock-price"><div class="price ${up ? 'up' : 'down'}">${s.price.toFixed(2)}</div><div class="change ${up ? 'up' : 'down'}">${sign}${s.chg.toFixed(2)} (${sign}${s.pct.toFixed(2)}%)</div></div></div><div class="chart"><canvas id="c${i}"></canvas></div><div class="stock-bottom"><span>成交量 ${s.vol}</span><span>市值 ${s.cap}</span></div>`;
+                stocksEl.appendChild(div);
+                setTimeout(() => drawChart(document.getElementById('c' + i), s.trend, up), 10)
+            });
+            const hot = data.reduce((a, b) => Math.abs(a.pct) > Math.abs(b.pct) ? a : b);
+            alertsEl.innerHTML = Math.abs(hot.pct) > 2 ? `<div class="alert ${hot.chg > 0 ? 'ok' : 'warn'}">⚡ ${hot.name} 波动 ${hot.pct > 0 ? '+' : ''}${hot.pct.toFixed(2)}%，请注意风险</div>` : '';
+        }
+        function tick() {
+            data.forEach(s => { const d = (Math.random() - .48) * s.price * 0.002; s.price += d; s.chg += d; s.pct = s.chg / (s.price - s.chg) * 100; s.trend.push(s.price); if (s.trend.length > 20) s.trend.shift() });
+            render(); document.getElementById('ts').textContent = '更新: ' + new Date().toLocaleTimeString('zh-CN');
+        }
+        document.getElementById('mkt').textContent = '沪深港实时行情 · ' + new Date().toLocaleDateString('zh-CN');
+        render(); setInterval(tick, 3000);
+    </script>
+</body>
+
+</html>

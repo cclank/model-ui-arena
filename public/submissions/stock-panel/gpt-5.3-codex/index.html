@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pulse Stocks</title>
+  <style>
+    :root {
+      --bg: #0f141b;
+      --panel: #161d27;
+      --line: #334155;
+      --text: #ecf4ff;
+      --up: #5ee09d;
+      --down: #ff7e84;
+      --neutral: #9eb1c7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: "Verdana", "Segoe UI", sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 0 0, #203145 0, transparent 38%),
+        radial-gradient(circle at 100% 100%, #2d223f 0, transparent 40%),
+        var(--bg);
+    }
+    .panel {
+      width: min(96vw, 560px);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--panel);
+      padding: 16px;
+      box-shadow: 0 20px 38px rgba(0, 0, 0, 0.35);
+    }
+    .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+    .head h1 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-family: "Gill Sans", "Tahoma", sans-serif;
+    }
+    .clock { color: #a4bad4; font-size: 12px; }
+    .row {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      margin-bottom: 8px;
+      background: rgba(0, 0, 0, 0.15);
+    }
+    .symbol { font-weight: 700; }
+    .name { font-size: 12px; color: var(--neutral); margin-top: 2px; }
+    .price {
+      font-family: "Menlo", "Consolas", monospace;
+      text-align: right;
+      font-size: 19px;
+    }
+    .delta {
+      min-width: 106px;
+      text-align: right;
+      font-family: "Menlo", "Consolas", monospace;
+      font-size: 14px;
+    }
+    .up { color: var(--up); }
+    .down { color: var(--down); }
+    .mini {
+      grid-column: 1 / span 3;
+      height: 36px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 4px;
+    }
+    .mini svg { width: 100%; height: 100%; }
+    .risk {
+      margin-top: 10px;
+      border: 1px dashed #495b73;
+      border-radius: 10px;
+      font-size: 12px;
+      padding: 8px 10px;
+      color: #cfdded;
+    }
+    .risk b { color: #ffcf95; }
+    @media (max-width: 390px) {
+      .row { grid-template-columns: 1fr auto; }
+      .price { grid-column: 2; }
+      .delta { grid-column: 2; }
+      .mini { grid-column: 1 / span 2; }
+    }
+  </style>
+</head>
+<body>
+  <section class="panel">
+    <div class="head"><h1>Pulse Stocks</h1><span class="clock" id="clock">--:--:--</span></div>
+    <div id="board"></div>
+    <div class="risk" id="risk">风险提示：<b>稳定</b>，当前波动较温和。</div>
+  </section>
+  <script>
+    const board = document.getElementById("board");
+    const risk = document.getElementById("risk");
+    const clock = document.getElementById("clock");
+
+    const stocks = [
+      { symbol: "AAPL", name: "Apple", price: 193.42, prevClose: 191.98, history: [191.9, 192.4, 192.1, 192.9, 193.0, 193.42] },
+      { symbol: "NVDA", name: "NVIDIA", price: 742.2, prevClose: 736.8, history: [737.0, 739.4, 738.2, 740.6, 741.7, 742.2] },
+      { symbol: "TSLA", name: "Tesla", price: 213.63, prevClose: 216.05, history: [216.2, 215.8, 214.9, 214.2, 213.9, 213.63] }
+    ];
+
+    function pct(stock) {
+      return ((stock.price - stock.prevClose) / stock.prevClose) * 100;
+    }
+
+    function points(arr) {
+      const max = Math.max(...arr);
+      const min = Math.min(...arr);
+      return arr.map((v, i) => {
+        const x = 4 + (220 / (arr.length - 1)) * i;
+        const y = 30 - ((v - min) / Math.max(0.0001, max - min)) * 22;
+        return `${x},${y}`;
+      }).join(" ");
+    }
+
+    function render() {
+      board.innerHTML = "";
+      let maxMove = 0;
+
+      stocks.forEach((s) => {
+        const p = pct(s);
+        maxMove = Math.max(maxMove, Math.abs(p));
+        const up = p >= 0;
+        const row = document.createElement("article");
+        row.className = "row";
+        row.innerHTML = `
+          <div>
+            <div class="symbol">${s.symbol}</div>
+            <div class="name">${s.name}</div>
+          </div>
+          <div class="price">${s.price.toFixed(2)}</div>
+          <div class="delta ${up ? "up" : "down"}">${up ? "+" : ""}${(s.price - s.prevClose).toFixed(2)} (${up ? "+" : ""}${p.toFixed(2)}%)</div>
+          <div class="mini">
+            <svg viewBox="0 0 228 34" preserveAspectRatio="none">
+              <polyline fill="none" stroke="${up ? "#5ee09d" : "#ff7e84"}" stroke-width="2.2" points="${points(s.history)}"></polyline>
+            </svg>
+          </div>
+        `;
+        board.appendChild(row);
+      });
+
+      if (maxMove >= 2.5) {
+        risk.innerHTML = "风险提示：<b>高波动</b>，请注意仓位与止损。";
+      } else {
+        risk.innerHTML = "风险提示：<b>稳定</b>，当前波动较温和。";
+      }
+      clock.textContent = new Date().toLocaleTimeString("zh-CN", { hour12: false });
+    }
+
+    function tick() {
+      stocks.forEach((s) => {
+        const drift = (Math.random() - 0.48) * 0.9;
+        s.price = Math.max(1, s.price * (1 + drift / 100));
+        s.history.push(s.price);
+        if (s.history.length > 14) s.history.shift();
+      });
+      render();
+    }
+
+    render();
+    setInterval(tick, 1600);
+    setInterval(() => {
+      clock.textContent = new Date().toLocaleTimeString("zh-CN", { hour12: false });
+    }, 1000);
+  </script>
+</body>
+</html>
