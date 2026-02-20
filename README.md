@@ -1,5 +1,11 @@
 # Model Capability Benchmark
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Vercel Ready](https://img.shields.io/badge/Deploy-Vercel-000000?logo=vercel)
+[![GitHub stars](https://img.shields.io/github/stars/cclank/model-ui-arena?style=social)](https://github.com/cclank/model-ui-arena/stargazers)
+
 A production-ready benchmarking workspace for comparing LLM capability outputs under standardized task constraints.
 
 ## 模型代码放哪里（最关键）
@@ -195,4 +201,4 @@ npm run prompt -- --theme <theme> --model <name> --max-lines <n>
 
 ## License
 
-Add your preferred license before public distribution.
+This project is licensed under the MIT License. See `LICENSE` for details.
