@@ -2,6 +2,33 @@
 
 A production-ready benchmarking workspace for comparing LLM capability outputs under standardized task constraints.
 
+## 模型代码放哪里（最关键）
+
+每个模型生成的代码都放到这个路径：
+
+```text
+public/submissions/<theme>/<model>/index.html
+```
+
+例如：
+
+```text
+public/submissions/clock/claude-3.7/index.html
+public/submissions/clock/gpt-4.1/index.html
+public/submissions/weather-card/gemini-2.0-flash/index.html
+```
+
+放好后会自动被页面读取并渲染（无需改前端代码）：
+
+- 本地开发：刷新 `http://localhost:3000` 即可看到
+- Vercel 线上：提交并重新部署后可见
+
+硬性要求：
+
+- 文件名必须是 `index.html`
+- 目录名必须是已支持主题之一（`clock` / `recorder` / `weather-card` / `stock-panel` / `carwash-decision`）
+- 一个模型一个目录（目录名就是模型名）
+
 ## What This Project Solves
 
 When comparing model outputs, most evaluations are noisy because prompts, runtime, and rendering conditions vary.
