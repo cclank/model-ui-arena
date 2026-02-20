@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时钟</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0a0a14;
+            --accent: #6c63ff;
+            --text: #e8e8f0;
+            --dim: #4a4a6a;
+            --glow: rgba(108, 99, 255, 0.4);
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: var(--text);
+            overflow: hidden;
+            transition: background 2s ease;
+        }
+
+        body.day {
+            --bg: #f0f4ff;
+            --accent: #4f46e5;
+            --text: #1a1a2e;
+            --dim: #9090b0;
+            --glow: rgba(79, 70, 229, 0.3);
+        }
+
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            animation: drift 8s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+
+        .bg-orb:nth-child(1) {
+            width: 400px;
+            height: 400px;
+            background: #6c63ff;
+            top: -100px;
+            left: -100px;
+        }
+
+        .bg-orb:nth-child(2) {
+            width: 300px;
+            height: 300px;
+            background: #ff6b9d;
+            bottom: -80px;
+            right: -80px;
+            animation-delay: -4s;
+        }
+
+        @keyframes drift {
+            to {
+                transform: translate(30px, 20px) scale(1.1);
+            }
+        }
+
+        .clock-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+            z-index: 1;
+        }
+
+        .analog-clock {
+            position: relative;
+            width: 260px;
+            height: 260px;
+        }
+
+        .clock-face {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.4));
+            border: 2px solid rgba(108, 99, 255, 0.5);
+            box-shadow: 0 0 40px var(--glow), inset 0 0 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tick {
+            position: absolute;
+            width: 2px;
+            background: var(--dim);
+            top: 0;
+            left: 50%;
+            transform-origin: bottom center;
+            border-radius: 2px;
+        }
+
+        .tick.major {
+            width: 3px;
+            height: 20px;
+            background: var(--accent);
+        }
+
+        .tick.minor {
+            height: 10px;
+        }
+
+        .hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            border-radius: 4px;
+            transition: none;
+        }
+
+        .hour-hand {
+            width: 6px;
+            height: 70px;
+            background: linear-gradient(to top, var(--accent), #a89cff);
+            margin-left: -3px;
+            box-shadow: 0 0 8px var(--glow);
+        }
+
+        .minute-hand {
+            width: 4px;
+            height: 95px;
+            background: linear-gradient(to top, var(--text), #ccccee);
+            margin-left: -2px;
+        }
+
+        .second-hand {
+            width: 2px;
+            height: 110px;
+            background: #ff6b6b;
+            margin-left: -1px;
+            box-shadow: 0 0 6px rgba(255, 107, 107, 0.6);
+        }
+
+        .second-hand::before {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 20px;
+            background: #ff6b6b;
+            border-radius: 2px;
+        }
+
+        .center-dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 0 0 10px var(--glow);
+        }
+
+        .digital-display {
+            text-align: center;
+            position: relative;
+        }
+
+        .time-digits {
+            font-size: clamp(52px, 14vw, 80px);
+            font-weight: 200;
+            letter-spacing: 4px;
+            background: linear-gradient(135deg, var(--text), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 20px var(--glow));
+            font-variant-numeric: tabular-nums;
+        }
+
+        .seconds-display {
+            font-size: 28px;
+            color: var(--accent);
+            opacity: 0.8;
+            letter-spacing: 2px;
+        }
+
+        .date-display {
+            font-size: 14px;
+            color: var(--dim);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 8px;
+        }
+
+        .period-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(108, 99, 255, 0.15);
+            border: 1px solid rgba(108, 99, 255, 0.3);
+            border-radius: 20px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: var(--accent);
+            margin-top: 10px;
+            transition: all 1s ease;
+        }
+
+        .progress-ring {
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            width: calc(100% + 16px);
+            height: calc(100% + 16px);
+        }
+
+        .progress-ring circle {
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 3;
+            stroke-linecap: round;
+            opacity: 0.4;
+            transform-origin: center;
+            transform: rotate(-90deg);
+            transition: stroke-dashoffset 0.3s;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-orb"></div>
+    <div class="bg-orb"></div>
+    <div class="clock-container">
+        <div class="analog-clock">
+            <div class="clock-face" id="clockFace">
+                <svg class="progress-ring" viewBox="0 0 276 276">
+                    <circle id="secRing" cx="138" cy="138" r="132" stroke-dasharray="829.38"
+                        stroke-dashoffset="829.38" />
+                </svg>
+            </div>
+            <div class="hand hour-hand" id="hourHand"></div>
+            <div class="hand minute-hand" id="minuteHand"></div>
+            <div class="hand second-hand" id="secondHand"></div>
+            <div class="center-dot"></div>
+        </div>
+        <div class="digital-display">
+            <div class="time-digits"><span id="hh">00</span>:<span id="mm">00</span></div>
+            <div class="seconds-display">:<span id="ss">00</span></div>
+            <div class="date-display" id="dateDisplay"></div>
+            <div class="period-badge" id="periodBadge">夜间</div>
+        </div>
+    </div>
+    <script>
+        const face = document.getElementById('clockFace');
+        const CIRC = 829.38;
+
+        // 绘制刻度
+        for (let i = 0; i < 60; i++) {
+            const tick = document.createElement('div');
+            tick.className = 'tick ' + (i % 5 === 0 ? 'major' : 'minor');
+            const angle = i * 6;
+            const r = 130;
+            const rad = (angle - 90) * Math.PI / 180;
+            const isMajor = i % 5 === 0;
+            const len = isMajor ? 20 : 10;
+            tick.style.cssText = `
+      position:absolute;
+      width:${isMajor ? 3 : 2}px;
+      height:${len}px;
+      background:${isMajor ? 'var(--accent)' : 'var(--dim)'};
+      top:${130 - r * Math.sin(rad + Math.PI / 2) - len}px;
+      left:${130 + r * Math.cos(rad + Math.PI / 2) - (isMajor ? 1.5 : 1)}px;
+      transform:rotate(${angle}deg);
+      transform-origin:center bottom;
+      border-radius:2px;
+    `;
+            face.appendChild(tick);
+        }
+
+        const periods = [
+            { start: 6, end: 12, label: '上午', day: true },
+            { start: 12, end: 18, label: '下午', day: true },
+            { start: 18, end: 21, label: '傍晚', day: false },
+            { start: 21, end: 24, label: '夜间', day: false },
+            { start: 0, end: 6, label: '深夜', day: false },
+        ];
+
+        const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+
+        function tick() {
+            const now = new Date();
+            const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds(), ms = now.getMilliseconds();
+            const pad = n => String(n).padStart(2, '0');
+
+            document.getElementById('hh').textContent = pad(h);
+            document.getElementById('mm').textContent = pad(m);
+            document.getElementById('ss').textContent = pad(s);
+
+            const sTotal = s + ms / 1000;
+            const mTotal = m + sTotal / 60;
+            const hTotal = (h % 12) + mTotal / 60;
+
+            document.getElementById('hourHand').style.transform = `rotate(${hTotal * 30}deg)`;
+            document.getElementById('minuteHand').style.transform = `rotate(${mTotal * 6}deg)`;
+            document.getElementById('secondHand').style.transform = `rotate(${sTotal * 6}deg)`;
+
+            document.getElementById('secRing').style.strokeDashoffset = CIRC - (sTotal / 60) * CIRC;
+
+            const dateStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 · 周${weekDays[now.getDay()]}`;
+            document.getElementById('dateDisplay').textContent = dateStr;
+
+            const period = periods.find(p => {
+                if (p.start < p.end) return h >= p.start && h < p.end;
+                return h >= p.start || h < p.end;
+            }) || periods[4];
+            document.getElementById('periodBadge').textContent = period.label;
+            document.body.classList.toggle('day', period.day);
+        }
+
+        tick();
+        setInterval(tick, 100);
+    </script>
+</body>
+
+</html>

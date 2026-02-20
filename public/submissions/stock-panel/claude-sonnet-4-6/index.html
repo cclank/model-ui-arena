@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票面板</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #080c14;
+            font-family: 'Segoe UI', 'PingFang SC', system-ui, sans-serif;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 20px 16px;
+            overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .live-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 20px;
+            font-size: 11px;
+            color: #22c55e;
+            letter-spacing: 1px;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 1.5s ease infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0.3
+            }
+        }
+
+        /* 市场概览 */
+        .market-summary {
+            width: 100%;
+            max-width: 420px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .mkt-item {
+            background: rgba(15, 20, 35, 0.8);
+            border: 1px solid rgba(30, 40, 65, 0.9);
+            border-radius: 12px;
+            padding: 12px 14px;
+        }
+
+        .mkt-name {
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .mkt-val {
+            font-size: 18px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .mkt-chg {
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        /* 股票卡片 */
+        .stocks-list {
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .stock-card {
+            background: rgba(12, 17, 28, 0.95);
+            border: 1px solid rgba(30, 40, 65, 0.8);
+            border-radius: 16px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s;
+        }
+
+        .stock-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            border-radius: 2px 0 0 2px;
+        }
+
+        .stock-card.up::before {
+            background: #22c55e;
+        }
+
+        .stock-card.down::before {
+            background: #ef4444;
+        }
+
+        .stock-card:hover {
+            border-color: rgba(60, 80, 120, 0.9);
+        }
+
+        .stock-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .stock-info {}
+
+        .stock-code {
+            font-size: 11px;
+            color: #475569;
+            letter-spacing: 1px;
+        }
+
+        .stock-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .price-block {
+            text-align: right;
+        }
+
+        .stock-price {
+            font-size: 26px;
+            font-weight: 300;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.5px;
+        }
+
+        .stock-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 4px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .up .stock-change {
+            background: rgba(34, 197, 94, 0.12);
+            color: #22c55e;
+        }
+
+        .down .stock-change {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+        }
+
+        /* 迷你折线图 */
+        .mini-chart {
+            width: 100%;
+            height: 48px;
+            position: relative;
+        }
+
+        .mini-chart canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 附加信息 */
+        .stock-stats {
+            display: flex;
+            gap: 16px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(30, 40, 65, 0.6);
+        }
+
+        .stat-item {}
+
+        .stat-label {
+            font-size: 10px;
+            color: #475569;
+            margin-bottom: 2px;
+        }
+
+        .stat-val {
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 波动警告 */
+        .alert-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 8px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            background: rgba(234, 179, 8, 0.1);
+            color: #eab308;
+            border: 1px solid rgba(234, 179, 8, 0.2);
+        }
+
+        .up {
+            color: #22c55e;
+        }
+
+        .down {
+            color: #ef4444;
+        }
+
+        .neutral {
+            color: #64748b;
+        }
+
+        /* 风险提示 */
+        .risk-banner {
+            width: 100%;
+            max-width: 420px;
+            margin-top: 16px;
+            padding: 10px 14px;
+            background: rgba(30, 30, 40, 0.6);
+            border: 1px solid rgba(50, 50, 80, 0.5);
+            border-radius: 10px;
+            font-size: 11px;
+            color: #475569;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>市场行情</h1>
+        <div class="live-badge">
+            <div class="live-dot"></div>模拟实时
+        </div>
+    </div>
+
+    <div class="market-summary" id="mktSummary"></div>
+    <div class="stocks-list" id="stocksList"></div>
+    <div class="risk-banner">⚠ 数据为模拟演示，不构成任何投资建议。投资有风险，入市须谨慎。</div>
+
+    <script>
+        const markets = [
+            { name: '上证指数', base: 3228.5, change: 0.38 },
+            { name: '深证成指', base: 10455.2, change: -0.21 },
+        ];
+
+        const stocks = [
+            {
+                code: '600519', name: '贵州茅台', price: 1688.0, change: 2.35,
+                open: 1652, high: 1695, vol: '12.4万',
+                history: [1620, 1640, 1652, 1645, 1658, 1670, 1688],
+                alert: null
+            },
+            {
+                code: '000858', name: '五粮液', price: 142.50, change: -1.82,
+                open: 145.2, high: 145.8, vol: '8.1万',
+                history: [147, 146.5, 145.2, 144.8, 143.6, 143.0, 142.5],
+                alert: '近期波动偏大，注意风险'
+            },
+            {
+                code: '300750', name: '宁德时代', price: 182.30, change: 4.12,
+                open: 175.0, high: 184.5, vol: '35.2万',
+                history: [175, 176.5, 178, 179, 181, 182, 182.3],
+                alert: null
+            },
+            {
+                code: '601318', name: '中国平安', price: 48.20, change: -0.62,
+                open: 48.5, high: 48.8, vol: '52.3万',
+                history: [48.9, 48.7, 48.5, 48.4, 48.3, 48.2, 48.2],
+                alert: null
+            },
+            {
+                code: '002594', name: '比亚迪', price: 268.50, change: 3.78,
+                open: 258.0, high: 270.0, vol: '18.7万',
+                history: [255, 258, 260, 262, 265, 267, 268.5],
+                alert: '今日涨幅较大，请注意'
+            },
+        ];
+
+        function drawSparkline(canvasEl, data, isUp) {
+            const ctx = canvasEl.getContext('2d');
+            const w = canvasEl.offsetWidth || 380;
+            const h = 48;
+            canvasEl.width = w * 2;
+            canvasEl.height = h * 2;
+            ctx.scale(2, 2);
+
+            const min = Math.min(...data), max = Math.max(...data);
+            const range = max - min || 1;
+            const pad = 4;
+            const step = (w - pad * 2) / (data.length - 1);
+
+            const pts = data.map((v, i) => ({
+                x: pad + i * step,
+                y: h - pad - ((v - min) / range) * (h - pad * 2)
+            }));
+
+            // 填充
+            ctx.beginPath();
+            ctx.moveTo(pts[0].x, h);
+            pts.forEach(p => ctx.lineTo(p.x, p.y));
+            ctx.lineTo(pts[pts.length - 1].x, h);
+            ctx.closePath();
+            const grad = ctx.createLinearGradient(0, 0, 0, h);
+            if (isUp) {
+                grad.addColorStop(0, 'rgba(34,197,94,0.3)');
+                grad.addColorStop(1, 'rgba(34,197,94,0)');
+            } else {
+                grad.addColorStop(0, 'rgba(239,68,68,0.3)');
+                grad.addColorStop(1, 'rgba(239,68,68,0)');
+            }
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // 折线
+            ctx.beginPath();
+            pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+            ctx.strokeStyle = isUp ? '#22c55e' : '#ef4444';
+            ctx.lineWidth = 1.5;
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+
+            // 最后一点
+            const last = pts[pts.length - 1];
+            ctx.beginPath();
+            ctx.arc(last.x, last.y, 3, 0, Math.PI * 2);
+            ctx.fillStyle = isUp ? '#22c55e' : '#ef4444';
+            ctx.fill();
+        }
+
+        // 渲染市场概览
+        const mktSummary = document.getElementById('mktSummary');
+        markets.forEach(m => {
+            const isUp = m.change >= 0;
+            const div = document.createElement('div');
+            div.className = 'mkt-item';
+            div.innerHTML = `
+      <div class="mkt-name">${m.name}</div>
+      <div class="mkt-val ${isUp ? 'up' : 'down'}">${m.base.toFixed(2)}</div>
+      <div class="mkt-chg ${isUp ? 'up' : 'down'}">${isUp ? '▲' : '▼'} ${Math.abs(m.change)}%</div>
+    `;
+            mktSummary.appendChild(div);
+        });
+
+        // 渲染股票卡片
+        const stocksList = document.getElementById('stocksList');
+        const canvases = [];
+        stocks.forEach((s, idx) => {
+            const isUp = s.change >= 0;
+            const div = document.createElement('div');
+            div.className = `stock-card ${isUp ? 'up' : 'down'}`;
+            div.innerHTML = `
+      <div class="stock-top">
+        <div class="stock-info">
+          <div class="stock-code">${s.code}</div>
+          <div class="stock-name">${s.name}</div>
+        </div>
+        <div class="price-block">
+          <div class="stock-price">${s.price.toFixed(2)}</div>
+          <div class="stock-change">${isUp ? '▲' : '▼'} ${Math.abs(s.change)}%</div>
+        </div>
+      </div>
+      <div class="mini-chart"><canvas id="chart_${idx}"></canvas></div>
+      <div class="stock-stats">
+        <div class="stat-item"><div class="stat-label">开盘</div><div class="stat-val">${s.open}</div></div>
+        <div class="stat-item"><div class="stat-label">最高</div><div class="stat-val">${s.high}</div></div>
+        <div class="stat-item"><div class="stat-label">成交量</div><div class="stat-val">${s.vol}</div></div>
+      </div>
+      ${s.alert ? `<div class="alert-badge">⚡ ${s.alert}</div>` : ''}
+    `;
+            stocksList.appendChild(div);
+            canvases.push({ id: `chart_${idx}`, data: s.history, isUp });
+        });
+
+        // 延迟绘制图表
+        setTimeout(() => {
+            canvases.forEach(c => {
+                const el = document.getElementById(c.id);
+                if (el) drawSparkline(el, c.data, c.isUp);
+            });
+        }, 50);
+
+        // 模拟实时刷新
+        function randomFluc(price) {
+            return +(price * (1 + (Math.random() - 0.5) * 0.004)).toFixed(2);
+        }
+
+        setInterval(() => {
+            const idx = Math.floor(Math.random() * stocks.length);
+            const s = stocks[idx];
+            const newPrice = randomFluc(s.price);
+            s.history.push(newPrice);
+            if (s.history.length > 20) s.history.shift();
+            s.price = newPrice;
+            s.change = +((newPrice / s.open - 1) * 100).toFixed(2);
+
+            const isUp = s.change >= 0;
+            const card = stocksList.children[idx];
+            card.className = `stock-card ${isUp ? 'up' : 'down'}`;
+            card.querySelector('.stock-price').textContent = newPrice.toFixed(2);
+            card.querySelector('.stock-change').textContent = `${isUp ? '▲' : '▼'} ${Math.abs(s.change)}%`;
+
+            const canvas = document.getElementById(`chart_${idx}`);
+            if (canvas) drawSparkline(canvas, s.history, isUp);
+        }, 1800);
+    </script>
+</body>
+
+</html>

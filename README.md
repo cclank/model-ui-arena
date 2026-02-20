@@ -203,6 +203,16 @@ If you see hydration mismatch with injected attributes (e.g. theme/class attribu
 
 The layout already includes hydration-warning suppression on root nodes to reduce noisy extension-induced warnings.
 
+### `Cannot find module './xxx.js'` in `.next/server/...`
+
+If this appears during development, it is usually a build-cache collision (for example, running `next dev` and `next build` against the same `.next` directory).
+
+- This project isolates dev artifacts to `.next-dev` (`npm run dev`)
+- Production build artifacts remain in `.next` (`npm run build` / `npm run start`)
+- If needed, clean both and restart:
+  - `rm -rf .next .next-dev`
+  - `npm run dev`
+
 ## Scripts
 
 ```bash

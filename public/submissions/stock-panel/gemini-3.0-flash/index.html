@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Pro Monitor</title>
+    <style>
+        :root {
+            --up: #f43f5e;
+            --down: #10b981;
+            --bg: #0f172a;
+            --card: #1e293b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .panel {
+            width: 360px;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .live-tag {
+            background: rgba(244, 63, 94, 0.1);
+            color: var(--up);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .stock-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .stock-card:hover {
+            transform: translateY(-2px);
+            background: #2d3748;
+        }
+
+        .info {
+            flex: 1;
+        }
+
+        .symbol {
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+        .name {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        .price-box {
+            text-align: right;
+            margin-right: 15px;
+        }
+
+        .price {
+            font-family: monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        .change {
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .up {
+            color: var(--up);
+        }
+
+        .down {
+            color: var(--down);
+        }
+
+        .mini-chart {
+            width: 80px;
+            height: 35px;
+        }
+
+        polyline {
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="panel">
+        <div class="header">
+            <h1>Market</h1>
+            <div class="live-tag">● LIVE</div>
+        </div>
+        <div id="list"></div>
+    </div>
+    <script>
+        const stocks = [
+            { id: 'NVDA', name: 'Nvidia Corp', p: 726.13, c: 1.25, h: [20, 30, 25, 35, 32, 40, 38, 45] },
+            { id: 'AAPL', name: 'Apple Inc', p: 182.31, c: -0.45, h: [40, 35, 38, 30, 32, 25, 28, 20] },
+            { id: 'TSLA', name: 'Tesla, Inc.', p: 193.57, c: 2.10, h: [10, 15, 12, 25, 20, 35, 30, 50] }
+        ];
+        function render() {
+            const list = document.getElementById('list'); list.innerHTML = '';
+            stocks.forEach((s, i) => {
+                const isUp = s.c >= 0;
+                const path = s.h.map((v, x) => `${x * 11},${50 - v}`).join(' ');
+                list.innerHTML += `
+                    <div class="stock-card">
+                        <div class="info"><div class="symbol">${s.id}</div><div class="name">${s.name}</div></div>
+                        <svg class="mini-chart" viewBox="0 0 80 50">
+                            <polyline points="${path}" stroke="${isUp ? '#f43f5e' : '#10b981'}" />
+                        </svg>
+                        <div class="price-box">
+                            <div class="price" id="p-${i}">${s.p.toFixed(2)}</div>
+                            <div class="change ${isUp ? 'up' : 'down'}">${isUp ? '+' : ''}${s.c.toFixed(2)}%</div>
+                        </div>
+                    </div>`;
+            });
+        }
+        function tick() {
+            stocks.forEach((s, i) => {
+                const delta = (Math.random() - 0.5) * 2;
+                s.p += delta;
+                const el = document.getElementById(`p-${i}`);
+                if (el) {
+                    el.style.color = delta > 0 ? 'var(--up)' : 'var(--down)';
+                    el.textContent = s.p.toFixed(2);
+                    setTimeout(() => el.style.color = '', 500);
+                }
+            });
+        }
+        render(); setInterval(tick, 3000);
+    </script>
+</body>
+
+</html>

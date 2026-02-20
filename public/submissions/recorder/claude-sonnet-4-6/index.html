@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>录音机</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #0d1117;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: #e6edf3;
+            overflow: hidden;
+        }
+
+        .bg-gradient {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(248, 81, 73, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 100%, rgba(88, 166, 255, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .card {
+            width: min(380px, 95vw);
+            background: rgba(22, 27, 34, 0.95);
+            border: 1px solid rgba(48, 54, 61, 0.8);
+            border-radius: 24px;
+            padding: 32px 28px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 500;
+            color: #8b949e;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        /* 波形区域 */
+        .waveform-area {
+            height: 80px;
+            background: rgba(13, 17, 23, 0.8);
+            border-radius: 12px;
+            border: 1px solid rgba(48, 54, 61, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            padding: 0 16px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .bar {
+            width: 3px;
+            border-radius: 3px;
+            background: rgba(88, 166, 255, 0.3);
+            transition: height 0.1s ease;
+            min-height: 4px;
+        }
+
+        .bar.active {
+            background: linear-gradient(to top, #f85149, #ff9d6b);
+        }
+
+        .idle-text {
+            position: absolute;
+            color: #484f58;
+            font-size: 13px;
+            letter-spacing: 1px;
+        }
+
+        /* 计时器 */
+        .timer {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .timer-display {
+            font-size: 56px;
+            font-weight: 200;
+            letter-spacing: 4px;
+            font-variant-numeric: tabular-nums;
+            color: #e6edf3;
+            transition: color 0.3s;
+        }
+
+        .timer-display.recording {
+            color: #f85149;
+        }
+
+        .timer-display.paused {
+            color: #e3b341;
+            opacity: 0.8;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* 状态标签 */
+        .state-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #8b949e;
+            margin-bottom: 32px;
+            min-height: 20px;
+            transition: all 0.3s;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #484f58;
+            transition: all 0.3s;
+        }
+
+        .dot.recording {
+            background: #f85149;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        .dot.paused {
+            background: #e3b341;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1
+            }
+
+            50% {
+                transform: scale(1.5);
+                opacity: 0.6
+            }
+        }
+
+        /* 控制按钮 */
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .btn {
+            border: none;
+            cursor: pointer;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .btn:active {
+            transform: scale(0.93);
+        }
+
+        .btn-main {
+            width: 72px;
+            height: 72px;
+            background: #f85149;
+            box-shadow: 0 0 0 0 rgba(248, 81, 73, 0.4);
+            font-size: 26px;
+        }
+
+        .btn-main.paused-state {
+            background: #e3b341;
+            box-shadow: 0 0 0 0 rgba(227, 179, 65, 0.4);
+        }
+
+        .btn-main:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 24px rgba(248, 81, 73, 0.5);
+        }
+
+        .btn-main.recording {
+            animation: ring 1.5s ease-out infinite;
+        }
+
+        @keyframes ring {
+            0% {
+                box-shadow: 0 0 0 0 rgba(248, 81, 73, 0.5)
+            }
+
+            70% {
+                box-shadow: 0 0 0 20px rgba(248, 81, 73, 0)
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(248, 81, 73, 0)
+            }
+        }
+
+        .btn-secondary {
+            width: 52px;
+            height: 52px;
+            background: rgba(48, 54, 61, 0.8);
+            border: 1px solid rgba(48, 54, 61, 1);
+            font-size: 20px;
+            color: #8b949e;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(68, 74, 81, 0.9);
+            color: #e6edf3;
+        }
+
+        .btn-secondary:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* 录音历史 */
+        .history-section {
+            border-top: 1px solid rgba(48, 54, 61, 0.6);
+            padding-top: 20px;
+        }
+
+        .history-title {
+            font-size: 12px;
+            color: #484f58;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: rgba(22, 27, 34, 0.8);
+            border: 1px solid rgba(48, 54, 61, 0.5);
+            border-radius: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+        }
+
+        .history-icon {
+            font-size: 16px;
+            opacity: 0.6;
+        }
+
+        .history-info {
+            flex: 1;
+        }
+
+        .history-name {
+            font-size: 13px;
+            color: #e6edf3;
+        }
+
+        .history-meta {
+            font-size: 11px;
+            color: #484f58;
+            margin-top: 2px;
+        }
+
+        .history-duration {
+            font-size: 13px;
+            color: #58a6ff;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .empty-history {
+            text-align: center;
+            padding: 16px;
+            color: #484f58;
+            font-size: 13px;
+        }
+
+        /* 确认弹窗 */
+        .confirm-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .confirm-overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .confirm-box {
+            background: #161b22;
+            border: 1px solid rgba(48, 54, 61, 0.9);
+            border-radius: 16px;
+            padding: 24px;
+            width: 280px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            transform: scale(0.9);
+            transition: transform 0.2s;
+        }
+
+        .confirm-overlay.show .confirm-box {
+            transform: scale(1);
+        }
+
+        .confirm-box h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .confirm-box p {
+            font-size: 13px;
+            color: #8b949e;
+            margin-bottom: 20px;
+        }
+
+        .confirm-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .confirm-btns button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel {
+            background: rgba(48, 54, 61, 0.8);
+            color: #e6edf3;
+        }
+
+        .btn-confirm-stop {
+            background: #f85149;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-gradient"></div>
+    <div class="card">
+        <div class="header">
+            <h1>录音机</h1>
+        </div>
+        <div class="waveform-area" id="waveArea">
+            <span class="idle-text" id="idleText">点击开始录音</span>
+        </div>
+        <div class="timer">
+            <div class="timer-display" id="timerDisplay">00:00</div>
+        </div>
+        <div class="state-label">
+            <div class="dot" id="statusDot"></div>
+            <span id="statusText">待机</span>
+        </div>
+        <div class="controls">
+            <button class="btn btn-secondary" id="btnPause" disabled title="暂停">⏸</button>
+            <button class="btn btn-main" id="btnMain" title="开始录音">⏺</button>
+            <button class="btn btn-secondary" id="btnStop" disabled title="停止">⏹</button>
+        </div>
+        <div class="history-section">
+            <div class="history-title">录音记录</div>
+            <div class="history-list" id="historyList">
+                <div class="empty-history">暂无录音</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 停止确认 -->
+    <div class="confirm-overlay" id="confirmOverlay">
+        <div class="confirm-box">
+            <h3>停止录音？</h3>
+            <p>当前录音将被保存到记录中</p>
+            <div class="confirm-btns">
+                <button class="btn-cancel" id="btnCancelStop">继续录音</button>
+                <button class="btn-confirm-stop" id="btnConfirmStop">停止保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STATES = { IDLE: 'idle', RECORDING: 'recording', PAUSED: 'paused' };
+        let state = STATES.IDLE;
+        let seconds = 0, timer = null, waveTimer = null;
+        let recordings = [];
+        let recCount = 0;
+
+        const btnMain = document.getElementById('btnMain');
+        const btnPause = document.getElementById('btnPause');
+        const btnStop = document.getElementById('btnStop');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const waveArea = document.getElementById('waveArea');
+        const idleText = document.getElementById('idleText');
+        const historyList = document.getElementById('historyList');
+        const confirmOverlay = document.getElementById('confirmOverlay');
+
+        // 创建波形条
+        const bars = [];
+        idleText.style.display = 'block';
+        for (let i = 0; i < 50; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            bar.style.height = '4px';
+            waveArea.appendChild(bar);
+            bars.push(bar);
+        }
+
+        function pad(n) { return String(n).padStart(2, '0'); }
+        function formatTime(s) { return `${pad(Math.floor(s / 60))}:${pad(s % 60)}`; }
+
+        function updateWave(active) {
+            bars.forEach((bar, i) => {
+                bar.className = 'bar' + (active ? ' active' : '');
+                if (active) {
+                    const h = Math.random() * 60 + 4;
+                    bar.style.height = h + 'px';
+                } else {
+                    bar.style.height = '4px';
+                }
+            });
+        }
+
+        function setState(newState) {
+            state = newState;
+            timerDisplay.className = 'timer-display ' + (newState === STATES.RECORDING ? 'recording' : newState === STATES.PAUSED ? 'paused' : '');
+            statusDot.className = 'dot ' + (newState === STATES.RECORDING ? 'recording' : newState === STATES.PAUSED ? 'paused' : '');
+
+            const labels = { idle: '待机', recording: '录音中', paused: '已暂停' };
+            statusText.textContent = labels[newState];
+
+            btnMain.className = 'btn btn-main' + (newState === STATES.RECORDING ? ' recording' : newState === STATES.PAUSED ? ' paused-state' : '');
+            btnMain.title = newState === STATES.IDLE ? '开始录音' : newState === STATES.RECORDING ? '暂停' : '继续';
+            btnMain.textContent = newState === STATES.IDLE ? '⏺' : newState === STATES.RECORDING ? '⏸' : '▶';
+            btnPause.disabled = newState === STATES.IDLE;
+            btnStop.disabled = newState === STATES.IDLE;
+            idleText.style.display = newState === STATES.IDLE ? 'block' : 'none';
+
+            if (newState !== STATES.RECORDING) {
+                clearInterval(waveTimer);
+                updateWave(false);
+            } else {
+                waveTimer = setInterval(() => updateWave(true), 120);
+            }
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                seconds++;
+                timerDisplay.textContent = formatTime(seconds);
+            }, 1000);
+        }
+        function stopTimer() { clearInterval(timer); }
+
+        btnMain.addEventListener('click', () => {
+            if (state === STATES.IDLE) {
+                seconds = 0;
+                timerDisplay.textContent = '00:00';
+                setState(STATES.RECORDING);
+                startTimer();
+            } else if (state === STATES.RECORDING) {
+                setState(STATES.PAUSED);
+                stopTimer();
+            } else {
+                setState(STATES.RECORDING);
+                startTimer();
+            }
+        });
+
+        btnPause.addEventListener('click', () => {
+            if (state === STATES.RECORDING) { setState(STATES.PAUSED); stopTimer(); }
+            else if (state === STATES.PAUSED) { setState(STATES.RECORDING); startTimer(); }
+        });
+
+        btnStop.addEventListener('click', () => {
+            confirmOverlay.classList.add('show');
+        });
+
+        document.getElementById('btnCancelStop').addEventListener('click', () => {
+            confirmOverlay.classList.remove('show');
+        });
+
+        document.getElementById('btnConfirmStop').addEventListener('click', () => {
+            confirmOverlay.classList.remove('show');
+            saveRecording();
+            stopTimer();
+            setState(STATES.IDLE);
+            seconds = 0;
+            timerDisplay.textContent = '00:00';
+        });
+
+        function saveRecording() {
+            recCount++;
+            const now = new Date();
+            const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+            const rec = { name: `录音 #${recCount}`, duration: seconds, time: timeStr };
+            recordings.unshift(rec);
+            renderHistory();
+        }
+
+        function renderHistory() {
+            if (recordings.length === 0) {
+                historyList.innerHTML = '<div class="empty-history">暂无录音</div>';
+                return;
+            }
+            historyList.innerHTML = recordings.map(r => `
+      <div class="history-item">
+        <span class="history-icon">🎙</span>
+        <div class="history-info">
+          <div class="history-name">${r.name}</div>
+          <div class="history-meta">保存于 ${r.time}</div>
+        </div>
+        <span class="history-duration">${formatTime(r.duration)}</span>
+      </div>
+    `).join('');
+        }
+    </script>
+</body>
+
+</html>

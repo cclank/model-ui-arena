@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天气卡片</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            transition: background 0.8s ease;
+            overflow: hidden;
+        }
+
+        body.sunny {
+            background: linear-gradient(135deg, #f7b733, #fc4a1a);
+        }
+
+        body.cloudy {
+            background: linear-gradient(135deg, #606c88, #3f4c6b);
+        }
+
+        body.rainy {
+            background: linear-gradient(135deg, #373b44, #4286f4);
+        }
+
+        body.snowy {
+            background: linear-gradient(135deg, #8e9eab, #eef2f3);
+        }
+
+        .card {
+            width: min(390px, 95vw);
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 28px;
+            padding: 28px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            left: -40px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        /* 城市选择器 */
+        .city-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 28px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .city-tab {
+            padding: 7px 16px;
+            border-radius: 20px;
+            border: 1.5px solid rgba(255, 255, 255, 0.35);
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .city-tab.active {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+        }
+
+        .city-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        /* 主天气信息 */
+        .main-weather {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .temp-block {}
+
+        .temp-main {
+            font-size: 80px;
+            font-weight: 100;
+            line-height: 1;
+            letter-spacing: -2px;
+        }
+
+        .temp-range {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 4px;
+        }
+
+        .weather-icon {
+            font-size: 72px;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(-8px)
+            }
+        }
+
+        .weather-desc {
+            font-size: 22px;
+            font-weight: 300;
+            margin-bottom: 4px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .city-name {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 详情信息 */
+        .details {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .detail-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .detail-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        /* 趋势图 */
+        .trend-section {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .trend-title {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        .trend-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            height: 60px;
+        }
+
+        .bar-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .bar-temp {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+        }
+
+        .trend-bar {
+            width: 100%;
+            border-radius: 4px 4px 0 0;
+            background: rgba(255, 255, 255, 0.35);
+            transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 4px;
+        }
+
+        .trend-bar.peak {
+            background: rgba(255, 255, 255, 0.65);
+        }
+
+        .trend-day {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+            margin-top: 6px;
+        }
+
+        /* 雨滴动画 */
+        .rain-container {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .rain-container.active {
+            opacity: 1;
+        }
+
+        .raindrop {
+            position: absolute;
+            width: 2px;
+            background: linear-gradient(transparent, rgba(255, 255, 255, 0.4));
+            border-radius: 1px;
+            animation: fall linear infinite;
+            top: -20px;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(110vh);
+            }
+        }
+
+        /* 雪花 */
+        .snow-container {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .snow-container.active {
+            opacity: 1;
+        }
+
+        .snowflake {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            top: -30px;
+            animation: snowfall linear infinite;
+        }
+
+        @keyframes snowfall {
+            to {
+                transform: translateY(110vh) rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="sunny">
+    <div class="rain-container" id="rainContainer"></div>
+    <div class="snow-container" id="snowContainer"></div>
+    <div class="card">
+        <div class="city-tabs" id="cityTabs"></div>
+        <div class="main-weather">
+            <div>
+                <div class="weather-desc" id="weatherDesc">晴天</div>
+                <div class="city-name">📍 <span id="cityName">北京</span></div>
+                <br>
+                <div class="temp-main"><span id="tempMain">24</span>°</div>
+                <div class="temp-range">最低 <span id="tempLow">14</span>° · 最高 <span id="tempHigh">28</span>°</div>
+            </div>
+            <div class="weather-icon" id="weatherIcon">☀️</div>
+        </div>
+        <div class="details">
+            <div class="detail-item">
+                <div class="detail-label">湿度</div>
+                <div class="detail-value" id="humidity">42%</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">风速</div>
+                <div class="detail-value" id="windSpeed">12km/h</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">体感</div>
+                <div class="detail-value" id="feelsLike">21°</div>
+            </div>
+        </div>
+        <div class="trend-section">
+            <div class="trend-title">5日温度趋势</div>
+            <div class="trend-chart" id="trendChart"></div>
+        </div>
+    </div>
+
+    <script>
+        const cities = [
+            {
+                name: '北京', type: 'sunny', icon: '☀️', desc: '晴天', theme: 'sunny',
+                temp: 24, low: 14, high: 28, humidity: '42%', wind: '12km/h', feels: '21°',
+                trend: [18, 22, 24, 20, 16], days: ['周一', '周二', '今天', '周四', '周五']
+            },
+            {
+                name: '上海', type: 'rainy', icon: '🌧', desc: '小雨', theme: 'rainy',
+                temp: 16, low: 12, high: 19, humidity: '85%', wind: '8km/h', feels: '13°',
+                trend: [15, 16, 16, 17, 18], days: ['周一', '周二', '今天', '周四', '周五']
+            },
+            {
+                name: '广州', type: 'cloudy', icon: '⛅', desc: '多云', theme: 'cloudy',
+                temp: 28, low: 22, high: 32, humidity: '78%', wind: '15km/h', feels: '30°',
+                trend: [26, 27, 28, 29, 28], days: ['周一', '周二', '今天', '周四', '周五']
+            },
+            {
+                name: '哈尔滨', type: 'snowy', icon: '❄️', desc: '降雪', theme: 'snowy',
+                temp: -8, low: -14, high: -4, humidity: '65%', wind: '20km/h', feels: '-14°',
+                trend: [-10, -8, -8, -6, -5], days: ['周一', '周二', '今天', '周四', '周五']
+            },
+            {
+                name: '成都', type: 'cloudy', icon: '🌫', desc: '阴天', theme: 'cloudy',
+                temp: 12, low: 8, high: 15, humidity: '72%', wind: '5km/h', feels: '10°',
+                trend: [10, 11, 12, 13, 12], days: ['周一', '周二', '今天', '周四', '周五']
+            },
+        ];
+
+        let current = 0;
+        const rainContainer = document.getElementById('rainContainer');
+        const snowContainer = document.getElementById('snowContainer');
+
+        // 生成雨滴
+        for (let i = 0; i < 40; i++) {
+            const d = document.createElement('div');
+            d.className = 'raindrop';
+            const h = Math.random() * 60 + 20;
+            d.style.cssText = `height:${h}px;left:${Math.random() * 100}%;animation-duration:${Math.random() * 0.5 + 0.6}s;animation-delay:${Math.random() * 2}s;opacity:${Math.random() * 0.5 + 0.3}`;
+            rainContainer.appendChild(d);
+        }
+        // 生成雪花
+        for (let i = 0; i < 30; i++) {
+            const d = document.createElement('div');
+            d.className = 'snowflake';
+            d.textContent = ['❄', '✦', '⁕'][Math.floor(Math.random() * 3)];
+            d.style.cssText = `left:${Math.random() * 100}%;animation-duration:${Math.random() * 3 + 3}s;animation-delay:${Math.random() * 3}s;font-size:${Math.random() * 12 + 8}px`;
+            snowContainer.appendChild(d);
+        }
+
+        // 生成城市标签
+        const tabs = document.getElementById('cityTabs');
+        cities.forEach((c, i) => {
+            const tab = document.createElement('button');
+            tab.className = 'city-tab' + (i === 0 ? ' active' : '');
+            tab.textContent = c.name;
+            tab.addEventListener('click', () => switchCity(i));
+            tabs.appendChild(tab);
+        });
+
+        function switchCity(idx) {
+            current = idx;
+            const c = cities[idx];
+            document.querySelectorAll('.city-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+            document.body.className = c.theme;
+            document.getElementById('weatherDesc').textContent = c.desc;
+            document.getElementById('cityName').textContent = c.name;
+            document.getElementById('tempMain').textContent = c.temp;
+            document.getElementById('tempLow').textContent = c.low;
+            document.getElementById('tempHigh').textContent = c.high;
+            document.getElementById('weatherIcon').textContent = c.icon;
+            document.getElementById('humidity').textContent = c.humidity;
+            document.getElementById('windSpeed').textContent = c.wind;
+            document.getElementById('feelsLike').textContent = c.feels;
+
+            rainContainer.classList.toggle('active', c.type === 'rainy');
+            snowContainer.classList.toggle('active', c.type === 'snowy');
+
+            renderTrend(c);
+        }
+
+        function renderTrend(c) {
+            const chart = document.getElementById('trendChart');
+            chart.innerHTML = '';
+            const temps = c.trend;
+            const min = Math.min(...temps), max = Math.max(...temps);
+            const range = max - min || 1;
+            const maxH = 50;
+
+            temps.forEach((t, i) => {
+                const col = document.createElement('div');
+                col.className = 'bar-col';
+                const h = Math.max(6, ((t - min) / range) * maxH + 6);
+                const isPeak = t === max;
+                col.innerHTML = `
+        <div class="bar-temp">${t}°</div>
+        <div class="trend-bar${isPeak ? ' peak' : ''}" style="height:${h}px"></div>
+        <div class="trend-day">${c.days[i]}</div>
+      `;
+                chart.appendChild(col);
+            });
+        }
+
+        switchCity(0);
+    </script>
+</body>
+
+</html>

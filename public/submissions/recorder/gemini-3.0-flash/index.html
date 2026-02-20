@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Recorder Prototype</title>
+    <style>
+        :root {
+            --p: #ef4444;
+            --s: #10b981;
+            --b: #f8fafc;
+            --t: #1e293b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #f1f5f9;
+            color: var(--t);
+            font-family: system-ui, sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            background: white;
+            width: 340px;
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .timer {
+            font-size: 3.5rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            margin: 20px 0;
+            color: #334155;
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #cbd5e1;
+        }
+
+        .dot.active {
+            background: var(--p);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .wave-box {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            margin-bottom: 30px;
+        }
+
+        .bar {
+            width: 4px;
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 2px;
+        }
+
+        .recording .bar {
+            background: var(--p);
+            animation: wave 1s infinite alternate;
+        }
+
+        @keyframes wave {
+            from {
+                height: 10px;
+            }
+
+            to {
+                height: 50px;
+            }
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        button {
+            flex: 1;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-main {
+            background: var(--p);
+            color: white;
+        }
+
+        .btn-pause {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-stop {
+            background: #64748b;
+            color: white;
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .summary {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            display: none;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body class="">
+    <div class="card">
+        <div class="status-bar">
+            <div id="dot" class="dot"></div>
+            <span id="statusTxt">IDLE</span>
+        </div>
+        <div class="timer" id="timer">00:00</div>
+        <div class="wave-box" id="waves"></div>
+        <div class="controls">
+            <button class="btn-main" id="startBtn">START</button>
+            <button class="btn-pause" id="pauseBtn" disabled>PAUSE</button>
+            <button class="btn-stop" id="stopBtn" disabled>STOP</button>
+        </div>
+        <div class="summary" id="summary"></div>
+    </div>
+    <script>
+        let sec = 0, timerId = null, state = 'idle'; // idle, recording, paused
+        const w = document.getElementById('waves'), startBtn = document.getElementById('startBtn'), pauseBtn = document.getElementById('pauseBtn'), stopBtn = document.getElementById('stopBtn');
+        for (let i = 0; i < 20; i++) { const b = document.createElement('div'); b.className = 'bar'; b.style.animationDelay = (i * 0.05) + 's'; w.appendChild(b); }
+        function fmt(s) { const min = Math.floor(s / 60), rem = s % 60; return `${min.toString().padStart(2, '0')}:${rem.toString().padStart(2, '0')}`; }
+        function set(s) {
+            state = s; document.body.className = s === 'recording' ? 'recording' : '';
+            document.getElementById('dot').className = 'dot ' + (s === 'recording' ? 'active' : '');
+            document.getElementById('statusTxt').textContent = s.toUpperCase();
+            startBtn.disabled = s === 'recording'; pauseBtn.disabled = s === 'idle'; pauseBtn.textContent = s === 'paused' ? 'RESUME' : 'PAUSE';
+            stopBtn.disabled = s === 'idle';
+        }
+        startBtn.onclick = () => {
+            if (state === 'idle') sec = 0; set('recording');
+            timerId = setInterval(() => { sec++; document.getElementById('timer').textContent = fmt(sec); }, 1000);
+        };
+        pauseBtn.onclick = () => {
+            if (state === 'recording') { set('paused'); clearInterval(timerId); } else { startBtn.onclick(); }
+        };
+        stopBtn.onclick = () => {
+            if (!confirm('End recording?')) return;
+            clearInterval(timerId);
+            document.getElementById('summary').style.display = 'block';
+            document.getElementById('summary').innerHTML = `<b>Recording Summary:</b><br>Duration: ${fmt(sec)}<br>Status: Successfully Saved`;
+            set('idle'); document.getElementById('timer').textContent = '00:00';
+        };
+    </script>
+</body>
+
+</html>

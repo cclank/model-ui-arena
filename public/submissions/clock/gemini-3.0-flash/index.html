@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimalist Flash Clock</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --accent: #38bdf8;
+            --text: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: system-ui, -apple-system, sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .bg-glow {
+            position: absolute;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
+            animation: drift 20s infinite alternate;
+            z-index: -1;
+        }
+
+        @keyframes drift {
+            from {
+                transform: translate(-10%, -10%);
+            }
+
+            to {
+                transform: translate(10%, 10%);
+            }
+        }
+
+        .container {
+            width: 320px;
+            text-align: center;
+        }
+
+        .clock-face {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            margin: 0 auto 30px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+        }
+
+        .hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom;
+            border-radius: 4px;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .hour {
+            width: 6px;
+            height: 70px;
+            background: var(--text);
+            z-index: 3;
+            margin-left: -3px;
+        }
+
+        .minute {
+            width: 4px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.7);
+            z-index: 2;
+            margin-left: -2px;
+        }
+
+        .second {
+            width: 2px;
+            height: 110px;
+            background: var(--accent);
+            z-index: 4;
+            margin-left: -1px;
+        }
+
+        .center-dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            margin: -6px 0 0 -6px;
+            z-index: 5;
+        }
+
+        .mark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            transform-origin: 0 140px;
+            margin-top: -140px;
+        }
+
+        .mark-main {
+            width: 4px;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.4);
+            animation: breathe 4s infinite;
+        }
+
+        @keyframes breathe {
+
+            0%,
+            100% {
+                opacity: 0.4;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .digital {
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: -2px;
+            margin-bottom: 5px;
+            color: var(--text);
+        }
+
+        .date {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-glow"></div>
+    <div class="container">
+        <div class="clock-face" id="face">
+            <div class="hand hour" id="hour"></div>
+            <div class="hand minute" id="min"></div>
+            <div class="hand second" id="sec"></div>
+            <div class="center-dot"></div>
+        </div>
+        <div class="digital" id="digital">00:00:00</div>
+        <div class="date" id="date">JAN 01, 2024</div>
+    </div>
+    <script>
+        const face = document.getElementById('face');
+        for (let i = 0; i < 12; i++) {
+            const mark = document.createElement('div');
+            mark.className = 'mark' + (i % 3 === 0 ? ' mark-main' : '');
+            mark.style.transform = `translateX(-50%) rotate(${i * 30}deg)`;
+            face.appendChild(mark);
+        }
+        function update() {
+            const n = new Date();
+            const s = n.getSeconds(), m = n.getMinutes(), h = n.getHours();
+            document.getElementById('sec').style.transform = `rotate(${s * 6}deg)`;
+            document.getElementById('min').style.transform = `rotate(${m * 6 + s * 0.1}deg)`;
+            document.getElementById('hour').style.transform = `rotate(${(h % 12) * 30 + m * 0.5}deg)`;
+            document.getElementById('digital').textContent = n.toTimeString().split(' ')[0];
+            document.getElementById('date').textContent = n.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+        }
+        setInterval(update, 1000); update();
+    </script>
+</body>
+
+</html>

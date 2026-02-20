@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Weather Card</title>
+    <style>
+        :root {
+            --grad: linear-gradient(135deg, #0ea5e9, #38bdf8);
+            --accent: #fff;
+        }
+
+        .theme-rain {
+            --grad: linear-gradient(135deg, #475569, #1e293b);
+        }
+
+        .theme-cloud {
+            --grad: linear-gradient(135deg, #94a3b8, #64748b);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #f1f5f9;
+            font-family: system-ui, sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .card {
+            width: 350px;
+            background: var(--grad);
+            border-radius: 30px;
+            padding: 25px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            transition: 0.5s;
+        }
+
+        .city-chips {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .chip {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .chip.active {
+            background: white;
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        .main {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .temp {
+            font-size: 5rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .desc {
+            font-size: 1.2rem;
+            margin-top: 5px;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .details {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+            background: rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            border-radius: 20px;
+        }
+
+        .detail-item {
+            text-align: center;
+        }
+
+        .detail-label {
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+
+        .detail-val {
+            font-weight: 600;
+        }
+
+        .chart {
+            margin-top: 25px;
+            height: 40px;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .bar {
+            width: 30px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            transition: 0.8s;
+        }
+
+        .rain-drop {
+            position: absolute;
+            width: 1px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.4);
+            top: -10px;
+            animation: drop 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes drop {
+            to {
+                transform: translateY(400px);
+            }
+        }
+
+        .rainy .rain-drop {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="card" class="card">
+        <div id="drops"></div>
+        <div class="city-chips">
+            <div class="chip active" onclick="go(0)">北京</div>
+            <div class="chip" onclick="go(1)">上海</div>
+            <div class="chip" onclick="go(2)">伦敦</div>
+        </div>
+        <div class="main">
+            <div class="temp" id="temp">24°</div>
+            <div class="desc" id="desc">Sunny</div>
+        </div>
+        <div class="details">
+            <div class="detail-item">
+                <div class="detail-label">湿度</div>
+                <div class="detail-val" id="hum">45%</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">风速</div>
+                <div class="detail-val" id="wind">12km/h</div>
+            </div>
+        </div>
+        <div class="chart" id="chart"></div>
+    </div>
+    <script>
+        const data = [
+            { city: '北京', temp: 24, desc: '晴朗', hum: '45%', wind: '12km/h', theme: '', chart: [30, 45, 60, 40, 55] },
+            { city: '上海', temp: 18, desc: '大雨', hum: '88%', wind: '22km/h', theme: 'theme-rain rainy', chart: [80, 70, 90, 85, 75] },
+            { city: '伦敦', temp: 12, desc: '多云', hum: '60%', wind: '15km/h', theme: 'theme-cloud', chart: [40, 50, 45, 60, 55] }
+        ];
+        const drops = document.getElementById('drops');
+        for (let i = 0; i < 30; i++) {
+            const d = document.createElement('div'); d.className = 'rain-drop';
+            d.style.left = Math.random() * 100 + '%'; d.style.animationDelay = Math.random() + 's';
+            drops.appendChild(d);
+        }
+        function go(idx) {
+            const d = data[idx];
+            document.getElementById('card').className = 'card ' + d.theme;
+            document.getElementById('temp').textContent = d.temp + '°';
+            document.getElementById('desc').textContent = d.desc;
+            document.getElementById('hum').textContent = d.hum;
+            document.getElementById('wind').textContent = d.wind;
+            const chips = document.querySelectorAll('.chip');
+            chips.forEach((c, i) => c.className = 'chip ' + (i === idx ? 'active' : ''));
+            const chart = document.getElementById('chart'); chart.innerHTML = '';
+            d.chart.forEach(h => {
+                const b = document.createElement('div'); b.className = 'bar';
+                b.style.height = '0px'; setTimeout(() => b.style.height = h / 2 + 'px', 10);
+                chart.appendChild(b);
+            });
+        }
+        go(0);
+    </script>
+</body>
+
+</html>

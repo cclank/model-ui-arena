@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>点击放烟花</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #02040d;
+            cursor: crosshair;
+            user-select: none;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .hint {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.25);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-size: 13px;
+            letter-spacing: 2px;
+            pointer-events: none;
+            animation: fadeHint 3s ease 1s forwards;
+            white-space: nowrap;
+        }
+
+        @keyframes fadeHint {
+            0% {
+                opacity: 1
+            }
+
+            100% {
+                opacity: 0
+            }
+        }
+
+        .counter {
+            position: fixed;
+            top: 16px;
+            right: 20px;
+            color: rgba(255, 255, 255, 0.2);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-size: 12px;
+            letter-spacing: 1px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="c"></canvas>
+    <div class="hint">点击任意位置，绽放烟花 ✨</div>
+    <div class="counter">烟花 × <span id="cnt">0</span></div>
+    <script>
+        const canvas = document.getElementById('c');
+        const ctx = canvas.getContext('2d');
+        const cntEl = document.getElementById('cnt');
+        let W, H, totalCount = 0;
+
+        function resize() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        // 星空背景
+        const stars = [];
+        for (let i = 0; i < 180; i++) {
+            stars.push({
+                x: Math.random(), y: Math.random(),
+                r: Math.random() * 1.2,
+                a: Math.random(),
+                da: (Math.random() - 0.5) * 0.01
+            });
+        }
+
+        // 粒子池
+        const particles = [];
+
+        // 调色板
+        const palettes = [
+            ['#ff6b6b', '#ff8e53', '#ffd700'],   // 暖红橙金
+            ['#00d2ff', '#7b2ff7', '#ff6b9d'],   // 赛博
+            ['#7fff00', '#00fa9a', '#00ced1'],   // 极光绿
+            ['#ff69b4', '#da70d6', '#ee82ee'],   // 玫瑰紫
+            ['#ffd700', '#fff8dc', '#ffec8b'],   // 金色
+            ['#00bfff', '#1e90ff', '#87cefa'],   // 蓝冰
+            ['#ff4500', '#ff8c00', '#ffa500'],   // 烈焰
+        ];
+
+        function getRandPalette() {
+            return palettes[Math.floor(Math.random() * palettes.length)];
+        }
+
+        function hexToRgb(hex) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `${r},${g},${b}`;
+        }
+
+        class Particle {
+            constructor(x, y, color, type = 'main') {
+                this.x = x; this.y = y;
+                this.color = color;
+                this.rgb = hexToRgb(color);
+                this.type = type;
+
+                if (type === 'main') {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 6 + 2;
+                    this.vx = Math.cos(angle) * speed;
+                    this.vy = Math.sin(angle) * speed;
+                    this.gravity = 0.08;
+                    this.alpha = 1;
+                    this.decay = Math.random() * 0.012 + 0.008;
+                    this.size = Math.random() * 3 + 1.5;
+                    this.trail = [];
+                    this.maxTrailLen = Math.floor(Math.random() * 6 + 4);
+                    this.glitter = Math.random() < 0.4;
+                } else if (type === 'sparkle') {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 2 + 0.5;
+                    this.vx = Math.cos(angle) * speed;
+                    this.vy = Math.sin(angle) * speed - 1;
+                    this.gravity = 0.04;
+                    this.alpha = 1;
+                    this.decay = Math.random() * 0.02 + 0.015;
+                    this.size = Math.random() * 2 + 0.5;
+                    this.trail = [];
+                    this.maxTrailLen = 3;
+                    this.glitter = false;
+                } else if (type === 'launch') {
+                    this.vx = (Math.random() - 0.5) * 0.5;
+                    this.vy = -(Math.random() * 2 + 3);
+                    this.gravity = 0.05;
+                    this.alpha = 0.6;
+                    this.decay = 0.02;
+                    this.size = 1.5;
+                    this.trail = [];
+                    this.maxTrailLen = 5;
+                    this.glitter = false;
+                }
+                this.dead = false;
+            }
+
+            update() {
+                this.trail.push({ x: this.x, y: this.y, a: this.alpha });
+                if (this.trail.length > this.maxTrailLen) this.trail.shift();
+
+                this.vx *= 0.98;
+                this.vy += this.gravity;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+                if (this.alpha <= 0) this.dead = true;
+            }
+
+            draw() {
+                if (this.dead) return;
+                // 尾迹
+                for (let i = 0; i < this.trail.length; i++) {
+                    const t = this.trail[i];
+                    const ratio = i / this.trail.length;
+                    const ta = t.a * ratio * 0.4;
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, this.size * ratio * 0.6, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${this.rgb},${ta})`;
+                    ctx.fill();
+                }
+                // 主体
+                const glow = this.glitter && Math.random() < 0.5 ? 3 : 1;
+                ctx.shadowBlur = glow * 8;
+                ctx.shadowColor = `rgba(${this.rgb},${this.alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * glow, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${this.rgb},${this.alpha})`;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function launch(x, y) {
+            totalCount++;
+            cntEl.textContent = totalCount;
+            const palette = getRandPalette();
+            const count = Math.floor(Math.random() * 80 + 60);
+            const hasSparkle = Math.random() < 0.6;
+
+            for (let i = 0; i < count; i++) {
+                const color = palette[Math.floor(Math.random() * palette.length)];
+                particles.push(new Particle(x, y, color, 'main'));
+            }
+
+            // 二次小爆炸 sparkle
+            if (hasSparkle) {
+                setTimeout(() => {
+                    for (let i = 0; i < 20; i++) {
+                        const color = palette[Math.floor(Math.random() * palette.length)];
+                        const px = x + (Math.random() - 0.5) * 40;
+                        const py = y + (Math.random() - 0.5) * 40;
+                        particles.push(new Particle(px, py, color, 'sparkle'));
+                    }
+                }, 200);
+            }
+
+            // 余辉闪点
+            for (let i = 0; i < 15; i++) {
+                const color = '#ffffff';
+                const p = new Particle(
+                    x + (Math.random() - 0.5) * 60,
+                    y + (Math.random() - 0.5) * 60,
+                    color, 'sparkle'
+                );
+                p.size = Math.random() * 1.5;
+                p.decay = Math.random() * 0.03 + 0.02;
+                particles.push(p);
+            }
+        }
+
+        let lastTime = 0;
+        function loop(ts) {
+            requestAnimationFrame(loop);
+            const dt = ts - lastTime;
+            lastTime = ts;
+            if (dt > 100) return; // 跳帧保护
+
+            // 背景渐隐（余辉效果）
+            ctx.fillStyle = 'rgba(2,4,13,0.18)';
+            ctx.fillRect(0, 0, W, H);
+
+            // 星空
+            stars.forEach(s => {
+                s.a += s.da;
+                if (s.a < 0.1 || s.a > 1) s.da *= -1;
+                ctx.beginPath();
+                ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255,255,255,${s.a})`;
+                ctx.fill();
+            });
+
+            // 更新粒子
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].dead) particles.splice(i, 1);
+            }
+        }
+
+        // 事件
+        canvas.addEventListener('click', e => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = W / rect.width, scaleY = H / rect.height;
+            launch((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+        });
+        canvas.addEventListener('touchstart', e => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = W / rect.width, scaleY = H / rect.height;
+            Array.from(e.changedTouches).forEach(t => {
+                launch((t.clientX - rect.left) * scaleX, (t.clientY - rect.top) * scaleY);
+            });
+        }, { passive: false });
+
+        // 自动放几个
+        setTimeout(() => launch(W * 0.35, H * 0.4), 300);
+        setTimeout(() => launch(W * 0.65, H * 0.35), 700);
+        setTimeout(() => launch(W * 0.5, H * 0.55), 1100);
+
+        requestAnimationFrame(loop);
+    </script>
+</body>
+
+</html>
