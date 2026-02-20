@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>股票监控面板</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+  font-family: 'Segoe UI', sans-serif;
+  color: #fff;
+}
+.panel {
+  width: 360px;
+  background: linear-gradient(145deg, #1e1e30, #252540);
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.title { font-size: 18px; font-weight: 600; }
+.update-time { font-size: 12px; color: #666; }
+.stocks { display: flex; flex-direction: column; gap: 12px; }
+.stock-card {
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
+  padding: 15px;
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: center;
+  gap: 10px;
+  transition: transform 0.2s;
+}
+.stock-card:hover { transform: translateX(5px); }
+.stock-info h3 { font-size: 14px; margin-bottom: 4px; }
+.stock-code { font-size: 11px; color: #888; }
+.price-info { text-align: right; }
+.current-price { font-size: 18px; font-weight: 600; }
+.change {
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
+  display: inline-block;
+}
+.change.up { background: rgba(46,204,113,0.2); color: #2ecc71; }
+.change.down { background: rgba(231,76,60,0.2); color: #e74c3c; }
+.mini-chart { width: 60px; height: 30px; }
+.mini-chart svg { width: 100%; height: 100%; }
+.summary {
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 12px;
+}
+.summary h4 {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 12px;
+}
+.chart-container {
+  height: 80px;
+  position: relative;
+}
+.chart-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.chart-area { opacity: 0.1; }
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 10px;
+  font-size: 11px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.refresh-btn {
+  width: 100%;
+  margin-top: 15px;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+.refresh-btn:hover { opacity: 0.9; }
+@keyframes flash {
+  0% { background: rgba(255,255,255,0.1); }
+  100% { background: rgba(255,255,255,0.05); }
+}
+.flash { animation: flash 0.5s; }
+@media (max-width: 390px) {
+  .panel { width: 340px; padding: 20px; }
+}
+</style>
+</head>
+<body>
+<div class="panel">
+  <div class="header">
+    <div class="title">📈 实时行情</div>
+    <div class="update-time" id="updateTime">--</div>
+  </div>
+  <div class="stocks" id="stocks"></div>
+  <div class="summary">
+    <h4>今日走势对比</h4>
+    <div class="chart-container">
+      <svg id="summaryChart" viewBox="0 0 300 80"></svg>
+    </div>
+    <div class="legend" id="legend"></div>
+  </div>
+  <button class="refresh-btn" onclick="refreshData()">🔄 刷新数据</button>
+</div>
+<script>
+const stocksData = [
+  { name: '腾讯控股', code: '00700.HK', price: 368.20, change: 2.35, color: '#3498db' },
+  { name: '阿里巴巴', code: 'BABA', price: 85.60, change: -1.20, color: '#e74c3c' },
+  { name: '比亚迪', code: '002594.SZ', price: 245.80, change: 5.42, color: '#2ecc71' }
+];
+function generateChartData(base, points = 20) {
+  const data = [base];
+  for (let i = 1; i < points; i++) {
+    const change = (Math.random() - 0.5) * 5;
+    data.push(Math.max(50, data[i-1] + change));
+  }
+  return data;
+}
+function createMiniChart(data, color, isUp) {
+  const width = 60, height = 30;
+  const max = Math.max(...data), min = Math.min(...data);
+  const range = max - min || 1;
+  const points = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((v - min) / range) * height;
+    return `${x},${y}`;
+  }).join(' ');
+  return `<svg viewBox="0 0 ${width} ${height}">
+    <polyline fill="none" stroke="${color}" stroke-width="1.5" points="${points}"/>
+  </svg>`;
+}
+function renderStocks() {
+  const container = document.getElementById('stocks');
+  container.innerHTML = '';
+  stocksData.forEach((stock, i) => {
+    const isUp = stock.change >= 0;
+    const chartData = generateChartData(stock.price);
+    const card = document.createElement('div');
+    card.className = 'stock-card';
+    card.innerHTML = `
+      <div class="stock-info">
+        <h3>${stock.name}</h3>
+        <div class="stock-code">${stock.code}</div>
+      </div>
+      <div class="price-info">
+        <div class="current-price">${stock.price.toFixed(2)}</div>
+        <div class="change ${isUp ? 'up' : 'down'}">${isUp ? '+' : ''}${stock.change.toFixed(2)}%</div>
+      </div>
+      <div class="mini-chart">${createMiniChart(chartData, stock.color, isUp)}</div>
+    `;
+    container.appendChild(card);
+  });
+  document.getElementById('updateTime').textContent = new Date().toLocaleTimeString();
+}
+function renderSummaryChart() {
+  const svg = document.getElementById('summaryChart');
+  const legend = document.getElementById('legend');
+  svg.innerHTML = '';
+  legend.innerHTML = '';
+  stocksData.forEach(stock => {
+    const data = generateChartData(100);
+    const max = Math.max(...data), min = Math.min(...data);
+    const range = max - min || 1;
+    const points = data.map((v, i) => {
+      const x = (i / (data.length - 1)) * 300;
+      const y = 70 - ((v - min) / range) * 60;
+      return `${x},${y}`;
+    }).join(' ');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', stock.color);
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('points', points);
+    svg.appendChild(path);
+    legend.innerHTML += `<div class="legend-item"><div class="legend-dot" style="background:${stock.color}"></div>${stock.name}</div>`;
+  });
+}
+function refreshData() {
+  stocksData.forEach(stock => {
+    const delta = (Math.random() - 0.5) * 2;
+    stock.price += delta;
+    stock.change = ((delta / stock.price) * 100).toFixed(2) * 1;
+  });
+  renderStocks();
+  renderSummaryChart();
+  document.querySelectorAll('.stock-card').forEach(card => {
+    card.classList.add('flash');
+    setTimeout(() => card.classList.remove('flash'), 500);
+  });
+}
+renderStocks();
+renderSummaryChart();
+setInterval(refreshData, 5000);
+</script>
+</body>
+</html>

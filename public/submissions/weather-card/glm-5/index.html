@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>天气卡片</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Segoe UI', sans-serif;
+  transition: background 1s;
+}
+.sunny { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+.rainy { background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%); }
+.cloudy { background: linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%); }
+.card {
+  width: 340px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 30px;
+  color: #fff;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+}
+.city-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 25px;
+}
+.city-tab {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.city-tab.active {
+  background: rgba(255,255,255,0.3);
+  font-weight: 600;
+}
+.city-tab:hover { background: rgba(255,255,255,0.2); }
+.weather-main {
+  text-align: center;
+  padding: 20px 0;
+}
+.weather-icon {
+  font-size: 80px;
+  margin-bottom: 10px;
+  position: relative;
+}
+.temp {
+  font-size: 72px;
+  font-weight: 200;
+}
+.temp span { font-size: 24px; vertical-align: top; }
+.desc {
+  font-size: 18px;
+  opacity: 0.9;
+  margin-top: 5px;
+}
+.details {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,0.2);
+}
+.detail-item {
+  text-align: center;
+}
+.detail-label {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-bottom: 5px;
+}
+.detail-value {
+  font-size: 16px;
+  font-weight: 500;
+}
+.trend {
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+}
+.trend-title {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-bottom: 10px;
+}
+.trend-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 40px;
+}
+.trend-bar {
+  width: 20px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 4px 4px 0 0;
+  transition: height 0.5s;
+}
+.rain {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.rain.active { opacity: 1; }
+.raindrop {
+  position: absolute;
+  width: 2px;
+  height: 15px;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.6));
+  animation: fall linear infinite;
+}
+@keyframes fall {
+  0% { transform: translateY(-20px); }
+  100% { transform: translateY(100vh); }
+}
+.cloud {
+  position: absolute;
+  background: rgba(255,255,255,0.3);
+  border-radius: 50px;
+  animation: float 6s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(20px); }
+}
+@media (max-width: 390px) {
+  .card { width: 300px; padding: 20px; }
+  .temp { font-size: 60px; }
+}
+</style>
+</head>
+<body class="sunny">
+<div class="rain" id="rain"></div>
+<div class="card">
+  <div class="city-tabs">
+    <button class="city-tab active" onclick="switchCity(0)">北京</button>
+    <button class="city-tab" onclick="switchCity(1)">上海</button>
+    <button class="city-tab" onclick="switchCity(2)">深圳</button>
+  </div>
+  <div class="weather-main">
+    <div class="weather-icon" id="weatherIcon">☀️</div>
+    <div class="temp"><span id="tempValue">28</span><span>°C</span></div>
+    <div class="desc" id="weatherDesc">晴朗</div>
+  </div>
+  <div class="details">
+    <div class="detail-item">
+      <div class="detail-label">湿度</div>
+      <div class="detail-value" id="humidity">45%</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-label">风速</div>
+      <div class="detail-value" id="wind">3.2 m/s</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-label">体感</div>
+      <div class="detail-value" id="feels">26°C</div>
+    </div>
+  </div>
+  <div class="trend">
+    <div class="trend-title">24小时温度趋势</div>
+    <div class="trend-chart" id="trendChart"></div>
+  </div>
+</div>
+<script>
+const cities = [
+  { name: '北京', temp: 28, desc: '晴朗', icon: '☀️', humidity: 45, wind: 3.2, feels: 26, type: 'sunny', trend: [22,24,26,28,30,28,26] },
+  { name: '上海', temp: 22, desc: '小雨', icon: '🌧️', humidity: 85, wind: 4.5, feels: 21, type: 'rainy', trend: [18,19,21,22,23,22,20] },
+  { name: '深圳', temp: 25, desc: '多云', icon: '⛅', humidity: 70, wind: 2.8, feels: 27, type: 'cloudy', trend: [24,25,26,25,27,26,25] }
+];
+let currentCity = 0;
+function createRain() {
+  const rain = document.getElementById('rain');
+  rain.innerHTML = '';
+  for (let i = 0; i < 50; i++) {
+    const drop = document.createElement('div');
+    drop.className = 'raindrop';
+    drop.style.left = Math.random() * 100 + '%';
+    drop.style.animationDuration = (0.5 + Math.random() * 0.5) + 's';
+    drop.style.animationDelay = Math.random() * 2 + 's';
+    rain.appendChild(drop);
+  }
+}
+function updateTrendChart(trend) {
+  const chart = document.getElementById('trendChart');
+  chart.innerHTML = '';
+  const max = Math.max(...trend);
+  trend.forEach((t, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'trend-bar';
+    bar.style.height = (t / max * 40) + 'px';
+    chart.appendChild(bar);
+  });
+}
+function switchCity(index) {
+  currentCity = index;
+  const city = cities[index];
+  document.querySelectorAll('.city-tab').forEach((tab, i) => {
+    tab.classList.toggle('active', i === index);
+  });
+  document.getElementById('tempValue').textContent = city.temp;
+  document.getElementById('weatherDesc').textContent = city.desc;
+  document.getElementById('weatherIcon').textContent = city.icon;
+  document.getElementById('humidity').textContent = city.humidity + '%';
+  document.getElementById('wind').textContent = city.wind + ' m/s';
+  document.getElementById('feels').textContent = city.feels + '°C';
+  document.body.className = city.type;
+  document.getElementById('rain').classList.toggle('active', city.type === 'rainy');
+  updateTrendChart(city.trend);
+}
+createRain();
+updateTrendChart(cities[0].trend);
+</script>
+</body>
+</html>

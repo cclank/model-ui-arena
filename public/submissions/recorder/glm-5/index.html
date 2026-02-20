@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>录音机原型</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  font-family: 'Segoe UI', sans-serif;
+}
+.recorder {
+  width: 320px;
+  background: linear-gradient(145deg, #1e1e30, #252540);
+  border-radius: 24px;
+  padding: 30px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.display {
+  background: #0a0a15;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.time {
+  font-size: 48px;
+  font-weight: 200;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 2px;
+}
+.status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+  color: #888;
+  font-size: 14px;
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #555;
+  transition: all 0.3s;
+}
+.status-dot.recording {
+  background: #e74c3c;
+  animation: blink 1s infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.waveform {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 40px;
+  margin: 15px 0;
+}
+.bar {
+  width: 4px;
+  background: linear-gradient(to top, #3498db, #9b59b6);
+  border-radius: 2px;
+  transition: height 0.1s;
+}
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+.btn {
+  width: 60px;
+  height: 60px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-start {
+  background: linear-gradient(145deg, #27ae60, #2ecc71);
+  color: #fff;
+}
+.btn-start:hover { transform: scale(1.1); box-shadow: 0 0 20px rgba(46,204,113,0.5); }
+.btn-pause {
+  background: linear-gradient(145deg, #f39c12, #f1c40f);
+  color: #fff;
+}
+.btn-stop {
+  background: linear-gradient(145deg, #c0392b, #e74c3c);
+  color: #fff;
+}
+.btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+.summary {
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
+  display: none;
+}
+.summary.show { display: block; }
+.summary h3 {
+  color: #9b59b6;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  color: #aaa;
+  font-size: 13px;
+  padding: 5px 0;
+}
+.summary-item span:last-child { color: #fff; }
+@media (max-width: 390px) {
+  .recorder { width: 300px; padding: 20px; }
+  .time { font-size: 40px; }
+}
+</style>
+</head>
+<body>
+<div class="recorder">
+  <div class="display">
+    <div class="time" id="timeDisplay">00:00</div>
+    <div class="status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">准备就绪</span>
+    </div>
+    <div class="waveform" id="waveform"></div>
+  </div>
+  <div class="controls">
+    <button class="btn btn-start" id="btnStart" onclick="startRecording()">▶</button>
+    <button class="btn btn-pause" id="btnPause" onclick="pauseRecording()" disabled>⏸</button>
+    <button class="btn btn-stop" id="btnStop" onclick="stopRecording()" disabled>⏹</button>
+  </div>
+  <div class="summary" id="summary">
+    <h3>📊 录音摘要</h3>
+    <div class="summary-item"><span>时长</span><span id="sumDuration">--</span></div>
+    <div class="summary-item"><span>状态</span><span id="sumStatus">--</span></div>
+    <div class="summary-item"><span>结束时间</span><span id="sumTime">--</span></div>
+  </div>
+</div>
+<script>
+let seconds = 0;
+let timer = null;
+let isPaused = false;
+let waveformBars = [];
+const waveform = document.getElementById('waveform');
+for (let i = 0; i < 20; i++) {
+  const bar = document.createElement('div');
+  bar.className = 'bar';
+  bar.style.height = '5px';
+  waveform.appendChild(bar);
+  waveformBars.push(bar);
+}
+function updateTime() {
+  seconds++;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  document.getElementById('timeDisplay').textContent = 
+    `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+function animateWave() {
+  waveformBars.forEach(bar => {
+    const h = 5 + Math.random() * 30;
+    bar.style.height = h + 'px';
+  });
+}
+function startRecording() {
+  if (isPaused) {
+    isPaused = false;
+  } else {
+    seconds = 0;
+    document.getElementById('summary').classList.remove('show');
+  }
+  timer = setInterval(() => { updateTime(); animateWave(); }, 1000);
+  document.getElementById('statusDot').classList.add('recording');
+  document.getElementById('statusText').textContent = '录音中...';
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('btnPause').disabled = false;
+  document.getElementById('btnStop').disabled = false;
+}
+function pauseRecording() {
+  clearInterval(timer);
+  isPaused = true;
+  document.getElementById('statusDot').classList.remove('recording');
+  document.getElementById('statusText').textContent = '已暂停';
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnPause').disabled = true;
+}
+function stopRecording() {
+  clearInterval(timer);
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  document.getElementById('statusDot').classList.remove('recording');
+  document.getElementById('statusText').textContent = '已停止';
+  document.getElementById('sumDuration').textContent = `${m}分${s}秒`;
+  document.getElementById('sumStatus').textContent = '完成';
+  document.getElementById('sumTime').textContent = new Date().toLocaleTimeString();
+  document.getElementById('summary').classList.add('show');
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnPause').disabled = true;
+  document.getElementById('btnStop').disabled = true;
+  isPaused = false;
+  seconds = 0;
+}
+</script>
+</body>
+</html>
