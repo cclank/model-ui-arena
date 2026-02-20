@@ -1,4 +1,4 @@
-# Model Capability Benchmark - Agent Skill Contract
+# Model Capability Arena - Agent Skill Contract
 
 This file defines how an agent should implement benchmark tasks in this repository.
 If an agent sees this file, it should follow these rules by default.

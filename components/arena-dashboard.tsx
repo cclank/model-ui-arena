@@ -40,7 +40,7 @@ export function ArenaDashboard() {
   const [error, setError] = useState<string>("");
   const [activeTheme, setActiveTheme] = useState<string>("clock");
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
-  const [panesPerRow, setPanesPerRow] = useState<number>(2);
+  const [panesPerRow, setPanesPerRow] = useState<number>(4);
 
   useEffect(() => {
     let cancelled = false;
@@ -119,8 +119,8 @@ export function ArenaDashboard() {
   return (
     <main className="arena-shell">
       <header className="hero">
-        <p className="hero-kicker">Capability Benchmark</p>
-        <h1 className="hero-title">Model Capability Benchmark</h1>
+        <p className="hero-kicker">Capability Arena</p>
+        <h1 className="hero-title">Model Capability Arena</h1>
         <a
           className="author-link"
           href="https://x.com/LufzzLiz"
