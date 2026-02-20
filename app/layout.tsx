@@ -3,7 +3,10 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Model Capability Benchmark",
-  description: "Benchmark model capabilities under standardized tasks and constraints in one evaluation surface."
+  description: "Benchmark model capabilities under standardized tasks and constraints in one evaluation surface.",
+  icons: {
+    icon: "/icon.svg"
+  }
 };
 
 export default function RootLayout({
