@@ -13,15 +13,21 @@ export type Submission = {
   model: string;
   filename: string;
   publicPath: string;
+  renderKind: "html" | "text";
   linesTotal: number;
   linesCss: number;
   linesJs: number;
   sizeBytes: number;
   withinLineLimit: boolean;
   updatedAt: string;
+  questionText?: string;
+  answerText?: string;
 };
 
 export const LINE_LIMIT = 220;
+
+export const CARWASH_Q1 =
+  "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？";
 
 export const THEMES: ThemeMeta[] = [
   {
@@ -47,7 +53,7 @@ export const THEMES: ThemeMeta[] = [
   {
     id: "carwash-decision",
     label: "开放题：洗车决策",
-    objective: "问题建模、决策解释性、交互引导"
+    objective: "单问答推理能力：直接结论 + 理由解释"
   }
 ];
 
@@ -66,6 +72,14 @@ function countInlineTagLines(html: string, tagName: "style" | "script"): number 
   }
 
   return lines;
+}
+
+function candidateFilesForTheme(themeId: string): string[] {
+  if (themeId === "carwash-decision") {
+    return ["response.md", "answer.md", "response.txt", "answer.txt", "index.html"];
+  }
+
+  return ["index.html"];
 }
 
 export async function scanSubmissions(): Promise<Submission[]> {
@@ -95,35 +109,53 @@ export async function scanSubmissions(): Promise<Submission[]> {
       }
 
       const model = modelDir.name;
-      const filename = "index.html";
-      const absoluteFile = path.join(themePath, model, filename);
+      const candidates = candidateFilesForTheme(themeId);
 
-      try {
-        const [html, stats] = await Promise.all([
-          fs.readFile(absoluteFile, "utf8"),
-          fs.stat(absoluteFile)
-        ]);
+      let filename = "";
+      let content = "";
+      let stats: Awaited<ReturnType<typeof fs.stat>> | null = null;
 
-        const linesTotal = html.split(/\r?\n/).length;
-        const linesCss = countInlineTagLines(html, "style");
-        const linesJs = countInlineTagLines(html, "script");
+      for (const candidate of candidates) {
+        const absoluteFile = path.join(themePath, model, candidate);
+        try {
+          const [fileText, fileStats] = await Promise.all([
+            fs.readFile(absoluteFile, "utf8"),
+            fs.stat(absoluteFile)
+          ]);
+          filename = candidate;
+          content = fileText;
+          stats = fileStats;
+          break;
+        } catch {
+          continue;
+        }
+      }
 
-        output.push({
-          id: `${themeId}:${model}`,
-          theme: themeId,
-          model,
-          filename,
-          publicPath: `/submissions/${themeId}/${model}/${filename}`,
-          linesTotal,
-          linesCss,
-          linesJs,
-          sizeBytes: stats.size,
-          withinLineLimit: linesTotal <= LINE_LIMIT,
-          updatedAt: stats.mtime.toISOString()
-        });
-      } catch {
+      if (!filename || !stats) {
         continue;
       }
+
+      const isHtml = filename.toLowerCase().endsWith(".html");
+      const linesTotal = content.split(/\r?\n/).length;
+      const linesCss = isHtml ? countInlineTagLines(content, "style") : 0;
+      const linesJs = isHtml ? countInlineTagLines(content, "script") : 0;
+
+      output.push({
+        id: `${themeId}:${model}`,
+        theme: themeId,
+        model,
+        filename,
+        publicPath: `/submissions/${themeId}/${model}/${filename}`,
+        renderKind: isHtml ? "html" : "text",
+        linesTotal,
+        linesCss,
+        linesJs,
+        sizeBytes: stats.size,
+        withinLineLimit: linesTotal <= LINE_LIMIT,
+        updatedAt: stats.mtime.toISOString(),
+        questionText: themeId === "carwash-decision" && !isHtml ? CARWASH_Q1 : undefined,
+        answerText: !isHtml ? content.trim() : undefined
+      });
     }
   }
 

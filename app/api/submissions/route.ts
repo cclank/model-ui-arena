@@ -8,7 +8,7 @@ export async function GET() {
     generatedAt: new Date().toISOString(),
     constraints: {
       maxLines: LINE_LIMIT,
-      runtime: "HTML + CSS + JavaScript (single index.html)"
+      runtime: "Mixed: visual themes use index.html; carwash-decision supports text answers (response.md/answer.md)"
     },
     themes: THEMES,
     submissions

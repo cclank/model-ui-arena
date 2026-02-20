@@ -213,6 +213,37 @@ body {
   background: #07090f;
 }
 
+.qa-preview {
+  min-height: 300px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #0b101b;
+  padding: 14px;
+}
+
+.qa-label {
+  margin: 0 0 6px;
+  color: var(--accent);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.qa-question {
+  margin: 0 0 12px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.qa-answer {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #d6e5ff;
+  font: inherit;
+  line-height: 1.55;
+}
+
 .source-link {
   display: inline-block;
   margin-top: 8px;

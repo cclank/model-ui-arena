@@ -27,10 +27,12 @@ async function run() {
   const theme = args.theme ?? "clock";
   const model = args.model ?? "target-model";
   const language = args.language ?? "HTML + CSS + JavaScript";
-  const maxLines = Number(args["max-lines"] ?? 220);
+  const defaultMaxLines = theme === "carwash-decision" ? 18 : 220;
+  const maxLines = Number(args["max-lines"] ?? defaultMaxLines);
 
   const root = process.cwd();
-  const basePath = path.join(root, "prompts", "base.md");
+  const baseFile = theme === "carwash-decision" ? "base-reasoning.md" : "base.md";
+  const basePath = path.join(root, "prompts", baseFile);
   const themePath = path.join(root, "prompts", "themes", `${theme}.md`);
 
   const [baseRaw, themeRaw] = await Promise.all([

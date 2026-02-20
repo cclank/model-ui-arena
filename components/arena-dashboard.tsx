@@ -14,12 +14,15 @@ type Submission = {
   model: string;
   filename: string;
   publicPath: string;
+  renderKind: "html" | "text";
   linesTotal: number;
   linesCss: number;
   linesJs: number;
   sizeBytes: number;
   withinLineLimit: boolean;
   updatedAt: string;
+  questionText?: string;
+  answerText?: string;
 };
 
 type ApiPayload = {
@@ -199,18 +202,27 @@ export function ArenaDashboard() {
 
             <div className="metrics">
               <span>Total: {item.linesTotal} lines</span>
-              <span>CSS: {item.linesCss}</span>
-              <span>JS: {item.linesJs}</span>
+              {item.renderKind === "html" ? <span>CSS: {item.linesCss}</span> : <span>Mode: text</span>}
+              {item.renderKind === "html" ? <span>JS: {item.linesJs}</span> : <span>Type: reasoning</span>}
               <span>{Math.round(item.sizeBytes / 1024)} KB</span>
             </div>
 
-            <iframe
-              className="preview"
-              src={item.publicPath}
-              title={`${item.theme}-${item.model}`}
-              sandbox="allow-scripts allow-same-origin"
-              loading="lazy"
-            />
+            {item.renderKind === "html" ? (
+              <iframe
+                className="preview"
+                src={item.publicPath}
+                title={`${item.theme}-${item.model}`}
+                sandbox="allow-scripts allow-same-origin"
+                loading="lazy"
+              />
+            ) : (
+              <div className="qa-preview">
+                <p className="qa-label">Question</p>
+                <p className="qa-question">{item.questionText ?? "N/A"}</p>
+                <p className="qa-label">Answer</p>
+                <pre className="qa-answer">{item.answerText || "(empty answer)"}</pre>
+              </div>
+            )}
 
             <a className="source-link" href={item.publicPath} target="_blank" rel="noreferrer">
               查看原始页面

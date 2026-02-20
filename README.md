@@ -10,10 +10,10 @@ A production-ready benchmarking workspace for comparing LLM capability outputs u
 
 ## 模型代码放哪里（最关键）
 
-每个模型生成的代码都放到这个路径：
+每个模型生成的结果都放到这个路径：
 
 ```text
-public/submissions/<theme>/<model>/index.html
+public/submissions/<theme>/<model>/<submission-file>
 ```
 
 例如：
@@ -21,7 +21,7 @@ public/submissions/<theme>/<model>/index.html
 ```text
 public/submissions/clock/claude-3.7/index.html
 public/submissions/clock/gpt-4.1/index.html
-public/submissions/weather-card/gemini-2.0-flash/index.html
+public/submissions/carwash-decision/gemini-2.0-flash/response.md
 ```
 
 放好后会自动被页面读取并渲染（无需改前端代码）：
@@ -29,9 +29,10 @@ public/submissions/weather-card/gemini-2.0-flash/index.html
 - 本地开发：刷新 `http://localhost:3000` 即可看到
 - Vercel 线上：提交并重新部署后可见
 
-硬性要求：
+硬性要求（按主题类型）：
 
-- 文件名必须是 `index.html`
+- 视觉主题（`clock` / `recorder` / `weather-card` / `stock-panel`）文件名必须是 `index.html`
+- 问答主题（`carwash-decision`）文件名推荐 `response.md`（也支持 `answer.md` / `response.txt` / `answer.txt`）
 - 目录名必须是已支持主题之一（`clock` / `recorder` / `weather-card` / `stock-panel` / `carwash-decision`）
 - 一个模型一个目录（目录名就是模型名）
 
@@ -64,7 +65,7 @@ This project enforces a consistent benchmark surface so you can compare models f
 
 - Next.js (App Router)
 - React + TypeScript
-- Filesystem-based submission ingestion (`public/submissions/**/index.html`)
+- Filesystem-based submission ingestion (`public/submissions/**`)
 
 ## Project Structure
 
@@ -90,7 +91,7 @@ model-ui-arena/
       carwash-decision.md
   public/
     submissions/
-      <theme>/<model>/index.html # model outputs
+      <theme>/<model>/<submission-file> # model outputs (html or text)
   scripts/
     build-prompt.mjs              # prompt composer CLI
 ```
@@ -109,7 +110,7 @@ Open `http://localhost:3000`.
 Every model output must be stored as:
 
 ```text
-public/submissions/<theme>/<model>/index.html
+public/submissions/<theme>/<model>/<submission-file>
 ```
 
 Example:
@@ -120,6 +121,9 @@ public/submissions/
     claude-3.7/index.html
     gpt-4.1/index.html
     gemini-2.0-flash/index.html
+  carwash-decision/
+    claude-3.7/response.md
+    gpt-4.1/response.md
 ```
 
 The dashboard auto-loads and renders all discovered submissions.
@@ -146,7 +150,10 @@ Use the generated prompt text directly in your target model.
 
 ### 3) Save model output
 
-Save the returned `index.html` into the matching submission path.
+Save the returned file into the matching submission path:
+
+- visual themes: `index.html`
+- carwash decision: `response.md` (recommended)
 
 ### 4) Refresh dashboard
 
@@ -154,8 +161,8 @@ The benchmark page updates from filesystem scans.
 
 ## Standard Constraint Profile (Recommended)
 
-- Runtime: `HTML + CSS + JavaScript`
-- File count: exactly `1` (`index.html`)
+- Runtime: visual themes use `HTML + CSS + JavaScript`; carwash-decision is text reasoning
+- File count: exactly `1` per model per theme
 - Max lines: `180-220` (adjust by pressure level)
 - External dependencies: forbidden
 - Mobile baseline: width `390px`
