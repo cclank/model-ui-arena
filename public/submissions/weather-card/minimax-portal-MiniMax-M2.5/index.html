@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>天气卡片</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif;
+      background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%);
+      padding: 20px;
+    }
+    .card {
+      width: 100%;
+      max-width: 360px;
+      border-radius: 32px;
+      overflow: hidden;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+      transition: all 0.5s ease;
+    }
+    .card.sunny { background: linear-gradient(180deg, #f5af19 0%, #f12711 100%); }
+    .card.rainy { background: linear-gradient(180deg, #3a6073 0%, #16222a 100%); }
+    .card.cloudy { background: linear-gradient(180deg, #606c88 0%, #3f4c6b 100%); }
+    .card.night { background: linear-gradient(180deg, #0f2027 0%, #203a43 50%, #2c5364 100%); }
+
+    .weather-header {
+      padding: 32px 24px;
+      color: #fff;
+      position: relative;
+      min-height: 200px;
+    }
+    .city-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .city-tab {
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.15);
+      border: none;
+      border-radius: 20px;
+      color: rgba(255,255,255,0.7);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .city-tab.active {
+      background: rgba(255,255,255,0.3);
+      color: #fff;
+    }
+    .city-tab:hover:not(.active) { background: rgba(255,255,255,0.2); }
+
+    .weather-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .temp {
+      font-size: 72px;
+      font-weight: 200;
+      line-height: 1;
+    }
+    .temp-unit {
+      font-size: 24px;
+      opacity: 0.7;
+      vertical-align: super;
+    }
+    .weather-icon {
+      width: 100px;
+      height: 100px;
+      position: relative;
+    }
+
+    .sun-icon {
+      width: 60px;
+      height: 60px;
+      background: #ffd700;
+      border-radius: 50%;
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      box-shadow: 0 0 40px #ffd700;
+      animation: sunPulse 3s ease-in-out infinite;
+    }
+    @keyframes sunPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 40px #ffd700; }
+      50% { transform: scale(1.1); box-shadow: 0 0 60px #ffd700; }
+    }
+    .cloud-icon {
+      position: absolute;
+      background: rgba(255,255,255,0.9);
+      border-radius: 50px;
+    }
+    .cloud-icon::after, .cloud-icon::before {
+      content: '';
+      position: absolute;
+      background: inherit;
+      border-radius: 50%;
+    }
+    .cloud-icon.c1 { width: 50px; height: 20px; top: 40px; left: 25px; animation: cloudFloat 3s ease-in-out infinite; }
+    .cloud-icon.c1::after { width: 25px; height: 25px; top: -12px; left: 8px; }
+    .cloud-icon.c1::before { width: 18px; height: 18px; top: -8px; left: 22px; }
+    @keyframes cloudFloat { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
+
+    .rain-icon {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+    .rain-drop {
+      position: absolute;
+      width: 2px;
+      height: 10px;
+      background: rgba(255,255,255,0.6);
+      border-radius: 2px;
+      animation: rainFall 0.8s linear infinite;
+    }
+    .rain-drop:nth-child(1) { left: 30%; animation-delay: 0s; }
+    .rain-drop:nth-child(2) { left: 50%; animation-delay: 0.2s; }
+    .rain-drop:nth-child(3) { left: 70%; animation-delay: 0.4s; }
+    @keyframes rainFall {
+      0% { transform: translateY(-20px); opacity: 0; }
+      50% { opacity: 1; }
+      100% { transform: translateY(60px); opacity: 0; }
+    }
+
+    .weather-desc {
+      font-size: 18px;
+      margin-top: 8px;
+      opacity: 0.9;
+    }
+    .weather-details {
+      display: flex;
+      gap: 24px;
+      margin-top: 16px;
+    }
+    .detail-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+    .detail-item svg { width: 16px; height: 16px; }
+
+    .trend {
+      background: rgba(0,0,0,0.1);
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      color: #fff;
+    }
+    .trend-item {
+      text-align: center;
+    }
+    .trend-label {
+      font-size: 11px;
+      opacity: 0.6;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .trend-temp {
+      font-size: 18px;
+      font-weight: 500;
+      margin-top: 4px;
+    }
+    .trend-icon {
+      font-size: 20px;
+      margin: 8px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="card sunny" id="card">
+    <div class="weather-header">
+      <div class="city-tabs">
+        <button class="city-tab active" data-city="beijing">北京</button>
+        <button class="city-tab" data-city="shanghai">上海</button>
+        <button class="city-tab" data-city="guangzhou">广州</button>
+      </div>
+      <div class="weather-main">
+        <div>
+          <div class="temp"><span id="temp">28</span><span class="temp-unit">°C</span></div>
+          <div class="weather-desc" id="desc">晴</div>
+          <div class="weather-details">
+            <div class="detail-item">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+              <span id="wind">3级</span>
+            </div>
+            <div class="detail-item">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+              <span id="humidity">45%</span>
+            </div>
+          </div>
+        </div>
+        <div class="weather-icon" id="icon"></div>
+      </div>
+    </div>
+    <div class="trend">
+      <div class="trend-item">
+        <div class="trend-label">昨天</div>
+        <div class="trend-icon">🌤️</div>
+        <div class="trend-temp" id="yesterday">26°</div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-label">今天</div>
+        <div class="trend-icon" id="todayIcon">☀️</div>
+        <div class="trend-temp" id="today">28°</div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-label">明天</div>
+        <div class="trend-icon" id="tomorrowIcon">⛅</div>
+        <div class="trend-temp" id="tomorrow">27°</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const weatherData = {
+      beijing: {
+        temp: 28, desc: '晴', wind: '3级', humidity: '45%',
+        yesterday: 26, today: 28, tomorrow: 27,
+        type: 'sunny', todayIcon: '☀️', tomorrowIcon: '⛅'
+      },
+      shanghai: {
+        temp: 22, desc: '小雨', wind: '2级', humidity: '78%',
+        yesterday: 20, today: 22, tomorrow: 19,
+        type: 'rainy', todayIcon: '🌧️', tomorrowIcon: '🌧️'
+      },
+      guangzhou: {
+        temp: 30, desc: '多云', wind: '1级', humidity: '65%',
+        yesterday: 29, today: 30, tomorrow: 31,
+        type: 'cloudy', todayIcon: '⛅', tomorrowIcon: '☀️'
+      }
+    };
+
+    function renderIcon(type) {
+      const iconEl = document.getElementById('icon');
+      if (type === 'sunny') {
+        iconEl.innerHTML = '<div class="sun-icon"></div>';
+      } else if (type === 'rainy') {
+        iconEl.innerHTML = '<div class="rain-icon"><div class="rain-drop"></div><div class="rain-drop"></div><div class="rain-drop"></div></div>';
+      } else if (type === 'cloudy') {
+        iconEl.innerHTML = '<div class="cloud-icon c1"></div>';
+      } else if (type === 'night') {
+        iconEl.innerHTML = '<div class="sun-icon" style="background:#ddd;box-shadow:0 0 30px #fff;"></div>';
+      }
+    }
+
+    function updateCity(city) {
+      const data = weatherData[city];
+      const card = document.getElementById('card');
+      
+      card.className = 'card ' + data.type;
+      
+      document.getElementById('temp').textContent = data.temp;
+      document.getElementById('desc').textContent = data.desc;
+      document.getElementById('wind').textContent = data.wind;
+      document.getElementById('humidity').textContent = data.humidity;
+      document.getElementById('yesterday').textContent = data.yesterday + '°';
+      document.getElementById('today').textContent = data.today + '°';
+      document.getElementById('tomorrow').textContent = data.tomorrow + '°';
+      document.getElementById('todayIcon').textContent = data.todayIcon;
+      document.getElementById('tomorrowIcon').textContent = data.tomorrowIcon;
+      
+      renderIcon(data.type);
+
+      document.querySelectorAll('.city-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.city === city);
+      });
+    }
+
+    document.querySelectorAll('.city-tab').forEach(tab => {
+      tab.addEventListener('click', () => updateCity(tab.dataset.city));
+    });
+
+    renderIcon('sunny');
+  </script>
+</body>
+</html>

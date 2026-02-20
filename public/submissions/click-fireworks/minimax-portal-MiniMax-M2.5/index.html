@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>烟花</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: linear-gradient(to bottom, #0a0a1a 0%, #1a1a3a 50%, #0f0f2a 100%);
+      cursor: crosshair;
+    }
+    .hint {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.4);
+      font-family: -apple-system, sans-serif;
+      font-size: 14px;
+      letter-spacing: 2px;
+      pointer-events: none;
+      transition: opacity 0.5s;
+    }
+    .hint.hidden { opacity: 0; }
+    .firework {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .particle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .glow {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: glowFade 0.5s ease-out forwards;
+    }
+    @keyframes glowFade {
+      0% { transform: scale(0.5); opacity: 0.8; }
+      100% { transform: scale(3); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="hint" id="hint">点击屏幕绽放烟花</div>
+
+  <script>
+    const colors = [
+      '#ff4757', '#2ed573', '#1e90ff', '#ffa502', '#ff6b81',
+      '#7bed9f', '#70a1ff', '#eccc68', '#ff7f50', '#a29bfe',
+      '#fd79a8', '#00cec9', '#fdcb6e', '#6c5ce7', '#e17055'
+    ];
+    const GRAVITY = 0.15;
+    const FRICTION = 0.96;
+    let particles = [];
+    let fireworks = [];
+    let hintShown = true;
+    let lastTime = 0;
+    let isRunning = true;
+
+    class Particle {
+      constructor(x, y, color, vx, vy) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.vx = vx;
+        this.vy = vy;
+        this.life = 1;
+        this.decay = 0.015 + Math.random() * 0.01;
+        this.size = 2 + Math.random() * 2;
+        this.trail = [];
+        this.trailLength = 5;
+      }
+
+      update() {
+        this.trail.push({ x: this.x, y: this.y, life: this.life });
+        if (this.trail.length > this.trailLength) this.trail.shift();
+
+        this.vx *= FRICTION;
+        this.vy *= FRICTION;
+        this.vy += GRAVITY;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.life -= this.decay;
+      }
+
+      draw(ctx) {
+        if (this.life <= 0) return;
+
+        this.trail.forEach((t, i) => {
+          const alpha = (i / this.trailLength) * t.life * 0.5;
+          ctx.beginPath();
+          ctx.arc(t.x, t.y, this.size * 0.5, 0, Math.PI * 2);
+          ctx.fillStyle = this.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+          ctx.fill();
+        });
+
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.globalAlpha = this.life;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    class Firework {
+      constructor(x, y, targetY, color) {
+        this.x = x;
+        this.y = y;
+        this.targetY = targetY;
+        this.color = color;
+        this.vy = -12 - Math.random() * 3;
+        this.exploded = false;
+      }
+
+      update() {
+        if (!this.exploded) {
+          this.y += this.vy;
+          this.vy += 0.3;
+          if (this.y <= this.targetY) {
+            this.explode();
+          }
+        }
+      }
+
+      explode() {
+        this.exploded = true;
+        const particleCount = 80 + Math.floor(Math.random() * 40);
+        for (let i = 0; i < particleCount; i++) {
+          const angle = (Math.PI * 2 * i) / particleCount;
+          const speed = 3 + Math.random() * 8;
+          const vx = Math.cos(angle) * speed;
+          const vy = Math.sin(angle) * speed;
+          particles.push(new Particle(this.x, this.y, this.color, vx, vy));
+        }
+
+        createGlow(this.x, this.targetY, this.color);
+      }
+
+      draw(ctx) {
+        if (this.exploded) return;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(this.x, this.y + 20);
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+
+    function createGlow(x, y, color) {
+      const canvas = document.createElement('canvas');
+      canvas.className = 'glow';
+      canvas.style.left = (x - 30) + 'px';
+      canvas.style.top = (y - 30) + 'px';
+      canvas.style.width = '60px';
+      canvas.style.height = '60px';
+      canvas.style.background = `radial-gradient(circle, ${color} 0%, transparent 70%)`;
+      document.body.appendChild(canvas);
+      setTimeout(() => canvas.remove(), 500);
+    }
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    document.body.appendChild(canvas);
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function animate(timestamp) {
+      if (!isRunning) return;
+      const delta = timestamp - lastTime;
+      lastTime = timestamp;
+
+      ctx.fillStyle = 'rgba(10, 10, 26, 0.15)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      fireworks = fireworks.filter(fw => !fw.exploded);
+      fireworks.forEach(fw => {
+        fw.update();
+        fw.draw(ctx);
+      });
+
+      particles = particles.filter(p => p.life > 0);
+      particles.forEach(p => {
+        p.update();
+        p.draw(ctx);
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    function launchFirework(x, y) {
+      const targetY = 100 + Math.random() * (canvas.height * 0.4);
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      fireworks.push(new Firework(x, canvas.height, targetY, color));
+
+      if (hintShown) {
+        document.getElementById('hint').classList.add('hidden');
+        hintShown = false;
+      }
+    }
+
+    document.addEventListener('click', (e) => {
+      launchFirework(e.clientX, e.clientY);
+    });
+
+    document.addEventListener('touchstart', (e) => {
+      for (let i = 0; i < e.touches.length; i++) {
+        launchFirework(e.touches[i].clientX, e.touches[i].clientY);
+      }
+    });
+
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>

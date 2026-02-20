@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>时钟</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'SF Pro Display', -apple-system, sans-serif;
+      transition: background 0.8s ease;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #fff;
+    }
+    body.day { background: linear-gradient(135deg, #87CEEB 0%, #E0F7FA 100%); color: #333; }
+    .clock-container {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(10px);
+      border: 3px solid rgba(255,255,255,0.15);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+    body.day .clock-container {
+      background: rgba(255,255,255,0.9);
+      border-color: rgba(0,0,0,0.1);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+    .dial {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+    .marker {
+      position: absolute;
+      width: 3px;
+      height: 12px;
+      background: rgba(255,255,255,0.6);
+      left: 50%;
+      top: 8px;
+      transform-origin: 50% 132px;
+      border-radius: 2px;
+    }
+    body.day .marker { background: rgba(0,0,0,0.4); }
+    .marker.hour { height: 18px; width: 4px; transform-origin: 50% 126px; }
+    .center-dot {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      background: #ff6b6b;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(255,107,107,0.5);
+    }
+    .hand {
+      position: absolute;
+      bottom: 50%;
+      left: 50%;
+      transform-origin: bottom center;
+      border-radius: 4px;
+      z-index: 5;
+    }
+    .hand.hour {
+      width: 6px;
+      height: 70px;
+      background: linear-gradient(to top, #fff, #ccc);
+      margin-left: -3px;
+    }
+    .hand.minute {
+      width: 4px;
+      height: 95px;
+      background: linear-gradient(to top, #4ecdc4, #2ab7a9);
+      margin-left: -2px;
+    }
+    .hand.second {
+      width: 2px;
+      height: 105px;
+      background: #ff6b6b;
+      margin-left: -1px;
+    }
+    .hand.second::after {
+      content: '';
+      position: absolute;
+      bottom: -30px;
+      left: 50%;
+      width: 2px;
+      height: 30px;
+      background: #ff6b6b;
+      transform: translateX(-50%);
+    }
+    .digital {
+      margin-top: 40px;
+      font-size: 48px;
+      font-weight: 200;
+      letter-spacing: 4px;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    }
+    body.day .digital { text-shadow: none; }
+    .date {
+      margin-top: 12px;
+      font-size: 16px;
+      opacity: 0.7;
+      letter-spacing: 2px;
+    }
+    @keyframes breathe {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.1); }
+    }
+    .center-dot { animation: breathe 2s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+  <div class="clock-container">
+    <div class="dial" id="dial"></div>
+    <div class="hand hour" id="hour"></div>
+    <div class="hand minute" id="minute"></div>
+    <div class="hand second" id="second"></div>
+    <div class="center-dot"></div>
+  </div>
+  <div class="digital" id="digital">00:00:00</div>
+  <div class="date" id="date">2024年1月1日</div>
+
+  <script>
+    const dial = document.getElementById('dial');
+    for (let i = 0; i < 60; i++) {
+      const marker = document.createElement('div');
+      marker.className = 'marker' + (i % 5 === 0 ? ' hour' : '');
+      marker.style.transform = `rotate(${i * 6}deg)`;
+      dial.appendChild(marker);
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const h = now.getHours() % 12;
+      const m = now.getMinutes();
+      const s = now.getSeconds();
+      const ms = now.getMilliseconds();
+
+      const secDeg = s * 6 + ms * 0.006;
+      const minDeg = m * 6 + secDeg / 60;
+      const hourDeg = h * 30 + minDeg / 12;
+
+      document.getElementById('hour').style.transform = `rotate(${hourDeg}deg)`;
+      document.getElementById('minute').style.transform = `rotate(${minDeg}deg)`;
+      document.getElementById('second').style.transform = `rotate(${secDeg}deg)`;
+
+      const timeStr = [h + 12, m, s].map(v => String(v).padStart(2, '0')).join(':');
+      document.getElementById('digital').textContent = timeStr;
+
+      const dateStr = now.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+      document.getElementById('date').textContent = dateStr;
+
+      const hour = now.getHours();
+      document.body.classList.toggle('day', hour >= 6 && hour < 18);
+
+      requestAnimationFrame(updateClock);
+    }
+    updateClock();
+  </script>
+</body>
+</html>

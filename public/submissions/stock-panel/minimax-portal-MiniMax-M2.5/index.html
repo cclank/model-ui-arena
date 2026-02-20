@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>股票面板</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif;
+      background: #0a0e17;
+      color: #fff;
+      padding: 20px;
+    }
+    .panel {
+      width: 100%;
+      max-width: 400px;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 0 4px;
+    }
+    .panel-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .market-status {
+      font-size: 12px;
+      color: #00c853;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #00c853;
+      border-radius: 50%;
+      animation: blink 2;
+    }
+    @keyframes blink { 0%, 100% { opacitys infinite: 1; } 50% { opacity: 0.4; } }
+
+    .stock-card {
+      background: #151c28;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .stock-card:hover { background: #1a2332; transform: translateY(-2px); }
+    .stock-card.up { border-left: 3px solid #00c853; }
+    .stock-card.down { border-left: 3px solid #ff1744; }
+    .stock-card.warn { border-left: 3px solid #ffab00; }
+
+    .stock-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .stock-name {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .stock-code {
+      font-size: 12px;
+      color: #666;
+      margin-top: 2px;
+    }
+    .stock-price {
+      text-align: right;
+    }
+    .price {
+      font-size: 24px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .change {
+      font-size: 13px;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+    .up .change, .up .price { color: #00c853; }
+    .down .change, .down .price { color: #ff1744; }
+    .warn .change, .warn .price { color: #ffab00; }
+
+    .chart {
+      height: 50px;
+      margin-top: 16px;
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+    }
+    .chart-bar {
+      flex: 1;
+      background: currentColor;
+      opacity: 0.3;
+      border-radius: 2px 2px 0 0;
+      transition: opacity 0.3s;
+    }
+    .stock-card:hover .chart-bar { opacity: 0.5; }
+    .up .chart-bar { background: #00c853; }
+    .down .chart-bar { background: #ff1744; }
+    .warn .chart-bar { background: #ffab00; }
+
+    .stock-details {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .detail-item {
+      text-align: center;
+    }
+    .detail-label {
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+    }
+    .detail-value {
+      font-size: 13px;
+      margin-top: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pulse {
+      animation: pulse 0.5s ease;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">自选股</div>
+      <div class="market-status">
+        <div class="status-dot"></div>
+        <span>实时</span>
+      </div>
+    </div>
+
+    <div class="stock-card up" id="stock1">
+      <div class="stock-header">
+        <div>
+          <div class="stock-name">贵州茅台</div>
+          <div class="stock-code">SH.600519</div>
+        </div>
+        <div class="stock-price">
+          <div class="price">1,728.00</div>
+          <div class="change">+2.35%</div>
+        </div>
+      </div>
+      <div class="chart" id="chart1"></div>
+      <div class="stock-details">
+        <div class="detail-item"><div class="detail-label">涨跌</div><div class="detail-value">+39.80</div></div>
+        <div class="detail-item"><div class="detail-label">今开</div><div class="detail-value">1,692.00</div></div>
+        <div class="detail-item"><div class="detail-label">成交量</div><div class="detail-value">2.8万</div></div>
+      </div>
+    </div>
+
+    <div class="stock-card down" id="stock2">
+      <div class="stock-header">
+        <div>
+          <div class="stock-name">宁德时代</div>
+          <div class="stock-code">SZ.300750</div>
+        </div>
+        <div class="stock-price">
+          <div class="price">182.50</div>
+          <div class="change">-1.28%</div>
+        </div>
+      </div>
+      <div class="chart" id="chart2"></div>
+      <div class="stock-details">
+        <div class="detail-item"><div class="detail-label">涨跌</div><div class="detail-value">-2.37</div></div>
+        <div class="detail-item"><div class="detail-label">今开</div><div class="detail-value">185.20</div></div>
+        <div class="detail-item"><div class="detail-label">成交量</div><div class="detail-value">15.2万</div></div>
+      </div>
+    </div>
+
+    <div class="stock-card warn" id="stock3">
+      <div class="stock-header">
+        <div>
+          <div class="stock-name">比亚迪</div>
+          <div class="stock-code">SZ.002594</div>
+        </div>
+        <div class="stock-price">
+          <div class="price">267.80</div>
+          <div class="change">+0.08%</div>
+        </div>
+      </div>
+      <div class="chart" id="chart3"></div>
+      <div class="stock-details">
+        <div class="detail-item"><div class="detail-label">涨跌</div><div class="detail-value">+0.22</div></div>
+        <div class="detail-item"><div class="detail-label">今开</div><div class="detail-value">268.50</div></div>
+        <div class="detail-item"><div class="detail-label">成交量</div><div class="detail-value">8.5万</div></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function generateChartData(type) {
+      const data = [];
+      let base = 50;
+      for (let i = 0; i < 30; i++) {
+        const change = (Math.random() - 0.5) * 20;
+        if (type === 'up') base += Math.abs(change) * 0.3;
+        else if (type === 'down') base -= Math.abs(change) * 0.3;
+        else base += change * 0.1;
+        base = Math.max(10, Math.min(90, base));
+        data.push(base);
+      }
+      return data;
+    }
+
+    function renderChart(chartId, data) {
+      const chart = document.getElementById(chartId);
+      chart.innerHTML = '';
+      const max = Math.max(...data);
+      const min = Math.min(...data);
+      const range = max - min || 1;
+      
+      data.forEach(val => {
+        const bar = document.createElement('div');
+        bar.className = 'chart-bar';
+        bar.style.height = ((val - min) / range * 100) + '%';
+        chart.appendChild(bar);
+      });
+    }
+
+    const chart1Data = generateChartData('up');
+    const chart2Data = generateChartData('down');
+    const chart3Data = generateChartData('flat');
+
+    renderChart('chart1', chart1Data);
+    renderChart('chart2', chart2Data);
+    renderChart('chart3', chart3Data);
+
+    function simulateUpdate() {
+      const stocks = [
+        { id: 'stock1', base: 1728, change: 2.35 },
+        { id: 'stock2', base: 182.5, change: -1.28 },
+        { id: 'stock3', base: 267.8, change: 0.08 }
+      ];
+
+      stocks.forEach((stock, idx) => {
+        const fluctuation = (Math.random() - 0.5) * 2;
+        const newPrice = stock.base + fluctuation;
+        const newChange = stock.change + fluctuation / stock.base * 100;
+        
+        const card = document.getElementById(stock.id);
+        const priceEl = card.querySelector('.price');
+        const changeEl = card.querySelector('.change');
+        
+        priceEl.textContent = newPrice.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        changeEl.textContent = (newChange >= 0 ? '+' : '') + newChange.toFixed(2) + '%';
+        
+        card.classList.remove('up', 'down', 'warn');
+        if (newChange > 0.5) card.classList.add('up');
+        else if (newChange < -0.5) card.classList.add('down');
+        else card.classList.add('warn');
+        
+        card.classList.add('pulse');
+        setTimeout(() => card.classList.remove('pulse'), 500);
+      });
+    }
+
+    setInterval(simulateUpdate, 3000);
+  </script>
+</body>
+</html>

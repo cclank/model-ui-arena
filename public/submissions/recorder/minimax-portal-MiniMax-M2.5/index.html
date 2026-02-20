@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>录音机</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif;
+      background: linear-gradient(180deg, #0f0f23 0%, #1a1a3e 100%);
+      color: #fff;
+      padding: 20px;
+    }
+    .recorder {
+      width: 100%;
+      max-width: 360px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 24px;
+      padding: 32px 24px;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+    }
+    .title {
+      text-align: center;
+      font-size: 14px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      opacity: 0.5;
+      margin-bottom: 32px;
+    }
+    .display {
+      background: #000;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 32px;
+      border: 1px solid #222;
+    }
+    .timer {
+      font-size: 56px;
+      font-weight: 100;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 2px;
+      color: #00ff88;
+      text-shadow: 0 0 30px rgba(0,255,136,0.5);
+    }
+    .timer.recording { color: #ff4444; text-shadow: 0 0 30px rgba(255,68,68,0.6); animation: pulse 1s ease-in-out infinite; }
+    .timer.paused { color: #ffaa00; text-shadow: 0 0 30px rgba(255,170,0,0.5); }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    .status {
+      margin-top: 12px;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: 0.6;
+    }
+    .waveform {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      height: 40px;
+      margin-top: 16px;
+    }
+    .wave-bar {
+      width: 4px;
+      background: #00ff88;
+      border-radius: 2px;
+      transition: height 0.1s ease;
+    }
+    .recording .wave-bar { animation: wave 0.5s ease-in-out infinite alternate; }
+    .recording .wave-bar:nth-child(odd) { animation-delay: 0.1s; }
+    @keyframes wave { 0% { height: 8px; } 100% { height: 32px; } }
+    .paused .wave-bar { opacity: 0.3; }
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+    .btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+    .btn:hover { transform: scale(1.08); background: rgba(255,255,255,0.15); }
+    .btn:active { transform: scale(0.95); }
+    .btn.rec { background: #ff4444; box-shadow: 0 8px 30px rgba(255,68,68,0.4); }
+    .btn.rec:hover { background: #ff6666; }
+    .btn.rec.recording { animation: recPulse 1.5s ease-in-out infinite; }
+    @keyframes recPulse { 0%, 100% { box-shadow: 0 8px 30px rgba(255,68,68,0.4); } 50% { box-shadow: 0 8px 50px rgba(255,68,68,0.7); } }
+    .btn.stop { background: #ffaa00; box-shadow: 0 8px 30px rgba(255,170,0,0.3); }
+    .btn.stop:hover { background: #ffcc33; }
+    .btn svg { width: 28px; height: 28px; }
+    .record-btn-wrapper { position: relative; }
+    .red-dot {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 12px;
+      height: 12px;
+      background: #ff4444;
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .red-dot.visible { opacity: 1; animation: blink 1s infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .summary {
+      margin-top: 24px;
+      padding: 16px;
+      background: rgba(0,255,136,0.08);
+      border-radius: 12px;
+      border: 1px solid rgba(0,255,136,0.2);
+      display: none;
+    }
+    .summary.visible { display: block; animation: slideUp 0.3s ease; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .summary-title { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.6; margin-bottom: 8px; }
+    .summary-item { display: flex; justify-content: space-between; font-size: 14px; margin-top: 8px; }
+    .summary-label { opacity: 0.6; }
+    .summary-value { font-weight: 600; color: #00ff88; }
+  </style>
+</head>
+<body>
+  <div class="recorder">
+    <div class="title">Voice Recorder</div>
+    <div class="display">
+      <div class="timer" id="timer">00:00</div>
+      <div class="status" id="status">就绪</div>
+      <div class="waveform" id="waveform">
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn" id="pauseBtn" title="暂停">
+        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+      </button>
+      <div class="record-btn-wrapper">
+        <button class="btn rec" id="recordBtn" title="录音">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>
+        </button>
+        <div class="red-dot" id="redDot"></div>
+      </div>
+      <button class="btn stop" id="stopBtn" title="停止">
+        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+      </button>
+    </div>
+    <div class="summary" id="summary">
+      <div class="summary-title">录音摘要</div>
+      <div class="summary-item"><span class="summary-label">时长</span><span class="summary-value" id="summaryDuration">00:00</span></div>
+      <div class="summary-item"><span class="summary-label">状态</span><span class="summary-value" id="summaryStatus">已完成</span></div>
+    </div>
+  </div>
+
+  <script>
+    let state = 'idle';
+    let seconds = 0;
+    let timerInterval = null;
+
+    const timerEl = document.getElementById('timer');
+    const statusEl = document.getElementById('status');
+    const waveformEl = document.getElementById('waveform');
+    const recordBtn = document.getElementById('recordBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const redDot = document.getElementById('redDot');
+    const summaryEl = document.getElementById('summary');
+    const summaryDuration = document.getElementById('summaryDuration');
+    const summaryStatus = document.getElementById('summaryStatus');
+
+    function formatTime(s) {
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        seconds++;
+        timerEl.textContent = formatTime(seconds);
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    function setState(newState) {
+      state = newState;
+      timerEl.className = 'timer';
+      waveformEl.className = 'waveform';
+      redDot.classList.remove('visible');
+
+      if (newState === 'idle') {
+        statusEl.textContent = '就绪';
+        pauseBtn.style.opacity = '0.3';
+        pauseBtn.disabled = true;
+      } else if (newState === 'recording') {
+        statusEl.textContent = '录音中';
+        timerEl.classList.add('recording');
+        waveformEl.classList.add('recording');
+        redDot.classList.add('visible');
+        pauseBtn.style.opacity = '1';
+        pauseBtn.disabled = false;
+      } else if (newState === 'paused') {
+        statusEl.textContent = '已暂停';
+        timerEl.classList.add('paused');
+        waveformEl.classList.add('paused');
+        pauseBtn.style.opacity = '1';
+      } else if (newState === 'stopped') {
+        statusEl.textContent = '已完成';
+        pauseBtn.style.opacity = '0.3';
+        pauseBtn.disabled = true;
+        summaryDuration.textContent = formatTime(seconds);
+        summaryStatus.textContent = seconds > 0 ? '正常结束' : '无录音';
+        summaryEl.classList.add('visible');
+      }
+    }
+
+    recordBtn.addEventListener('click', () => {
+      if (state === 'idle' || state === 'stopped') {
+        seconds = 0;
+        timerEl.textContent = '00:00';
+        summaryEl.classList.remove('visible');
+        startTimer();
+        setState('recording');
+      }
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      if (state === 'recording') {
+        stopTimer();
+        setState('paused');
+      } else if (state === 'paused') {
+        startTimer();
+        setState('recording');
+      }
+    });
+
+    stopBtn.addEventListener('click', () => {
+      if (state === 'recording' || state === 'paused') {
+        stopTimer();
+        setState('stopped');
+      }
+    });
+
+    setState('idle');
+  </script>
+</body>
+</html>
