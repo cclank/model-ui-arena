@@ -1,9 +1,9 @@
 # Model Capability Benchmark
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
-![Vercel Ready](https://img.shields.io/badge/Deploy-Vercel-000000?logo=vercel)
+[![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Deploy to Vercel](https://img.shields.io/badge/Deploy-Vercel-000000?logo=vercel)](https://vercel.com/new/clone?repository-url=https://github.com/cclank/model-ui-arena)
 [![GitHub stars](https://img.shields.io/github/stars/cclank/model-ui-arena?style=social)](https://github.com/cclank/model-ui-arena/stargazers)
 
 A production-ready benchmarking workspace for comparing LLM capability outputs under standardized task constraints.
@@ -184,6 +184,8 @@ Returns:
 - per-submission metrics and pass/fail state
 
 ## Deploy to Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/cclank/model-ui-arena)
 
 1. Push repository to GitHub
 2. Import into Vercel
