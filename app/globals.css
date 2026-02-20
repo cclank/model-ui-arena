@@ -1,0 +1,255 @@
+:root {
+  --font-title: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, serif;
+  --font-mono: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --bg: #0f121a;
+  --panel: #161b27;
+  --panel-alt: #1f2635;
+  --line: #2b3449;
+  --text: #edf1ff;
+  --muted: #9aa8c8;
+  --brand: #7ee787;
+  --warning: #ff7b72;
+  --accent: #68d8ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at 12% 8%, #233251 0%, transparent 35%),
+    radial-gradient(circle at 90% 20%, #1f3f2c 0%, transparent 30%),
+    linear-gradient(180deg, #0e1118 0%, #0b0e14 100%);
+  color: var(--text);
+  font-family: var(--font-mono), monospace;
+}
+
+.arena-shell {
+  width: min(1600px, 94vw);
+  margin: 32px auto 60px;
+}
+
+.hero {
+  margin-bottom: 18px;
+}
+
+.hero-kicker {
+  color: var(--accent);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 12px;
+  margin: 0 0 6px;
+}
+
+.hero h1 {
+  margin: 0;
+  font-family: var(--font-title), sans-serif;
+  font-size: clamp(34px, 5.2vw, 68px);
+  line-height: 0.95;
+}
+
+.hero-sub {
+  color: var(--muted);
+  margin: 14px 0 0;
+  max-width: 720px;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: linear-gradient(155deg, var(--panel) 0%, var(--panel-alt) 100%);
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.35);
+}
+
+.controls {
+  padding: 18px;
+  margin-bottom: 24px;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.label {
+  min-width: 72px;
+  padding-top: 8px;
+  color: var(--muted);
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  background: #101624;
+  color: var(--text);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font: inherit;
+  cursor: pointer;
+  transition: 160ms ease;
+}
+
+.chip:hover {
+  border-color: var(--accent);
+}
+
+.chip.active {
+  border-color: var(--brand);
+  color: #07120d;
+  background: var(--brand);
+}
+
+.stats {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.stats p {
+  color: var(--muted);
+  margin: 0;
+  font-size: 12px;
+}
+
+.stats strong {
+  font-size: 20px;
+}
+
+.theme-section {
+  margin-bottom: 26px;
+}
+
+.theme-head {
+  margin-bottom: 12px;
+}
+
+.theme-head.single {
+  margin-bottom: 14px;
+}
+
+.theme-head h2 {
+  margin: 0;
+  font-family: var(--font-title), serif;
+  font-size: 26px;
+}
+
+.theme-head p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.arena-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+}
+
+.card {
+  padding: 14px;
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.card h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.meta {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.badge {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge.ok {
+  background: #173323;
+  color: var(--brand);
+}
+
+.badge.bad {
+  background: #32171a;
+  color: var(--warning);
+}
+
+.metrics {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.preview {
+  width: 100%;
+  height: 430px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #07090f;
+}
+
+.source-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.source-link:hover {
+  text-decoration: underline;
+}
+
+.error-banner {
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  background: #3a1f23;
+  border: 1px solid #6e2f36;
+  color: #ffd9da;
+}
+
+@media (max-width: 900px) {
+  .row {
+    flex-direction: column;
+    margin-bottom: 10px;
+  }
+
+  .label {
+    min-width: 0;
+    padding-top: 0;
+  }
+
+  .stats {
+    gap: 16px;
+  }
+
+  .preview {
+    height: 360px;
+  }
+}
