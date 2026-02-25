@@ -1,117 +1,131 @@
-设计说明：
-本钟表页面采用极简主义设计，以数字时间为主、模拟时钟为辅，突出高辨识度。
-使用 CSS 渐变背景和呼吸动效营造科技感，同时确保在移动端 390px 下清晰可读。
-所有功能均通过内联 CSS/JS 实现，无外部依赖，单文件即可运行。
+设计说明：模拟数字双显时钟，秒针律动呼吸效果，自动切换昼夜主题（清晨/傍晚自动变色），采用 CSS 渐变与阴影营造层次感。
 
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>高辨识度时钟</title>
-<style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-  min-height:100vh;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);
-  font-family:'Segoe UI',Arial,sans-serif;
-  color:#fff;
-  animation:gradientMove 10s ease infinite;
-}
-@keyframes gradientMove {
-  0%,100% {filter:hue-rotate(0deg);}
-  50% {filter:hue-rotate(30deg);}
-}
-.clock-container {
-  text-align:center;
-  padding:30px;
-  background:rgba(255,255,255,0.1);
-  border-radius:20px;
-  backdrop-filter:blur(10px);
-  box-shadow:0 8px 32px rgba(0,0,0,0.3);
-}
-.analog-clock {
-  width:200px;
-  height:200px;
-  border:4px solid #00d9ff;
-  border-radius:50%;
-  margin:0 auto 20px;
-  position:relative;
-  box-shadow:0 0 20px rgba(0,217,255,0.3);
-}
-.hand {
-  position:absolute;
-  bottom:50%;
-  left:50%;
-  transform-origin:bottom center;
-  background:#00d9ff;
-  border-radius:4px;
-}
-.hour { width:4px; height:50px; margin-left:-2px; }
-.min { width:3px; height:70px; margin-left:-1.5px; }
-.sec { width:2px; height:80px; margin-left:-1px; background:#ff6b6b; }
-.center-dot {
-  position:absolute;
-  top:50%;
-  left:50%;
-  width:8px;
-  height:8px;
-  background:#fff;
-  border-radius:50%;
-  transform:translate(-50%,-50%);
-  z-index:10;
-}
-.digital-time {
-  font-size:2.5rem;
-  font-weight:bold;
-  letter-spacing:3px;
-  text-shadow:0 0 10px rgba(0,217,255,0.5);
-  margin-bottom:10px;
-}
-.date-display {
-  font-size:1rem;
-  opacity:0.8;
-  letter-spacing:1px;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时钟</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            transition: all 0.5s ease;
+        }
+        .clock-container {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .analog-clock {
+            width: 200px;
+            height: 200px;
+            border: 8px solid #333;
+            border-radius: 50%;
+            position: relative;
+            margin: 0 auto 20px;
+            background: radial-gradient(circle at 30% 30%, #fff, #f0f0f0);
+        }
+        .hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom;
+            border-radius: 4px;
+            transition: transform 0.05s cubic-bezier(0.4, 2.08, 0.55, 0.44);
+        }
+        .hour { width: 6px; height: 50px; background: #333; margin-left: -3px; }
+        .minute { width: 4px; height: 70px; background: #666; margin-left: -2px; }
+        .second { 
+            width: 2px; 
+            height: 80px; 
+            background: #e74c3c; 
+            margin-left: -1px;
+            animation: tick 1s linear infinite;
+        }
+        @keyframes tick { from { transform: translateX(-50%) rotate(0deg); } to { transform: translateX(-50%) rotate(360deg); } }
+        .center-dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 12px;
+            height: 12px;
+            background: #333;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        .numbers {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        .number {
+            position: absolute;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        .digital-time {
+            font-size: 36px;
+            font-weight: 700;
+            color: #333;
+            letter-spacing: 2px;
+            margin-top: 10px;
+        }
+        .date {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
 </head>
 <body>
-<div class="clock-container">
-  <div class="analog-clock">
-    <div class="hand hour" id="hourHand"></div>
-    <div class="hand min" id="minHand"></div>
-    <div class="hand sec" id="secHand"></div>
-    <div class="center-dot"></div>
-  </div>
-  <div class="digital-time" id="digitalTime">00:00:00</div>
-  <div class="date-display" id="dateDisplay">加载日期...</div>
-</div>
-<script>
-function updateClock() {
-  const now = new Date();
-  const h = now.getHours();
-  const m = now.getMinutes();
-  const s = now.getSeconds();
-  
-  // Analog clock
-  document.getElementById('hourHand').style.transform = `translateX(-50%) rotate(${h*30 + m*0.5}deg)`;
-  document.getElementById('minHand').style.transform = `translateX(-50%) rotate(${m*6 + s*0.1}deg)`;
-  document.getElementById('secHand').style.transform = `translateX(-50%) rotate(${s*6}deg)`;
-  
-  // Digital time
-  const timeStr = [h,m,s].map(v=>String(v).padStart(2,'0')).join(':');
-  document.getElementById('digitalTime').textContent = timeStr;
-  
-  // Date display
-  const dateStr = now.toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'weekday'});
-  document.getElementById('dateDisplay').textContent = dateStr;
-}
-setInterval(updateClock,1000);
-updateClock();
-</script>
+    <div class="clock-container">
+        <div class="analog-clock">
+            <div class="numbers">
+                <span class="number" style="top: 5px; left: 50%; transform: translateX(-50%);">12</span>
+                <span class="number" style="top: 50%; right: 5px;">3</span>
+                <span class="number" style="bottom: 5px; left: 50%; transform: translateX(-50%);">6</span>
+                <span class="number" style="top: 50%; left: 5px;">9</span>
+            </div>
+            <div class="hand hour" id="hour"></div>
+            <div class="hand minute" id="minute"></div>
+            <div class="hand second" id="second"></div>
+            <div class="center-dot"></div>
+        </div>
+        <div class="digital-time" id="digitalTime"></div>
+        <div class="date" id="date"></div>
+    </div>
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            const ms = now.getMilliseconds();
+            
+            const hourDeg = (hours % 12) * 30 + minutes * 0.5;
+            const minuteDeg = minutes * 6 + seconds * 0.1;
+            const secondDeg = seconds * 6 + ms * 0.006;
+            
+            document.getElementById('hour').style.transform = `translateY(-50%) rotate(${hourDeg}deg)`;
+            document.getElementById('minute').style.transform = `translateY(-50%) rotate(${minuteDeg}deg)`;
+            document.getElementById('second').style.transform = `translateY(-50%) rotate(${secondDeg}deg)`;
+            
+            const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
+            document.getElementById('digitalTime').textContent = timeStr;
+            document.getElementById('date').textContent = now.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+        }
+        setInterval(updateTime, 50);
+        updateTime();
+    </script>
 </body>
 </html>

@@ -1,0 +1,140 @@
+设计说明：点击页面任意位置触发烟花爆炸，粒子扩散/衰减/消失动画，多色随机烟花效果，夜空背景氛围，优化性能避免内存无限增长。
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>烟花绽放</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #0a0a2a 0%, #1a1a4a 50%, #2a1a4a 100%);
+            cursor: crosshair;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
+        .hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+            pointer-events: none;
+            animation: fadeInOut 2s ease-in-out infinite;
+        }
+        @keyframes fadeInOut { 
+            0%, 100% { opacity: 0.3; } 
+            50% { opacity: 0.8; } 
+        }
+    </style>
+</head>
+<body>
+    <canvas class="canvas" id="canvas"></canvas>
+    <div class="hint">🎆 点击任意位置燃放烟花</div>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+        
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+        
+        const colors = ['#ff0040', '#ff8800', '#ffdd00', '#00ff40', '#0088ff', '#8800ff', '#ff0088'];
+        const particles = [];
+        const MAX_PARTICLES = 200;
+        
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 4 + 2;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.02 + 0.015;
+                this.gravity = 0.05;
+                this.size = Math.random() * 3 + 2;
+            }
+            
+            update() {
+                this.vx *= 0.98;
+                this.vy *= 0.98;
+                this.vy += this.gravity;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Glow effect
+                ctx.globalAlpha = this.alpha * 0.5;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+            
+            isDead() {
+                return this.alpha <= 0;
+            }
+        }
+        
+        function createFirework(x, y) {
+            const particleCount = 60 + Math.random() * 30;
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            for (let i = 0; i < particleCount; i++) {
+                if (particles.length < MAX_PARTICLES) {
+                    particles.push(new Particle(x, y, color));
+                }
+            }
+        }
+        
+        function animate() {
+            ctx.fillStyle = 'rgba(10, 10, 42, 0.15)';
+            ctx.fillRect(0, 0, width, height);
+            
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.update();
+                p.draw();
+                if (p.isDead()) {
+                    particles.splice(i, 1);
+                }
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        canvas.addEventListener('click', (e) => {
+            createFirework(e.clientX, e.clientY);
+        });
+        
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            for (const touch of e.touches) {
+                createFirework(touch.clientX, touch.clientY);
+            }
+        });
+        
+        animate();
+    </script>
+</body>
+</html>

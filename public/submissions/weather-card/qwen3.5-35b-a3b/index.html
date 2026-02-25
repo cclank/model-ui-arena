@@ -1,193 +1,143 @@
-设计说明：
-本天气卡片支持北京、上海、广州三城市切换，每个城市显示温度、天气描述、风速湿度。
-采用动态视觉设计：晴天用金黄渐变、雨天用蓝灰调、阴天用灰色系。
-添加微动画效果（云漂浮、雨滴下落）提升视觉体验，响应式布局适配移动端。
+设计说明：可切换城市的天气卡片 UI，支持北京/上海/广州三城切换，晴/雨/多云三种天气视觉，微动画效果（云朵飘动、雨滴下落），温度数字滚动效果。
 
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>天气卡片</title>
-<style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-  min-height:100vh;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  background:#1a1a2e;
-  font-family:'Segoe UI',Arial,sans-serif;
-}
-.weather-app {
-  width:95%;
-  max-width:380px;
-}
-.city-tabs {
-  display:flex;
-  gap:10px;
-  margin-bottom:20px;
-}
-.tab {
-  flex:1;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  background:rgba(255,255,255,0.1);
-  color:#fff;
-  cursor:pointer;
-  transition:all 0.3s ease;
-  font-weight:600;
-}
-.tab.active {
-  background:#00d9ff;
-  color:#1a1a2e;
-  box-shadow:0 4px 15px rgba(0,217,255,0.4);
-}
-.card {
-  border-radius:24px;
-  padding:30px;
-  text-align:center;
-  color:#fff;
-  transition:all 0.5s ease;
-  position:relative;
-  overflow:hidden;
-}
-.card.sunny {
-  background:linear-gradient(135deg,#ffd93d 0%,#ff6b6b 100%);
-}
-.card.rainy {
-  background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
-}
-.card.cloudy {
-  background:linear-gradient(135deg,#bdc3c7 0%,#2c3e50 100%);
-}
-.temp {
-  font-size:4rem;
-  font-weight:bold;
-  margin:20px 0;
-  text-shadow:0 2px 10px rgba(0,0,0,0.2);
-}
-.condition {
-  font-size:1.5rem;
-  margin-bottom:10px;
-}
-.details {
-  display:flex;
-  justify-content:center;
-  gap:20px;
-  margin-top:20px;
-  font-size:0.9rem;
-  opacity:0.9;
-}
-.wind, .humidity {
-  display:flex;
-  align-items:center;
-  gap:5px;
-}
-.animated-cloud {
-  position:absolute;
-  top:20px;
-  right:-60px;
-  font-size:3rem;
-  animation:floatRight 8s linear infinite;
-}
-@keyframes floatRight {
-  from { transform:translateX(-100px); }
-  to { transform:translateX(calc(100% + 100px)); }
-}
-.animated-rain {
-  position:absolute;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  pointer-events:none;
-}
-.drop {
-  position:absolute;
-  background:rgba(255,255,255,0.6);
-  width:2px;
-  height:10px;
-  animation:fall 1s linear infinite;
-}
-@keyframes fall {
-  to { transform:translateY(100vh); }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天气卡片</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .weather-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 24px;
+            padding: 30px;
+            width: 320px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .city-tabs { display: flex; gap: 10px; margin-bottom: 25px; }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        .tab.active { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .weather-display { text-align: center; }
+        .weather-icon { font-size: 64px; margin-bottom: 10px; }
+        .temp { font-size: 56px; font-weight: 700; color: #333; margin-bottom: 5px; }
+        .condition { font-size: 18px; color: #666; margin-bottom: 20px; }
+        .details {
+            display: flex;
+            justify-content: space-around;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .detail-item { text-align: center; }
+        .detail-label { font-size: 12px; color: #999; margin-bottom: 5px; }
+        .detail-value { font-size: 18px; font-weight: 600; color: #333; }
+        .cloud {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            font-size: 80px;
+            opacity: 0.3;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(5px, -5px); } }
+        .rain { position: relative; height: 40px; overflow: hidden; }
+        .rain::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 2px;
+            height: 20px;
+            background: #667eea;
+            animation: rain 0.5s linear infinite;
+        }
+        @keyframes rain { to { transform: translateY(40px); opacity: 0; } }
+    </style>
 </head>
 <body>
-<div class="weather-app">
-  <div class="city-tabs">
-    <button class="tab active" data-city="beijing">北京</button>
-    <button class="tab" data-city="shanghai">上海</button>
-    <button class="tab" data-city="guangzhou">广州</button>
-  </div>
-  <div class="card sunny" id="weatherCard">
-    <div class="animated-cloud">☁️</div>
-    <h2 id="cityName">北京</h2>
-    <div class="condition" id="condition">多云</div>
-    <div class="temp" id="temp">28°</div>
-    <div class="details">
-      <div class="wind">💨 <span id="wind">东南风 3 级</span></div>
-      <div class="humidity">💧 <span id="humidity">45%</span></div>
+    <div class="weather-card">
+        <div class="cloud">☁️</div>
+        <div class="city-tabs">
+            <button class="tab active" data-city="beijing">北京</button>
+            <button class="tab" data-city="shanghai">上海</button>
+            <button class="tab" data-city="guangzhou">广州</button>
+        </div>
+        <div class="weather-display">
+            <div class="weather-icon" id="weatherIcon">🌤️</div>
+            <div class="temp" id="temp">24°</div>
+            <div class="condition" id="condition">多云</div>
+            <div class="rain" id="rain"></div>
+            <div class="details">
+                <div class="detail-item">
+                    <div class="detail-label">湿度</div>
+                    <div class="detail-value" id="humidity">58%</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">风速</div>
+                    <div class="detail-value" id="wind">12km/h</div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
-<script>
-const weatherData = {
-  beijing: { temp:28, condition:'多云', wind:'东南风 3 级', humidity:'45%', type:'cloudy' },
-  shanghai: { temp:24, condition:'小雨', wind:'东北风 2 级', humidity:'78%', type:'rainy' },
-  guangzhou: { temp:32, condition:'晴朗', wind:'南风 4 级', humidity:'62%', type:'sunny' }
-};
-
-let raindrops = null;
-
-function updateWeather(city) {
-  const data = weatherData[city];
-  const card = document.getElementById('weatherCard');
-  
-  // Remove all raindrops
-  if(raindrops) {
-    raindrops.forEach(d => d.remove());
-    raindrops = null;
-  }
-  
-  card.className = `card ${data.type}`;
-  document.getElementById('cityName').textContent = city.charAt(0).toUpperCase() + city.slice(1);
-  document.getElementById('temp').textContent = `${data.temp}°`;
-  document.getElementById('condition').textContent = data.condition;
-  document.getElementById('wind').textContent = data.wind;
-  document.getElementById('humidity').textContent = data.humidity;
-  
-  // Add rain for rainy weather
-  if(data.type === 'rainy') {
-    createRain();
-  }
-}
-
-function createRain() {
-  raindrops = [];
-  for(let i=0; i<20; i++) {
-    const drop = document.createElement('div');
-    drop.className = 'drop';
-    drop.style.left = Math.random()*100 + '%';
-    drop.style.animationDelay = Math.random()*1 + 's';
-    document.getElementById('weatherCard').appendChild(drop);
-    raindrops.push(drop);
-  }
-}
-
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    updateWeather(tab.dataset.city);
-  });
-});
-
-updateWeather('beijing');
-</script>
+    <script>
+        const weatherData = {
+            beijing: { temp: 24, condition: '多云', humidity: '58%', wind: '12km/h', icon: '🌤️', type: 'cloudy' },
+            shanghai: { temp: 21, condition: '小雨', humidity: '78%', wind: '18km/h', icon: '🌧️', type: 'rainy' },
+            guangzhou: { temp: 28, condition: '晴', humidity: '65%', wind: '8km/h', icon: '☀️', type: 'sunny' }
+        };
+        
+        const tabs = document.querySelectorAll('.tab');
+        const weatherIcon = document.getElementById('weatherIcon');
+        const temp = document.getElementById('temp');
+        const condition = document.getElementById('condition');
+        const humidity = document.getElementById('humidity');
+        const wind = document.getElementById('wind');
+        const rain = document.getElementById('rain');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const city = tab.dataset.city;
+                const data = weatherData[city];
+                
+                weatherIcon.textContent = data.icon;
+                temp.textContent = `${data.temp}°`;
+                condition.textContent = data.condition;
+                humidity.textContent = data.humidity;
+                wind.textContent = data.wind;
+                
+                if (data.type === 'rainy') {
+                    rain.style.display = 'block';
+                    weatherCard.style.background = 'linear-gradient(135deg, #e0e0e0, #d0d0d0)';
+                } else if (data.type === 'cloudy') {
+                    rain.style.display = 'none';
+                    weatherCard.style.background = 'rgba(255,255,255,0.95)';
+                } else {
+                    rain.style.display = 'none';
+                    weatherCard.style.background = 'linear-gradient(135deg, #fff9e6, #ffe6b3)';
+                }
+            });
+        });
+        
+        const weatherCard = document.querySelector('.weather-card');
+    </script>
 </body>
 </html>

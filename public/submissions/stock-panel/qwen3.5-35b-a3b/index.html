@@ -1,0 +1,176 @@
+设计说明：股票监控面板展示 3 支股票，红色涨绿色跌实时区分，内置简易折线趋势图，模拟流式数据刷新效果，风险提示区域。
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票面板</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: white;
+        }
+        .panel {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 25px;
+            width: 400px;
+            backdrop-filter: blur(10px);
+        }
+        .header {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .stock-card {
+            background: rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .stock-name { font-size: 16px; font-weight: 600; }
+        .stock-code { font-size: 12px; color: #999; }
+        .stock-price {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .stock-change { font-size: 14px; font-weight: 600; }
+        .up { color: #00ff88; }
+        .down { color: #ff4757; }
+        .trend-chart {
+            height: 40px;
+            margin-top: 10px;
+            position: relative;
+        }
+        .trend-line {
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(90deg, 
+                rgba(255,255,255,0.05) 0px, 
+                rgba(255,255,255,0.05) 10px,
+                transparent 10px,
+                transparent 20px);
+            border-top: 2px solid;
+            border-radius: 4px;
+        }
+        .risk-warning {
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(255,215,0,0.1);
+            border-left: 3px solid #ffd700;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <div class="header">📈 实时监控</div>
+        <div class="stock-card" id="stock1">
+            <div class="stock-header">
+                <div>
+                    <div class="stock-name">腾讯控股</div>
+                    <div class="stock-code">00700.HK</div>
+                </div>
+            </div>
+            <div class="stock-price" id="price1">328.40</div>
+            <div class="stock-change" id="change1">+2.80 (+0.86%)</div>
+            <div class="trend-chart">
+                <div class="trend-line" id="trend1"></div>
+            </div>
+        </div>
+        <div class="stock-card" id="stock2">
+            <div class="stock-header">
+                <div>
+                    <div class="stock-name">阿里巴巴</div>
+                    <div class="stock-code">09988.HK</div>
+                </div>
+            </div>
+            <div class="stock-price" id="price2">78.65</div>
+            <div class="stock-change" id="change2">-1.25 (-1.57%)</div>
+            <div class="trend-chart">
+                <div class="trend-line" id="trend2"></div>
+            </div>
+        </div>
+        <div class="stock-card" id="stock3">
+            <div class="stock-header">
+                <div>
+                    <div class="stock-name">美团-W</div>
+                    <div class="stock-code">03690.HK</div>
+                </div>
+            </div>
+            <div class="stock-price" id="price3">125.80</div>
+            <div class="stock-change" id="change3">+3.50 (+2.86%)</div>
+            <div class="trend-chart">
+                <div class="trend-line" id="trend3"></div>
+            </div>
+        </div>
+        <div class="risk-warning">⚠️ 市场有风险，投资需谨慎 · 数据仅供参考</div>
+    </div>
+    <script>
+        const stocks = [
+            { price: 328.40, change: 2.80, trend: [320, 322, 325, 324, 326, 328] },
+            { price: 78.65, change: -1.25, trend: [80, 79.5, 79, 78.8, 78.5, 78.2] },
+            { price: 125.80, change: 3.50, trend: [120, 122, 123, 124, 125, 126] }
+        ];
+        
+        function renderTrend(elementId, trendData) {
+            const el = document.getElementById(elementId);
+            const max = Math.max(...trendData);
+            const min = Math.min(...trendData);
+            const range = max - min || 1;
+            
+            let svgPath = '';
+            trendData.forEach((val, i) => {
+                const x = (i / (trendData.length - 1)) * 100;
+                const y = 100 - ((val - min) / range) * 80 - 10;
+                svgPath += i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`;
+            });
+            
+            el.style.background = `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'><path d='${svgPath}' stroke='%2300ff88' fill='none' stroke-width='2'/></svg>")`;
+        }
+        
+        function updateStocks() {
+            stocks.forEach((stock, i) => {
+                const priceEl = document.getElementById(`price${i + 1}`);
+                const changeEl = document.getElementById(`change${i + 1}`);
+                
+                const newChange = (Math.random() - 0.5) * 0.5;
+                stock.price += newChange;
+                stock.change += newChange;
+                
+                priceEl.textContent = stock.price.toFixed(2);
+                changeEl.textContent = `${stock.change > 0 ? '+' : ''}${stock.change.toFixed(2)} (${stock.change / (stock.price - stock.change) * 100 > 0 ? '+' : ''}${(stock.change / (stock.price - stock.change) * 100).toFixed(2)}%)`;
+                
+                if (stock.change >= 0) {
+                    priceEl.className = 'stock-price up';
+                    changeEl.className = 'stock-change up';
+                } else {
+                    priceEl.className = 'stock-price down';
+                    changeEl.className = 'stock-change down';
+                }
+            });
+        }
+        
+        stocks.forEach((stock, i) => renderTrend(`trend${i + 1}`, stock.trend));
+        setInterval(updateStocks, 2000);
+    </script>
+</body>
+</html>
