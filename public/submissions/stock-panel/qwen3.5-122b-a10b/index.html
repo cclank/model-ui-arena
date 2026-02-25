@@ -1,0 +1,322 @@
+<!-- 设计说明：股票面板采用暗色科技风，实时跳动的数据配合 K 线简化图表。支持多股票切换，涨跌幅用红绿色区分，内置迷你折线图展示趋势 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Panel - Qwen3.5</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card-bg: #161b22;
+      --border: #30363d;
+      --text-primary: #c9d1d9;
+      --text-secondary: #8b949e;
+      --up: #3fb950;
+      --down: #f85149;
+      --accent: #58a6ff;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--bg);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 20px;
+    }
+    .stock-panel {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .header h1 {
+      color: var(--text-primary);
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+    .market-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: var(--up);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--up);
+      border-radius: 50%;
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .tabs {
+      display: flex;
+      background: rgba(0,0,0,0.2);
+    }
+    .tab {
+      flex: 1;
+      padding: 15px;
+      text-align: center;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+    }
+    .tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: rgba(88,166,255,0.1);
+    }
+    .stock-display {
+      padding: 25px;
+    }
+    .stock-symbol {
+      font-size: 1.5rem;
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    .stock-name {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    .price-container {
+      display: flex;
+      align-items: baseline;
+      margin: 20px 0;
+    }
+    .current-price {
+      font-size: 3rem;
+      color: var(--text-primary);
+      font-weight: 300;
+      font-variant-numeric: tabular-nums;
+    }
+    .currency {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-left: 4px;
+    }
+    .change {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .change.up {
+      background: rgba(63,185,80,0.15);
+      color: var(--up);
+    }
+    .change.down {
+      background: rgba(248,81,73,0.15);
+      color: var(--down);
+    }
+    .mini-chart {
+      height: 120px;
+      margin: 25px 0;
+      position: relative;
+    }
+    .chart-canvas {
+      width: 100%;
+      height: 100%;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .stat-item {
+      background: rgba(0,0,0,0.2);
+      border-radius: 12px;
+      padding: 15px;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .stat-value {
+      font-size: 1.1rem;
+      color: var(--text-primary);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .pulse-animation {
+      animation: price-pulse 0.5s ease-in-out;
+    }
+    @keyframes price-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+  </style>
+</head>
+<body>
+  <div class="stock-panel">
+    <div class="header">
+      <h1>📈 Stock Panel</h1>
+      <div class="market-status">
+        <span class="status-dot"></span>
+        <span>交易中</span>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab active" data-stock="AAPL">AAPL</div>
+      <div class="tab" data-stock="GOOGL">GOOGL</div>
+      <div class="tab" data-stock="TSLA">TSLA</div>
+      <div class="tab" data-stock="MSFT">MSFT</div>
+    </div>
+    <div class="stock-display">
+      <div class="stock-symbol" id="symbol">AAPL</div>
+      <div class="stock-name" id="name">Apple Inc.</div>
+      <div class="price-container">
+        <div class="current-price" id="price">178.52</div>
+        <div class="currency">USD</div>
+      </div>
+      <div class="change up" id="change">
+        <span id="changeText">+2.34 (+1.33%)</span>
+      </div>
+      <div class="mini-chart">
+        <canvas class="chart-canvas" id="chart"></canvas>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-label">开盘价</div>
+          <div class="stat-value" id="open">176.20</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">最高价</div>
+          <div class="stat-value" id="high">179.85</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">最低价</div>
+          <div class="stat-value" id="low">175.90</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">成交量</div>
+          <div class="stat-value" id="volume">52.3M</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const stocks = {
+      AAPL: { name: 'Apple Inc.', basePrice: 178, open: 176.2, high: 179.85, low: 175.9 },
+      GOOGL: { name: 'Alphabet Inc.', basePrice: 141, open: 139.5, high: 142.3, low: 138.8 },
+      TSLA: { name: 'Tesla Inc.', basePrice: 248, open: 245, high: 252.6, low: 243.2 },
+      MSFT: { name: 'Microsoft Corp.', basePrice: 378, open: 375.5, high: 380.2, low: 374.1 }
+    };
+
+    let currentStock = 'AAPL';
+    let price = stocks[currentStock].basePrice;
+
+    function renderChart(direction) {
+      const canvas = document.getElementById('chart');
+      const ctx = canvas.getContext('2d');
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * 2;
+      canvas.height = rect.height * 2;
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.scale(2, 2);
+
+      ctx.clearRect(0, 0, w/2, h/2);
+
+      // Generate chart points
+      const points = [];
+      let prev = direction === 'up' ? price * 0.98 : price * 1.02;
+      for (let i = 0; i < 30; i++) {
+        prev += (Math.random() - 0.5) * 2;
+        points.push(prev);
+      }
+
+      const minX = 0, maxX = rect.width - 20;
+      const minY = Math.min(...points) * 0.99, maxY = Math.max(...points) * 1.01;
+
+      ctx.beginPath();
+      const strokeColor = direction === 'up' ? '#3fb950' : '#f85149';
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 2;
+
+      points.forEach((p, i) => {
+        const x = minX + (i / (points.length - 1)) * (maxX - minX);
+        const y = h/2 - ((p - minY) / (maxY - minY)) * (h/2 - 20);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // Gradient fill
+      const gradient = ctx.createLinearGradient(0, 0, 0, h/2);
+      gradient.addColorStop(0, direction === 'up' ? 'rgba(63,185,80,0.3)' : 'rgba(248,81,73,0.3)');
+      gradient.addColorStop(1, 'transparent');
+      ctx.lineTo(maxX, h/2);
+      ctx.lineTo(minX, h/2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+    }
+
+    function updateStock(symbol) {
+      currentStock = symbol;
+      const stock = stocks[symbol];
+
+      document.getElementById('symbol').textContent = symbol;
+      document.getElementById('name').textContent = stock.name;
+
+      // Simulate price movement
+      const changePercent = (Math.random() - 0.48) * 3;
+      const changeValue = price * changePercent / 100;
+      const isUp = changeValue >= 0;
+
+      const changeEl = document.getElementById('change');
+      changeEl.className = `change ${isUp ? 'up' : 'down'}`;
+      document.getElementById('changeText').textContent = 
+        `${isUp ? '+' : ''}${changeValue.toFixed(2)} (${changePercent.toFixed(2)}%)`;
+
+      document.getElementById('open').textContent = stock.open.toFixed(2);
+      document.getElementById('high').textContent = stock.high.toFixed(2);
+      document.getElementById('low').textContent = stock.low.toFixed(2);
+      document.getElementById('volume').textContent = (40 + Math.random() * 30).toFixed(1) + 'M';
+
+      renderChart(isUp ? 'up' : 'down');
+    }
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        price = stocks[tab.dataset.stock].basePrice;
+        updateStock(tab.dataset.stock);
+      });
+    });
+
+    // Auto-update price
+    setInterval(() => {
+      const volatility = (Math.random() - 0.5) * 0.8;
+      price += volatility;
+      document.getElementById('price').textContent = price.toFixed(2);
+      document.getElementById('price').classList.add('pulse-animation');
+      setTimeout(() => document.getElementById('price').classList.remove('pulse-animation'), 500);
+    }, 2000);
+
+    updateStock('AAPL');
+  </script>
+</body>
+</html>

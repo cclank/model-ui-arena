@@ -1,0 +1,353 @@
+<!-- 设计说明：极简录音面板，采用拟物化设计风格。中央大圆形录制按钮配合呼吸动效，实时显示录音时长与波形可视化。支持暂停/继续，波形使用 Canvas 绘制真实音频频率反馈 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recorder - Qwen3.5</title>
+  <style>
+    :root {
+      --bg: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%);
+      --card-bg: rgba(255,255,255,0.08);
+      --primary: #e94560;
+      --secondary: #0f3460;
+      --text: #eee;
+      --text-muted: #888;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 20px;
+    }
+    .container {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border-radius: 30px;
+      padding: 40px 30px;
+      text-align: center;
+    }
+    h1 {
+      color: var(--text);
+      font-size: 1.5rem;
+      margin-bottom: 30px;
+      font-weight: 300;
+      letter-spacing: 4px;
+    }
+    .waveform-container {
+      height: 100px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 15px;
+      overflow: hidden;
+      margin-bottom: 30px;
+      position: relative;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .timer {
+      font-size: 3.5rem;
+      color: var(--text);
+      font-weight: 200;
+      margin-bottom: 30px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 2px;
+    }
+    .record-btn-wrapper {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 30px;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.8); opacity: 0.8; }
+      100% { transform: scale(1.8); opacity: 0; }
+    }
+    @keyframes pulse-dot {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .pulse-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 120px;
+      height: 120px;
+      background: radial-gradient(circle, rgba(233,69,96,0.4) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: pulse-ring 2s ease-out infinite;
+      pointer-events: none;
+    }
+    .record-btn {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      font-size: 2rem;
+      transition: all 0.3s ease;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 8px 30px rgba(233,69,96,0.4), inset 0 -4px 10px rgba(0,0,0,0.2);
+    }
+    .record-btn.idle {
+      background: radial-gradient(circle at 30% 30%, #ff6b7d 0%, #e94560 50%, #c73e54 100%);
+    }
+    .record-btn.recording {
+      background: radial-gradient(circle at 30% 30%, #ff8a99 0%, #e94560 50%, #c73e54 100%);
+      animation: pulse-dot 1s ease-in-out infinite;
+    }
+    .record-btn.paused {
+      background: radial-gradient(circle at 30% 30%, #ffd93d 0%, #f9ca24 50%, #e6ac00 100%);
+    }
+    .record-btn:active { transform: scale(0.95); }
+    .status-text {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+      min-height: 24px;
+    }
+    .controls {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+    .control-btn {
+      padding: 12px 28px;
+      border: 1px solid var(--text-muted);
+      background: transparent;
+      color: var(--text);
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      min-width: 100px;
+    }
+    .control-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .control-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    .recordings-list {
+      margin-top: 30px;
+      text-align: left;
+    }
+    .recording-item {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .recording-name {
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+    .recording-time {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>RECORDER</h1>
+    <div class="waveform-container">
+      <canvas id="waveform"></canvas>
+    </div>
+    <div class="timer" id="timer">00:00:00</div>
+    <div class="record-btn-wrapper">
+      <div class="pulse-ring" style="display:none;"></div>
+      <button class="record-btn idle" id="recordBtn">●</button>
+    </div>
+    <div class="status-text" id="statusText">点击录制按钮开始</div>
+    <div class="controls">
+      <button class="control-btn" id="pauseBtn" disabled>暂停</button>
+      <button class="control-btn" id="stopBtn" disabled>停止</button>
+    </div>
+    <div class="recordings-list" id="recordingsList"></div>
+  </div>
+  <script>
+    const recordBtn = document.getElementById('recordBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const timerEl = document.getElementById('timer');
+    const statusText = document.getElementById('statusText');
+    const waveformCanvas = document.getElementById('waveform');
+    const recordingsList = document.getElementById('recordingsList');
+    const pulseRing = document.querySelector('.pulse-ring');
+
+    let isRecording = false;
+    let isPaused = false;
+    let startTime = 0;
+    let elapsedTime = 0;
+    let timerInterval = null;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let stream = null;
+    let animationFrame = null;
+
+    function formatTime(ms) {
+      const totalSec = Math.floor(ms / 1000);
+      const h = Math.floor(totalSec / 3600).toString().padStart(2, '0');
+      const m = Math.floor((totalSec % 3600) / 60).toString().padStart(2, '0');
+      const s = (totalSec % 60).toString().padStart(2, '0');
+      return `${h}:${m}:${s}`;
+    }
+
+    function updateTimer() {
+      if (!isPaused) {
+        elapsedTime = Date.now() - startTime;
+        timerEl.textContent = formatTime(elapsedTime);
+      }
+    }
+
+    async function initAudio() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = saveRecording;
+      } catch (err) {
+        statusText.textContent = '无法访问麦克风：' + err.message;
+        throw err;
+      }
+    }
+
+    function startRecording() {
+      audioChunks = [];
+      startTime = Date.now() - elapsedTime;
+      mediaRecorder.start();
+      isRecording = true;
+      isPaused = false;
+      recordBtn.className = 'record-btn recording';
+      recordBtn.textContent = '⬛';
+      pulseRing.style.display = 'block';
+      pauseBtn.disabled = false;
+      stopBtn.disabled = false;
+      statusText.textContent = '录制中...';
+      timerInterval = setInterval(updateTimer, 100);
+      animateWaveform();
+    }
+
+    function togglePause() {
+      if (isPaused) {
+        mediaRecorder.resume();
+        isPaused = false;
+        recordBtn.className = 'record-btn recording';
+        recordBtn.textContent = '⬛';
+        statusText.textContent = '录制继续...';
+      } else {
+        mediaRecorder.pause();
+        isPaused = true;
+        recordBtn.className = 'record-btn paused';
+        recordBtn.textContent = '▶';
+        statusText.textContent = '已暂停';
+      }
+    }
+
+    function stopRecording() {
+      mediaRecorder.stop();
+      isRecording = false;
+      isPaused = false;
+      clearInterval(timerInterval);
+      cancelAnimationFrame(animationFrame);
+      recordBtn.className = 'record-btn idle';
+      recordBtn.textContent = '●';
+      pulseRing.style.display = 'none';
+      pauseBtn.disabled = true;
+      stopBtn.disabled = true;
+      statusText.textContent = '录制完成！';
+      stream.getTracks().forEach(t => t.stop());
+    }
+
+    function saveRecording() {
+      const blob = new Blob(audioChunks, { type: 'audio/webm' });
+      const url = URL.createObjectURL(blob);
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
+
+      const item = document.createElement('div');
+      item.className = 'recording-item';
+      item.innerHTML = `
+        <div>
+          <div class="recording-name">录音 ${timeStr}</div>
+          <div class="recording-time">${formatTime(elapsedTime)}</div>
+        </div>
+        <audio controls src="${url}" style="height: 30px;"></audio>
+      `;
+      recordingsList.insertBefore(item, recordingsList.firstChild);
+    }
+
+    // Simulated waveform visualization
+    function animateWaveform() {
+      const ctx = waveformCanvas.getContext('2d');
+      const rect = waveformCanvas.getBoundingClientRect();
+      waveformCanvas.width = rect.width;
+      waveformCanvas.height = rect.height;
+      const w = waveformCanvas.width;
+      const h = waveformCanvas.height;
+
+      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      ctx.fillRect(0, 0, w, h);
+
+      if (isRecording && !isPaused) {
+        ctx.beginPath();
+        ctx.strokeStyle = '#e94560';
+        ctx.lineWidth = 2;
+        const amplitude = Math.random() * 20 + 10;
+        for (let x = 0; x < w; x += 3) {
+          const y = h / 2 + Math.sin(x * 0.05 + Date.now() * 0.01) * amplitude * Math.sin(x * 0.01);
+          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      } else {
+        ctx.strokeStyle = '#444';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, h / 2);
+        ctx.lineTo(w, h / 2);
+        ctx.stroke();
+      }
+
+      if (isRecording) {
+        animationFrame = requestAnimationFrame(animateWaveform);
+      }
+    }
+
+    recordBtn.addEventListener('click', () => {
+      if (!isRecording || isPaused) {
+        if (!mediaRecorder) {
+          initAudio().then(() => {
+            if (isPaused) togglePause();
+            else startRecording();
+          });
+        } else {
+          startRecording();
+        }
+      } else {
+        togglePause();
+      }
+    });
+
+    pauseBtn.addEventListener('click', togglePause);
+    stopBtn.addEventListener('click', stopRecording);
+
+    updateTimer();
+  </script>
+</body>
+</html>

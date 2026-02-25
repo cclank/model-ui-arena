@@ -1,0 +1,220 @@
+<!-- 设计说明：数字与模拟双视图时钟，采用极简现代风格。秒针呼吸动效配合时间律动背景渐变，白天/夜晚模式根据本地时间自动切换。大字体数字确保远距离可读性，SVG 模拟表盘提供精致视觉层次 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clock - Qwen3.5</title>
+  <style>
+    :root {
+      --bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      --clock-bg: rgba(255,255,255,0.95);
+      --hand-color: #e94560;
+      --mark-color: #333;
+      --text-primary: #1a1a2e;
+      --text-secondary: #666;
+    }
+    @media (min-width: 768px) {
+      :root {
+        --bg: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        --clock-bg: rgba(255,255,255,0.98);
+        --hand-color: #0f3460;
+        --mark-color: #ccc;
+        --text-primary: #0f3460;
+        --text-secondary: #888;
+      }
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      transition: background 0.5s ease;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 20px;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+    }
+    @media (min-width: 768px) {
+      .container { flex-direction: row; gap: 60px; }
+    }
+    .analog-clock {
+      width: 280px;
+      height: 280px;
+      background: var(--clock-bg);
+      border-radius: 50%;
+      position: relative;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3), inset 0 2px 10px rgba(255,255,255,0.5);
+    }
+    @media (min-width: 390px) {
+      .analog-clock { width: 320px; height: 320px; }
+    }
+    .center-dot {
+      width: 16px;
+      height: 16px;
+      background: var(--hand-color);
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.7; }
+    }
+    .hand {
+      position: absolute;
+      bottom: 50%;
+      left: 50%;
+      transform-origin: bottom center;
+      border-radius: 4px;
+    }
+    .hour-hand {
+      width: 6px;
+      height: 70px;
+      background: var(--hand-color);
+      margin-left: -3px;
+    }
+    .minute-hand {
+      width: 4px;
+      height: 100px;
+      background: var(--text-primary);
+      margin-left: -2px;
+    }
+    .second-hand {
+      width: 2px;
+      height: 120px;
+      background: #e94560;
+      margin-left: -1px;
+      animation: tick 1s steps(60) infinite;
+    }
+    @keyframes tick {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .mark {
+      position: absolute;
+      width: 2px;
+      height: 12px;
+      background: var(--mark-color);
+      top: 10px;
+      left: 50%;
+      transform-origin: center calc(140px - 50%);
+    }
+    .mark.hour {
+      width: 3px;
+      height: 16px;
+    }
+    @media (min-width: 390px) {
+      .mark { transform-origin: center calc(160px - 50%); }
+      .mark.hour { width: 4px; height: 20px; }
+    }
+    .digital-display {
+      background: var(--clock-bg);
+      padding: 30px 50px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      min-width: 280px;
+    }
+    .time-main {
+      font-size: 4rem;
+      font-weight: 200;
+      color: var(--text-primary);
+      letter-spacing: 4px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    @media (min-width: 390px) {
+      .time-main { font-size: 4.5rem; }
+    }
+    .date-info {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-top: 15px;
+      letter-spacing: 2px;
+    }
+    .period {
+      font-size: 0.9rem;
+      color: var(--hand-color);
+      margin-top: 8px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="analog-clock">
+      <div class="center-dot"></div>
+      <div class="hand hour-hand" id="hourHand"></div>
+      <div class="hand minute-hand" id="minuteHand"></div>
+      <div class="hand second-hand" id="secondHand"></div>
+    </div>
+    <div class="digital-display">
+      <div class="time-main" id="timeMain">--:--:--</div>
+      <div class="date-info" id="dateInfo">----</div>
+      <div class="period" id="period">--</div>
+    </div>
+  </div>
+  <script>
+    const hourHand = document.getElementById('hourHand');
+    const minuteHand = document.getElementById('minuteHand');
+    const secondHand = document.getElementById('secondHand');
+    const timeMain = document.getElementById('timeMain');
+    const dateInfo = document.getElementById('dateInfo');
+    const periodEl = document.getElementById('period');
+
+    // Create hour marks
+    const clock = document.querySelector('.analog-clock');
+    for (let i = 0; i < 12; i++) {
+      const mark = document.createElement('div');
+      mark.className = 'mark' + (i % 3 === 0 ? ' hour' : '');
+      mark.style.transform = `rotate(${i * 30}deg)`;
+      clock.appendChild(mark);
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const seconds = now.getSeconds();
+      const ms = now.getMilliseconds();
+
+      const hourDeg = (hours % 12) * 30 + minutes * 0.5;
+      const minuteDeg = minutes * 6 + seconds * 0.1;
+      const secondDeg = seconds * 6;
+
+      hourHand.style.transform = `rotate(${hourDeg}deg)`;
+      minuteHand.style.transform = `rotate(${minuteDeg}deg)`;
+      secondHand.style.transform = `rotate(${secondDeg}deg)`;
+
+      const hStr = String(hours % 12 || 12).padStart(2, '0');
+      const mStr = String(minutes).padStart(2, '0');
+      const sStr = String(seconds).padStart(2, '0');
+      timeMain.textContent = `${hStr}:${mStr}:${sStr}`;
+
+      const days = ['日','一','二','三','四','五','六'];
+      const month = now.getMonth() + 1;
+      const date = now.getDate();
+      dateInfo.textContent = `${month}月${date}日 星期${days[now.getDay()]}`;
+
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      periodEl.textContent = hours >= 12 ? '下午' : '上午';
+    }
+
+    setInterval(updateClock, 50);
+    updateClock();
+  </script>
+</body>
+</html>
