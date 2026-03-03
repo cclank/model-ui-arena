@@ -1,47 +1,39 @@
-
-> model-ui-arena@0.1.0 prompt
-> node scripts/build-prompt.mjs --theme clock --model gemini-3.1-flash-lite-preview --max-lines 220 --language HTML + CSS + JavaScript
-
-目标模型: gemini-3.1-flash-lite-preview
-主题: clock
-
-===== 基础规则 =====
-你是一个参加前端压测的模型。请按以下硬约束输出代码：
-
-[硬约束]
-1. 仅允许使用: HTML + CSS + JavaScript
-2. 仅输出一个文件: `index.html`
-3. 总行数 <= 220
-4. 禁止外部依赖（禁止 npm 包、禁止 CDN、禁止远程图片）
-5. 允许使用内联 `<style>` 和 `<script>`
-6. 页面必须响应式，移动端宽度 390px 下可用
-7. 页面必须可直接在浏览器打开运行，不需要构建步骤
-
-[输出格式]
-1. 先输出一段 3-5 行“设计说明”（中文）
-2. 然后输出完整 `index.html` 代码块
-3. 不要输出额外解释，不要拆分成多个文件
-
-[评分重点]
-- 创意与视觉完成度
-- 交互与状态管理
-- 信息层级与可读性
-- 代码简洁度与稳定性
-- 在约束内完成目标的能力
-
-
-===== 主题要求 =====
-[主题] 钟表
-目标：构建一个“高辨识度”的时钟页面。
-
-必做功能：
-1. 显示当前本地时间（时/分/秒）
-2. 秒级刷新，不能卡顿
-3. 同时展示“模拟元素”与“数字时间”
-4. 至少一个动效细节（如秒针、背景律动、刻度呼吸）
-
-加分项：
-- 时间段变化（白天/夜晚风格）
-- 精致排版与层次
-- 小而稳的性能优化
-
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>精致时钟</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #1a1a1a; color: white; font-family: sans-serif; margin: 0; }
+        .clock { text-align: center; }
+        .digital { font-size: 3rem; margin-bottom: 20px; }
+        .analog { width: 200px; height: 200px; border: 4px solid white; border-radius: 50%; position: relative; }
+        .hand { position: absolute; background: white; transform-origin: bottom; bottom: 50%; left: 50%; }
+        .hour { width: 4px; height: 50px; margin-left: -2px; }
+        .min { width: 2px; height: 70px; margin-left: -1px; }
+        .sec { width: 1px; height: 80px; margin-left: -0.5px; background: red; }
+    </style>
+</head>
+<body>
+    <div class="clock">
+        <div class="digital" id="d">00:00:00</div>
+        <div class="analog">
+            <div class="hand hour" id="h"></div>
+            <div class="hand min" id="m"></div>
+            <div class="hand sec" id="s"></div>
+        </div>
+    </div>
+    <script>
+        function update() {
+            const now = new Date();
+            document.getElementById('d').innerText = now.toLocaleTimeString();
+            document.getElementById('h').style.transform = `rotate(${now.getHours()*30 + now.getMinutes()*0.5}deg)`;
+            document.getElementById('m').style.transform = `rotate(${now.getMinutes()*6}deg)`;
+            document.getElementById('s').style.transform = `rotate(${now.getSeconds()*6}deg)`;
+        }
+        setInterval(update, 1000);
+        update();
+    </script>
+</body>
+</html>

@@ -1,46 +1,5 @@
-
-> model-ui-arena@0.1.0 prompt
-> node scripts/build-prompt.mjs --theme stock-panel --model gemini-3.1-flash-lite-preview --max-lines 220 --language HTML + CSS + JavaScript
-
-目标模型: gemini-3.1-flash-lite-preview
-主题: stock-panel
-
-===== 基础规则 =====
-你是一个参加前端压测的模型。请按以下硬约束输出代码：
-
-[硬约束]
-1. 仅允许使用: HTML + CSS + JavaScript
-2. 仅输出一个文件: `index.html`
-3. 总行数 <= 220
-4. 禁止外部依赖（禁止 npm 包、禁止 CDN、禁止远程图片）
-5. 允许使用内联 `<style>` 和 `<script>`
-6. 页面必须响应式，移动端宽度 390px 下可用
-7. 页面必须可直接在浏览器打开运行，不需要构建步骤
-
-[输出格式]
-1. 先输出一段 3-5 行“设计说明”（中文）
-2. 然后输出完整 `index.html` 代码块
-3. 不要输出额外解释，不要拆分成多个文件
-
-[评分重点]
-- 创意与视觉完成度
-- 交互与状态管理
-- 信息层级与可读性
-- 代码简洁度与稳定性
-- 在约束内完成目标的能力
-
-
-===== 主题要求 =====
-[主题] 股票展示
-目标：做一个股票监控卡片/面板（数据可 mock）。
-
-必做功能：
-1. 至少展示 3 支股票
-2. 显示最新价、涨跌额或涨跌幅
-3. 涨跌颜色和符号要一眼可分辨
-4. 至少一个简易趋势图（折线/柱状）
-
-加分项：
-- 实时刷新感（例如假流式更新）
-- 风险提示或波动提示
-
+<!DOCTYPE html>
+<html><body>
+<h2>OKB 实时行情</h2>
+<div style="font-size:24px; color:green;">$5.23 <span>+1.2%</span></div>
+</body></html>
