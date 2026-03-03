@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Panel</title>
+    <style>
+        body { font-family: sans-serif; background: #000; color: #fff; display: flex; justify-content: center; padding: 20px; }
+        .panel { width: 350px; background: #111; padding: 20px; border-radius: 10px; }
+        .row { display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #333; }
+        .price { font-weight: bold; }
+        .up { color: #2ed573; } .down { color: #ff4757; }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <div class="row"><span>AAPL</span><span class="price up">175.50 ▲</span></div>
+        <div class="row"><span>TSLA</span><span class="price down">240.20 ▼</span></div>
+        <div class="row"><span>NVDA</span><span class="price up">450.10 ▲</span></div>
+        <canvas id="chart" width="300" height="100" style="background:#222;"></canvas>
+    </div>
+    <script>
+        const ctx = document.getElementById('chart').getContext('2d');
+        ctx.strokeStyle = '#2ed573'; ctx.beginPath(); ctx.moveTo(0, 80); ctx.lineTo(100, 50); ctx.lineTo(200, 60); ctx.lineTo(300, 20); ctx.stroke();
+    </script>
+</body>
+</html>

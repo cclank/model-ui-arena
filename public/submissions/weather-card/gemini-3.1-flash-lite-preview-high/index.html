@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Card</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; font-family: sans-serif; }
+        .card { width: 300px; padding: 20px; background: white; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: all 0.3s; }
+        .sunny { background: linear-gradient(135deg, #f7d633, #ff9f43); color: white; }
+        .rainy { background: linear-gradient(135deg, #5f27cd, #341f97); color: white; }
+        button { border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="card" id="card">
+        <select id="city" onchange="update()">
+            <option value="Beijing">Beijing</option><option value="Shanghai">Shanghai</option><option value="Guangzhou">Guangzhou</option>
+        </select>
+        <h2 id="temp">25°C</h2>
+        <p id="desc">Sunny</p>
+        <p id="details">Humidity: 40%</p>
+    </div>
+    <script>
+        const data = { Beijing: { t: '25°C', d: 'Sunny', c: 'sunny' }, Shanghai: { t: '18°C', d: 'Rainy', c: 'rainy' }, Guangzhou: { t: '28°C', d: 'Cloudy', c: 'cloudy' } };
+        function update() {
+            const city = document.getElementById('city').value;
+            const card = document.getElementById('card');
+            card.className = 'card ' + data[city].c;
+            document.getElementById('temp').innerText = data[city].t;
+            document.getElementById('desc').innerText = data[city].d;
+        }
+        update();
+    </script>
+</body>
+</html>

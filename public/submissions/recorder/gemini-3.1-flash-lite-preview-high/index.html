@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Recorder</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #222; color: #fff; }
+        .recorder { text-align: center; width: 300px; padding: 20px; background: #333; border-radius: 20px; }
+        .wave { height: 60px; display: flex; justify-content: center; align-items: center; gap: 4px; margin: 20px 0; }
+        .bar { width: 4px; height: 10px; background: #555; border-radius: 2px; }
+        .recording .bar { animation: pulse 0.5s infinite alternate; }
+        @keyframes pulse { to { height: 40px; background: #ff4757; } }
+        .controls button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 10px; font-weight: bold; }
+        .btn-start { background: #2ed573; }
+        .btn-stop { background: #ff4757; }
+    </style>
+</head>
+<body>
+    <div class="recorder">
+        <div id="status">Ready</div>
+        <div class="wave" id="wave">
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        </div>
+        <div id="timer">00:00</div>
+        <div class="controls">
+            <button id="start" class="btn-start">Start</button>
+            <button id="stop" class="btn-stop" disabled>Stop</button>
+        </div>
+    </div>
+    <script>
+        let s = 0, timer, active = false;
+        const startBtn = document.getElementById('start'), stopBtn = document.getElementById('stop'), timerEl = document.getElementById('timer');
+        startBtn.onclick = () => {
+            active = true;
+            document.body.classList.add('recording');
+            document.getElementById('status').innerText = 'Recording...';
+            startBtn.disabled = true; stopBtn.disabled = false;
+            timer = setInterval(() => { s++; timerEl.innerText = `${Math.floor(s/60).toString().padStart(2,0)}:${(s%60).toString().padStart(2,0)}`; }, 1000);
+        };
+        stopBtn.onclick = () => {
+            clearInterval(timer); active = false;
+            document.body.classList.remove('recording');
+            document.getElementById('status').innerText = 'Finished (' + timerEl.innerText + ')';
+            startBtn.disabled = false; stopBtn.disabled = true; s = 0;
+        };
+    </script>
+</body>
+</html>

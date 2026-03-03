@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firework Effect</title>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; height: 100vh; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d'), particles = [];
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        function create(x, y) {
+            for(let i=0; i<30; i++) particles.push({ x, y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, a: 1, c: `hsl(${Math.random()*360},100%,50%)` });
+        }
+        function animate() {
+            ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy; p.a -= 0.02;
+                ctx.fillStyle = p.c; ctx.globalAlpha = p.a; ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fill();
+                if(p.a <= 0) particles.splice(i, 1);
+            });
+            requestAnimationFrame(animate);
+        }
+        window.onclick = (e) => create(e.clientX, e.clientY);
+        animate();
+    </script>
+</body>
+</html>

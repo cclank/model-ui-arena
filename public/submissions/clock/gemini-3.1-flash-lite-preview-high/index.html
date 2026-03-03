@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimalist Clock</title>
+    <style>
+        :root { --bg: #f4f4f9; --text: #333; --accent: #ff4757; }
+        body.night { --bg: #2f3542; --text: #ffffff; }
+        body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: var(--bg); color: var(--text); font-family: sans-serif; transition: background 0.5s; }
+        .clock-container { text-align: center; }
+        .analog-clock { width: 200px; height: 200px; border: 4px solid var(--text); border-radius: 50%; position: relative; margin: 0 auto 20px; }
+        .hand { position: absolute; bottom: 50%; left: 50%; transform-origin: bottom; background: var(--text); border-radius: 2px; }
+        .hour { width: 4px; height: 50px; margin-left: -2px; }
+        .minute { width: 3px; height: 70px; margin-left: -1.5px; }
+        .second { width: 2px; height: 80px; margin-left: -1px; background: var(--accent); }
+        #digital { font-size: 2rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="clock-container">
+        <div class="analog-clock">
+            <div id="h-hand" class="hand hour"></div>
+            <div id="m-hand" class="hand minute"></div>
+            <div id="s-hand" class="hand second"></div>
+        </div>
+        <div id="digital">00:00:00</div>
+    </div>
+    <script>
+        function update() {
+            const now = new Date();
+            const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+            document.getElementById('h-hand').style.transform = `rotate(${h * 30 + m * 0.5}deg)`;
+            document.getElementById('m-hand').style.transform = `rotate(${m * 6}deg)`;
+            document.getElementById('s-hand').style.transform = `rotate(${s * 6}deg)`;
+            document.getElementById('digital').innerText = now.toLocaleTimeString('en-GB');
+            document.body.className = (h < 6 || h >= 18) ? 'night' : '';
+        }
+        setInterval(update, 1000);
+        update();
+    </script>
+</body>
+</html>
