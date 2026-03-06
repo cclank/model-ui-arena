@@ -3,41 +3,137 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Celestial Clock</title>
+<title>Observatory Clock</title>
 <style>
-:root{--sky1:#06111f;--sky2:#1f4d7c;--text:#eef6ff;--muted:#c4d6ea;--gold:#ffd47e;--cyan:#79e6ff;--rose:#ff9fc6;--face:#08141f;--h:0;--m:0;--s:0}
-*{box-sizing:border-box}html,body{height:100%;margin:0}body{display:grid;place-items:center;padding:18px;overflow:hidden;color:var(--text);font-family:"Times New Roman","Songti SC",serif;background:radial-gradient(60vmax 60vmax at 10% 10%,rgba(121,230,255,.16),transparent 45%),radial-gradient(70vmax 70vmax at 90% 90%,rgba(255,159,198,.12),transparent 35%),linear-gradient(160deg,var(--sky1),var(--sky2))}
-body:before,body:after{content:"";position:fixed;inset:-10vmax;background:radial-gradient(circle,#fff 0 1px,transparent 1.5px) 0 0/32px 32px,radial-gradient(circle,rgba(255,255,255,.6) 0 1px,transparent 1.6px) 16px 18px/44px 44px;opacity:.18;animation:drift 36s linear infinite}body:after{opacity:.08;transform:scale(1.3);animation-direction:reverse}
-.shell{width:min(94vw,440px);padding:24px;border-radius:34px;border:1px solid rgba(255,255,255,.16);background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.04));backdrop-filter:blur(16px);box-shadow:0 28px 80px rgba(0,0,0,.35)}
-.top,.meta{display:flex;justify-content:space-between;gap:12px;align-items:center}.k{font-size:12px;letter-spacing:.26em;text-transform:uppercase;opacity:.75}.pill{padding:7px 12px;border-radius:999px;background:rgba(255,255,255,.08);font-size:12px}
-.stack{position:relative;aspect-ratio:1;margin:18px 0 20px;display:grid;place-items:center}
-.ring{position:absolute;border-radius:50%;display:grid;place-items:center;background:conic-gradient(from -90deg,var(--tone) 0 calc(var(--deg)*1deg),rgba(255,255,255,.08) 0 360deg)}
-.hour{width:100%;height:100%;padding:16px;--tone:var(--gold)}.minute{width:86%;height:86%;padding:16px;--tone:var(--cyan)}.second{width:72%;height:72%;padding:16px;--tone:var(--rose)}
-.face{position:relative;width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.13),transparent 28%),radial-gradient(circle at 50% 55%,#112233 0,#09131e 70%);box-shadow:inset 0 0 28px rgba(255,255,255,.08),0 20px 35px rgba(0,0,0,.25)}
-.face:before{content:"";position:absolute;inset:9%;border:1px solid rgba(255,255,255,.08);border-radius:50%}.glow{position:absolute;inset:14%;border:1px solid rgba(255,255,255,.07);border-radius:50%;animation:pulse 2.4s ease-in-out infinite}
-.tick{position:absolute;left:50%;top:50%;width:2px;height:18px;background:rgba(255,255,255,.78);border-radius:999px;transform-origin:center calc(50% + 108px)}.tick.major{height:24px;width:3px;background:var(--gold)}
-.hand{position:absolute;left:50%;top:50%;transform-origin:bottom center;translate:-50% -100%;border-radius:999px}.hand.h{width:8px;height:62px;background:linear-gradient(#fff,#ffd47e)}.hand.m{width:5px;height:86px;background:linear-gradient(#fff,#79e6ff)}.hand.s{width:2px;height:98px;background:linear-gradient(#fff,#ff9fc6);box-shadow:0 0 14px rgba(255,159,198,.8)}
-.pin{position:absolute;left:50%;top:50%;width:16px;height:16px;border-radius:50%;translate:-50% -50%;background:#fff;box-shadow:0 0 0 6px rgba(255,255,255,.1)}
-.readout{text-align:center}.time{font-size:clamp(36px,10vw,58px);letter-spacing:.12em;font-variant-numeric:tabular-nums}.date{margin-top:8px;font-size:15px;color:var(--muted)}.meta{margin-top:16px;font-size:13px;color:var(--muted)}
-@keyframes drift{to{transform:rotate(1turn)}}@keyframes pulse{50%{transform:scale(1.05);opacity:.65}}@media (max-width:390px){.shell{padding:18px;border-radius:26px}.tick{transform-origin:center calc(50% + 92px)}.hand.h{height:54px}.hand.m{height:76px}.hand.s{height:88px}.time{font-size:42px}}
+:root{
+  --bg1:#07111f;--bg2:#183a67;--fg:#f7f5ef;--muted:#c8d3e4;--line:rgba(255,255,255,.18);
+  --accent:#8bd8ff;--accent2:#ffd07d;--accent3:#ff9bb9;--glass:rgba(255,255,255,.08)
+}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{
+  display:grid;place-items:center;padding:18px;overflow:hidden;color:var(--fg);
+  font-family:"Iowan Old Style","Songti SC","Times New Roman",serif;
+  background:
+    radial-gradient(55vmax 55vmax at 15% 15%,rgba(139,216,255,.18),transparent 42%),
+    radial-gradient(50vmax 50vmax at 85% 85%,rgba(255,155,185,.12),transparent 32%),
+    linear-gradient(160deg,var(--bg1),var(--bg2));
+}
+body:before,body:after{
+  content:"";position:fixed;inset:-10vmax;pointer-events:none;
+  background:
+    radial-gradient(circle,#fff 0 1px,transparent 1.7px) 0 0/34px 34px,
+    radial-gradient(circle,rgba(255,255,255,.65) 0 1px,transparent 1.8px) 18px 20px/48px 48px;
+  opacity:.15;animation:sky 36s linear infinite
+}
+body:after{opacity:.06;transform:scale(1.25);animation-direction:reverse}
+.panel{
+  width:min(94vw,450px);padding:22px;border-radius:32px;border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.04));
+  backdrop-filter:blur(16px);box-shadow:0 28px 80px rgba(0,0,0,.34)
+}
+.top,.meta{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.title{font-size:12px;letter-spacing:.28em;text-transform:uppercase;opacity:.78}
+.phase{padding:7px 12px;border-radius:999px;background:var(--glass);font-size:12px}
+.dialWrap{position:relative;margin:18px 0 20px}
+.halo,.progress{position:absolute;inset:50% auto auto 50%;translate:-50% -50%;border-radius:50%}
+.halo{width:min(74vw,330px);aspect-ratio:1;border:1px solid rgba(255,255,255,.08);box-shadow:0 0 0 16px rgba(255,255,255,.02)}
+.progress{
+  width:min(80vw,356px);aspect-ratio:1;padding:12px;
+  background:conic-gradient(from -90deg,var(--accent) 0 var(--s),rgba(255,255,255,.08) var(--s) 360deg)
+}
+.clock{
+  position:relative;width:min(72vw,320px);aspect-ratio:1;margin:auto;border-radius:50%;
+  border:1px solid rgba(255,255,255,.16);
+  background:
+    radial-gradient(circle at 32% 28%,rgba(255,255,255,.14),transparent 24%),
+    radial-gradient(circle at 50% 55%,#112033 0,#09131d 74%);
+  box-shadow:inset 0 0 28px rgba(255,255,255,.08),0 24px 36px rgba(0,0,0,.25)
+}
+.clock:before,.clock:after{content:"";position:absolute;border-radius:50%}
+.clock:before{inset:8%;border:1px solid rgba(255,255,255,.09)}
+.clock:after{inset:16%;border:1px solid rgba(255,255,255,.06);animation:breathe 2.4s ease-in-out infinite}
+.tick{
+  position:absolute;left:50%;top:50%;width:2px;height:46%;
+  transform-origin:50% 100%;transform:translate(-50%,-100%) rotate(var(--deg))
+}
+.tick:before{content:"";position:absolute;left:0;top:0;width:100%;height:9px;border-radius:999px;background:rgba(255,255,255,.72)}
+.tick.major:before{height:15px;width:3px;left:-.5px;background:var(--accent2)}
+.hand{position:absolute;left:50%;top:50%;transform-origin:50% calc(100% - 12px);transform:translate(-50%,-100%) rotate(0);border-radius:999px;will-change:transform}
+.hour{width:8px;height:31%;background:linear-gradient(#fff,var(--accent2))}
+.minute{width:5px;height:39%;background:linear-gradient(#fff,var(--accent))}
+.second{width:2px;height:43%;background:linear-gradient(#fff,var(--accent3));box-shadow:0 0 14px rgba(255,155,185,.85)}
+.pin{position:absolute;left:50%;top:50%;width:16px;height:16px;transform:translate(-50%,-50%);border-radius:50%;background:#fff;box-shadow:0 0 0 6px rgba(255,255,255,.12)}
+.digital{text-align:center}.time{font-size:clamp(38px,10vw,58px);letter-spacing:.12em;font-variant-numeric:tabular-nums}
+.date{margin-top:8px;font-size:15px;color:var(--muted)}.bar{height:8px;margin:16px 0 10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+.fill{height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,var(--accent2),var(--accent),var(--accent3))}
+.meta{font-size:13px;color:var(--muted)}
+@keyframes sky{to{transform:rotate(1turn)}}@keyframes breathe{50%{transform:scale(1.04);opacity:.62}}
+@media (max-width:390px){
+  .panel{padding:18px;border-radius:26px}.time{font-size:42px}.clock{width:min(74vw,290px)}
+  .halo{width:min(78vw,306px)}.progress{width:min(84vw,332px)}
+}
 </style>
 </head>
 <body>
-<section class="shell">
-  <div class="top"><div class="k">Celestial Clock</div><div class="pill" id="phase">夜航模式</div></div>
-  <div class="stack">
-    <div class="ring hour" id="hourRing"><div class="ring minute" id="minuteRing"><div class="ring second" id="secondRing"><div class="face" id="face"><div class="glow"></div><div class="hand h" id="hour"></div><div class="hand m" id="minute"></div><div class="hand s" id="second"></div><div class="pin"></div></div></div></div></div>
+<section class="panel">
+  <div class="top">
+    <div class="title">Observatory Clock</div>
+    <div class="phase" id="phase">夜航模式</div>
   </div>
-  <div class="readout"><div class="time" id="time">00:00:00</div><div class="date" id="date">正在同步本地时间</div></div>
-  <div class="meta"><span id="zone">Local</span><span id="mood">星轨平稳</span></div>
+  <div class="dialWrap">
+    <div class="halo"></div>
+    <div class="progress" id="progress">
+      <div class="clock" id="clock">
+        <div id="ticks"></div>
+        <div class="hand hour" id="hour"></div>
+        <div class="hand minute" id="minute"></div>
+        <div class="hand second" id="second"></div>
+        <div class="pin"></div>
+      </div>
+    </div>
+  </div>
+  <div class="digital">
+    <div class="time" id="time">00:00:00</div>
+    <div class="date" id="date">正在同步本地时间</div>
+  </div>
+  <div class="bar"><div class="fill" id="fill"></div></div>
+  <div class="meta"><span id="zone">Local Time</span><span id="mood">秒针平滑推进</span></div>
 </section>
 <script>
-const face=document.getElementById('face');for(let i=0;i<60;i++){const t=document.createElement('i');t.className='tick'+(i%5===0?' major':'');t.style.transform=`translate(-50%,-50%) rotate(${i*6}deg)`;face.appendChild(t)}
-const $=id=>document.getElementById(id),rings={h:$('hourRing'),m:$('minuteRing'),s:$('secondRing')},hands={h:$('hour'),m:$('minute'),s:$('second')};
-function pad(n){return String(n).padStart(2,'0')}const moods=['星轨平稳','秒针发光','分环推进','昼夜切换'];
-function theme(h){const day=h>=6&&h<18,root=document.documentElement.style;if(day){root.setProperty('--sky1','#8dcdf8');root.setProperty('--sky2','#375f91');root.setProperty('--text','#102338');root.setProperty('--muted','#23435e')}else{root.setProperty('--sky1','#06111f');root.setProperty('--sky2','#1f4d7c');root.setProperty('--text','#eef6ff');root.setProperty('--muted','#c4d6ea')}$('phase').textContent=day?'白昼模式':'夜航模式'}
-function draw(){const now=new Date(),h=now.getHours(),m=now.getMinutes(),s=now.getSeconds();rings.h.style.setProperty('--deg',((h%12)+m/60)/12*360);rings.m.style.setProperty('--deg',(m+s/60)/60*360);rings.s.style.setProperty('--deg',s/60*360);hands.h.style.transform=`translate(-50%,-100%) rotate(${(h%12)*30+m/2}deg)`;hands.m.style.transform=`translate(-50%,-100%) rotate(${m*6+s/10}deg)`;hands.s.style.transform=`translate(-50%,-100%) rotate(${s*6}deg)`;$('time').textContent=[h,m,s].map(pad).join(':');$('date').textContent=now.toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});$('zone').textContent=Intl.DateTimeFormat().resolvedOptions().timeZone;$('mood').textContent=moods[s%4];theme(h)}
-draw();setInterval(draw,1000)
+const clock=document.getElementById('ticks');
+for(let i=0;i<60;i++){
+  const tick=document.createElement('i');
+  tick.className='tick'+(i%5===0?' major':'');
+  tick.style.setProperty('--deg',`${i*6}deg`);
+  clock.appendChild(tick);
+}
+const $=id=>document.getElementById(id),hour=$('hour'),minute=$('minute'),second=$('second'),fill=$('fill'),phase=$('phase'),mood=$('mood'),progress=$('progress');
+const moods=['星空稳定','轨道刷新','昼夜切换','时间同步'];
+const pad=n=>String(n).padStart(2,'0');
+function theme(hourValue){
+  const day=hourValue>=6&&hourValue<18,root=document.documentElement.style;
+  root.setProperty('--bg1',day?'#9ad9ff':'#07111f');
+  root.setProperty('--bg2',day?'#4c78a8':'#183a67');
+  root.setProperty('--fg',day?'#13263d':'#f7f5ef');
+  root.setProperty('--muted',day?'#38516b':'#c8d3e4');
+  root.setProperty('--line',day?'rgba(19,38,61,.16)':'rgba(255,255,255,.18)');
+  root.setProperty('--glass',day?'rgba(255,255,255,.22)':'rgba(255,255,255,.08)');
+  phase.textContent=day?'白昼模式':'夜航模式';
+}
+function render(){
+  const now=new Date(),h=now.getHours(),m=now.getMinutes(),s=now.getSeconds();
+  hour.style.transform=`translate(-50%,-100%) rotate(${(h%12)*30+m*.5}deg)`;
+  minute.style.transform=`translate(-50%,-100%) rotate(${m*6+s*.1}deg)`;
+  second.style.transform=`translate(-50%,-100%) rotate(${s*6}deg)`;
+  $('time').textContent=`${pad(h)}:${pad(m)}:${pad(s)}`;
+  $('date').textContent=now.toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+  $('zone').textContent=Intl.DateTimeFormat().resolvedOptions().timeZone;
+  fill.style.width=((h*60+m)/1440*100).toFixed(2)+'%';
+  progress.style.setProperty('--s',`${s/60*360}deg`);
+  mood.textContent=moods[s%4];
+  theme(h);
+}
+render();setInterval(render,1000);
 </script>
 </body>
 </html>
