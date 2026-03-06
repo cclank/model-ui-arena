@@ -39,6 +39,15 @@ body {
   margin-bottom: 18px;
 }
 
+.hero-actions {
+  position: absolute;
+  top: 4px;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .hero-kicker {
   color: var(--accent);
   letter-spacing: 0.16em;
@@ -78,10 +87,8 @@ body {
   animation: titleSweep 4.1s ease-in-out infinite;
 }
 
-.author-link {
-  position: absolute;
-  top: 4px;
-  right: 0;
+.author-link,
+.github-link {
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -96,7 +103,22 @@ body {
   animation: authorPulse 3.8s ease-in-out infinite;
 }
 
-.author-link::after {
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+.github-link svg {
+  width: 18px;
+  height: 18px;
+}
+
+.author-link::after,
+.github-link::after {
   content: "";
   position: absolute;
   inset: -120% -90%;
@@ -114,7 +136,8 @@ body {
   animation: authorSweep 3.8s linear infinite;
 }
 
-.author-link:hover {
+.author-link:hover,
+.github-link:hover {
   border-color: var(--accent);
   color: #ffffff;
   box-shadow:
@@ -453,10 +476,16 @@ body {
     padding-right: 0;
   }
 
-  .author-link {
+  .hero-actions {
     position: static;
     display: inline-flex;
     margin-top: 10px;
+  }
+
+  .author-link,
+  .github-link {
+    position: static;
+    display: inline-flex;
   }
 
   .row {
