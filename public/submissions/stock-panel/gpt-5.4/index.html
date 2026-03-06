@@ -3,51 +3,29 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Pulse Ticker</title>
+<title>Night Market Board</title>
 <style>
-:root{--bg:#08111f;--panel:#101d31;--fg:#f3f6fb;--green:#34d399;--red:#ff6b7b;--amber:#ffc857}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at top,rgba(61,118,255,.18),transparent 24%),linear-gradient(180deg,#050b14,#0e1626);font-family:"Helvetica Neue","PingFang SC",sans-serif;color:var(--fg)}
-.board{width:min(94vw,460px);padding:20px;border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);box-shadow:0 26px 80px rgba(0,0,0,.34)}
-.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.head b{font-size:13px;letter-spacing:.18em;text-transform:uppercase}.tag{padding:6px 10px;border-radius:999px;background:rgba(255,200,87,.12);color:var(--amber);font-size:12px}
-.row{display:grid;grid-template-columns:1.1fr .9fr 90px;gap:12px;align-items:center;padding:14px 12px;border-radius:18px;background:rgba(255,255,255,.03);margin-top:10px}
-.name strong{display:block;font-size:17px}.name span{font-size:12px;opacity:.66}.price{font-variant-numeric:tabular-nums}.price strong{display:block;font-size:26px}.delta{font-size:13px;font-weight:700}
-.up{color:var(--green)}.down{color:var(--red)}.spark{width:100%;height:54px}.foot{display:flex;justify-content:space-between;margin-top:14px;font-size:12px;opacity:.72}
-@media (max-width:390px){.row{grid-template-columns:1fr .9fr 74px;padding:12px 10px}.price strong{font-size:22px}}
+:root{--bg:#060b13;--panel:#0f1724;--fg:#eef4ff;--muted:#94a8c3;--up:#2fd39a;--down:#ff6f88;--amber:#ffd166}
+*{box-sizing:border-box}html,body{height:100%;margin:0}body{display:grid;place-items:center;padding:18px;color:var(--fg);font-family:"Helvetica Neue","PingFang SC",sans-serif;background:radial-gradient(circle at 20% 0,rgba(61,115,255,.2),transparent 24%),linear-gradient(180deg,#04070c,#0c1220 55%,#090d15)}
+.board{position:relative;width:min(94vw,460px);padding:20px;border-radius:28px;border:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));box-shadow:0 28px 80px rgba(0,0,0,.38);overflow:hidden}.board:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent,rgba(255,255,255,.03),transparent);translate:0 -100%;animation:scan 6s linear infinite}
+.top,.heat,.foot{display:flex;justify-content:space-between;align-items:center;gap:10px}.top b{font-size:12px;letter-spacing:.24em;text-transform:uppercase}.tag,.flag{padding:6px 10px;border-radius:999px;font-size:12px}.tag{background:rgba(255,209,102,.12);color:var(--amber)}.heat{margin:14px 0;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.04)}.meter{flex:1;height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}.fill{height:100%;width:48%;background:linear-gradient(90deg,var(--down),var(--amber),var(--up));border-radius:999px}
+.row{display:grid;grid-template-columns:1fr .9fr 96px;gap:12px;align-items:center;padding:14px 12px;margin-top:10px;border-radius:20px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05)}.name strong{display:block;font-size:17px}.name span{font-size:12px;color:var(--muted)}.price strong{display:block;font-size:26px;font-variant-numeric:tabular-nums}.delta{font-size:13px;font-weight:700}.up{color:var(--up)}.down{color:var(--down)}.flag{display:inline-block;margin-top:6px;background:rgba(255,255,255,.06);color:var(--muted)}.spark{width:100%;height:56px}.foot{margin-top:14px;font-size:12px;color:var(--muted)}
+@keyframes scan{to{translate:0 100%}}@media (max-width:390px){.row{grid-template-columns:1fr .9fr 80px;padding:12px 10px}.price strong{font-size:22px}}
 </style>
 </head>
 <body>
-  <section class="board">
-    <div class="head"><b>Pulse Ticker</b><span class="tag" id="risk">波动温和</span></div>
-    <div id="list"></div>
-    <div class="foot"><span>模拟流式更新</span><span id="stamp">--:--:--</span></div>
-  </section>
+<section class="board">
+  <div class="top"><b>Night Market</b><span class="tag" id="risk">趋势升温</span></div>
+  <div class="heat"><span>市场热度</span><div class="meter"><div class="fill" id="fill"></div></div><span id="sentiment">58%</span></div>
+  <div id="list"></div>
+  <div class="foot"><span>模拟流式行情 · 1.5s 刷新</span><span id="stamp">--:--:--</span></div>
+</section>
 <script>
-const stocks=[
-  {name:'NOVA AI',code:'NVA',price:128.3,delta:2.4,pts:[28,34,31,39,42,46,50]},
-  {name:'Blue Grid',code:'BGR',price:86.7,delta:-1.1,pts:[54,52,50,49,46,44,43]},
-  {name:'Lotus EV',code:'LEV',price:211.2,delta:3.8,pts:[24,28,27,35,33,41,48]}
-];
-const list=document.getElementById('list'),risk=document.getElementById('risk'),stamp=document.getElementById('stamp');
-const fmt=n=>n.toFixed(2), pct=(d,p)=>(d/p*100).toFixed(2);
-function spark(points,color){
-  const coords=points.map((y,i)=>`${i*15},${58-y}`).join(' ');
-  return `<svg class="spark" viewBox="0 0 90 58" fill="none"><polyline points="${coords}" stroke="${color}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="90" cy="${58-points.at(-1)}" r="3" fill="${color}"/></svg>`;
-}
-function render(){
-  list.innerHTML=stocks.map(s=>{const up=s.delta>=0,c=up?'var(--green)':'var(--red)',sign=up?'+':'';return `
-    <div class="row">
-      <div class="name"><strong>${s.name}</strong><span>${s.code}</span></div>
-      <div class="price"><strong>${fmt(s.price)}</strong><div class="delta ${up?'up':'down'}">${sign}${fmt(s.delta)} / ${sign}${pct(s.delta,s.price-s.delta)}%</div></div>
-      ${spark(s.pts,c)}
-    </div>`}).join('');
-  const vol=Math.max(...stocks.map(s=>Math.abs(s.delta))); risk.textContent=vol>3?'波动偏高':vol>1.5?'趋势活跃':'波动温和';
-  stamp.textContent=new Date().toLocaleTimeString('zh-CN',{hour12:false});
-}
-function tick(){
-  stocks.forEach(s=>{const move=(Math.random()-.5)*(s.price>150?2.2:1.4);s.price+=move;s.delta+=move;s.pts=[...s.pts.slice(1),Math.max(20,Math.min(54,s.pts.at(-1)+move*4))]});
-  render();
-}
-render(); setInterval(tick,1800);
+const rows=[{name:'Aurora AI',code:'AUR',base:132.4,amp:2.8,phase:0.2,pts:[32,40,44,41,48,53,56],note:'算力回暖'},{name:'Delta Grid',code:'DGT',base:88.9,amp:1.9,phase:2.1,pts:[54,50,47,45,48,43,40],note:'波动可控'},{name:'Lotus Motion',code:'LTM',base:214.1,amp:3.4,phase:1.1,pts:[26,34,38,36,44,49,54],note:'资金追涨'}];
+const list=document.getElementById('list'),risk=document.getElementById('risk'),fill=document.getElementById('fill'),sentiment=document.getElementById('sentiment'),stamp=document.getElementById('stamp');let t=0;
+const svg=(pts,color)=>`<svg class="spark" viewBox="0 0 96 56" fill="none"><defs><linearGradient id="g${color.includes('up')?1:0}" x1="0" x2="0" y1="0" y2="1"><stop stop-color="currentColor" stop-opacity=".55"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><path d="M0 56 L${pts.map((y,i)=>`${i*16},${56-y}`).join(' ')} L96 56 Z" fill="url(#g${color.includes('up')?1:0})" class="${color}"/><polyline points="${pts.map((y,i)=>`${i*16},${56-y}`).join(' ')}" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="${color}"/></svg>`;
+function render(){const values=rows.map((row,i)=>{const move=Math.sin(t/2+row.phase)*row.amp;const price=row.base+move;const prev=row.base+Math.sin((t-1)/2+row.phase)*row.amp;const delta=price-prev;const pts=row.pts.map((p,j)=>Math.max(18,Math.min(54,p+Math.sin(t/2+row.phase+j*.35)*4)));return {...row,price,delta,pts}});const heat=Math.round(50+values.reduce((a,b)=>a+b.delta,0)*8);fill.style.width=Math.max(10,Math.min(92,heat))+'%';sentiment.textContent=heat+'%';risk.textContent=heat>62?'趋势升温':heat<45?'波动降温':'多空胶着';list.innerHTML=values.map(v=>{const up=v.delta>=0,c=up?'up':'down',sign=up?'+':'';const pct=(v.delta/(v.price-v.delta)*100).toFixed(2);return `<div class="row"><div class="name"><strong>${v.name}</strong><span>${v.code}</span></div><div class="price"><strong>${v.price.toFixed(2)}</strong><div class="delta ${c}">${sign}${v.delta.toFixed(2)} / ${sign}${pct}%</div><span class="flag">${v.note}</span></div><div class="${c}">${svg(v.pts,c)}</div></div>`}).join('');stamp.textContent=new Date().toLocaleTimeString('zh-CN',{hour12:false})}
+render();setInterval(()=>{t++;render()},1500)
 </script>
 </body>
 </html>

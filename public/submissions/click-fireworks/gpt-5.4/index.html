@@ -3,48 +3,28 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Festival Burst</title>
+<title>Sky Festival</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden}body{font-family:"Palatino","PingFang SC",serif;background:radial-gradient(circle at 50% 120%,#25114a 0,#090b18 45%,#02040a 100%);color:#fff}
-canvas{position:fixed;inset:0;width:100%;height:100%}
-.hud{position:fixed;left:50%;top:50%;translate:-50% -50%;width:min(88vw,420px);padding:26px;border-radius:26px;text-align:center;background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(12px)}
-.hud h1{margin:0 0 10px;font-size:clamp(34px,8vw,52px);letter-spacing:.08em}.hud p{margin:0;color:rgba(255,255,255,.78);line-height:1.7}
-.tip{margin-top:16px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#ffd97f}
+*{box-sizing:border-box}html,body{height:100%;margin:0;overflow:hidden}body{font-family:"Baskerville","PingFang SC",serif;background:radial-gradient(circle at 50% 120%,#29104a 0,#090d1f 45%,#02040a 100%);color:#fff}
+canvas{position:fixed;inset:0;width:100%;height:100%}.hud{position:fixed;left:50%;top:14%;translate:-50% 0;text-align:center;width:min(88vw,460px);padding:22px 24px;border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(12px)}.hud h1{margin:0 0 10px;font-size:clamp(32px,8vw,54px);letter-spacing:.1em}.hud p{margin:0;line-height:1.7;color:rgba(255,255,255,.8)}.tip{margin-top:12px;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#ffd98d}.city{position:fixed;left:0;right:0;bottom:0;height:18vh;background:linear-gradient(180deg,transparent,rgba(0,0,0,.35)),linear-gradient(0deg,#04060b,#0a1020)}.city:before{content:"";position:absolute;left:0;right:0;bottom:0;height:100%;background:linear-gradient(90deg,#0d1322 0 8%,transparent 8% 10%,#09111d 10% 18%,transparent 18% 21%,#10182a 21% 30%,transparent 30% 34%,#09111d 34% 46%,transparent 46% 49%,#0d1527 49% 60%,transparent 60% 64%,#0b1220 64% 78%,transparent 78% 81%,#11192b 81% 100%)}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<div class="hud">
-  <h1>Festival Burst</h1>
-  <p>点击任意位置，夜空会在那里绽放一束烟花。<br>支持连续点击，粒子会自动衰减回收。</p>
-  <div class="tip">Tap / Click Anywhere</div>
-</div>
+<div class="hud"><h1>Sky Festival</h1><p>点击任意位置，一枚烟火会从地平线升起，并在你的指尖附近绽放。<br>支持连续点击，粒子和光晕会自动回收。</p><div class="tip">Tap Anywhere To Launch</div></div>
+<div class="city"></div>
 <script>
-const c=document.getElementById('c'),x=c.getContext('2d'),shells=[],trails=[];
-function size(){c.width=innerWidth*devicePixelRatio;c.height=innerHeight*devicePixelRatio;x.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)} addEventListener('resize',size); size();
-const rand=(a,b)=>Math.random()*(b-a)+a, colors=['#ffd166','#ef476f','#06d6a0','#118ab2','#f7b801','#c77dff'];
-function boom(px,py){
-  const n=40+Math.random()*30,r=rand(50,110),hue=colors[Math.random()*colors.length|0];
-  for(let i=0;i<n;i++){const a=Math.PI*2*i/n,s=rand(1.2,3.8);shells.push({x:px,y:py,vx:Math.cos(a)*s*(r/70),vy:Math.sin(a)*s*(r/70),life:1,size:rand(1.8,3.8),color:Math.random()>.25?hue:colors[Math.random()*colors.length|0]})}
-}
-function pointer(e){const p=e.touches?e.touches[0]:e;boom(p.clientX,p.clientY)} addEventListener('click',pointer); addEventListener('touchstart',pointer,{passive:true});
-for(let i=0;i<2;i++) setTimeout(()=>boom(innerWidth*(.3+i*.28),innerHeight*.35),400+i*380);
-function loop(){
-  x.fillStyle='rgba(2,4,10,.18)'; x.fillRect(0,0,innerWidth,innerHeight);
-  x.save(); x.globalCompositeOperation='lighter';
-  for(let i=shells.length-1;i>=0;i--){
-    const p=shells[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=.035; p.vx*=.994; p.life-=.016;
-    trails.push({x:p.x,y:p.y,life:.35,color:p.color,size:p.size});
-    if(p.life<=0){shells.splice(i,1);continue}
-    x.beginPath(); x.fillStyle=p.color; x.globalAlpha=Math.max(p.life,0); x.arc(p.x,p.y,p.size,0,Math.PI*2); x.fill();
-  }
-  for(let i=trails.length-1;i>=0;i--){
-    const t=trails[i]; t.life-=.03; if(t.life<=0){trails.splice(i,1);continue}
-    x.beginPath(); x.fillStyle=t.color; x.globalAlpha=t.life*.4; x.arc(t.x,t.y,t.size*.8,0,Math.PI*2); x.fill();
-  }
-  x.restore(); requestAnimationFrame(loop);
-}
-loop();
+const c=document.getElementById('c'),ctx=c.getContext('2d'),rockets=[],sparks=[],rings=[],stars=[];let w=0,h=0;
+function size(){w=innerWidth;h=innerHeight;c.width=w*devicePixelRatio;c.height=h*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);stars.length=0;for(let i=0;i<70;i++)stars.push({x:(i*97)%w,y:(i*53)%Math.max(80,h*.65),r:1+(i%3),a:.25+(i%5)*.12})}addEventListener('resize',size);size();
+function seeded(n){return ()=>((n=Math.imul(n,1664525)+1013904223)>>>0)/4294967296}const palette=['#ffd166','#ff6f91','#7afcff','#b8ff6a','#c79cff','#ff9f68'];
+function burst(x,y,seed){const rnd=seeded(seed),count=42+(seed%18),core=palette[seed%palette.length];for(let i=0;i<count;i++){const a=i/count*Math.PI*2,s=1.5+rnd()*3.6,col=rnd()>.28?core:palette[(seed+i)%palette.length];sparks.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,size:1.8+rnd()*2.6,color:col})}rings.push({x,y,r:6,life:1,color:core})}
+function launch(x,y){const seed=((x|0)*73856093^((y|0)*19349663))>>>0;rockets.push({x:w*.5+(x-w*.5)*.35,y:h*.92,tx:x,ty:y,vx:(x-w*.5)/38,vy:-(8+h*.002),trail:[],seed,color:palette[seed%palette.length]})}
+addEventListener('click',e=>launch(e.clientX,e.clientY));addEventListener('touchstart',e=>{const t=e.touches[0];if(t)launch(t.clientX,t.clientY)},{passive:true});setTimeout(()=>launch(w*.32,h*.34),500);setTimeout(()=>launch(w*.68,h*.28),1100);
+function step(){ctx.fillStyle='rgba(2,4,10,.18)';ctx.fillRect(0,0,w,h);stars.forEach(s=>{ctx.globalAlpha=s.a+Math.sin(Date.now()/900+s.x)*.08;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.fill()});ctx.globalAlpha=1;ctx.globalCompositeOperation='lighter';
+ for(let i=rockets.length-1;i>=0;i--){const r=rockets[i];r.trail.push({x:r.x,y:r.y,life:1});r.x+=r.vx;r.y+=r.vy;if(r.y<=r.ty||Math.abs(r.x-r.tx)<6&&r.y<r.ty+30){burst(r.x,r.y,r.seed);rockets.splice(i,1);continue}ctx.strokeStyle=r.color;ctx.lineWidth=2;ctx.beginPath();r.trail.forEach((p,j)=>{ctx.globalAlpha=j/r.trail.length*.45;j?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)});ctx.stroke();if(r.trail.length>14)r.trail.shift();ctx.globalAlpha=1;ctx.beginPath();ctx.fillStyle=r.color;ctx.arc(r.x,r.y,3.4,0,7);ctx.fill()}
+ for(let i=sparks.length-1;i>=0;i--){const p=sparks[i];p.x+=p.vx;p.y+=p.vy;p.vx*=.992;p.vy=p.vy*.992+.035;p.life-=.015;if(p.life<=0){sparks.splice(i,1);continue}ctx.globalAlpha=Math.max(.05,p.life);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,7);ctx.fill()}
+ for(let i=rings.length-1;i>=0;i--){const r=rings[i];r.r+=3.2;r.life-=.035;if(r.life<=0){rings.splice(i,1);continue}ctx.globalAlpha=r.life*.35;ctx.strokeStyle=r.color;ctx.lineWidth=2;ctx.beginPath();ctx.arc(r.x,r.y,r.r,0,7);ctx.stroke()}
+ ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';requestAnimationFrame(step)}step();
 </script>
 </body>
 </html>
