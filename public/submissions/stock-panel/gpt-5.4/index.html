@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pulse Ticker</title>
+<style>
+:root{--bg:#08111f;--panel:#101d31;--fg:#f3f6fb;--green:#34d399;--red:#ff6b7b;--amber:#ffc857}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at top,rgba(61,118,255,.18),transparent 24%),linear-gradient(180deg,#050b14,#0e1626);font-family:"Helvetica Neue","PingFang SC",sans-serif;color:var(--fg)}
+.board{width:min(94vw,460px);padding:20px;border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);box-shadow:0 26px 80px rgba(0,0,0,.34)}
+.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.head b{font-size:13px;letter-spacing:.18em;text-transform:uppercase}.tag{padding:6px 10px;border-radius:999px;background:rgba(255,200,87,.12);color:var(--amber);font-size:12px}
+.row{display:grid;grid-template-columns:1.1fr .9fr 90px;gap:12px;align-items:center;padding:14px 12px;border-radius:18px;background:rgba(255,255,255,.03);margin-top:10px}
+.name strong{display:block;font-size:17px}.name span{font-size:12px;opacity:.66}.price{font-variant-numeric:tabular-nums}.price strong{display:block;font-size:26px}.delta{font-size:13px;font-weight:700}
+.up{color:var(--green)}.down{color:var(--red)}.spark{width:100%;height:54px}.foot{display:flex;justify-content:space-between;margin-top:14px;font-size:12px;opacity:.72}
+@media (max-width:390px){.row{grid-template-columns:1fr .9fr 74px;padding:12px 10px}.price strong{font-size:22px}}
+</style>
+</head>
+<body>
+  <section class="board">
+    <div class="head"><b>Pulse Ticker</b><span class="tag" id="risk">波动温和</span></div>
+    <div id="list"></div>
+    <div class="foot"><span>模拟流式更新</span><span id="stamp">--:--:--</span></div>
+  </section>
+<script>
+const stocks=[
+  {name:'NOVA AI',code:'NVA',price:128.3,delta:2.4,pts:[28,34,31,39,42,46,50]},
+  {name:'Blue Grid',code:'BGR',price:86.7,delta:-1.1,pts:[54,52,50,49,46,44,43]},
+  {name:'Lotus EV',code:'LEV',price:211.2,delta:3.8,pts:[24,28,27,35,33,41,48]}
+];
+const list=document.getElementById('list'),risk=document.getElementById('risk'),stamp=document.getElementById('stamp');
+const fmt=n=>n.toFixed(2), pct=(d,p)=>(d/p*100).toFixed(2);
+function spark(points,color){
+  const coords=points.map((y,i)=>`${i*15},${58-y}`).join(' ');
+  return `<svg class="spark" viewBox="0 0 90 58" fill="none"><polyline points="${coords}" stroke="${color}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="90" cy="${58-points.at(-1)}" r="3" fill="${color}"/></svg>`;
+}
+function render(){
+  list.innerHTML=stocks.map(s=>{const up=s.delta>=0,c=up?'var(--green)':'var(--red)',sign=up?'+':'';return `
+    <div class="row">
+      <div class="name"><strong>${s.name}</strong><span>${s.code}</span></div>
+      <div class="price"><strong>${fmt(s.price)}</strong><div class="delta ${up?'up':'down'}">${sign}${fmt(s.delta)} / ${sign}${pct(s.delta,s.price-s.delta)}%</div></div>
+      ${spark(s.pts,c)}
+    </div>`}).join('');
+  const vol=Math.max(...stocks.map(s=>Math.abs(s.delta))); risk.textContent=vol>3?'波动偏高':vol>1.5?'趋势活跃':'波动温和';
+  stamp.textContent=new Date().toLocaleTimeString('zh-CN',{hour12:false});
+}
+function tick(){
+  stocks.forEach(s=>{const move=(Math.random()-.5)*(s.price>150?2.2:1.4);s.price+=move;s.delta+=move;s.pts=[...s.pts.slice(1),Math.max(20,Math.min(54,s.pts.at(-1)+move*4))]});
+  render();
+}
+render(); setInterval(tick,1800);
+</script>
+</body>
+</html>

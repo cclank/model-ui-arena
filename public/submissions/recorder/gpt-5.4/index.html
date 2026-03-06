@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Tape Memo</title>
+<style>
+:root{--bg:#16100f;--panel:#281b19;--cream:#f5e9d4;--hot:#ff6a5d;--gold:#ffbe55;--line:rgba(255,245,220,.12)}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 20% 0,rgba(255,190,85,.15),transparent 30%),linear-gradient(135deg,#130c0b,#2b1e1b 55%,#171012);font-family:"Trebuchet MS","PingFang SC",sans-serif;color:var(--cream)}
+.deck{width:min(92vw,430px);padding:22px;border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.18));border:1px solid var(--line);box-shadow:0 24px 70px rgba(0,0,0,.4)}
+.meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;letter-spacing:.18em;text-transform:uppercase;opacity:.8}
+.status{display:flex;align-items:center;gap:8px}.dot{width:10px;height:10px;border-radius:50%;background:#7d625f}.dot.live{background:var(--hot);box-shadow:0 0 14px var(--hot);animation:blink 1s infinite}
+.screen{margin:18px 0;padding:18px;border-radius:20px;background:linear-gradient(180deg,#131416,#1e2628);border:1px solid rgba(255,255,255,.06)}
+.time{font-size:52px;font-weight:700;letter-spacing:.08em;text-align:center}
+.sub{display:flex;justify-content:space-between;font-size:13px;opacity:.78;margin-top:8px}
+.wave{height:84px;display:flex;align-items:end;gap:5px;margin-top:18px;padding:0 4px}
+.bar{flex:1;border-radius:999px 999px 4px 4px;background:linear-gradient(180deg,var(--gold),var(--hot));height:20%;transform-origin:bottom;transition:.25s}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+button{border:0;border-radius:16px;padding:14px 10px;font:inherit;font-weight:700;color:#201313;background:#ead7b8;cursor:pointer}
+button:nth-child(1){background:var(--hot);color:#fff}button:nth-child(2){background:#ffd17c}button:nth-child(3){background:#f2ece4}
+button:disabled{opacity:.45;cursor:not-allowed}
+.summary{margin-top:16px;padding:15px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);min-height:84px}
+.summary strong{display:block;font-size:14px;margin-bottom:8px}.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.07);font-size:12px}
+@keyframes blink{50%{opacity:.35}}@media (max-width:390px){.deck{padding:18px}.time{font-size:44px}.wave{gap:4px;height:72px}}
+</style>
+</head>
+<body>
+  <section class="deck">
+    <div class="meta">
+      <span>Tape Memo</span>
+      <div class="status"><span class="dot" id="dot"></span><span id="stateText">待机</span></div>
+    </div>
+    <div class="screen">
+      <div class="time" id="timer">00:00</div>
+      <div class="sub"><span id="mode">准备记录灵感</span><span id="label">Session #01</span></div>
+      <div class="wave" id="wave"></div>
+    </div>
+    <div class="controls">
+      <button id="startBtn">Start</button>
+      <button id="pauseBtn" disabled>Pause</button>
+      <button id="stopBtn" disabled>Stop</button>
+    </div>
+    <div class="summary">
+      <strong>本次录音摘要</strong>
+      <div class="chips" id="summary"><span class="chip">尚未生成记录</span></div>
+    </div>
+  </section>
+<script>
+const wave=document.getElementById('wave');for(let i=0;i<18;i++){const b=document.createElement('div');b.className='bar';wave.appendChild(b)}
+const bars=[...document.querySelectorAll('.bar')],timer=document.getElementById('timer'),stateText=document.getElementById('stateText');
+const mode=document.getElementById('mode'),summary=document.getElementById('summary'),dot=document.getElementById('dot');
+const startBtn=document.getElementById('startBtn'),pauseBtn=document.getElementById('pauseBtn'),stopBtn=document.getElementById('stopBtn');
+let state='idle',secs=0,tick=0,int;
+const mmss=v=>`${String((v/60|0)).padStart(2,'0')}:${String(v%60).padStart(2,'0')}`;
+function render(){
+  timer.textContent=mmss(secs);
+  stateText.textContent={idle:'待机',recording:'录音中',paused:'已暂停',stopped:'已停止'}[state];
+  mode.textContent={idle:'准备记录灵感',recording:'正在采样波形',paused:'暂停中，保留进度',stopped:'可复盘本次录音'}[state];
+  dot.className='dot'+(state==='recording'?' live':'');
+  startBtn.disabled=state==='recording'; pauseBtn.disabled=state!=='recording'; stopBtn.disabled=state==='idle'||state==='stopped';
+  bars.forEach((bar,i)=>{const live=state==='recording';const h=live?(22+Math.abs(Math.sin((tick+i)*.7))*58):(state==='paused'?18+(i%4)*7:10+(i%3)*5);bar.style.height=h+'%';bar.style.opacity=live?1:.65})
+}
+function start(){ if(state==='paused'||state==='idle'){ state='recording'; clearInterval(int); int=setInterval(()=>{secs++;tick++;render()},1000); render(); } }
+function pause(){ if(state==='recording'){ state='paused'; clearInterval(int); render(); } }
+function stop(){ if(state==='idle') return; if(secs&&state==='recording'&&!confirm('确定结束这段录音吗？')) return; clearInterval(int); state='stopped'; render();
+  const quality=secs<20?'片段过短':'信息完整'; summary.innerHTML=`<span class="chip">时长 ${mmss(secs)}</span><span class="chip">状态 ${quality}</span><span class="chip">${new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})} 保存</span>`; }
+startBtn.onclick=start; pauseBtn.onclick=pause; stopBtn.onclick=stop; render();
+</script>
+</body>
+</html>

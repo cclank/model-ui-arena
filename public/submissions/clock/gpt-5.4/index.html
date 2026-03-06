@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pulse Clock</title>
+<style>
+:root{--bg1:#07111f;--bg2:#14243c;--fg:#f4efe2;--accent:#89c9ff;--accent2:#ffd479;--ring:rgba(255,255,255,.12)}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:"Georgia","Songti SC",serif;background:radial-gradient(circle at 20% 15%,rgba(137,201,255,.16),transparent 28%),radial-gradient(circle at 80% 80%,rgba(255,212,121,.12),transparent 25%),linear-gradient(160deg,var(--bg1),var(--bg2));color:var(--fg);overflow:hidden}
+body:before,body:after{content:"";position:fixed;inset:-12vmax;background:repeating-radial-gradient(circle,transparent 0 16px,rgba(255,255,255,.02) 17px 18px);animation:drift 16s linear infinite}
+body:after{mix-blend-mode:screen;opacity:.45;animation-direction:reverse}
+.card{width:min(92vw,430px);padding:24px;border:1px solid rgba(255,255,255,.12);border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.03));backdrop-filter:blur(18px);box-shadow:0 25px 70px rgba(0,0,0,.35)}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.title{letter-spacing:.28em;text-transform:uppercase;font-size:12px;opacity:.72}.phase{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.08);font-size:12px}
+.dial{position:relative;aspect-ratio:1;border-radius:50%;border:1px solid var(--ring);background:radial-gradient(circle,rgba(255,255,255,.05) 0 42%,rgba(255,255,255,.01) 43% 100%);box-shadow:inset 0 0 0 18px rgba(255,255,255,.02),0 0 50px rgba(0,0,0,.25)}
+.dial:before{content:"";position:absolute;inset:24px;border-radius:50%;border:1px solid rgba(255,255,255,.08)}
+.tick{position:absolute;left:50%;top:50%;width:2px;height:14px;background:rgba(255,255,255,.7);transform-origin:center calc(50% + 135px)}
+.tick.major{height:20px;width:3px;background:var(--accent2)}
+.hand{position:absolute;left:50%;top:50%;transform-origin:bottom center;border-radius:999px;translate:-50% -100%}
+.h{width:7px;height:80px;background:linear-gradient(#fff,#97cfff)}.m{width:5px;height:108px;background:linear-gradient(#fff,#ffd479)}.s{width:2px;height:124px;background:linear-gradient(#fffd,#ff8b6f);box-shadow:0 0 14px #ff8b6f}
+.center{position:absolute;inset:50% auto auto 50%;width:18px;height:18px;border-radius:50%;translate:-50% -50%;background:var(--fg);box-shadow:0 0 0 6px rgba(255,255,255,.09)}
+.digital{margin-top:20px;text-align:center}.time{font-size:clamp(38px,10vw,58px);letter-spacing:.08em}.sub{display:flex;justify-content:space-between;gap:12px;margin-top:12px;font-size:13px;opacity:.8}
+@keyframes drift{to{transform:rotate(1turn)}}@keyframes pulse{50%{transform:scale(1.06);opacity:.78}}
+.glow{position:absolute;inset:12%;border-radius:50%;border:1px solid rgba(255,255,255,.06);animation:pulse 1s ease-in-out infinite}
+@media (max-width:390px){.card{padding:18px;border-radius:22px}.time{font-size:42px}.tick{transform-origin:center calc(50% + 115px)}}
+</style>
+</head>
+<body>
+  <section class="card">
+    <div class="top">
+      <div class="title">Chrono Pulse</div>
+      <div class="phase" id="phase">夜航模式</div>
+    </div>
+    <div class="dial" id="dial">
+      <div class="glow"></div>
+      <div class="hand h" id="hour"></div>
+      <div class="hand m" id="minute"></div>
+      <div class="hand s" id="second"></div>
+      <div class="center"></div>
+    </div>
+    <div class="digital">
+      <div class="time" id="time">00:00:00</div>
+      <div class="sub">
+        <span id="date">----</span>
+        <span id="zone">Local Time</span>
+      </div>
+    </div>
+  </section>
+<script>
+const dial=document.getElementById('dial');
+for(let i=0;i<60;i++){const t=document.createElement('div');t.className='tick'+(i%5===0?' major':'');t.style.transform=`translate(-50%,-50%) rotate(${i*6}deg)`;dial.appendChild(t)}
+const byId=id=>document.getElementById(id),hour=byId('hour'),minute=byId('minute'),second=byId('second');
+const dateEl=byId('date'),timeEl=byId('time'),phase=byId('phase');
+function paint(h){
+  const day=h>=6&&h<18;
+  document.documentElement.style.setProperty('--bg1',day?'#b9def7':'#07111f');
+  document.documentElement.style.setProperty('--bg2',day?'#325f8d':'#14243c');
+  document.documentElement.style.setProperty('--fg',day?'#11243a':'#f4efe2');
+  document.documentElement.style.setProperty('--accent',day?'#2f7cff':'#89c9ff');
+  document.documentElement.style.setProperty('--accent2',day?'#ff9b3d':'#ffd479');
+  phase.textContent=day?'日光模式':'夜航模式';
+}
+function update(){
+  const now=new Date(),h=now.getHours(),m=now.getMinutes(),s=now.getSeconds();
+  hour.style.transform=`translate(-50%,-100%) rotate(${(h%12)*30+m/2}deg)`;
+  minute.style.transform=`translate(-50%,-100%) rotate(${m*6+s/10}deg)`;
+  second.style.transform=`translate(-50%,-100%) rotate(${s*6}deg)`;
+  timeEl.textContent=[h,m,s].map(v=>String(v).padStart(2,'0')).join(':');
+  dateEl.textContent=now.toLocaleDateString('zh-CN',{month:'long',day:'numeric',weekday:'long'});
+  byId('zone').textContent=Intl.DateTimeFormat().resolvedOptions().timeZone;
+  paint(h);
+}
+update();setInterval(update,1000);
+</script>
+</body>
+</html>

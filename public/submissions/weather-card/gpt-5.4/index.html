@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Weather Postcard</title>
+<style>
+:root{--bg1:#4e87ff;--bg2:#89d7ff;--card:#ffffff18;--fg:#fffaf3}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:"Avenir Next","PingFang SC",sans-serif;color:var(--fg);background:linear-gradient(165deg,var(--bg1),var(--bg2));overflow:hidden}
+body:before{content:"";position:fixed;inset:-10vmax;background:radial-gradient(circle at 15% 20%,rgba(255,255,255,.18),transparent 25%),radial-gradient(circle at 75% 18%,rgba(255,255,255,.12),transparent 18%),radial-gradient(circle at 50% 80%,rgba(255,255,255,.1),transparent 20%)}
+.card{position:relative;width:min(92vw,430px);padding:22px;border-radius:30px;background:var(--card);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(18px);box-shadow:0 22px 60px rgba(29,42,88,.28)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}.tab{padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:transparent;color:inherit;cursor:pointer}.tab.active{background:rgba(255,255,255,.2)}
+.hero{display:flex;justify-content:space-between;align-items:center;margin:20px 0 16px}.city{font-size:34px;font-weight:700}.desc{opacity:.84;margin-top:6px}
+.temp{font-size:68px;font-weight:700;line-height:1}.icon{position:relative;width:110px;height:90px}
+.sun,.cloud,.rain{position:absolute}.sun{width:46px;height:46px;border-radius:50%;background:#ffd35f;right:10px;top:0;box-shadow:0 0 24px #ffd35f}.cloud{width:78px;height:30px;border-radius:999px;background:#fff;left:12px;top:30px;box-shadow:24px -12px 0 6px #fff,45px 4px 0 0 #fff}.rain span{position:absolute;width:3px;height:18px;border-radius:999px;background:#b8ebff;animation:rain 1.1s linear infinite}
+.rain span:nth-child(1){left:34px;top:58px}.rain span:nth-child(2){left:54px;top:62px;animation-delay:.25s}.rain span:nth-child(3){left:74px;top:56px;animation-delay:.45s}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.metric,.trend{padding:14px;border-radius:18px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12)}
+.metric b,.trend b{display:block;font-size:12px;letter-spacing:.16em;text-transform:uppercase;opacity:.72;margin-bottom:8px}.metric span{font-size:22px;font-weight:700}
+.trendline{display:flex;align-items:end;gap:6px;height:64px}.trendline i{flex:1;border-radius:12px 12px 4px 4px;background:linear-gradient(180deg,#fff,#c9eeff)}
+@keyframes rain{to{transform:translateY(16px);opacity:0}}@media (max-width:390px){.card{padding:18px}.city{font-size:30px}.temp{font-size:58px}.hero{align-items:flex-start}}
+</style>
+</head>
+<body>
+  <section class="card">
+    <div class="tabs" id="tabs"></div>
+    <div class="hero">
+      <div>
+        <div class="city" id="city">上海</div>
+        <div class="desc" id="desc">多云转晴，适合轻装出行</div>
+      </div>
+      <div>
+        <div class="temp" id="temp">23°</div>
+        <div class="icon"><div class="sun" id="sun"></div><div class="cloud"></div><div class="rain" id="rain"><span></span><span></span><span></span></div></div>
+      </div>
+    </div>
+    <div class="metrics">
+      <div class="metric"><b>湿度</b><span id="humidity">61%</span></div>
+      <div class="metric"><b>风速</b><span id="wind">3.5m/s</span></div>
+      <div class="trend"><b>体感趋势</b><div class="trendline" id="trend"></div></div>
+    </div>
+  </section>
+<script>
+const data=[
+  {city:'上海',temp:23,desc:'多云转晴，适合轻装出行',humidity:'61%',wind:'3.5m/s',type:'sun',bg:['#547cf4','#91d7ff'],trend:[42,50,64,60,72]},
+  {city:'成都',temp:18,desc:'云层偏厚，空气湿润',humidity:'79%',wind:'2.0m/s',type:'cloud',bg:['#5f6d84','#a9b8c8'],trend:[46,49,51,47,50]},
+  {city:'深圳',temp:27,desc:'阵雨来得快，记得带伞',humidity:'88%',wind:'5.1m/s',type:'rain',bg:['#495d89','#6bc3df'],trend:[35,57,48,66,58]}
+];
+const tabs=document.getElementById('tabs'),trend=document.getElementById('trend'),ids=x=>document.getElementById(x);
+data.forEach((item,i)=>{const b=document.createElement('button');b.className='tab'+(!i?' active':'');b.textContent=item.city;b.onclick=()=>paint(i);tabs.appendChild(b)});
+function paint(i){
+  const d=data[i]; [...tabs.children].forEach((t,idx)=>t.classList.toggle('active',idx===i));
+  ids('city').textContent=d.city; ids('temp').textContent=d.temp+'°'; ids('desc').textContent=d.desc; ids('humidity').textContent=d.humidity; ids('wind').textContent=d.wind;
+  document.documentElement.style.setProperty('--bg1',d.bg[0]); document.documentElement.style.setProperty('--bg2',d.bg[1]);
+  ids('sun').style.opacity=d.type==='cloud'?0:.95; ids('rain').style.opacity=d.type==='rain'?1:0;
+  trend.innerHTML=''; d.trend.forEach(v=>{const bar=document.createElement('i');bar.style.height=v+'%';trend.appendChild(bar)});
+}
+paint(0);
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Festival Burst</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden}body{font-family:"Palatino","PingFang SC",serif;background:radial-gradient(circle at 50% 120%,#25114a 0,#090b18 45%,#02040a 100%);color:#fff}
+canvas{position:fixed;inset:0;width:100%;height:100%}
+.hud{position:fixed;left:50%;top:50%;translate:-50% -50%;width:min(88vw,420px);padding:26px;border-radius:26px;text-align:center;background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(12px)}
+.hud h1{margin:0 0 10px;font-size:clamp(34px,8vw,52px);letter-spacing:.08em}.hud p{margin:0;color:rgba(255,255,255,.78);line-height:1.7}
+.tip{margin-top:16px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#ffd97f}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud">
+  <h1>Festival Burst</h1>
+  <p>点击任意位置，夜空会在那里绽放一束烟花。<br>支持连续点击，粒子会自动衰减回收。</p>
+  <div class="tip">Tap / Click Anywhere</div>
+</div>
+<script>
+const c=document.getElementById('c'),x=c.getContext('2d'),shells=[],trails=[];
+function size(){c.width=innerWidth*devicePixelRatio;c.height=innerHeight*devicePixelRatio;x.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)} addEventListener('resize',size); size();
+const rand=(a,b)=>Math.random()*(b-a)+a, colors=['#ffd166','#ef476f','#06d6a0','#118ab2','#f7b801','#c77dff'];
+function boom(px,py){
+  const n=40+Math.random()*30,r=rand(50,110),hue=colors[Math.random()*colors.length|0];
+  for(let i=0;i<n;i++){const a=Math.PI*2*i/n,s=rand(1.2,3.8);shells.push({x:px,y:py,vx:Math.cos(a)*s*(r/70),vy:Math.sin(a)*s*(r/70),life:1,size:rand(1.8,3.8),color:Math.random()>.25?hue:colors[Math.random()*colors.length|0]})}
+}
+function pointer(e){const p=e.touches?e.touches[0]:e;boom(p.clientX,p.clientY)} addEventListener('click',pointer); addEventListener('touchstart',pointer,{passive:true});
+for(let i=0;i<2;i++) setTimeout(()=>boom(innerWidth*(.3+i*.28),innerHeight*.35),400+i*380);
+function loop(){
+  x.fillStyle='rgba(2,4,10,.18)'; x.fillRect(0,0,innerWidth,innerHeight);
+  x.save(); x.globalCompositeOperation='lighter';
+  for(let i=shells.length-1;i>=0;i--){
+    const p=shells[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=.035; p.vx*=.994; p.life-=.016;
+    trails.push({x:p.x,y:p.y,life:.35,color:p.color,size:p.size});
+    if(p.life<=0){shells.splice(i,1);continue}
+    x.beginPath(); x.fillStyle=p.color; x.globalAlpha=Math.max(p.life,0); x.arc(p.x,p.y,p.size,0,Math.PI*2); x.fill();
+  }
+  for(let i=trails.length-1;i>=0;i--){
+    const t=trails[i]; t.life-=.03; if(t.life<=0){trails.splice(i,1);continue}
+    x.beginPath(); x.fillStyle=t.color; x.globalAlpha=t.life*.4; x.arc(t.x,t.y,t.size*.8,0,Math.PI*2); x.fill();
+  }
+  x.restore(); requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
