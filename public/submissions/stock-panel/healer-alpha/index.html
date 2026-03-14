@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Healer Stock Panel</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d1117;color:#c9d1d9;font-family:'Segoe UI',system-ui,sans-serif;padding:20px;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+h2{font-size:1rem;font-weight:400;opacity:.5;margin-bottom:16px;letter-spacing:1px;text-transform:uppercase}
+.panel{width:100%;max-width:360px}
+.stock{background:#161b22;border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid #30363d;transition:border-color .2s}
+.stock:hover{border-color:#58a6ff}
+.stock-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.stock-name{font-weight:600;font-size:.95rem}
+.stock-code{font-size:.75rem;opacity:.4}
+.stock-price{font-size:1.5rem;font-weight:200;margin-bottom:4px}
+.stock-change{font-size:.85rem;font-weight:500}
+.up .stock-price,.up .stock-change{color:#3fb950}
+.down .stock-price,.down .stock-change{color:#f85149}
+.flat .stock-price,.flat .stock-change{color:#8b949e}
+.spark{height:36px;margin-top:8px}
+.spark svg{width:100%;height:100%}
+.warn{background:#1c1208;border:1px solid #9e6a03;border-radius:10px;padding:12px 16px;margin-top:16px;font-size:.8rem;color:#e3b341;display:flex;align-items:center;gap:8px}
+.refresh{text-align:center;font-size:.7rem;opacity:.3;margin-top:12px}
+</style>
+</head>
+<body>
+<h2>📊 股票监控面板</h2>
+<div class="panel" id="panel"></div>
+<div class="warn">⚠️ 本面板数据为模拟演示，不构成投资建议</div>
+<div class="refresh" id="refresh">实时刷新中...</div>
+<script>
+const stocks=[
+  {code:'AAPL',name:'苹果',base:189.5},
+  {code:'TSLA',name:'特斯拉',base:245.3},
+  {code:'NVDA',name:'英伟达',base:875.2}
+];
+const colors=['#58a6ff','#3fb950','#f85149'];
+let hist=stocks.map(()=>Array(12).fill(0).map((_,i)=>0));
+function rnd(v,range){return v+(Math.random()-.5)*range}
+function cls(v){return v>0?'up':v<0?'down':'flat'}
+function fmt(v){return v.toFixed(2)}
+function sparkSVG(data,color){
+  const w=200,h=34,min=Math.min(...data),max=Math.max(...data),range=max-min||1;
+  const pts=data.map((v,i)=>`${(i/(data.length-1))*w},${h-((v-min)/range)*h}`).join(' ');
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2"/></svg>`}
+function render(){
+  const panel=document.getElementById('panel');panel.innerHTML='';
+  stocks.forEach((s,i)=>{
+    const delta=rnd(0,4),price=rnd(s.base,3),pct=(delta/s.base*100);
+    hist[i].push(price);if(hist[i].length>12)hist[i].shift();
+    const d=document.createElement('div');d.className='stock '+cls(delta);
+    d.innerHTML=`<div class="stock-header"><span class="stock-name">${s.name}</span><span class="stock-code">${s.code}</span></div>
+      <div class="stock-price">¥${fmt(price)}</div>
+      <div class="stock-change">${delta>0?'+':''}${fmt(delta)} (${pct>0?'+':''}${pct.toFixed(2)}%)</div>
+      <div class="spark">${sparkSVG(hist[i],colors[i])}</div>`;
+    panel.appendChild(d)})
+}
+render();setInterval(render,3000);
+</script>
+</body>
+</html>

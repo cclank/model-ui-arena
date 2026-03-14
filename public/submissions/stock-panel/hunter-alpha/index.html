@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hunter Stock</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b0e17;color:#c8cdd5;font-family:'SF Mono','Fira Code',monospace;padding:20px;display:flex;flex-direction:column;align-items:center;min-height:100vh}
+h3{font-size:.85rem;font-weight:400;opacity:.4;letter-spacing:2px;margin-bottom:14px;text-transform:uppercase}
+.grid{width:100%;max-width:350px}
+.s{background:#131825;border:1px solid #1e2640;border-radius:14px;padding:14px;margin-bottom:10px;transition:border-color .2s}
+.s:hover{border-color:#3b82f6}
+.sh{display:flex;justify-content:space-between;margin-bottom:6px}
+.sn{font-weight:600;font-size:.9rem}.sc{font-size:.7rem;opacity:.35}
+.sp{font-size:1.4rem;font-weight:300;margin-bottom:2px}
+.ch{font-size:.8rem;font-weight:500}
+.up .sp,.up .ch{color:#22c55e}.dn .sp,.dn .ch{color:#ef4444}
+.fx{height:30px;margin-top:6px}
+.fx svg{width:100%;height:100%}
+.warn{background:#1a1408;border:1px solid #854d0e;border-radius:10px;padding:10px 14px;margin-top:14px;font-size:.75rem;color:#ca8a04}
+.foot{text-align:center;font-size:.65rem;opacity:.25;margin-top:10px}
+</style>
+</head>
+<body>
+<h3>📊 实时行情</h3>
+<div class="grid" id="g"></div>
+<div class="warn">⚠️ 模拟数据，不构成投资建议</div>
+<div class="foot" id="ft">同步中...</div>
+<script>
+const S=[{c:'AAPL',n:'苹果',b:189.2},{c:'TSLA',n:'特斯拉',b:243.8},{c:'NVDA',n:'英伟达',b:872.5}];
+let H=S.map(()=>Array.from({length:14},()=>0));
+function rn(v,r){return v+(Math.random()-.5)*r}
+function mk(h,col){
+  const w=180,h2=28,mn=Math.min(...h),mx=Math.max(...h)||1,r=mx-mn||1;
+  const pts=h.map((v,i)=>`${i/(h.length-1)*w},${h2-(v-mn)/r*h2}`).join(' ');
+  return `<svg viewBox="0 0 ${w} ${h2}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.5" opacity=".7"/></svg>`}
+function tick(){
+  const g=document.getElementById('g');g.innerHTML='';
+  S.forEach((s,i)=>{
+    const d=rn(0,5),p=rn(s.b,4),pct=d/s.b*100,up=d>=0;
+    H[i].push(p);if(H[i].length>14)H[i].shift();
+    const el=document.createElement('div');el.className='s '+(up?'up':'dn');
+    el.innerHTML=`<div class="sh"><span class="sn">${s.n}</span><span class="sc">${s.c}</span></div>
+      <div class="sp">¥${p.toFixed(2)}</div>
+      <div class="ch">${up?'+':''}${d.toFixed(2)} (${up?'+':''}${pct.toFixed(2)}%)</div>
+      <div class="fx">${mk(H[i],up?'#22c55e':'#ef4444')}</div>`;
+    g.appendChild(el)});
+  document.getElementById('ft').textContent='更新于 '+new Date().toLocaleTimeString('zh-CN')}
+tick();setInterval(tick,3000);
+</script>
+</body>
+</html>

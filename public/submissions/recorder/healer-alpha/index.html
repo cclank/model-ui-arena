@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Healer Recorder</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#1a1a2e;color:#eee;font-family:'Segoe UI',system-ui,sans-serif}
+.recorder{width:280px;padding:32px;background:#16213e;border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.status{text-align:center;font-size:.85rem;text-transform:uppercase;letter-spacing:3px;margin-bottom:16px;min-height:1.2em}
+.status.recording{color:#e74c3c;animation:pulse 1s infinite}
+.status.paused{color:#f39c12}
+.status.stopped{color:#636e72}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.timer{font-size:3.2rem;text-align:center;font-variant-numeric:tabular-nums;font-weight:200;margin:16px 0;letter-spacing:2px}
+.wave{display:flex;align-items:center;justify-content:center;gap:3px;height:50px;margin:16px 0}
+.wave span{width:4px;background:#e74c3c;border-radius:2px;transition:height .1s}
+.controls{display:flex;justify-content:center;gap:16px;margin-top:20px}
+.btn{width:52px;height:52px;border:none;border-radius:50%;cursor:pointer;font-size:1.2rem;transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:scale(1.1)}
+.btn:active{transform:scale(.95)}
+.btn-start{background:#27ae60;color:#fff}
+.btn-pause{background:#f39c12;color:#fff}
+.btn-stop{background:#e74c3c;color:#fff}
+.btn:disabled{opacity:.3;cursor:not-allowed;transform:none}
+.summary{margin-top:24px;padding:16px;background:#0f3460;border-radius:12px;font-size:.85rem;line-height:1.8;display:none}
+.summary.show{display:block}
+.summary h4{margin-bottom:8px;color:#74b9ff;font-size:.75rem;letter-spacing:1px;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div class="recorder">
+  <div class="status stopped" id="status">就绪</div>
+  <div class="timer" id="timer">00:00</div>
+  <div class="wave" id="wave"></div>
+  <div class="controls">
+    <button class="btn btn-start" id="btnStart" title="开始">⏺</button>
+    <button class="btn btn-pause" id="btnPause" title="暂停" disabled>⏸</button>
+    <button class="btn btn-stop" id="btnStop" title="停止" disabled>⏹</button>
+  </div>
+  <div class="summary" id="summary">
+    <h4>📋 录音摘要</h4>
+    <div id="summaryContent"></div>
+  </div>
+</div>
+<script>
+const waveEl=document.getElementById('wave'),bars=20;
+for(let i=0;i<bars;i++){const s=document.createElement('span');s.style.height='4px';waveEl.appendChild(s)}
+let state='stopped',seconds=0,timer=null,waveAnim=null;
+const statusEl=document.getElementById('status'),timerEl=document.getElementById('timer'),
+  btnStart=document.getElementById('btnStart'),btnPause=document.getElementById('btnPause'),
+  btnStop=document.getElementById('btnStop'),summaryEl=document.getElementById('summary'),
+  summaryContent=document.getElementById('summaryContent');
+function fmt(s){return [Math.floor(s/60),s%60].map(v=>String(v).padStart(2,'0')).join(':')}
+function setStatus(s){state=s;statusEl.className='status '+s;
+  statusEl.textContent={recording:'● 录音中',paused:'⏸ 已暂停',stopped:'就绪'}[s]}
+function animateWave(){const spans=waveEl.children;
+  for(let i=0;i<spans.length;i++){spans[i].style.height=(state==='recording'?4+Math.random()*40:4)+'px'}
+  if(state==='recording')waveAnim=requestAnimationFrame(animateWave)}
+function start(){if(state==='stopped'){seconds=0;summaryEl.classList.remove('show')}
+  setStatus('recording');btnStart.disabled=true;btnPause.disabled=false;btnStop.disabled=false;
+  timer=setInterval(()=>{seconds++;timerEl.textContent=fmt(seconds)},1000);animateWave()}
+function pause(){if(state==='recording'){clearInterval(timer);cancelAnimationFrame(waveAnim);setStatus('paused');btnStart.disabled=false;btnStart.textContent='⏵';btnStart.title='继续'}
+  else if(state==='paused'){setStatus('recording');btnStart.disabled=true;btnStart.textContent='⏺';
+  timer=setInterval(()=>{seconds++;timerEl.textContent=fmt(seconds)},1000);animateWave()}}
+function stop(){clearInterval(timer);cancelAnimationFrame(waveAnim);setStatus('stopped');
+  btnStart.disabled=false;btnStart.textContent='⏺';btnPause.disabled=true;btnStop.disabled=true;
+  const spans=waveEl.children;for(let i=0;i<spans.length;i++)spans[i].style.height='4px';
+  if(seconds>0){summaryEl.classList.add('show');
+    summaryContent.innerHTML=`<div>⏱ 时长：${fmt(seconds)}</div><div>📅 日期：${new Date().toLocaleString('zh-CN')}</div><div>📊 状态：录音完成</div>`}}
+btnStart.onclick=start;btnPause.onclick=pause;btnStop.onclick=stop;
+</script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hunter Recorder</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f0f23;color:#e0e0e0;font-family:'Segoe UI',system-ui,sans-serif}
+.unit{width:300px;background:#1a1a3a;border-radius:24px;padding:32px 24px;box-shadow:0 12px 48px rgba(0,0,0,.5)}
+.state{text-align:center;font-size:.7rem;letter-spacing:4px;text-transform:uppercase;height:20px}
+.state.idle{color:#636e72}.state.rec{color:#ff4757;animation:blink 1s step-end infinite}.state.pause{color:#ffa502}
+@keyframes blink{50%{opacity:.3}}
+.readout{text-align:center;font-size:3rem;font-weight:100;margin:16px 0;letter-spacing:3px;font-variant-numeric:tabular-nums}
+.viz{display:flex;align-items:center;justify-content:center;gap:3px;height:64px;margin:20px 0}
+.viz span{width:3px;border-radius:2px;background:linear-gradient(to top,#ff4757,#ff6b81);transition:height 60ms}
+.btns{display:flex;justify-content:center;gap:14px}
+.b{width:50px;height:50px;border:none;border-radius:50%;cursor:pointer;font-size:1.1rem;transition:transform .12s,opacity .2s;color:#fff}
+.b:hover{transform:scale(1.08)}.b:disabled{opacity:.25;cursor:default;transform:none}
+.b1{background:#2ed573}.b2{background:#ffa502}.b3{background:#ff4757}
+.card{margin-top:20px;padding:14px;background:#151530;border-radius:14px;font-size:.8rem;line-height:1.8;display:none}
+.card.show{display:block}
+.card h5{font-size:.65rem;letter-spacing:2px;color:#70a1ff;margin-bottom:6px;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div class="unit">
+  <div class="state idle" id="st">就绪</div>
+  <div class="readout" id="tm">00:00</div>
+  <div class="viz" id="vz"></div>
+  <div class="btns">
+    <button class="b b1" id="bGo">⏺</button>
+    <button class="b b2" id="bPa" disabled>⏸</button>
+    <button class="b b3" id="bSt" disabled>⏹</button>
+  </div>
+  <div class="card" id="cd"><h5>📋 摘要</h5><div id="cm"></div></div>
+</div>
+<script>
+const N=24,vz=document.getElementById('vz');
+for(let i=0;i<N;i++){const s=document.createElement('span');s.style.height='4px';vz.appendChild(s)}
+let sec=0,tmr=null,wf=null,mode='idle';
+const $=id=>document.getElementById(id),bars=[...vz.children];
+function pad(n){return String(n).padStart(2,'0')}
+function fmt(s){return pad(s/60|0)+':'+pad(s%60)}
+function setMode(m){mode=m;const el=$('st');el.className='state '+m;el.textContent={idle:'就绪',rec:'● 录音中',pause:'已暂停'}[m]}
+function wave(){bars.forEach(b=>b.style.height=mode==='rec'?4+Math.random()*52+'px':'4px');if(mode==='rec')wf=requestAnimationFrame(wave)}
+$('bGo').onclick=()=>{if(mode==='idle'){sec=0;$('cd').classList.remove('show')}
+  setMode('rec');$('bGo').disabled=1;$('bPa').disabled=0;$('bSt').disabled=0;
+  tmr=setInterval(()=>{sec++;$('tm').textContent=fmt(sec)},1000);wave()};
+$('bPa').onclick=()=>{if(mode==='rec'){clearInterval(tmr);cancelAnimationFrame(wf);setMode('pause');$('bGo').disabled=0;$('bGo').textContent='⏵'}
+  else if(mode==='pause'){setMode('rec');$('bGo').disabled=1;$('bGo').textContent='⏺';tmr=setInterval(()=>{sec++;$('tm').textContent=fmt(sec)},1000);wave()}};
+$('bSt').onclick=()=>{clearInterval(tmr);cancelAnimationFrame(wf);setMode('idle');$('bGo').disabled=0;$('bGo').textContent='⏺';$('bPa').disabled=1;$('bSt').disabled=1;
+  if(sec>0){$('cd').classList.add('show');$('cm').innerHTML=`⏱ 时长：${fmt(sec)}<br>📅 ${new Date().toLocaleString('zh-CN')}<br>✅ 录音完成`}};
+</script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hunter Weather</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Segoe UI',system-ui,sans-serif;transition:background .6s}
+body.sunny{background:linear-gradient(145deg,#f9ca24,#f0932b)}
+body.cloudy{background:linear-gradient(145deg,#636e72,#b2bec3)}
+body.rainy{background:linear-gradient(145deg,#2d3436,#636e72)}
+.card{width:290px;padding:24px;background:rgba(255,255,255,.12);backdrop-filter:blur(16px);border-radius:22px;color:#fff;box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.tabs{display:flex;gap:6px;margin-bottom:18px}
+.tab{flex:1;padding:6px 0;border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;border-radius:16px;cursor:pointer;font-size:.75rem;text-align:center;transition:all .2s}
+.tab.on{background:rgba(255,255,255,.28);border-color:#fff}
+.hero{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.emo{font-size:3.6rem;animation:bob 2.5s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.deg{font-size:3rem;font-weight:200}
+.desc{font-size:1rem;opacity:.85;margin-bottom:14px}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.meta-box{background:rgba(255,255,255,.1);padding:10px;border-radius:12px}
+.meta-lbl{font-size:.65rem;opacity:.5;text-transform:uppercase;letter-spacing:1px}
+.meta-val{font-size:1.05rem;margin-top:2px}
+.row{display:flex;align-items:flex-end;gap:4px;height:36px;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.18)}
+.row span{flex:1;background:rgba(255,255,255,.35);border-radius:2px 2px 0 0;transition:height .35s}
+.raindrop{position:fixed;width:1.5px;background:rgba(255,255,255,.25);animation:fall .9s linear infinite}
+@keyframes fall{0%{transform:translateY(-100vh)}100%{transform:translateY(100vh)}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="tabs" id="tabs"></div>
+  <div class="hero"><span class="emo" id="emo"></span><span class="deg" id="deg"></span></div>
+  <div class="desc" id="desc"></div>
+  <div class="meta">
+    <div class="meta-box"><div class="meta-lbl">湿度</div><div class="meta-val" id="hum"></div></div>
+    <div class="meta-box"><div class="meta-lbl">风速</div><div class="meta-val" id="wnd"></div></div>
+  </div>
+  <div class="row" id="row"></div>
+</div>
+<script>
+const D={
+  '北京':{t:27,d:'晴朗',e:'☀️',c:'sunny',h:40,w:10,td:[23,24,26,27,28,29,28,27]},
+  '上海':{t:21,d:'多云',e:'⛅',c:'cloudy',h:70,w:16,td:[19,20,20,21,22,21,20,19]},
+  '广州':{t:30,d:'雷阵雨',e:'⛈️',c:'rainy',h:88,w:22,td:[28,29,30,31,30,29,28,27]}
+},keys=Object.keys(D),tabs=document.getElementById('tabs');
+keys.forEach(k=>{const b=document.createElement('button');b.className='tab';b.textContent=k;b.onclick=()=>go(k);tabs.appendChild(b)});
+function go(city){
+  const d=D[city];
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('on',keys[i]===city));
+  document.body.className=d.c;
+  document.getElementById('emo').textContent=d.e;
+  document.getElementById('deg').textContent=d.t+'°';
+  document.getElementById('desc').textContent=d.d;
+  document.getElementById('hum').textContent=d.h+'%';
+  document.getElementById('wnd').textContent=d.w+' km/h';
+  const row=document.getElementById('row');row.innerHTML='';
+  const mx=Math.max(...d.td);
+  d.td.forEach(v=>{const s=document.createElement('span');s.style.height=v/mx*100+'%';row.appendChild(s)});
+  document.querySelectorAll('.raindrop').forEach(e=>e.remove());
+  if(d.c==='rainy')for(let i=0;i<25;i++){const p=document.createElement('div');p.className='raindrop';p.style.left=Math.random()*100+'vw';p.style.height=12+Math.random()*18+'px';p.style.animationDelay=Math.random()+'s';document.body.appendChild(p)}}
+go(keys[0]);
+</script>
+</body>
+</html>

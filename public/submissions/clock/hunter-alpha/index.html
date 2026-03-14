@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hunter Clock</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Courier New',monospace;overflow:hidden;transition:background 1s}
+.day{background:linear-gradient(160deg,#f8e9a1,#f76c6c)}
+.night{background:linear-gradient(160deg,#0b0d17,#2a2d5e)}
+.clock-wrap{display:flex;flex-direction:column;align-items:center;gap:28px}
+.ring{position:relative;width:200px;height:200px;border-radius:50%;border:3px solid rgba(255,255,255,.25);box-shadow:0 0 30px rgba(255,255,255,.08),inset 0 0 20px rgba(255,255,255,.05)}
+.mark{position:absolute;width:2px;background:rgba(255,255,255,.45);left:50%;top:8px;transform-origin:1px 92px}
+.mark.major{height:14px;width:3px;background:rgba(255,255,255,.85)}
+.mark.minor{height:8px}
+.arm{position:absolute;bottom:50%;left:50%;border-radius:2px}
+.arm-h{width:4px;height:52px;background:#fff;margin-left:-2px;box-shadow:0 0 6px rgba(255,255,255,.3)}
+.arm-m{width:3px;height:72px;background:rgba(255,255,255,.8);margin-left:-1.5px}
+.arm-s{width:1.5px;height:82px;background:#ff6b6b;margin-left:-.75px;box-shadow:0 0 8px rgba(255,107,107,.5)}
+.pip{position:absolute;width:8px;height:8px;border-radius:50%;background:#fff;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5}
+.digital{font-size:2.6rem;color:#fff;letter-spacing:6px;font-weight:300;text-shadow:0 2px 12px rgba(0,0,0,.3)}
+.label{font-size:.75rem;color:rgba(255,255,255,.5);letter-spacing:3px}
+</style>
+</head>
+<body>
+<div class="clock-wrap">
+  <div class="ring" id="ring"><div class="pip"></div><div class="arm arm-h" id="ah"></div><div class="arm arm-m" id="am"></div><div class="arm arm-s" id="as"></div></div>
+  <div class="digital" id="dig">00:00:00</div>
+  <div class="label" id="lbl"></div>
+</div>
+<script>
+const ring=document.getElementById('ring');
+for(let i=0;i<60;i++){const m=document.createElement('div');m.className='mark '+(i%5===0?'major':'minor');m.style.transform=`rotate(${i*6}deg)`;ring.appendChild(m)}
+const $=id=>document.getElementById(id);
+!function tick(){const d=new Date(),h=d.getHours(),m=d.getMinutes(),s=d.getSeconds(),ms=d.getMilliseconds();
+$('as').style.transform=`rotate(${s*6+ms*.006}deg)`;
+$('am').style.transform=`rotate(${m*6+s*.1}deg)`;
+$('ah').style.transform=`rotate(${h%12*30+m*.5}deg)`;
+$('dig').textContent=[h,m,s].map(v=>String(v).padStart(2,'0')).join(':');
+const day=h>=6&&h<19;
+document.body.className=day?'day':'night';
+$('lbl').textContent=day?'☀ 日间':'☽ 夜间';
+requestAnimationFrame(tick)}();
+</script>
+</body>
+</html>

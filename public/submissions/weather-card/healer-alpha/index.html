@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Healer Weather</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:'Segoe UI',system-ui,sans-serif;transition:background .6s}
+body.sunny{background:linear-gradient(135deg,#fdcb6e,#e17055)}
+body.rainy{background:linear-gradient(135deg,#2d3436,#636e72)}
+body.cloudy{background:linear-gradient(135deg,#b2bec3,#dfe6e9)}
+.card{width:300px;padding:28px;background:rgba(255,255,255,.15);backdrop-filter:blur(12px);border-radius:20px;color:#fff;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.city-nav{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.city-btn{padding:6px 14px;border:1px solid rgba(255,255,255,.4);background:transparent;color:#fff;border-radius:20px;cursor:pointer;font-size:.8rem;transition:all .2s}
+.city-btn.active{background:rgba(255,255,255,.3);border-color:#fff}
+.main{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.icon{font-size:4rem;line-height:1;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.temp{font-size:3.5rem;font-weight:200}
+.desc{font-size:1.1rem;opacity:.9;margin-bottom:16px}
+.details{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.detail{background:rgba(255,255,255,.1);padding:10px 14px;border-radius:10px}
+.detail-label{font-size:.7rem;opacity:.6;text-transform:uppercase;letter-spacing:1px}
+.detail-value{font-size:1.1rem;margin-top:2px}
+.trend{margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.2)}
+.trend-title{font-size:.75rem;opacity:.6;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+.trend-bars{display:flex;align-items:flex-end;gap:6px;height:40px}
+.trend-bar{flex:1;background:rgba(255,255,255,.4);border-radius:2px 2px 0 0;transition:height .4s}
+.rain-particle{position:fixed;width:2px;background:rgba(255,255,255,.3);animation:rain 1s linear infinite}
+@keyframes rain{0%{transform:translateY(-100vh)}100%{transform:translateY(100vh)}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="city-nav" id="cityNav"></div>
+  <div class="main">
+    <div class="icon" id="icon">☀️</div>
+    <div class="temp" id="temp">--°</div>
+  </div>
+  <div class="desc" id="desc">加载中...</div>
+  <div class="details">
+    <div class="detail"><div class="detail-label">湿度</div><div class="detail-value" id="humidity">--%</div></div>
+    <div class="detail"><div class="detail-label">风速</div><div class="detail-value" id="wind">-- km/h</div></div>
+  </div>
+  <div class="trend">
+    <div class="trend-title">🌡 24h 温度趋势</div>
+    <div class="trend-bars" id="trendBars"></div>
+  </div>
+</div>
+<script>
+const data={
+  '北京':{temp:26,desc:'晴朗',icon:'☀️',class:'sunny',humidity:42,wind:12,trend:[22,23,25,26,27,28,27,26]},
+  '上海':{temp:22,desc:'多云',icon:'⛅',class:'cloudy',humidity:68,wind:18,trend:[20,21,21,22,23,22,21,20]},
+  '广州':{temp:29,desc:'雷阵雨',icon:'🌧️',class:'rainy',humidity:85,wind:24,trend:[27,28,29,30,29,28,27,26]}
+};
+const cities=Object.keys(data),nav=document.getElementById('cityNav');
+cities.forEach(c=>{const b=document.createElement('button');b.className='city-btn';b.textContent=c;
+  b.onclick=()=>render(c);nav.appendChild(b)});
+function render(city){
+  const d=data[city];
+  document.querySelectorAll('.city-btn').forEach((b,i)=>b.classList.toggle('active',cities[i]===city));
+  document.body.className=d.class;
+  document.getElementById('icon').textContent=d.icon;
+  document.getElementById('temp').textContent=d.temp+'°';
+  document.getElementById('desc').textContent=d.desc;
+  document.getElementById('humidity').textContent=d.humidity+'%';
+  document.getElementById('wind').textContent=d.wind+' km/h';
+  const bars=document.getElementById('trendBars');bars.innerHTML='';
+  const max=Math.max(...d.trend);
+  d.trend.forEach(v=>{const b=document.createElement('div');b.className='trend-bar';
+    b.style.height=((v/max)*100)+'%';bars.appendChild(b)});
+  if(d.class==='rainy')addRain();else document.querySelectorAll('.rain-particle').forEach(e=>e.remove());
+}
+function addRain(){document.querySelectorAll('.rain-particle').forEach(e=>e.remove());
+  for(let i=0;i<30;i++){const p=document.createElement('div');p.className='rain-particle';
+    p.style.left=Math.random()*100+'vw';p.style.height=(10+Math.random()*20)+'px';
+    p.style.animationDelay=Math.random()+'s';document.body.appendChild(p)}}
+render(cities[0]);
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hunter Fireworks</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:radial-gradient(ellipse at bottom,#1b2838 0%,#090a0f 100%);min-height:100vh;cursor:crosshair}
+canvas{display:block}
+.tip{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.2);font-size:.8rem;letter-spacing:3px;pointer-events:none}
+.ctr{position:fixed;top:14px;right:18px;color:rgba(255,255,255,.18);font-size:.7rem}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="tip">✨ 点击放烟花 ✨</div>
+<div class="ctr" id="ct">🎆 0</div>
+<script>
+const C=document.getElementById('c'),X=C.getContext('2d');
+let W,H;const fit=()=>{W=C.width=innerWidth;H=C.height=innerHeight};fit();addEventListener('resize',fit);
+const P=[];let cnt=0;
+const PAL=['#ff4757','#ffa502','#2ed573','#1e90ff','#a55eea','#ff6b81','#f9ca24','#7bed9f','#70a1ff','#eccc68'];
+class Pt{
+  constructor(x,y,c,vx,vy,life,sz){Object.assign(this,{x,y,c,vx,vy,life,ml:life,sz:sz||2});this.g=.035}
+  up(){this.vx*=.985;this.vy*=.985;this.vy+=this.g;this.x+=this.vx;this.y+=this.vy;this.life--}
+  dr(){const a=Math.max(0,this.life/this.ml);X.globalAlpha=a;X.fillStyle=this.c;
+    X.beginPath();X.arc(this.x,this.y,this.sz*a,0,6.283);X.fill();
+    X.globalAlpha=a*.3;X.beginPath();X.arc(this.x,this.y,this.sz*a*2.5,0,6.283);X.fill()}}
+function boom(x,y){
+  const c=PAL[Math.random()*PAL.length|0],n=60+Math.random()*50|0,ring=Math.random()>.5;
+  for(let i=0;i<n;i++){const a=ring?i/n*6.283:Math.random()*6.283,sp=1.5+Math.random()*5;
+    P.push(new Pt(x,y,c,Math.cos(a)*sp,Math.sin(a)*sp,35+Math.random()*35|0,1+Math.random()*2))}
+  cnt++;document.getElementById('ct').textContent='🎆 '+cnt}
+C.addEventListener('click',e=>boom(e.clientX,e.clientY));
+C.addEventListener('touchstart',e=>{e.preventDefault();[...e.changedTouches].forEach(t=>boom(t.clientX,t.clientY))},{passive:false});
+!function loop(){X.globalAlpha=.12;X.fillStyle='#090a0f';X.fillRect(0,0,W,H);X.globalAlpha=1;
+  for(let i=P.length-1;i>=0;i--){P[i].up();P[i].dr();if(P[i].life<=0)P.splice(i,1)}
+  requestAnimationFrame(loop)}();
+</script>
+</body>
+</html>
