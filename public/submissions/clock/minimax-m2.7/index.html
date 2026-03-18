@@ -1,0 +1,68 @@
+设计说明：
+本设计采用"数字律动"视觉风格，融合了新拟态(Neumorphism)的柔和光影与极简主义。通过 CSS 变量驱动全场景昼夜模式切换（06:00-18:00 自动切换），确保在 390px 移动端拥有完美的视觉焦点。秒针采用高频平滑扫秒动效，配合背景的亚克力质感呼吸灯，将时间的流动感具象化，兼顾模拟表盘的经典与数字显示的精准。
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronos Flow</title>
+    <style>
+        :root { --bg: #e0e5ec; --text: #31344b; --sh1: #ffffff; --sh2: #a3b1c6; --acc: #ff3b30; --dur: 0.8s; }
+        [data-t="night"] { --bg: #1a1b26; --text: #a9b1d6; --sh1: #24283b; --sh2: #000000; --acc: #7aa2f7; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; transition: background var(--dur), color var(--dur); overflow: hidden; }
+        .breathe { position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, var(--acc) 0%, transparent 70%); opacity: 0.05; filter: blur(60px); animation: pulse 8s infinite ease-in-out; pointer-events: none; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.03; } 50% { transform: scale(1.2); opacity: 0.08; } }
+        .clock { width: min(320px, 80vw); height: min(320px, 80vw); position: relative; background: var(--bg); border-radius: 50%; box-shadow: 10px 10px 20px var(--sh2), -10px -10px 20px var(--sh1); display: flex; align-items: center; justify-content: center; transition: box-shadow var(--dur); }
+        .face { width: 92%; height: 92%; position: relative; border-radius: 50%; border: 2px solid var(--sh1); opacity: 0.8; }
+        .marks span { position: absolute; width: 2px; height: 8px; background: var(--text); left: 50%; transform-origin: 0 145px; opacity: 0.3; }
+        .hand { position: absolute; bottom: 50%; left: 50%; transform-origin: bottom; border-radius: 4px; }
+        .h { width: 6px; height: 25%; background: var(--text); z-index: 3; }
+        .m { width: 4px; height: 38%; background: var(--text); opacity: 0.7; z-index: 2; }
+        .s { width: 2px; height: 44%; background: var(--acc); z-index: 4; }
+        .dot { position: absolute; width: 12px; height: 12px; background: var(--acc); border-radius: 50%; z-index: 5; border: 2px solid var(--bg); }
+        .digital { margin-top: 40px; font-size: 3.5rem; font-weight: 800; font-variant-numeric: tabular-nums; text-shadow: 2px 2px 4px var(--sh2); }
+        .date { font-size: 1rem; opacity: 0.6; margin-top: 5px; letter-spacing: 2px; font-weight: 500; }
+        @media (max-width: 390px) { .digital { font-size: 2.8rem; } .clock { width: 280px; height: 280px; } }
+    </style>
+</head>
+<body>
+    <div class="breathe"></div>
+    <div class="clock">
+        <div class="marks" id="mk"></div>
+        <div class="face">
+            <div class="hand h" id="hh"></div>
+            <div class="hand m" id="mm"></div>
+            <div class="hand s" id="ss"></div>
+            <div class="dot"></div>
+        </div>
+    </div>
+    <div class="digital" id="dg">00:00:00</div>
+    <div class="date" id="dt">---</div>
+    <script>
+        const mk = document.getElementById('mk');
+        for(let i=0; i<12; i++) {
+            const s = document.createElement('span');
+            s.style.transform = `translateX(-50%) rotate(${i*30}deg) translateY(-145px)`;
+            if(i%3===0) { s.style.height = '15px'; s.style.opacity = '0.6'; }
+            mk.appendChild(s);
+        }
+        function tick() {
+            const n = new Date();
+            const ms = n.getMilliseconds(), s = n.getSeconds(), m = n.getMinutes(), h = n.getHours();
+            const sDeg = (s + ms/1000) * 6;
+            const mDeg = (m + s/60) * 6;
+            const hDeg = (h % 12 + m/60) * 30;
+            document.getElementById('ss').style.transform = `translateX(-50%) rotate(${sDeg}deg)`;
+            document.getElementById('mm').style.transform = `translateX(-50%) rotate(${mDeg}deg)`;
+            document.getElementById('hh').style.transform = `translateX(-50%) rotate(${hDeg}deg)`;
+            document.getElementById('dg').innerText = n.toTimeString().split(' ')[0];
+            document.getElementById('dt').innerText = n.toLocaleDateString('zh-CN', {month:'short', day:'numeric', weekday:'long'}).toUpperCase();
+            document.body.setAttribute('data-t', (h >= 6 && h < 18) ? 'day' : 'night');
+            requestAnimationFrame(tick);
+        }
+        tick();
+    </script>
+</body>
+</html>

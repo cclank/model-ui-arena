@@ -1,0 +1,134 @@
+设计说明：
+采用深色极简拟物风格，模拟专业录音笔交互体验。通过 Canvas 绘制动态随机频谱模拟真实声波反馈，配合呼吸灯状态灯强化录音感。逻辑层实现严格的五态管理（待机、录音、暂停、确认、摘要），并加入防止误触的停止确认机制，确保原型交互的严谨与流畅。
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Recorder Pro</title>
+    <style>
+        :root { --bg: #121212; --card: #1e1e1e; --red: #ff4d4d; --accent: #007aff; --text: #eee; }
+        body { margin: 0; background: var(--bg); font-family: -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; color: var(--text); }
+        .app { width: 350px; background: var(--card); border-radius: 32px; padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center; position: relative; }
+        .status-bar { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; color: #888; margin-bottom: 10px; }
+        .dot { width: 8px; height: 8px; background: #444; border-radius: 50%; }
+        .recording .dot { background: var(--red); animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+        .timer { font-size: 56px; font-weight: 200; font-variant-numeric: tabular-nums; margin: 20px 0; }
+        canvas { width: 100%; height: 80px; margin-bottom: 30px; }
+        .controls { display: flex; justify-content: space-around; align-items: center; }
+        button { border: none; outline: none; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-main { width: 70px; height: 70px; border-radius: 50%; background: var(--red); display: flex; align-items: center; justify-content: center; }
+        .btn-main:active { transform: scale(0.9); }
+        .paused .btn-main { background: var(--accent); }
+        .btn-main i { width: 24px; height: 24px; background: white; border-radius: 4px; }
+        .idle .btn-main i { border-radius: 50%; width: 20px; height: 20px; }
+        .btn-side { background: #333; color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; opacity: 0.5; pointer-events: none; }
+        .active .btn-side { opacity: 1; pointer-events: auto; }
+        .modal { position: absolute; inset: 0; background: rgba(0,0,0,0.9); border-radius: 32px; display: none; flex-direction: column; justify-content: center; padding: 40px; z-index: 10; }
+        .modal h3 { margin-top: 0; color: var(--accent); }
+        .modal p { color: #aaa; line-height: 1.6; }
+        .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .modal-btns button { flex: 1; padding: 12px; border-radius: 12px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="app idle" id="app">
+        <div class="status-bar"><div class="dot"></div><span id="statusText">READY</span></div>
+        <div class="timer" id="timer">00:00</div>
+        <canvas id="viz"></canvas>
+        <div class="controls">
+            <button class="btn-side" onclick="togglePause()" id="pauseBtn">PAUSE</button>
+            <button class="btn-main" onclick="mainAction()"><i id="mainIcon"></i></button>
+            <button class="btn-side" onclick="stopConfirm()" id="stopBtn">STOP</button>
+        </div>
+        <div class="modal" id="modal">
+            <h3 id="modalTitle">Confirm</h3>
+            <p id="modalBody"></p>
+            <div class="modal-btns" id="modalBtns"></div>
+        </div>
+    </div>
+    <script>
+        let state = 'idle', seconds = 0, timerInterval, animationId;
+        const app = document.getElementById('app'), timerEl = document.getElementById('timer'), statusEl = document.getElementById('statusText');
+        const canvas = document.getElementById('viz'), ctx = canvas.getContext('2d');
+        canvas.width = 300; canvas.height = 80;
+
+        function updateUI() {
+            app.className = 'app ' + state + (state !== 'idle' ? ' active' : '');
+            statusEl.innerText = state.toUpperCase();
+            document.getElementById('pauseBtn').innerText = state === 'paused' ? 'RESUME' : 'PAUSE';
+            if (state === 'idle') timerEl.innerText = "00:00";
+        }
+
+        function mainAction() {
+            if (state === 'idle') startRecording();
+            else if (state === 'recording' || state === 'paused') togglePause();
+        }
+
+        function startRecording() {
+            state = 'recording'; seconds = 0; updateUI();
+            timerInterval = setInterval(() => { seconds++; timerEl.innerText = formatTime(seconds); }, 1000);
+            draw();
+        }
+
+        function togglePause() {
+            state = state === 'recording' ? 'paused' : 'recording';
+            updateUI();
+        }
+
+        function stopConfirm() {
+            showModal('停止录音', '确定要结束本次录制吗？', [
+                { text: '取消', cb: hideModal },
+                { text: '确定', cb: finishRecording, primary: true }
+            ]);
+        }
+
+        function finishRecording() {
+            clearInterval(timerInterval);
+            const duration = formatTime(seconds);
+            state = 'idle'; updateUI();
+            showModal('录音摘要', `状态：已保存<br>时长：${duration}<br>时间：${new Date().toLocaleTimeString()}`, [{ text: '完成', cb: hideModal, primary: true }]);
+        }
+
+        function formatTime(s) {
+            const m = Math.floor(s / 60);
+            return `${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+        }
+
+        function showModal(title, body, btns) {
+            const m = document.getElementById('modal');
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalBody').innerHTML = body;
+            const btnContainer = document.getElementById('modalBtns');
+            btnContainer.innerHTML = '';
+            btns.forEach(b => {
+                const el = document.createElement('button');
+                el.innerText = b.text;
+                el.style.background = b.primary ? 'var(--accent)' : '#333';
+                el.style.color = 'white';
+                el.onclick = b.cb;
+                btnContainer.appendChild(el);
+            });
+            m.style.display = 'flex';
+        }
+
+        function hideModal() { document.getElementById('modal').style.display = 'none'; }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const bars = 40, gap = 2;
+            const width = (canvas.width - (bars * gap)) / bars;
+            for (let i = 0; i < bars; i++) {
+                let h = state === 'recording' ? Math.random() * 60 + 5 : 2;
+                if (state === 'paused') h = 2;
+                ctx.fillStyle = state === 'recording' ? '#ff4d4d' : '#444';
+                ctx.fillRect(i * (width + gap), (canvas.height - h) / 2, width, h);
+            }
+            animationId = requestAnimationFrame(draw);
+        }
+        updateUI(); draw();
+    </script>
+</body>
+</html>

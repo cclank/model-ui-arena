@@ -1,0 +1,101 @@
+设计说明：
+本设计采用极简拟态视觉风格，通过纯 CSS 实现动态天气特效（如雨滴飞舞、云朵漂浮、日光呼吸）。
+内部通过轻量级 JavaScript 驱动状态机，点击城市即可无缝切换背景梯度色、天气图标及关联的 Mock 数据。
+集成 SVG 绘制的温度趋势小图，确保在 390px 移动端宽度下信息层级分明，核心数据一目了然。
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Card</title>
+    <style>
+        :root { --bg: linear-gradient(135deg, #4facfe, #00f2fe); --glass: rgba(255,255,255,0.2); }
+        * { box-sizing: border-box; font-family: -apple-system, system-ui, sans-serif; transition: 0.4s; }
+        body { margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center; background: #f0f2f5; }
+        #app { width: 360px; height: 580px; background: var(--bg); border-radius: 30px; position: relative; overflow: hidden; color: white; box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
+        .tabs { display: flex; justify-content: space-around; padding: 25px 20px; z-index: 10; position: relative; }
+        .tab { opacity: 0.6; cursor: pointer; font-weight: 600; font-size: 14px; }
+        .tab.active { opacity: 1; border-bottom: 2px solid white; }
+        .main { text-align: center; padding-top: 20px; z-index: 10; position: relative; }
+        .temp { font-size: 80px; font-weight: 200; margin: 10px 0; }
+        .desc { font-size: 20px; letter-spacing: 2px; margin-bottom: 40px; }
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 30px; }
+        .stat-card { background: var(--glass); padding: 15px; border-radius: 20px; backdrop-filter: blur(10px); }
+        .chart-box { margin-top: 40px; padding: 0 20px; text-align: left; }
+        .chart-title { font-size: 12px; margin-bottom: 10px; opacity: 0.8; padding-left: 10px; }
+        svg { width: 100%; height: 60px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        @keyframes rain { 0% { transform: translateY(-100px) rotate(15deg); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(500px) rotate(15deg); opacity: 0; } }
+        .sun { width: 80px; height: 80px; background: #ffce54; border-radius: 50%; margin: 0 auto; box-shadow: 0 0 40px #ffce54; animation: float 4s ease-in-out infinite; }
+        .cloud { position: absolute; width: 100px; height: 40px; background: #fff; border-radius: 50px; opacity: 0.8; animation: float 6s ease-in-out infinite; }
+        .cloud::after { content: ''; position: absolute; width: 50px; height: 50px; background: #fff; border-radius: 50%; top: -25px; left: 20px; }
+        .drop { position: absolute; width: 2px; height: 15px; background: rgba(255,255,255,0.6); animation: rain 1s linear infinite; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="fx"></div>
+        <div class="tabs" id="tabs"></div>
+        <div class="main">
+            <div id="icon"></div>
+            <div class="temp" id="temp">--°</div>
+            <div class="desc" id="desc">--</div>
+            <div class="stats">
+                <div class="stat-card"><div>湿度</div><b id="humi">--%</b></div>
+                <div class="stat-card"><div>风速</div><b id="wind">--m/s</b></div>
+            </div>
+        </div>
+        <div class="chart-box">
+            <div class="chart-title">24小时温度趋势预测</div>
+            <svg viewBox="0 0 300 60"><polyline id="path" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" points=""/></svg>
+        </div>
+    </div>
+
+    <script>
+        const data = [
+            { name: '北京', temp: 26, desc: '晴朗', humi: 32, wind: 2.5, type: 'sun', bg: 'linear-gradient(135deg, #ff9a9e, #fecfef)', points: '0,40 60,35 120,20 180,25 240,40 300,30' },
+            { name: '上海', temp: 19, desc: '阵雨', humi: 88, wind: 5.2, type: 'rain', bg: 'linear-gradient(135deg, #667eea, #764ba2)', points: '0,50 60,55 120,45 180,50 240,58 300,52' },
+            { name: '伦敦', temp: 12, desc: '多云', humi: 65, wind: 3.8, type: 'cloud', bg: 'linear-gradient(135deg, #bdc3c7, #2c3e50)', points: '0,55 60,50 120,52 180,48 240,50 300,45' }
+        ];
+
+        function initFX(type) {
+            const fx = document.getElementById('fx'); fx.innerHTML = '';
+            if (type === 'rain') {
+                for (let i = 0; i < 30; i++) {
+                    const d = document.createElement('div'); d.className = 'drop';
+                    d.style.left = Math.random() * 100 + '%'; d.style.animationDelay = Math.random() * 2 + 's';
+                    fx.appendChild(d);
+                }
+            } else if (type === 'cloud') {
+                const c = document.createElement('div'); c.className = 'cloud';
+                c.style.top = '100px'; c.style.left = '50px'; fx.appendChild(c);
+            } else {
+                const s = document.createElement('div'); s.className = 'sun';
+                document.getElementById('icon').innerHTML = ''; document.getElementById('icon').appendChild(s);
+            }
+        }
+
+        function switchCity(index) {
+            const c = data[index];
+            document.getElementById('app').style.setProperty('--bg', c.bg);
+            document.getElementById('temp').innerText = c.temp + '°';
+            document.getElementById('desc').innerText = c.desc;
+            document.getElementById('humi').innerText = c.humi + '%';
+            document.getElementById('wind').innerText = c.wind + 'm/s';
+            document.getElementById('path').setAttribute('points', c.points);
+            document.getElementById('icon').innerHTML = c.type === 'sun' ? '<div class="sun"></div>' : '';
+            initFX(c.type);
+            document.querySelectorAll('.tab').forEach((t, i) => t.className = i === index ? 'tab active' : 'tab');
+        }
+
+        const tabs = document.getElementById('tabs');
+        data.forEach((c, i) => {
+            const btn = document.createElement('div'); btn.className = 'tab';
+            btn.innerText = c.name; btn.onclick = () => switchCity(i);
+            tabs.appendChild(btn);
+        });
+        switchCity(0);
+    </script>
+</body>
+</html>

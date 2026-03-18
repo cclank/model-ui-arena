@@ -1,0 +1,100 @@
+本作品采用 HTML5 Canvas 构建了一个极简而华丽的交互式烟花系统。通过物理模拟算法，实现了带有重力感与空气阻力的粒子扩散特效，并利用 HSL 色彩空间生成高饱和度的随机五彩视觉。代码经过高度精简与性能优化，通过动态过滤失效粒子确保长效运行不卡顿，配合拖尾余辉效果，在 390px 移动端亦能呈现沉浸式的夜空庆典氛围。
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>夜空烟花</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: radial-gradient(circle at center, #050b1a 0%, #000 100%); touch-action: none; }
+        canvas { display: block; cursor: crosshair; }
+        #tip { position: fixed; top: 20px; width: 100%; text-align: center; color: rgba(255,255,255,0.3); font-family: sans-serif; pointer-events: none; font-size: 14px; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+    <div id="tip">点击夜空 燃放烟花</div>
+    <canvas id="c"></canvas>
+    <script>
+        const canvas = document.getElementById('c'), ctx = canvas.getContext('2d');
+        let particles = [];
+        const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor(x, y, h) {
+                this.x = x; this.y = y;
+                this.h = h;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.015 + 0.01;
+                this.radius = Math.random() * 2.5 + 1;
+                const angle = Math.random() * Math.PI * 2;
+                const force = Math.random() * 8 + 2;
+                this.vx = Math.cos(angle) * force;
+                this.vy = Math.sin(angle) * force;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `hsl(${this.h}, 100%, 65%)`;
+                if (this.alpha < 0.5 && Math.random() > 0.5) ctx.fillStyle = '#fff';
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = `hsl(${this.h}, 100%, 50%)`;
+                ctx.fill();
+                ctx.restore();
+            }
+            update() {
+                this.vy += 0.12;
+                this.vx *= 0.97;
+                this.vy *= 0.97;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+            }
+        }
+
+        function explode(x, y) {
+            const hue = Math.random() * 360;
+            const count = innerWidth < 500 ? 35 : 60;
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(x, y, hue));
+            }
+        }
+
+        function loop() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            particles = particles.filter(p => p.alpha > 0);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(loop);
+        }
+
+        const handleAction = (e) => {
+            const x = e.clientX || (e.touches && e.touches[0].clientX);
+            const y = e.clientY || (e.touches && e.touches[0].clientY);
+            if (x && y) explode(x, y);
+        };
+
+        canvas.addEventListener('mousedown', handleAction);
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleAction(e);
+        }, { passive: false });
+
+        setTimeout(() => {
+            const w = canvas.width, h = canvas.height;
+            explode(w * 0.5, h * 0.4);
+            setTimeout(() => explode(w * 0.3, h * 0.3), 300);
+            setTimeout(() => explode(w * 0.7, h * 0.35), 600);
+        }, 500);
+
+        loop();
+    </script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+设计说明：
+该面板采用深色极简风设计，聚焦核心金融数据。利用内联 SVG 实时计算并绘制平滑的价格趋势图，配合 CSS 关键帧实现价格跳动的"闪烁感"和模拟流式更新。系统内置数据模拟引擎，动态监测波动率并自动触发"高波动"风险提示，在满足移动端响应式布局的同时，通过色块与符号的强对比确保信息层级清晰。
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockDashboard</title>
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --up: #ef4444; --down: #22c55e; --text: #f8fafc; }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; padding: 15px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 360px; }
+        h2 { font-size: 1.2rem; margin: 0 0 15px 5px; font-weight: 500; opacity: 0.9; }
+        .card { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 12px; position: relative; overflow: hidden; transition: 0.3s; border: 1px solid #334155; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .symbol { font-weight: 700; font-size: 1.1rem; }
+        .name { font-size: 0.75rem; opacity: 0.5; display: block; }
+        .price-box { text-align: right; }
+        .price { font-family: 'Courier New', monospace; font-size: 1.2rem; font-weight: bold; transition: 0.2s; }
+        .change { font-size: 0.85rem; font-weight: 600; margin-top: 4px; }
+        .chart-box { height: 40px; width: 100%; margin-top: 10px; }
+        svg { width: 100%; height: 100%; overflow: visible; }
+        .path { fill: none; stroke-width: 2; stroke-linecap: round; transition: 0.5s ease-in-out; }
+        .flash-up { animation: f-up 0.4s; }
+        .flash-down { animation: f-down 0.4s; }
+        @keyframes f-up { 0% { color: var(--up); } 100% { color: var(--text); } }
+        @keyframes f-down { 0% { color: var(--down); } 100% { color: var(--text); } }
+        .alert { position: absolute; top: 0; right: 0; background: #f59e0b; color: #000; font-size: 0.6rem; padding: 2px 8px; border-bottom-left-radius: 8px; font-weight: bold; display: none; }
+        .footer { font-size: 0.7rem; opacity: 0.4; text-align: center; margin-top: 20px; border-top: 1px solid #334155; padding-top: 10px; line-height: 1.4; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>市场自选 (实时)</h2>
+        <div id="app"></div>
+        <div class="footer">股市有风险，投资需谨慎。<br>数据每 1.5s 模拟更新</div>
+    </div>
+    <script>
+        const stocks = [
+            { id: 's1', code: 'NVDA.O', name: '英伟达', price: 124.52, history: [40, 45, 38, 50, 48, 55, 60], change: 2.45 },
+            { id: 's2', code: 'AAPL.O', name: '苹果', price: 216.35, history: [60, 58, 62, 61, 63, 59, 58], change: -0.82 },
+            { id: 's3', code: 'TSLA.O', name: '特斯拉', price: 248.11, history: [30, 45, 20, 55, 40, 70, 65], change: 5.12 }
+        ];
+
+        function render() {
+            const app = document.getElementById('app');
+            app.innerHTML = stocks.map(s => {
+                const color = s.change >= 0 ? 'var(--up)' : 'var(--down)';
+                const sign = s.change >= 0 ? '▲' : '▼';
+                const points = s.history.map((val, i) => `${(i / (s.history.length - 1)) * 320},${80 - val}`).join(' ');
+                return `
+                    <div class="card" id="card-${s.id}">
+                        <div class="alert" style="display: ${Math.abs(s.change) > 4 ? 'block' : 'none'}">! 波动剧烈</div>
+                        <div class="header">
+                            <div><span class="symbol">${s.code}</span><span class="name">${s.name}</span></div>
+                            <div class="price-box">
+                                <div class="price" id="p-${s.id}">${s.price.toFixed(2)}</div>
+                                <div class="change" style="color: ${color}">${sign} ${Math.abs(s.change).toFixed(2)}%</div>
+                            </div>
+                        </div>
+                        <div class="chart-box">
+                            <svg viewBox="0 0 320 80">
+                                <polyline class="path" points="${points}" stroke="${color}" />
+                            </svg>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function updateData() {
+            stocks.forEach(s => {
+                const oldPrice = s.price;
+                const volt = (Math.random() - 0.5) * 2;
+                s.price += volt;
+                s.change += volt / 10;
+                s.history.push(Math.max(10, Math.min(70, s.history[s.history.length - 1] + volt * 5)));
+                if (s.history.length > 12) s.history.shift();
+                
+                const el = document.getElementById(`p-${s.id}`);
+                if (el) {
+                    el.innerText = s.price.toFixed(2);
+                    el.classList.remove('flash-up', 'flash-down');
+                    void el.offsetWidth;
+                    el.classList.add(volt > 0 ? 'flash-up' : 'flash-down');
+                }
+            });
+            render();
+        }
+
+        render();
+        setInterval(updateData, 1500);
+    </script>
+</body>
+</html>
