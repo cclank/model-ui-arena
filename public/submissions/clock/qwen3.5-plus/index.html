@@ -1,0 +1,179 @@
+<!-- 设计说明 -->
+<!-- 1. 创建了一个现代化的双显时钟，同时展示模拟和数字时间 -->
+<!-- 2. 使用CSS动画增强视觉效果，秒针平滑转动 -->
+<!-- 3. 实现日夜模式自动切换，界面响应式适配移动端 -->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>现代时钟</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      transition: background 0.5s ease;
+    }
+
+    body.night {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    }
+
+    .clock-container {
+      text-align: center;
+      padding: 2rem;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .analog-clock {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .center-point {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 10px;
+      height: 10px;
+      background: #fff;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+    }
+
+    .hour-hand, .minute-hand, .second-hand {
+      position: absolute;
+      left: 50%;
+      bottom: 50%;
+      transform-origin: bottom center;
+      border-radius: 10px;
+    }
+
+    .hour-hand {
+      width: 6px;
+      height: 50px;
+      background: #fff;
+      transform: translateX(-50%) rotate(0deg);
+    }
+
+    .minute-hand {
+      width: 4px;
+      height: 70px;
+      background: #ddd;
+      transform: translateX(-50%) rotate(0deg);
+    }
+
+    .second-hand {
+      width: 2px;
+      height: 80px;
+      background: #ff6b6b;
+      transform: translateX(-50%) rotate(0deg);
+    }
+
+    .digital-clock {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: white;
+      margin-bottom: 1rem;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+
+    .date-display {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1.2rem;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 390px) {
+      .analog-clock {
+        width: 180px;
+        height: 180px;
+      }
+
+      .digital-clock {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="clock-container">
+    <div class="analog-clock">
+      <div class="hour-hand"></div>
+      <div class="minute-hand"></div>
+      <div class="second-hand"></div>
+      <div class="center-point"></div>
+    </div>
+    <div class="digital-clock">00:00:00</div>
+    <div class="date-display">星期一, 2026年1月1日</div>
+  </div>
+
+  <script>
+    function updateTime() {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const seconds = now.getSeconds();
+
+      // 更新数字时钟
+      const digitalClock = document.querySelector('.digital-clock');
+      digitalClock.textContent =
+        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+      // 更新模拟时钟
+      const hourHand = document.querySelector('.hour-hand');
+      const minuteHand = document.querySelector('.minute-hand');
+      const secondHand = document.querySelector('.second-hand');
+
+      const hourDeg = (hours % 12) * 30 + minutes * 0.5;
+      const minuteDeg = minutes * 6 + seconds * 0.1;
+      const secondDeg = seconds * 6;
+
+      hourHand.style.transform = `translateX(-50%) rotate(${hourDeg}deg)`;
+      minuteHand.style.transform = `translateX(-50%) rotate(${minuteDeg}deg)`;
+      secondHand.style.transform = `translateX(-50%) rotate(${secondDeg}deg)`;
+
+      // 更新日期显示
+      const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+      const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+      const dateStr = `${weekdays[now.getDay()]}, ${now.getFullYear()}年${months[now.getMonth()]}${now.getDate()}日`;
+      document.querySelector('.date-display').textContent = dateStr;
+
+      // 自动切换昼夜模式
+      const body = document.body;
+      if (hours >= 6 && hours < 18) {
+        body.classList.remove('night');
+      } else {
+        body.classList.add('night');
+      }
+    }
+
+    // 初始化
+    updateTime();
+
+    // 每秒更新
+    setInterval(updateTime, 1000);
+  </script>
+</body>
+</html>

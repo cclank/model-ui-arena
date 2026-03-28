@@ -1,0 +1,330 @@
+<!-- 设计说明 -->
+<!-- 1. 创建了一个现代化的股票监控面板，展示多只股票信息 -->
+<!-- 2. 实现了清晰的涨跌视觉区分，使用颜色和符号快速识别 -->
+<!-- 3. 添加了简单的趋势图和模拟实时数据更新效果 -->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>股票监控面板</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #2c3e50, #1a1a2e);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+      color: #ecf0f1;
+    }
+
+    .stock-container {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .panel-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .panel-title {
+      font-size: 1.8rem;
+      margin-bottom: 5px;
+    }
+
+    .last-update {
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    .stocks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .stock-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 15px;
+      transition: background 0.3s ease;
+    }
+
+    .stock-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .stock-name {
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    .stock-symbol {
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    .stock-price {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 8px 0;
+    }
+
+    .price-change {
+      font-size: 1rem;
+      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .positive {
+      color: #2ecc71;
+      background: rgba(46, 204, 113, 0.1);
+    }
+
+    .negative {
+      color: #e74c3c;
+      background: rgba(231, 76, 60, 0.1);
+    }
+
+    .trend-chart {
+      margin-top: 15px;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    .chart-container {
+      height: 60px;
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+    }
+
+    .chart-bar {
+      flex: 1;
+      background: rgba(127, 140, 141, 0.5);
+      border-radius: 2px 2px 0 0;
+      transition: height 0.3s ease;
+    }
+
+    .realtime-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #2ecc71;
+      border-radius: 50%;
+      margin-right: 5px;
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0.4; }
+    }
+
+    @media (max-width: 390px) {
+      .stock-container {
+        padding: 15px;
+      }
+
+      .panel-title {
+        font-size: 1.5rem;
+      }
+
+      .stock-price {
+        font-size: 1.3rem;
+      }
+
+      .chart-container {
+        height: 50px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="stock-container">
+    <div class="panel-header">
+      <h1 class="panel-title">股票监控面板</h1>
+      <div class="last-update">
+        <span class="realtime-indicator"></span>
+        <span id="updateTime">最后更新: 10:30:15</span>
+      </div>
+    </div>
+
+    <div class="stocks-list" id="stocksList">
+      <!-- 股票卡片将通过JavaScript动态生成 -->
+    </div>
+  </div>
+
+  <script>
+    // 模拟股票数据
+    const stocks = [
+      {
+        name: "腾讯控股",
+        symbol: "TENCENT",
+        price: 350.25,
+        change: 8.75,
+        changePercent: 2.56,
+        history: [345, 347, 346, 349, 350, 348, 350, 352, 351, 350]
+      },
+      {
+        name: "阿里巴巴",
+        symbol: "ALIBABA",
+        price: 85.60,
+        change: -2.30,
+        changePercent: -2.61,
+        history: [87, 86.5, 87.2, 86.8, 86.2, 86, 85.8, 85.5, 85.7, 85.6]
+      },
+      {
+        name: "苹果公司",
+        symbol: "AAPL",
+        price: 182.52,
+        change: 1.25,
+        changePercent: 0.69,
+        history: [180, 181, 181.5, 182, 181.8, 182.2, 182.3, 182.1, 182.4, 182.5]
+      },
+      {
+        name: "特斯拉",
+        symbol: "TSLA",
+        price: 248.75,
+        change: -5.25,
+        changePercent: -2.07,
+        history: [250, 252, 251.5, 250.8, 250.2, 249.8, 249.5, 249, 248.8, 248.7]
+      }
+    ];
+
+    const stocksList = document.getElementById('stocksList');
+
+    // 生成趋势图表
+    function renderChart(container, data, isPositive) {
+      container.innerHTML = '';
+
+      const maxValue = Math.max(...data);
+      const minValue = Math.min(...data);
+      const range = maxValue - minValue || 1; // 防止除零
+
+      data.forEach(value => {
+        const heightPercent = ((value - minValue) / range) * 100;
+        const bar = document.createElement('div');
+        bar.className = 'chart-bar';
+        bar.style.height = `${Math.max(heightPercent, 5)}%`; // 最小高度5%
+
+        if (isPositive) {
+          bar.style.backgroundColor = '#2ecc71';
+        } else {
+          bar.style.backgroundColor = '#e74c3c';
+        }
+
+        container.appendChild(bar);
+      });
+    }
+
+    // 更新股票数据显示
+    function updateStocks() {
+      stocksList.innerHTML = '';
+
+      stocks.forEach(stock => {
+        const isPositive = stock.change >= 0;
+        const changeText = isPositive ? `+${stock.change.toFixed(2)}` : stock.change.toFixed(2);
+        const changePercentText = isPositive ? `+${stock.changePercent.toFixed(2)}%` : `${stock.changePercent.toFixed(2)}%`;
+
+        const stockCard = document.createElement('div');
+        stockCard.className = 'stock-card';
+
+        stockCard.innerHTML = `
+          <div class="stock-header">
+            <div>
+              <div class="stock-name">${stock.name}</div>
+              <div class="stock-symbol">${stock.symbol}</div>
+            </div>
+          </div>
+
+          <div class="stock-price">${stock.price.toFixed(2)}</div>
+
+          <div>
+            <span class="price-change ${isPositive ? 'positive' : 'negative'}">
+              ${changeText} (${changePercentText})
+            </span>
+          </div>
+
+          <div class="trend-chart">
+            <div class="chart-header">
+              <span>趋势</span>
+              <span>${isPositive ? '📈' : '📉'}</span>
+            </div>
+            <div class="chart-container" id="chart-${stock.symbol.toLowerCase()}"></div>
+          </div>
+        `;
+
+        stocksList.appendChild(stockCard);
+
+        // 渲染趋势图
+        const chartContainer = document.getElementById(`chart-${stock.symbol.toLowerCase()}`);
+        renderChart(chartContainer, stock.history, isPositive);
+      });
+
+      // 更新时间
+      const now = new Date();
+      document.getElementById('updateTime').textContent =
+        `最后更新: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+    }
+
+    // 模拟实时数据更新
+    function simulateRealtimeUpdates() {
+      stocks.forEach(stock => {
+        // 随机微调价格
+        const changeFactor = (Math.random() - 0.5) * 0.5; // -0.25% 到 +0.25%
+        const oldPrice = stock.price;
+        stock.price = Math.max(0.01, stock.price * (1 + changeFactor / 100));
+
+        // 更新变化值
+        stock.change = stock.price - (stock.price - stock.change); // 实际应该是新的变化
+        // 计算新的变化值（基于上一次的价格）
+        const priceDiff = stock.price - (stock.history[stock.history.length - 1]);
+        stock.change = priceDiff;
+        stock.changePercent = (priceDiff / (stock.price - priceDiff)) * 100;
+
+        // 更新历史数据
+        stock.history.shift(); // 移除最旧的数据
+        stock.history.push(stock.price); // 添加新价格
+      });
+
+      updateStocks();
+    }
+
+    // 初始化
+    updateStocks();
+
+    // 每3秒模拟一次数据更新
+    setInterval(simulateRealtimeUpdates, 3000);
+  </script>
+</body>
+</html>

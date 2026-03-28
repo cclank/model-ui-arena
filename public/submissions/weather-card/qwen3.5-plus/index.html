@@ -1,0 +1,360 @@
+<!-- 设计说明 -->
+<!-- 1. 创建了一个响应式的天气卡片，支持多个城市切换 -->
+<!-- 2. 展示温度、天气描述、风速/湿度等关键信息 -->
+<!-- 3. 根据不同天气状态动态切换背景视觉效果 -->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>天气卡片</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #74b9ff, #0984e3);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .weather-container {
+      width: 100%;
+      max-width: 400px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      color: white;
+    }
+
+    .city-selector {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+
+    .city-btn {
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 20px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+    }
+
+    .city-btn.active {
+      background: rgba(255, 255, 255, 0.3);
+      font-weight: bold;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+    }
+
+    .city-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .weather-card {
+      text-align: center;
+      padding: 20px;
+      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      transition: all 0.4s ease;
+    }
+
+    .weather-icon {
+      font-size: 4rem;
+      margin: 15px 0;
+      transition: transform 0.3s ease;
+    }
+
+    .temperature {
+      font-size: 3.5rem;
+      font-weight: bold;
+      margin: 10px 0;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .weather-description {
+      font-size: 1.4rem;
+      margin: 10px 0;
+      opacity: 0.9;
+    }
+
+    .weather-details {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .detail-item {
+      margin: 10px 15px;
+    }
+
+    .detail-value {
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    .detail-label {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+
+    .trend-graph {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+
+    .graph-title {
+      margin-bottom: 10px;
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+
+    .trend-bars {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      height: 50px;
+      padding: 0 10px;
+    }
+
+    .trend-bar {
+      width: 20px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 5px 5px 0 0;
+      transition: height 0.5s ease;
+    }
+
+    /* 天气状态特定样式 */
+    .sunny {
+      background: linear-gradient(135deg, #fdcb6e, #e17055);
+    }
+
+    .rainy {
+      background: linear-gradient(135deg, #74b9ff, #a29bfe);
+    }
+
+    .cloudy {
+      background: linear-gradient(135deg, #b2bec3, #636e72);
+    }
+
+    .snowy {
+      background: linear-gradient(135deg, #ffffff, #dfe6e9);
+      color: #2d3436;
+    }
+
+    .snowy .weather-details,
+    .snowy .detail-value,
+    .snowy .detail-label,
+    .snowy .weather-description {
+      color: #2d3436;
+    }
+
+    .snowy .city-btn {
+      color: #2d3436;
+    }
+
+    .snowy .city-btn.active {
+      background: rgba(116, 185, 255, 0.3);
+    }
+
+    .snowy .weather-icon {
+      color: #74b9ff;
+    }
+
+    @media (max-width: 390px) {
+      .weather-container {
+        padding: 15px;
+      }
+
+      .temperature {
+        font-size: 3rem;
+      }
+
+      .weather-icon {
+        font-size: 3rem;
+      }
+
+      .city-selector {
+        gap: 5px;
+      }
+
+      .city-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="weather-container">
+    <div class="city-selector">
+      <button class="city-btn active" data-city="beijing">北京</button>
+      <button class="city-btn" data-city="shanghai">上海</button>
+      <button class="city-btn" data-city="guangzhou">广州</button>
+      <button class="city-btn" data-city="shenzhen">深圳</button>
+    </div>
+
+    <div class="weather-card" id="weatherCard">
+      <div class="weather-icon" id="weatherIcon">☀️</div>
+      <div class="temperature" id="temperature">25°C</div>
+      <div class="weather-description" id="description">晴朗</div>
+
+      <div class="weather-details">
+        <div class="detail-item">
+          <div class="detail-value" id="windSpeed">12 km/h</div>
+          <div class="detail-label">风速</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-value" id="humidity">45%</div>
+          <div class="detail-label">湿度</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-value" id="feelsLike">27°C</div>
+          <div class="detail-label">体感</div>
+        </div>
+      </div>
+
+      <div class="trend-graph">
+        <div class="graph-title">未来5天温度趋势</div>
+        <div class="trend-bars" id="trendBars">
+          <!-- 动态生成趋势柱状图 -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 模拟城市天气数据
+    const weatherData = {
+      beijing: {
+        temp: 25,
+        description: '晴朗',
+        windSpeed: '12 km/h',
+        humidity: '45%',
+        feelsLike: '27°C',
+        icon: '☀️',
+        weatherType: 'sunny'
+      },
+      shanghai: {
+        temp: 18,
+        description: '多云转小雨',
+        windSpeed: '8 km/h',
+        humidity: '70%',
+        feelsLike: '19°C',
+        icon: '⛅',
+        weatherType: 'cloudy'
+      },
+      guangzhou: {
+        temp: 30,
+        description: '雷阵雨',
+        windSpeed: '15 km/h',
+        humidity: '80%',
+        feelsLike: '34°C',
+        icon: '⛈️',
+        weatherType: 'rainy'
+      },
+      shenzhen: {
+        temp: 28,
+        description: '小雪',
+        windSpeed: '10 km/h',
+        humidity: '65%',
+        feelsLike: '26°C',
+        icon: '❄️',
+        weatherType: 'snowy'
+      }
+    };
+
+    // 获取DOM元素
+    const cityButtons = document.querySelectorAll('.city-btn');
+    const weatherCard = document.getElementById('weatherCard');
+    const weatherIcon = document.getElementById('weatherIcon');
+    const temperature = document.getElementById('temperature');
+    const description = document.getElementById('description');
+    const windSpeed = document.getElementById('windSpeed');
+    const humidity = document.getElementById('humidity');
+    const feelsLike = document.getElementById('feelsLike');
+    const trendBars = document.getElementById('trendBars');
+
+    // 生成随机温度趋势数据
+    function generateTrendData() {
+      const trend = [];
+      for (let i = 0; i < 5; i++) {
+        // 生成相对当前温度的随机波动 (-5到+5度之间)
+        const variation = Math.floor(Math.random() * 11) - 5;
+        trend.push(variation);
+      }
+      return trend;
+    }
+
+    // 更新趋势图
+    function updateTrendGraph(temp) {
+      trendBars.innerHTML = '';
+      const trendData = generateTrendData();
+
+      trendData.forEach(value => {
+        const barHeight = 20 + Math.abs(value) * 3; // 基础高度加上变化幅度
+        const bar = document.createElement('div');
+        bar.className = 'trend-bar';
+        bar.style.height = `${barHeight}px`;
+        bar.style.background = value >= 0 ? 'rgba(255, 107, 107, 0.6)' : 'rgba(116, 185, 255, 0.6)';
+        bar.title = `${value >= 0 ? '+' : ''}${value}°C`;
+        trendBars.appendChild(bar);
+      });
+    }
+
+    // 更新天气显示
+    function updateWeather(city) {
+      const data = weatherData[city];
+
+      // 更新DOM
+      weatherIcon.textContent = data.icon;
+      temperature.textContent = `${data.temp}°C`;
+      description.textContent = data.description;
+      windSpeed.textContent = data.windSpeed;
+      humidity.textContent = data.humidity;
+      feelsLike.textContent = data.feelsLike;
+
+      // 更新天气类型
+      weatherCard.className = 'weather-card';
+      weatherCard.classList.add(data.weatherType);
+
+      // 更新趋势图
+      updateTrendGraph(data.temp);
+    }
+
+    // 为城市按钮添加点击事件
+    cityButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // 更新活动状态
+        cityButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+
+        // 更新天气数据
+        const city = button.getAttribute('data-city');
+        updateWeather(city);
+      });
+    });
+
+    // 初始化第一个城市
+    updateWeather('beijing');
+  </script>
+</body>
+</html>

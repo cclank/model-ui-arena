@@ -1,0 +1,198 @@
+<!-- 设计说明 -->
+<!-- 1. 创建了一个点击触发动画的烟花效果，具有粒子扩散和消失过程 -->
+<!-- 2. 实现了多彩烟花效果和夜空背景氛围 -->
+<!-- 3. 添加了性能优化以避免内存无限增长 -->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>点击放烟花</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      height: 100vh;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+    }
+
+    .firework {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .instructions {
+      position: fixed;
+      top: 20px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 1.2rem;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      z-index: 100;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.7; }
+      50% { opacity: 0.4; }
+      100% { opacity: 0.7; }
+    }
+
+    .stars {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle var(--duration) infinite ease-in-out;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="container">
+    <div class="instructions">点击任意位置放烟花 🎆</div>
+    <div class="stars" id="stars"></div>
+  </div>
+
+  <script>
+    const container = document.getElementById('container');
+    const starsContainer = document.getElementById('stars');
+    const colors = ['#ff5252', '#ffd740', '#40c4ff', '#69f0ae', '#ff4081', '#7c4dff', '#ffff00', '#00ffea'];
+
+    // 创建星空背景
+    function createStars() {
+      for (let i = 0; i < 100; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+
+        // 随机位置
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.top = `${Math.random() * 100}%`;
+
+        // 随机大小
+        const size = Math.random() * 2 + 1;
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+
+        // 随机动画持续时间
+        star.style.setProperty('--duration', `${Math.random() * 3 + 2}s`);
+
+        starsContainer.appendChild(star);
+      }
+    }
+
+    // 创建烟花效果
+    function createFirework(x, y) {
+      const particleCount = 100;
+
+      for (let i = 0; i < particleCount; i++) {
+        const firework = document.createElement('div');
+        firework.className = 'firework';
+
+        // 随机颜色
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        firework.style.backgroundColor = color;
+
+        // 设置初始位置
+        firework.style.left = `${x}px`;
+        firework.style.top = `${y}px`;
+
+        container.appendChild(firework);
+
+        // 随机运动参数
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 3 + 2;
+        const vx = Math.cos(angle) * speed;
+        const vy = Math.sin(angle) * speed;
+        const gravity = 0.05;
+        const friction = 0.95;
+        const decay = Math.random() * 0.03 + 0.01;
+
+        let opacity = 1;
+        let size = Math.random() * 3 + 2;
+
+        // 动画函数
+        function animate() {
+          // 更新位置
+          const currentLeft = parseFloat(firework.style.left);
+          const currentTop = parseFloat(firework.style.top);
+
+          firework.style.left = `${currentLeft + vx}px`;
+          firework.style.top = `${currentTop + vy}px`;
+
+          // 应用重力和摩擦
+          vy += gravity;
+          vx *= friction;
+          vy *= friction;
+
+          // 减小透明度和尺寸
+          opacity -= decay;
+          size *= 0.97;
+
+          firework.style.opacity = opacity;
+          firework.style.width = `${size}px`;
+          firework.style.height = `${size}px`;
+
+          // 继续动画或移除元素
+          if (opacity > 0) {
+            requestAnimationFrame(animate);
+          } else {
+            if (firework.parentNode) {
+              firework.parentNode.removeChild(firework);
+            }
+          }
+        }
+
+        // 开始动画
+        requestAnimationFrame(animate);
+      }
+    }
+
+    // 点击事件处理
+    container.addEventListener('click', (e) => {
+      createFirework(e.clientX, e.clientY);
+    });
+
+    // 触摸事件处理（移动设备）
+    container.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      createFirework(touch.clientX, touch.clientY);
+    }, { passive: false });
+
+    // 初始化星空
+    createStars();
+  </script>
+</body>
+</html>
