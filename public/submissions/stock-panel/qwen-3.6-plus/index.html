@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Qwen Stock</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#0a0e17;overflow:hidden}
+.panel{width:380px;background:#111827;border-radius:20px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.panel-head h2{font-size:14px;color:#6a7a9a;letter-spacing:1px;font-weight:500}
+.live-dot{width:8px;height:8px;background:#10b981;border-radius:50%;animation:pulse-dot 2s infinite}
+@keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.4)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}
+.stock-item{background:#0f1729;border-radius:16px;padding:16px 18px;margin-bottom:12px;transition:background .3s}
+.stock-item:hover{background:#162035}
+.stock-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.stock-name{font-size:15px;font-weight:600;color:#e0e8ff}
+.stock-badge{font-size:10px;padding:2px 8px;border-radius:6px;background:rgba(106,122,154,.15);color:#6a7a9a}
+.stock-price{display:flex;align-items:baseline;gap:12px;margin-bottom:10px}
+.price-val{font-size:28px;font-weight:300;color:#e0e8ff}
+.change{font-size:14px;font-weight:600;padding:2px 8px;border-radius:6px}
+.up{color:#10b981}.up .change{background:rgba(16,185,129,.15)}.down{color:#ef4444}.down .change{background:rgba(239,68,68,.15)}
+.stock-chart{height:48px;position:relative}
+.stock-chart svg{width:100%;height:100%}
+.risk-tip{font-size:11px;color:#4a5568;text-align:center;margin-top:16px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="panel">
+<div class="panel-head"><h2>📈 实时行情</h2><div class="live-dot"></div></div>
+<div id="list"></div>
+<div class="risk-tip">⚠️ 市场有风险，投资需谨慎。数据仅供演示</div>
+</div>
+<script>
+const stocks=[
+{name:'贵州茅台',code:'600519',base:1688,vol:3.5},
+{name:'宁德时代',code:'300750',base:198,vol:5},
+{name:'腾讯控股',code:'00700',base:425,vol:4.2},
+{name:'比亚迪',code:'002594',base:285,vol:6},
+{name:'中芯国际',code:'688981',base:82,vol:7}];
+const sparkData={};stocks.forEach(s=>{sparkData[s.code]=[];let p=s.base;for(let i=0;i<20;i++){p+=p*(Math.random()-.5)*s.vol/100;sparkData[s.code].push(p)}});
+function fmt(n){return n>99?n.toFixed(0):n.toFixed(2)}
+function mkSpark(code){const d=sparkData[code],mn=Math.min(...d),mx=Math.max(...d),range=mx-mn||1;
+const pts=d.map((v,i)=>{const x=i/(d.length-1)*300,y=44-(v-mn)/range*40;return x.toFixed(1)+','+y.toFixed(1)}).join(' ');
+const last=d[d.length-1],first=d[0],up=last>=first;const clr=up?'16,185,129':'239,68,68';
+return `<svg viewBox="0 0 300 48"><polyline fill="none" stroke="rgba(${clr}0.6)" stroke-width="2" points="${pts}"/><linearGradient id="g${code}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(${clr}.2)"/><stop offset="100%" stop-color="rgba(${clr}0)"/></linearGradient><polygon fill="url(#g${code})" points="${pts} 300,48 0,48"/></svg>`}
+function render(){const l=document.getElementById('list');l.innerHTML='';
+stocks.forEach(s=>{const last=sparkData[s.code][sparkData[s.code].length-1],ch=(last-s.base)/s.base*100;
+const cls=ch>=0?'up':'down',sign=ch>=0?'+':'';
+l.innerHTML+=`<div class="stock-item"><div class="stock-top"><span class="stock-name">${s.name}</span><span class="stock-badge">${s.code}</span></div><div class="stock-price ${cls}"><span class="price-val">${fmt(last)}</span><span class="change">${sign}${ch.toFixed(2)}%</span></div><div class="stock-chart">${mkSpark(s.code)}</div></div>`})}
+render();
+setInterval(()=>{stocks.forEach(s=>{const d=sparkData[s.code];let p=d[d.length-1];p+=p*(Math.random()-.5)*s.vol/200;
+d.shift();d.push(p)});render()},1500);
+</script>
+</body>
+</html>

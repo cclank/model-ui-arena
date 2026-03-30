@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Qwen Recorder</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#111;transition:background .3s}
+.recorder{width:350px;background:#1a1a2e;border-radius:24px;padding:32px 24px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.rec-title{color:#8a8aaa;font-size:14px;letter-spacing:2px;margin-bottom:24px}
+.timer{font-size:48px;color:#e0e0ff;font-weight:200;letter-spacing:2px;font-variant-numeric:tabular-nums;margin-bottom:20px;min-height:60px}
+.wave-container{height:60px;display:flex;align-items:center;justify-content:center;gap:3px;margin-bottom:24px}
+.wave-bar{width:4px;background:#3a3a5c;border-radius:2px;height:8px;transition:height .1s}
+.wave-bar.active{background:linear-gradient(to top,#6a5acd,#9b72cf)}
+.status-dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;vertical-align:middle}
+.status-dot.idle{background:#4a4a6a}.status-dot.recording{background:#ff4757;animation:blink 1s infinite}.status-dot.paused{background:#ffa502;animation:blink 2s infinite}
+.status-text{color:#8a8aaa;font-size:13px;margin-bottom:20px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.controls{display:flex;gap:12px;justify-content:center;margin-bottom:20px}
+.btn{border:none;outline:none;padding:12px 28px;border-radius:14px;font-size:15px;cursor:pointer;transition:all .2s;font-weight:500}
+.btn:disabled{opacity:.3;cursor:not-allowed;transform:none!important}
+.btn-start{background:linear-gradient(135deg,#6a5acd,#8b72cf);color:#fff}
+.btn-start:not(:disabled):hover{transform:scale(1.05);box-shadow:0 4px 16px rgba(106,90,205,.4)}
+.btn-pause{background:#2a2a4a;color:#8a8aaa}
+.btn-stop{background:linear-gradient(135deg,#ff4757,#ff6b81);color:#fff}
+.btn-stop:not(:disabled):hover{transform:scale(1.05);box-shadow:0 4px 16px rgba(255,71,87,.4)}
+.summary{background:#0f0f23;border-radius:12px;padding:16px;margin-top:16px;text-align:left;display:none}
+.summary.show{display:block}
+.summary h4{color:#9b72cf;font-size:13px;margin-bottom:8px}
+.summary p{color:#6a6a8a;font-size:12px;line-height:1.8}
+.summary span{color:#8a8aaa}
+</style>
+</head>
+<body>
+<div class="recorder">
+<div class="rec-title">● RECORDER</div>
+<div class="timer" id="timer">00:00</div>
+<div class="wave-container" id="wave"></div>
+<div><span class="status-dot idle" id="dot"></span><span class="status-text" id="stxt">准备就绪</span></div>
+<div class="controls">
+<button class="btn btn-start" id="btnStart" onclick="startRec()">开始</button>
+<button class="btn btn-pause" id="btnPause" onclick="pauseRec()" disabled>暂停</button>
+<button class="btn btn-stop" id="btnStop" onclick="stopRec()" disabled>停止</button>
+</div>
+<div class="summary" id="summary"><h4>录音摘要</h4><p id="sumText"></p></div>
+</div>
+<script>
+const waveEl=document.getElementById('wave');
+for(let i=0;i<32;i++){const b=document.createElement('div');b.className='wave-bar';waveEl.appendChild(b)}
+const bars=waveEl.children;let state='idle',elapsed=0,interval,pausedTime=0,frameId,segments=[];
+function fmt(s){const m=Math.floor(s/60),sec=Math.floor(s%60);return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')}
+function tick(){elapsed+=0.01;document.getElementById('timer').textContent=fmt(elapsed);
+if(state==='recording'){for(let b of bars){b.style.height=4+Math.random()*52+'px';bars[Math.floor(Math.random()*bars.length)].classList.add('active')}
+frameId=requestAnimationFrame(tick)}}
+function startRec(){if(elapsed>0){segments.push(elapsed);elapsed=0}state='recording';
+document.getElementById('dot').className='status-dot recording';
+document.getElementById('stxt').textContent='录音中';
+document.getElementById('btnStart').disabled=true;
+document.getElementById('btnPause').disabled=false;
+document.getElementById('btnStop').disabled=false;
+document.getElementById('summary').classList.remove('show');tick()}
+function pauseRec(){if(state==='recording'){state='paused';cancelAnimationFrame(frameId);
+document.getElementById('dot').className='status-dot paused';
+document.getElementById('stxt').textContent='已暂停';
+document.getElementById('btnPause').textContent='继续';
+for(let b of bars){b.classList.remove('active');b.style.height='8px'}}
+else if(state==='paused'){state='recording';
+document.getElementById('dot').className='status-dot recording';
+document.getElementById('stxt').textContent='录音中';
+document.getElementById('btnPause').textContent='暂停';tick()}}
+function stopRec(){if(state==='recording')cancelAnimationFrame(frameId);
+state='idle';let total=elapsed;segments.push(total);
+document.getElementById('dot').className='status-dot idle';
+document.getElementById('stxt').textContent='已停止';
+document.getElementById('btnStart').disabled=false;
+document.getElementById('btnPause').disabled=true;document.getElementById('btnPause').textContent='暂停';
+document.getElementById('btnStop').disabled=true;
+for(let b of bars){b.classList.remove('active');b.style.height='8px'}
+const n=segments.length,s=segments.reduce((a,b)=>a+b,0);
+document.getElementById('sumText').innerHTML='录音次数: <span>'+n+'</span> 次<br>总时长: <span>'+fmt(s)+'</span><br>最长单次: <span>'+fmt(Math.max(...segments))+'</span>';
+document.getElementById('summary').classList.add('show');segments=[]}
+</script>
+</body>
+</html>

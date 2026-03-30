@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Qwen Weather</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(160deg,#1a2a4a,#0d1b3e);transition:background .8s}
+.weather-card{width:350px;background:rgba(255,255,255,.08);backdrop-filter:blur(20px);border-radius:28px;padding:28px;color:#fff;box-shadow:0 20px 40px rgba(0,0,0,.3);transition:all .8s}
+.city-tabs{display:flex;gap:8px;margin-bottom:24px}
+.tab{flex:1;text-align:center;padding:8px;border-radius:10px;background:rgba(255,255,255,.06);font-size:13px;cursor:pointer;transition:all .3s;color:#8a9ab5;pointer-events:none}
+.tab.active{background:rgba(255,255,255,.18);color:#fff;font-weight:600;pointer-events:auto}
+.w-icon{font-size:64px;text-align:center;margin:16px 0 8px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.2));animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.w-temp{font-size:52px;font-weight:200;text-align:center;letter-spacing:-1px}
+.w-desc{font-size:16px;text-align:center;color:#8a9ab5;margin:8px 0 20px}
+.w-details{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.w-de-item{background:rgba(255,255,255,.05);border-radius:12px;padding:12px;text-align:center}
+.w-de-item .val{font-size:18px;font-weight:600;color:#e0e8ff}
+.w-de-item .label{font-size:11px;color:#6a7a9a;margin-top:4px}
+.trend{background:rgba(255,255,255,.05);border-radius:16px;padding:16px;margin-top:16px}
+.trend-title{font-size:12px;color:#6a7a9a;margin-bottom:12px;letter-spacing:1px}
+.trend-chart{display:flex;align-items:flex-end;gap:6px;height:50px}
+.trend-bar{flex:1;background:linear-gradient(to top,#4a7af5,#6a9aff);border-radius:4px 4px 0 0;transition:height .5s;min-height:4px;position:relative}
+.trend-bar .tlabel{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:#6a7a9a;white-space:nowrap}
+.rain-drop{position:absolute;width:2px;background:rgba(100,180,255,.4);animation:rain .6s linear infinite}
+@keyframes rain{from{transform:translateY(-20px)}to{transform:translateY(60px)}}
+</style>
+</head>
+<body>
+<div class="weather-card" id="card">
+<div class="city-tabs" id="tabs"></div>
+<div class="w-icon" id="wicon">☀️</div>
+<div class="w-temp" id="wtemp">28°</div>
+<div class="w-desc" id="wdesc">晴朗</div>
+<div class="w-details" id="wde"></div>
+<div class="trend"><div class="trend-title">24H 温度趋势</div><div class="trend-chart" id="chart"></div></div>
+</div>
+<script>
+const cities=[
+{name:'上海',temp:28,desc:'晴朗',icon:'☀️',wind:'东南风 3级',humi:'65%',uvi:'高',trend:[22,21,20,22,25,28,29,27,25,23,22,21]},
+{name:'成都',temp:19,desc:'小雨',icon:'🌧️',wind:'北风 2级',humi:'88%',uvi:'低',trend:[16,15,14,15,17,19,18,17,16,15,14,14]},
+{name:'北京',temp:12,desc:'多云',icon:'⛅',wind:'西北风 4级',humi:'30%',uvi:'中',trend:[5,3,4,6,9,12,11,10,8,6,5,4]},
+{name:'深圳',temp:32,desc:'雷阵雨',icon:'⛈️',wind:'南风 2级',humi:'82%',uvi:'高',trend:[26,25,24,26,29,32,31,30,29,27,26,25]}];
+const bgMap={'晴朗':'linear-gradient(160deg,#1a2a4a,#0d1b3e)','小雨':'linear-gradient(160deg,#1a2030,#0a1520)','多云':'linear-gradient(160deg,#2a2a3a,#1a1a2a)','雷阵雨':'linear-gradient(160deg,#0a0f1a,#050a10)'};
+const cardBg={'晴朗':'rgba(255,255,255,.08)','小雨':'rgba(255,255,255,.06)','多云':'rgba(255,255,255,.07)','雷阵雨':'rgba(255,255,255,.05)'};
+let sel=0;const tabsEl=document.getElementById('tabs');
+cities.forEach((c,i)=>{const t=document.createElement('div');t.className='tab'+(i===0?' active':'');t.textContent=c.name;t.onclick=()=>pick(i);tabsEl.appendChild(t)});
+function pick(i){sel=i;document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',j===i));update()}
+function update(){const c=cities[sel];
+document.getElementById('wicon').textContent=c.icon;
+document.getElementById('wtemp').textContent=c.temp+'°';
+document.getElementById('wdesc').textContent=c.desc;
+document.body.style.background=bgMap[c.desc];
+document.getElementById('card').style.background=cardBg[c.desc];
+document.getElementById('wde').innerHTML='<div class="w-de-item"><div class="val">'+c.temp+'°</div><div class="label">温度</div></div><div class="w-de-item"><div class="val">'+c.wind+'</div><div class="label">风速</div></div><div class="w-de-item"><div class="val">'+c.humi+'</div><div class="label">湿度</div></div>';
+const chart=document.getElementById('chart');chart.innerHTML='';
+const mx=Math.max(...c.trend);
+const labels=['0时','2时','4时','6时','8时','10时','12时','14时','16时','18时','20时','22时'];
+c.trend.forEach((v,j)=>{const b=document.createElement('div');b.className='trend-bar';b.style.height=v/mx*100+'%';const lb=document.createElement('div');lb.className='tlabel';lb.textContent=labels[j];b.appendChild(lb);chart.appendChild(b)});
+// rain effect for rain
+if(c.desc.includes('雨')){const card=document.getElementById('card');card.querySelectorAll('.rain-drop').forEach(d=>d.remove());for(let k=0;k<20;k++){const d=document.createElement('div');d.className='rain-drop';d.style.left=Math.random()*100+'%';d.style.animationDelay=Math.random()*.6+'s';d.style.height=8+Math.random()*16+'px';card.appendChild(d)}}else{card.querySelectorAll('.rain-drop').forEach(d=>d.remove())}}
+update();
+</script>
+</body>
+</html>

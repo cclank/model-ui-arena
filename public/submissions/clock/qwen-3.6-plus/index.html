@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Qwen Clock</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:#0a0e1a;overflow:hidden;transition:background 1s}
+.clock-container{text-align:center;position:relative;z-index:1}
+.clock-face{position:relative;width:280px;height:280px;margin:0 auto 24px;border-radius:50%;background:linear-gradient(135deg,#1a1f35,#0d1025);box-shadow:0 0 60px rgba(100,180,255,.15),inset 0 0 30px rgba(100,180,255,.05)}
+.tick{position:absolute;width:2px;height:8px;background:#3a4a6a;left:50%;top:10px;transform-origin:50% 130px}
+.tick.major{height:16px;width:3px;background:#5a8abf}
+.tick-label{position:absolute;color:#4a6a8a;font-size:13px;width:24px;height:24px;text-align:center;line-height:24px}
+.hand{position:absolute;bottom:50%;left:50%;transform-origin:50% 100%;border-radius:4px;transition:none}
+.hour{width:5px;height:70px;background:linear-gradient(to top,#5a8abf,#8bb8e0);margin-left:-2.5px;z-index:3}
+.minute{width:3.5px;height:95px;background:linear-gradient(to top,#7aaed0,#b8d8f0);margin-left:-1.75px;z-index:4}
+.second{width:1.5px;height:105px;background:linear-gradient(to top,#ff6b6b,#ff8e8e);margin-left:-.75px;z-index:5;box-shadow:0 0 8px rgba(255,107,107,.5)}
+.second::after{content:'';position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);width:3px;height:20px;background:#ff6b6b;border-radius:2px}
+.center-dot{position:absolute;top:50%;left:50%;width:12px;height:12px;background:#ff6b6b;border-radius:50%;transform:translate(-50%,-50%);z-index:6;box-shadow:0 0 12px rgba(255,107,107,.6)}
+.digital{font-size:32px;color:#8bb8e0;letter-spacing:2px;font-weight:300;text-shadow:0 0 20px rgba(139,184,255,.3)}
+.digital .sec{font-size:18px;color:#5a7a9a;margin-left:4px}
+.date-label{color:#4a6a8a;font-size:13px;margin-top:8px;letter-spacing:1px}
+.glow{position:absolute;width:400px;height:400px;filter:blur(80px);opacity:.08;animation:pulse 4s ease-in-out infinite}
+.glow-1{background:#4a90d9;top:-100px;left:-100px}
+.glow-2{background:#6a4ad9;bottom:-100px;right:-100px;animation-delay:2s}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+.night .glow-1{background:#2a4a8a}
+.night .glow-2{background:#4a2a8a}
+</style>
+</head>
+<body>
+<div class="glow glow-1"></div><div class="glow glow-2"></div>
+<div class="clock-container">
+<div class="clock-face" id="face"><div class="center-dot"></div></div>
+<div class="digital" id="digital"></div>
+<div class="date-label" id="dateLabel"></div>
+</div>
+<script>
+const face=document.getElementById('face');
+const h=Math.floor(360/12);for(let i=0;i<12;i++){
+const t=document.createElement('div');t.className='tick'+(i%3===0?' major':'');
+t.style.transform=`rotate(${h*i}deg)`;face.appendChild(t);
+if(i%3===0){const l=document.createElement('div');l.className='tick-label';
+l.textContent=i||12;const a=h*i*Math.PI/180,rx=140,ry=108;
+l.style.left=String(rx+rx*Math.sin(a)-12+40);l.style.top=String(ry-ry*Math.cos(a)-12+4-10);face.appendChild(l)}}
+function pad(n){return String(n).padStart(2,'0')}
+const dayNames=['周日','周一','周二','周三','周四','周五','周六'];
+function update(){const now=new Date(),h2=now.getHours(),m=now.getMinutes(),s=now.getSeconds(),ms=now.getMilliseconds();
+const ha=(h2%12+m/60)*30,ma=(m+s/60)*6,sa=(s+ms/1000)*6;
+let hhEl=document.querySelector('.hour')||face.appendChild(Object.assign(document.createElement('div'),{className:'hand hour'}));
+let mM=document.querySelector('.minute')||face.appendChild(Object.assign(document.createElement('div'),{className:'hand minute'}));
+let sE=document.querySelector('.second')||face.appendChild(Object.assign(document.createElement('div'),{className:'hand second'}));
+hhEl.style.transform=`rotate(${ha}deg)`;mM.style.transform=`rotate(${ma}deg)`;sE.style.transform=`rotate(${sa}deg)`;
+document.getElementById('digital').innerHTML=pad(h2)+':'+pad(m)+'<span class="sec">:'+pad(s)+'</span>';
+document.getElementById('dateLabel').textContent=now.getFullYear()+'/'+pad(now.getMonth()+1)+'/'+pad(now.getDate())+' '+dayNames[now.getDay()];
+document.body.classList.toggle('night',h2>=19||h2<6);requestAnimationFrame(update)}
+update();
+</script>
+</body>
+</html>
