@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seed-2.0-Pro Weather Card</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 1rem;
+        }
+        body.sunny {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        body.rainy {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        body.cloudy {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+        .weather-card {
+            width: 380px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+        }
+        .city-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .city-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        .city-btn.active {
+            background: rgba(255, 255, 255, 0.3);
+            font-weight: 600;
+        }
+        .city-btn:hover {
+            transform: translateY(-2px);
+        }
+        .current-weather {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .weather-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .temperature {
+            font-size: 4rem;
+            font-weight: 200;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+        .weather-desc {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-bottom: 0.3rem;
+        }
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .forecast {
+            display: flex;
+            justify-content: space-between;
+        }
+        .forecast-item {
+            text-align: center;
+            flex: 1;
+        }
+        .forecast-day {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 0.5rem;
+        }
+        .forecast-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .forecast-temp {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        @media (max-width: 390px) {
+            .weather-card {
+                width: 100%;
+                padding: 1.5rem;
+            }
+            .temperature {
+                font-size: 3.5rem;
+            }
+            .weather-icon {
+                font-size: 4rem;
+            }
+        }
+        .raindrop {
+            position: fixed;
+            top: -10px;
+            width: 2px;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.6);
+            animation: fall linear infinite;
+            opacity: 0;
+        }
+        @keyframes fall {
+            to {
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="sunny">
+    <div class="weather-card">
+        <div class="city-selector">
+            <button class="city-btn active" data-city="beijing">北京</button>
+            <button class="city-btn" data-city="shanghai">上海</button>
+            <button class="city-btn" data-city="guangzhou">广州</button>
+        </div>
+        <div class="current-weather">
+            <div class="weather-icon">☀️</div>
+            <div class="temperature">23°</div>
+            <div class="weather-desc">晴朗</div>
+        </div>
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">湿度</div>
+                <div class="stat-value">45%</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">风速</div>
+                <div class="stat-value">3.2 m/s</div>
+            </div>
+        </div>
+        <div class="forecast">
+            <div class="forecast-item">
+                <div class="forecast-day">今天</div>
+                <div class="forecast-icon">☀️</div>
+                <div class="forecast-temp">18° / 26°</div>
+            </div>
+            <div class="forecast-item">
+                <div class="forecast-day">明天</div>
+                <div class="forecast-icon">⛅</div>
+                <div class="forecast-temp">17° / 24°</div>
+            </div>
+            <div class="forecast-item">
+                <div class="forecast-day">后天</div>
+                <div class="forecast-icon">🌧️</div>
+                <div class="forecast-temp">15° / 21°</div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const weatherData = {
+            beijing: {
+                type: 'sunny',
+                icon: '☀️',
+                temp: '23°',
+                desc: '晴朗',
+                humidity: '45%',
+                wind: '3.2 m/s',
+                forecast: [
+                    { day: '今天', icon: '☀️', temp: '18° / 26°' },
+                    { day: '明天', icon: '⛅', temp: '17° / 24°' },
+                    { day: '后天', icon: '🌧️', temp: '15° / 21°' }
+                ]
+            },
+            shanghai: {
+                type: 'rainy',
+                icon: '🌧️',
+                temp: '18°',
+                desc: '小雨',
+                humidity: '82%',
+                wind: '5.1 m/s',
+                forecast: [
+                    { day: '今天', icon: '🌧️', temp: '16° / 20°' },
+                    { day: '明天', icon: '🌦️', temp: '17° / 22°' },
+                    { day: '后天', icon: '☀️', temp: '19° / 25°' }
+                ]
+            },
+            guangzhou: {
+                type: 'cloudy',
+                icon: '☁️',
+                temp: '27°',
+                desc: '阴天',
+                humidity: '68%',
+                wind: '2.8 m/s',
+                forecast: [
+                    { day: '今天', icon: '☁️', temp: '24° / 30°' },
+                    { day: '明天', icon: '⛅', temp: '25° / 31°' },
+                    { day: '后天', icon: '☀️', temp: '26° / 32°' }
+                ]
+            }
+        };
+        const cityBtns = document.querySelectorAll('.city-btn');
+        const body = document.body;
+        const weatherIcon = document.querySelector('.weather-icon');
+        const temperature = document.querySelector('.temperature');
+        const weatherDesc = document.querySelector('.weather-desc');
+        const humidityEl = document.querySelector('.stat-item:nth-child(1) .stat-value');
+        const windEl = document.querySelector('.stat-item:nth-child(2) .stat-value');
+        const forecastItems = document.querySelectorAll('.forecast-item');
+        function createRain() {
+            const existingRain = document.querySelectorAll('.raindrop');
+            existingRain.forEach(drop => drop.remove());
+            if (body.classList.contains('rainy')) {
+                for (let i = 0; i < 50; i++) {
+                    const drop = document.createElement('div');
+                    drop.className = 'raindrop';
+                    drop.style.left = `${Math.random() * 100}vw`;
+                    drop.style.animationDuration = `${Math.random() * 1 + 0.5}s`;
+                    drop.style.animationDelay = `${Math.random() * 2}s`;
+                    drop.style.opacity = '1';
+                    document.body.appendChild(drop);
+                }
+            }
+        }
+        cityBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                cityBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const city = btn.dataset.city;
+                const data = weatherData[city];
+                body.className = data.type;
+                weatherIcon.textContent = data.icon;
+                temperature.textContent = data.temp;
+                weatherDesc.textContent = data.desc;
+                humidityEl.textContent = data.humidity;
+                windEl.textContent = data.wind;
+                data.forecast.forEach((item, index) => {
+                    forecastItems[index].querySelector('.forecast-icon').textContent = item.icon;
+                    forecastItems[index].querySelector('.forecast-temp').textContent = item.temp;
+                });
+                createRain();
+            });
+        });
+        createRain();
+    </script>
+</body>
+</html>

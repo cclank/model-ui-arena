@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seed-2.0-Pro Clock</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        body.day {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+        body.night {
+            background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
+            color: #fff;
+        }
+        .clock-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+        .analog-clock {
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        .clock-hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            border-radius: 4px 4px 0 0;
+            transition: transform 0.05s ease-out;
+        }
+        .hour-hand {
+            width: 8px;
+            height: 70px;
+            background: #fff;
+            margin-left: -4px;
+        }
+        .minute-hand {
+            width: 6px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.9);
+            margin-left: -3px;
+        }
+        .second-hand {
+            width: 2px;
+            height: 120px;
+            background: #ff6b6b;
+            margin-left: -1px;
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.8);
+        }
+        .center-dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+        }
+        .digital-clock {
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        .date {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+        @media (max-width: 390px) {
+            .analog-clock {
+                width: 220px;
+                height: 220px;
+            }
+            .hour-hand { height: 55px; }
+            .minute-hand { height: 80px; }
+            .second-hand { height: 95px; }
+            .digital-clock { font-size: 2.2rem; }
+            .date { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="clock-container">
+        <div class="analog-clock">
+            <div class="clock-hand hour-hand"></div>
+            <div class="clock-hand minute-hand"></div>
+            <div class="clock-hand second-hand"></div>
+            <div class="center-dot"></div>
+        </div>
+        <div>
+            <div class="digital-clock"></div>
+            <div class="date"></div>
+        </div>
+    </div>
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            
+            // 切换主题
+            document.body.className = hours >= 6 && hours < 18 ? 'day' : 'night';
+            
+            // 模拟指针
+            const hourDeg = (hours % 12) * 30 + minutes * 0.5;
+            const minuteDeg = minutes * 6 + seconds * 0.1;
+            const secondDeg = seconds * 6;
+            
+            document.querySelector('.hour-hand').style.transform = `rotate(${hourDeg}deg)`;
+            document.querySelector('.minute-hand').style.transform = `rotate(${minuteDeg}deg)`;
+            document.querySelector('.second-hand').style.transform = `rotate(${secondDeg}deg)`;
+            
+            // 数字时间
+            const format = n => n.toString().padStart(2, '0');
+            document.querySelector('.digital-clock').textContent = `${format(hours)}:${format(minutes)}:${format(seconds)}`;
+            
+            // 日期
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            document.querySelector('.date').textContent = now.toLocaleDateString('zh-CN', options);
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body>
+</html>

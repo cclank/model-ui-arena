@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seed-2.0-Pro Fireworks</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            min-height: 100vh;
+            background: #000;
+            overflow: hidden;
+            cursor: crosshair;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        canvas {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+        .hint {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.5rem;
+            text-align: center;
+            pointer-events: none;
+            transition: opacity 1s ease;
+            z-index: 10;
+        }
+        .hint.hide {
+            opacity: 0;
+        }
+        .counter {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 600;
+            z-index: 10;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        @media (max-width: 390px) {
+            .hint {
+                font-size: 1.2rem;
+                padding: 0 2rem;
+            }
+            .counter {
+                top: 1rem;
+                right: 1rem;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hint">点击任意位置放烟花 🎆</div>
+    <div class="counter">已燃放: 0</div>
+    <canvas id="fireworks"></canvas>
+    <script>
+        const canvas = document.getElementById('fireworks');
+        const ctx = canvas.getContext('2d');
+        const hint = document.querySelector('.hint');
+        const counterEl = document.querySelector('.counter');
+        let fireworks = [];
+        let particles = [];
+        let count = 0;
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        class Firework {
+            constructor(x, y, targetX, targetY) {
+                this.x = x;
+                this.y = y;
+                this.startX = x;
+                this.startY = y;
+                this.targetX = targetX;
+                this.targetY = targetY;
+                this.distanceToTarget = Math.hypot(targetX - x, targetY - y);
+                this.distanceTraveled = 0;
+                this.coordinates = [];
+                this.coordinateCount = 3;
+                while (this.coordinateCount--) {
+                    this.coordinates.push([this.x, this.y]);
+                }
+                this.angle = Math.atan2(targetY - y, targetX - x);
+                this.speed = 3 + Math.random() * 2;
+                this.acceleration = 1.02;
+                this.brightness = 50 + Math.random() * 30;
+                this.color = `hsl(${Math.random() * 360}, 100%, ${this.brightness}%)`;
+                this.targetRadius = 2;
+            }
+            update(index) {
+                this.coordinates.pop();
+                this.coordinates.unshift([this.x, this.y]);
+                this.speed *= this.acceleration;
+                const vx = Math.cos(this.angle) * this.speed;
+                const vy = Math.sin(this.angle) * this.speed;
+                this.distanceTraveled = Math.hypot(this.x - this.startX, this.y - this.startY);
+                if (this.distanceTraveled >= this.distanceToTarget) {
+                    createParticles(this.targetX, this.targetY, this.color);
+                    fireworks.splice(index, 1);
+                } else {
+                    this.x += vx;
+                    this.y += vy;
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+                ctx.lineTo(this.x, this.y);
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(this.targetX, this.targetY, this.targetRadius, 0, Math.PI * 2);
+                ctx.strokeStyle = this.color;
+                ctx.stroke();
+            }
+        }
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.coordinates = [];
+                this.coordinateCount = 5;
+                while (this.coordinateCount--) {
+                    this.coordinates.push([this.x, this.y]);
+                }
+                this.angle = Math.random() * Math.PI * 2;
+                this.speed = Math.random() * 8 + 1;
+                this.friction = 0.95;
+                this.gravity = 0.8;
+                this.hue = Math.random() * 360;
+                this.color = color;
+                this.brightness = 50 + Math.random() * 30;
+                this.alpha = 1;
+                this.decay = 0.01 + Math.random() * 0.015;
+            }
+            update(index) {
+                this.coordinates.pop();
+                this.coordinates.unshift([this.x, this.y]);
+                this.speed *= this.friction;
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed + this.gravity;
+                this.alpha -= this.decay;
+                if (this.alpha <= 0) {
+                    particles.splice(index, 1);
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+                ctx.lineTo(this.x, this.y);
+                ctx.strokeStyle = this.color.replace(/%\)$/, `%, ${this.alpha})`).replace('hsl', 'hsla');
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+        function createParticles(x, y, color) {
+            const particleCount = 80 + Math.random() * 40;
+            while (particleCount--) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+        function loop() {
+            requestAnimationFrame(loop);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            let i = fireworks.length;
+            while (i--) {
+                fireworks[i].draw();
+                fireworks[i].update(i);
+            }
+            let j = particles.length;
+            while (j--) {
+                particles[j].draw();
+                particles[j].update(j);
+            }
+        }
+        window.addEventListener('click', (e) => {
+            count++;
+            counterEl.textContent = `已燃放: ${count}`;
+            if (!hint.classList.contains('hide')) {
+                hint.classList.add('hide');
+            }
+            const launchX = Math.random() * canvas.width;
+            const launchY = canvas.height;
+            fireworks.push(new Firework(launchX, launchY, e.clientX, e.clientY));
+        });
+        loop();
+        // 自动放几个开场烟花
+        setTimeout(() => {
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    const x = Math.random() * canvas.width;
+                    const y = Math.random() * (canvas.height / 2);
+                    const launchX = Math.random() * canvas.width;
+                    const launchY = canvas.height;
+                    fireworks.push(new Firework(launchX, launchY, x, y));
+                }, i * 500);
+            }
+        }, 500);
+    </script>
+</body>
+</html>

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seed-2.0-Pro Stock Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0a0a0a;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #fff;
+            padding: 1rem;
+        }
+        .stock-panel {
+            width: 380px;
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid #333;
+        }
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .panel-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #007aff, #5ac8fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .update-indicator {
+            font-size: 0.85rem;
+            color: #34c759;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #34c759;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .stock-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .stock-item {
+            background: #222;
+            border-radius: 12px;
+            padding: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+        .stock-item:hover {
+            border-color: #007aff;
+            transform: translateY(-2px);
+        }
+        .stock-item.active {
+            border-color: #007aff;
+        }
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.8rem;
+        }
+        .stock-info .name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+        }
+        .stock-info .code {
+            font-size: 0.85rem;
+            color: #888;
+        }
+        .stock-price {
+            text-align: right;
+        }
+        .price {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+        .change {
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+        }
+        .change.positive {
+            color: #34c759;
+            background: rgba(52, 199, 89, 0.1);
+        }
+        .change.negative {
+            color: #ff3b30;
+            background: rgba(255, 59, 48, 0.1);
+        }
+        .chart-container {
+            height: 40px;
+            position: relative;
+        }
+        .chart-svg {
+            width: 100%;
+            height: 100%;
+        }
+        .chart-line {
+            fill: none;
+            stroke-width: 2;
+        }
+        .chart-line.positive {
+            stroke: #34c759;
+        }
+        .chart-line.negative {
+            stroke: #ff3b30;
+        }
+        .chart-area {
+            opacity: 0.1;
+        }
+        .chart-area.positive {
+            fill: #34c759;
+        }
+        .chart-area.negative {
+            fill: #ff3b30;
+        }
+        .detail-panel {
+            background: #222;
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-top: 1rem;
+            display: none;
+            border: 1px solid #007aff;
+        }
+        .detail-panel.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .detail-item .label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 0.3rem;
+        }
+        .detail-item .value {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        .risk-tag {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: rgba(255, 149, 0, 0.1);
+            color: #ff9500;
+        }
+        @media (max-width: 390px) {
+            .stock-panel {
+                width: 100%;
+            }
+            .price {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stock-panel">
+        <div class="panel-header">
+            <div class="panel-title">股票监控</div>
+            <div class="update-indicator">
+                <span class="pulse-dot"></span>
+                <span>实时更新中</span>
+            </div>
+        </div>
+        <div class="stock-list">
+            <div class="stock-item active" data-stock="aapl">
+                <div class="stock-header">
+                    <div class="stock-info">
+                        <div class="name">苹果公司</div>
+                        <div class="code">AAPL</div>
+                    </div>
+                    <div class="stock-price">
+                        <div class="price">178.72</div>
+                        <div class="change positive">+2.35 (+1.32%)</div>
+                    </div>
+                </div>
+                <div class="chart-container"></div>
+            </div>
+            <div class="stock-item" data-stock="tsla">
+                <div class="stock-header">
+                    <div class="stock-info">
+                        <div class="name">特斯拉</div>
+                        <div class="code">TSLA</div>
+                    </div>
+                    <div class="stock-price">
+                        <div class="price">172.58</div>
+                        <div class="change negative">-3.12 (-1.78%)</div>
+                    </div>
+                </div>
+                <div class="chart-container"></div>
+            </div>
+            <div class="stock-item" data-stock="nvda">
+                <div class="stock-header">
+                    <div class="stock-info">
+                        <div class="name">英伟达</div>
+                        <div class="code">NVDA</div>
+                    </div>
+                    <div class="stock-price">
+                        <div class="price">892.34</div>
+                        <div class="change positive">+12.56 (+1.43%)</div>
+                    </div>
+                </div>
+                <div class="chart-container"></div>
+            </div>
+        </div>
+        <div class="detail-panel show">
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <div class="label">最高</div>
+                    <div class="value positive">179.45</div>
+                </div>
+                <div class="detail-item">
+                    <div class="label">最低</div>
+                    <div class="value negative">176.21</div>
+                </div>
+                <div class="detail-item">
+                    <div class="label">成交量</div>
+                    <div class="value">52.3M</div>
+                </div>
+            </div>
+            <div class="risk-tag">⚠️ 近期波动较大，建议谨慎操作</div>
+        </div>
+    </div>
+    <script>
+        const stockData = {
+            aapl: {
+                name: '苹果公司',
+                code: 'AAPL',
+                basePrice: 178.72,
+                change: '+2.35 (+1.32%)',
+                isPositive: true,
+                trend: [172, 174, 173, 176, 177, 176, 178.72],
+                high: 179.45,
+                low: 176.21,
+                volume: '52.3M'
+            },
+            tsla: {
+                name: '特斯拉',
+                code: 'TSLA',
+                basePrice: 172.58,
+                change: '-3.12 (-1.78%)',
+                isPositive: false,
+                trend: [182, 179, 177, 175, 174, 173, 172.58],
+                high: 176.12,
+                low: 171.89,
+                volume: '89.7M'
+            },
+            nvda: {
+                name: '英伟达',
+                code: 'NVDA',
+                basePrice: 892.34,
+                change: '+12.56 (+1.43%)',
+                isPositive: true,
+                trend: [845, 860, 872, 868, 879, 885, 892.34],
+                high: 898.76,
+                low: 878.23,
+                volume: '34.2M'
+            }
+        };
+        function generateChart(trend, isPositive, container) {
+            const width = container.offsetWidth;
+            const height = 40;
+            const padding = 2;
+            const max = Math.max(...trend);
+            const min = Math.min(...trend);
+            const range = max - min || 1;
+            const points = trend.map((val, i) => {
+                const x = (i / (trend.length - 1)) * (width - padding * 2) + padding;
+                const y = height - ((val - min) / range) * (height - padding * 2) - padding;
+                return `${x},${y}`;
+            });
+            const pathD = `M ${points.join(' L ')}`;
+            const areaD = `${pathD} L ${width - padding},${height - padding} L ${padding},${height - padding} Z`;
+            container.innerHTML = `
+                <svg class="chart-svg" viewBox="0 0 ${width} ${height}">
+                    <path class="chart-area ${isPositive ? 'positive' : 'negative'}" d="${areaD}"></path>
+                    <path class="chart-line ${isPositive ? 'positive' : 'negative'}" d="${pathD}"></path>
+                </svg>
+            `;
+        }
+        const stockItems = document.querySelectorAll('.stock-item');
+        const detailPanel = document.querySelector('.detail-panel');
+        function updateDetail(stockKey) {
+            const data = stockData[stockKey];
+            detailPanel.innerHTML = `
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="label">最高</div>
+                        <div class="value ${data.isPositive ? 'positive' : 'negative'}">${data.high}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="label">最低</div>
+                        <div class="value ${!data.isPositive ? 'positive' : 'negative'}">${data.low}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="label">成交量</div>
+                        <div class="value">${data.volume}</div>
+                    </div>
+                </div>
+                <div class="risk-tag">⚠️ 近期波动较大，建议谨慎操作</div>
+            `;
+        }
+        stockItems.forEach(item => {
+            const key = item.dataset.stock;
+            const data = stockData[key];
+            const chartContainer = item.querySelector('.chart-container');
+            generateChart(data.trend, data.isPositive, chartContainer);
+            item.addEventListener('click', () => {
+                stockItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                updateDetail(key);
+                if (!detailPanel.classList.contains('show')) {
+                    detailPanel.classList.add('show');
+                }
+            });
+        });
+        // 模拟价格跳动
+        setInterval(() => {
+            stockItems.forEach(item => {
+                const key = item.dataset.stock;
+                const data = stockData[key];
+                const priceEl = item.querySelector('.price');
+                const changeEl = item.querySelector('.change');
+                const fluctuation = (Math.random() - 0.5) * 0.5;
+                const newPrice = (data.basePrice + fluctuation).toFixed(2);
+                priceEl.textContent = newPrice;
+                priceEl.style.color = fluctuation >= 0 ? '#34c759' : '#ff3b30';
+                setTimeout(() => priceEl.style.color = '#fff', 300);
+            });
+        }, 3000);
+    </script>
+</body>
+</html>
