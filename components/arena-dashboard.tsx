@@ -96,6 +96,7 @@ function reorderModels(order: string[], draggedModel: string, targetModel: strin
 export function ArenaDashboard() {
   const [payload, setPayload] = useState<ApiPayload | null>(null);
   const [error, setError] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeTheme, setActiveTheme] = useState<string>("clock");
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [activeCardModel, setActiveCardModel] = useState<string>("");
@@ -112,6 +113,8 @@ export function ArenaDashboard() {
 
   useEffect(() => {
     let cancelled = false;
+    setIsLoading(true);
+    setError("");
 
     fetch("/api/submissions")
       .then(async (res) => {
@@ -126,6 +129,7 @@ export function ArenaDashboard() {
           return;
         }
 
+        setError("");
         setPayload(data);
 
         if (!data.themes.find((theme) => theme.id === "clock")) {
@@ -133,8 +137,19 @@ export function ArenaDashboard() {
         }
       })
       .catch((err: unknown) => {
+        if (cancelled) {
+          return;
+        }
+
         const message = err instanceof Error ? err.message : "加载失败";
         setError(message);
+      })
+      .finally(() => {
+        if (cancelled) {
+          return;
+        }
+
+        setIsLoading(false);
       });
 
     return () => {
@@ -177,6 +192,8 @@ export function ArenaDashboard() {
   const activeThemeMeta = useMemo(() => {
     return payload?.themes.find((theme) => theme.id === activeTheme) ?? null;
   }, [activeTheme, payload]);
+
+  const showInitialLoading = isLoading && !payload && !error;
 
   const themeSubmissions = useMemo(() => {
     if (!payload) {
@@ -285,6 +302,10 @@ export function ArenaDashboard() {
   }, [visibleSubmissions]);
 
   const selectionSummary = useMemo(() => {
+    if (showInitialLoading) {
+      return "Loading models";
+    }
+
     if (!availableModels.length) {
       return "No models available";
     }
@@ -294,7 +315,7 @@ export function ArenaDashboard() {
     }
 
     return `${selectedModels.length} / ${availableModels.length} models`;
-  }, [availableModels.length, selectedModels.length]);
+  }, [availableModels.length, selectedModels.length, showInitialLoading]);
 
   const activeCardIndex = useMemo(() => {
     return activeCardModel ? visibleModels.indexOf(activeCardModel) : -1;
@@ -447,16 +468,20 @@ export function ArenaDashboard() {
         <div className="row">
           <span className="label">Theme</span>
           <div className="chips">
-            {payload?.themes.map((theme) => (
-              <button
-                key={theme.id}
-                type="button"
-                className={theme.id === activeTheme ? "chip active" : "chip"}
-                onClick={() => setActiveTheme(theme.id)}
-              >
-                {theme.label}
-              </button>
-            ))}
+            {payload?.themes.length ? (
+              payload.themes.map((theme) => (
+                <button
+                  key={theme.id}
+                  type="button"
+                  className={theme.id === activeTheme ? "chip active" : "chip"}
+                  onClick={() => setActiveTheme(theme.id)}
+                >
+                  {theme.label}
+                </button>
+              ))
+            ) : showInitialLoading ? (
+              <span className="loading-inline-tag">正在同步主题与模型数据...</span>
+            ) : null}
           </div>
         </div>
 
@@ -469,12 +494,14 @@ export function ArenaDashboard() {
               onClick={isModelPickerOpen ? closeModelPicker : openModelPicker}
               aria-expanded={isModelPickerOpen}
               aria-haspopup="dialog"
-              disabled={!availableModels.length}
+              disabled={showInitialLoading || !availableModels.length}
             >
               <span className="picker-kicker">Multi Select</span>
               <strong className="picker-title">{selectionSummary}</strong>
               <span className="picker-meta">
-                {selectedModels.length === availableModels.length
+                {showInitialLoading
+                  ? "部署环境首次同步会慢一些，请稍候。"
+                  : selectedModels.length === availableModels.length
                   ? "默认展示全部模型"
                   : "已按所选模型收窄对比范围"}
               </span>
@@ -594,23 +621,23 @@ export function ArenaDashboard() {
         <div className="stats">
           <div>
             <p>当前主题</p>
-            <strong>{activeThemeMeta?.label ?? "-"}</strong>
+            <strong>{showInitialLoading ? "加载中" : activeThemeMeta?.label ?? "-"}</strong>
           </div>
           <div>
             <p>筛选模型</p>
-            <strong>{selectedModels.length}</strong>
+            <strong>{showInitialLoading ? "..." : selectedModels.length}</strong>
           </div>
           <div>
             <p>作品数</p>
-            <strong>{visibleSubmissions.length}</strong>
+            <strong>{showInitialLoading ? "..." : visibleSubmissions.length}</strong>
           </div>
           <div>
             <p>约束通过率</p>
-            <strong>{passRate}%</strong>
+            <strong>{showInitialLoading ? "..." : `${passRate}%`}</strong>
           </div>
           <div>
             <p>行数上限</p>
-            <strong>{payload?.constraints.maxLines ?? "-"}</strong>
+            <strong>{showInitialLoading ? "..." : payload?.constraints.maxLines ?? "-"}</strong>
           </div>
         </div>
       </section>
@@ -718,7 +745,26 @@ export function ArenaDashboard() {
         </div>
       ) : null}
 
-      {visibleSubmissions.length ? (
+      {showInitialLoading ? (
+        <section className="panel loading-state" role="status" aria-live="polite" aria-busy="true">
+          <div className="loading-visual" aria-hidden="true">
+            <span className="loading-ring loading-ring-outer" />
+            <span className="loading-ring loading-ring-middle" />
+            <span className="loading-ring loading-ring-inner" />
+            <span className="loading-core" />
+          </div>
+          <p className="loading-kicker">Loading arena results</p>
+          <h3>模型结果正在加载中</h3>
+          <p className="loading-copy">
+            部署环境首次读取作品清单和预览资源会慢一些，请耐心等待片刻，页面会自动补齐展示结果。
+          </p>
+          <div className="loading-pills" aria-hidden="true">
+            <span className="loading-pill">正在读取作品列表</span>
+            <span className="loading-pill">正在同步主题信息</span>
+            <span className="loading-pill">正在准备预览卡片</span>
+          </div>
+        </section>
+      ) : visibleSubmissions.length ? (
         <section
           className="arena-grid"
           style={{ gridTemplateColumns: `repeat(${panesPerRow}, minmax(0, 1fr))` }}
