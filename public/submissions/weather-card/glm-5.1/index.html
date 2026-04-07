@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather Card - GLM-5.1</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{display:flex;justify-content:center;align-items:center;min-height:100vh;background:#0f0f1a;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden}
+.card{width:360px;border-radius:28px;padding:28px 24px;position:relative;overflow:hidden;transition:all .8s ease;color:#fff}
+.card.sunny{background:linear-gradient(135deg,#f6d365,#fda085)}
+.card.rainy{background:linear-gradient(135deg,#667eea,#764ba2)}
+.card.cloudy{background:linear-gradient(135deg,#89a0b5,#6b7f94)}
+.card.snowy{background:linear-gradient(135deg,#e6e9f0,#bdc3c7)}
+.city-tabs{display:flex;gap:8px;margin-bottom:24px}
+.city-tab{padding:6px 16px;border-radius:20px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;cursor:pointer;font-size:13px;transition:all .3s}
+.city-tab.active{background:rgba(255,255,255,.25);border-color:rgba(255,255,255,.5);font-weight:600}
+.weather-icon{font-size:64px;text-align:center;margin:8px 0 12px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.2))}
+.temp{font-size:72px;font-weight:200;text-align:center;line-height:1;letter-spacing:-2px}
+.temp span{font-size:28px;vertical-align:super;opacity:.6}
+.desc{text-align:center;font-size:16px;opacity:.85;margin:8px 0 20px}
+.info-row{display:flex;justify-content:space-around;margin-bottom:20px}
+.info-item{text-align:center}
+.info-item .val{font-size:18px;font-weight:600}
+.info-item .lbl{font-size:11px;opacity:.6;margin-top:2px}
+.trend{height:60px;margin-top:8px}
+.trend canvas{width:100%;height:100%}
+.particles{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.rain-drop{position:absolute;width:2px;background:rgba(255,255,255,.4);animation:fall linear infinite}
+@keyframes fall{0%{transform:translateY(-20px)}100%{transform:translateY(420px)}}
+.snow-flake{position:absolute;width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.7);animation:snowfall linear infinite}
+@keyframes snowfall{0%{transform:translateY(-10px) rotate(0deg)}100%{transform:translateY(420px) rotate(360deg)}}
+.cloud-float{position:absolute;font-size:40px;opacity:.15;animation:drift 20s ease-in-out infinite}
+@keyframes drift{0%,100%{transform:translateX(0)}50%{transform:translateX(30px)}}
+</style>
+</head>
+<body>
+<div class="card" id="card">
+<div class="particles" id="particles"></div>
+<div class="city-tabs" id="tabs"></div>
+<div class="weather-icon" id="icon"></div>
+<div class="temp" id="temp"></div>
+<div class="desc" id="desc"></div>
+<div class="info-row" id="info"></div>
+<div class="trend"><canvas id="trendC"></canvas></div>
+</div>
+<script>
+const cities=[
+{name:'北京',type:'sunny',icon:'☀️',temp:28,desc:'晴朗',wind:'3.2m/s',hum:'45%',feels:'30°',trend:[24,25,27,28,30,29,27]},
+{name:'上海',type:'rainy',icon:'🌧️',temp:18,desc:'中雨',wind:'5.1m/s',hum:'89%',feels:'15°',trend:[20,19,18,17,18,19,20]},
+{name:'哈尔滨',type:'snowy',icon:'🌨️',temp:-5,desc:'小雪',wind:'4.0m/s',hum:'72%',feels:'-10°',trend:[-8,-6,-5,-4,-5,-7,-5]},
+{name:'成都',type:'cloudy',icon:'⛅',temp:22,desc:'多云',wind:'1.8m/s',hum:'65%',feels:'23°',trend:[20,21,22,23,22,21,20]}
+];
+let cur=0;
+function render(i){
+cur=i;const c=cities[i],card=document.getElementById('card');
+card.className='card '+c.type;
+document.getElementById('icon').textContent=c.icon;
+document.getElementById('temp').innerHTML=c.temp+'°<span>C</span>';
+document.getElementById('desc').textContent=c.desc;
+document.getElementById('info').innerHTML=
+`<div class="info-item"><div class="val">🌬 ${c.wind}</div><div class="lbl">风速</div></div>
+<div class="info-item"><div class="val">💧 ${c.hum}</div><div class="lbl">湿度</div></div>
+<div class="info-item"><div class="val">🌡 ${c.feels}</div><div class="lbl">体感</div></div>`;
+document.getElementById('tabs').innerHTML=cities.map((ct,j)=>
+`<button class="city-tab${j===i?' active':''}" onclick="render(${j})">${ct.name}</button>`).join('');
+drawParticles(c.type);drawTrend(c.trend)}
+function drawParticles(type){
+const p=document.getElementById('particles');p.innerHTML='';
+if(type==='rainy'){for(let i=0;i<40;i++){const d=document.createElement('div');d.className='rain-drop';
+d.style.left=Math.random()*100+'%';d.style.height=Math.random()*15+10+'px';
+d.style.animationDuration=Math.random()*.5+.3+'s';d.style.animationDelay=Math.random()*2+'s';p.appendChild(d)}}
+else if(type==='snowy'){for(let i=0;i<25;i++){const d=document.createElement('div');d.className='snow-flake';
+d.style.left=Math.random()*100+'%';d.style.animationDuration=Math.random()*3+2+'s';
+d.style.animationDelay=Math.random()*3+'s';p.appendChild(d)}}
+else if(type==='cloudy'){for(let i=0;i<3;i++){const d=document.createElement('div');d.className='cloud-float';
+d.textContent='☁';d.style.top=Math.random()*60+10+'%';d.style.left=Math.random()*60+'%';
+d.style.animationDelay=i*3+'s';p.appendChild(d)}}}
+function drawTrend(data){
+const cv=document.getElementById('trendC'),ctx=cv.getContext('2d');
+cv.width=cv.offsetWidth*2;cv.height=cv.offsetHeight*2;
+const w=cv.width,h=cv.height,pad=10,min=Math.min(...data),max=Math.max(...data),range=max-min||1;
+ctx.beginPath();ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=2;ctx.lineJoin='round';
+data.forEach((v,i)=>{const x=pad+i*(w-2*pad)/(data.length-1);const y=h-pad-(v-min)/range*(h-2*pad);
+i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.stroke();
+ctx.beginPath();ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;
+for(let i=0;i<5;i++){const y=pad+i*(h-2*pad)/4;ctx.moveTo(pad,y);ctx.lineTo(w-pad,y);ctx.stroke()}}
+render(0);
+</script>
+</body>
+</html>

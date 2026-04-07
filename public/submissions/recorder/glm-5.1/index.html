@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recorder - GLM-5.1</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{display:flex;justify-content:center;align-items:center;min-height:100vh;background:#0f0f1a;font-family:'Segoe UI',system-ui,sans-serif;color:#fff}
+.recorder{width:340px;background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:24px;padding:32px 24px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.status-bar{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:28px}
+.dot-indicator{width:12px;height:12px;border-radius:50%;background:#555;transition:all .3s}
+.dot-indicator.recording{background:#ff4444;animation:blink 1s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+.status-text{font-size:14px;opacity:.6;text-transform:uppercase;letter-spacing:2px}
+.timer{font-size:48px;text-align:center;font-weight:200;letter-spacing:4px;margin-bottom:24px;font-variant-numeric:tabular-nums}
+.wave-container{height:80px;margin-bottom:32px;position:relative;overflow:hidden;border-radius:12px;background:rgba(255,255,255,.03)}
+.wave-container canvas{width:100%;height:100%}
+.controls{display:flex;justify-content:center;gap:16px;margin-bottom:20px}
+.btn{width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;font-size:18px;transition:all .2s;display:flex;align-items:center;justify-content:center;color:#fff}
+.btn:disabled{opacity:.3;cursor:not-allowed;transform:none!important}
+.btn-start{background:linear-gradient(135deg,#e74c3c,#c0392b)}
+.btn-start:hover:not(:disabled){transform:scale(1.1);box-shadow:0 4px 20px rgba(231,76,60,.4)}
+.btn-pause{background:linear-gradient(135deg,#f39c12,#e67e22)}
+.btn-pause:hover:not(:disabled){transform:scale(1.1);box-shadow:0 4px 20px rgba(243,156,18,.4)}
+.btn-stop{background:linear-gradient(135deg,#7f8c8d,#636e72)}
+.btn-stop:hover:not(:disabled){transform:scale(1.1);box-shadow:0 4px 20px rgba(127,140,141,.4)}
+.summary{background:rgba(255,255,255,.05);border-radius:12px;padding:16px;margin-top:8px;display:none}
+.summary.show{display:block}
+.summary h3{font-size:13px;opacity:.5;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+.summary p{font-size:14px;line-height:1.6}
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:10}
+.confirm-overlay.show{display:flex}
+.confirm-box{background:#1a1a2e;padding:24px 28px;border-radius:16px;text-align:center;max-width:280px}
+.confirm-box p{margin-bottom:20px;font-size:15px}
+.confirm-btns{display:flex;gap:12px;justify-content:center}
+.confirm-btns button{padding:8px 20px;border:none;border-radius:8px;cursor:pointer;font-size:14px;color:#fff}
+.cb-cancel{background:#555}
+.cb-ok{background:#e74c3c}
+</style>
+</head>
+<body>
+<div class="recorder">
+<div class="status-bar"><div class="dot-indicator" id="dot"></div><span class="status-text" id="stxt">Ready</span></div>
+<div class="timer" id="timer">00:00</div>
+<div class="wave-container"><canvas id="wave"></canvas></div>
+<div class="controls">
+<button class="btn btn-start" id="bStart" onclick="startRec()">▶</button>
+<button class="btn btn-pause" id="bPause" onclick="pauseRec()" disabled>⏸</button>
+<button class="btn btn-stop" id="bStop" onclick="tryStop()" disabled>⏹</button>
+</div>
+<div class="summary" id="summary">
+<h3>录音摘要</h3>
+<p id="sumText"></p>
+</div>
+</div>
+<div class="confirm-overlay" id="cfmOverlay">
+<div class="confirm-box">
+<p>确定要停止录音吗？</p>
+<div class="confirm-btns">
+<button class="cb-cancel" onclick="cancelStop()">取消</button>
+<button class="cb-ok" onclick="confirmStop()">确定</button>
+</div>
+</div>
+</div>
+<script>
+let state='idle',elapsed=0,interval=null,animId=null;
+const c=document.getElementById('wave'),ctx=c.getContext('2d');
+function resizeC(){c.width=c.offsetWidth*2;c.height=c.offsetHeight*2}resizeC();window.onresize=resizeC;
+function fmt(s){const m=Math.floor(s/60),sec=s%60;return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')}
+function drawWave(){
+ctx.clearRect(0,0,c.width,c.height);const mid=c.height/2,t=Date.now()/1000;
+for(let i=0;i<3;i++){
+ctx.beginPath();ctx.strokeStyle=`rgba(231,76,60,${.3-i*.08})`;ctx.lineWidth=2;
+for(let x=0;x<c.width;x++){
+const amp=state==='recording'?20+i*8:3;const y=mid+Math.sin(x*.01+t*(2+i))*amp+Math.sin(x*.025+t*3)*amp*.5;
+x===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}
+ctx.stroke()}
+if(state==='recording')animId=requestAnimationFrame(drawWave)}
+function startRec(){
+if(state==='paused'){state='recording';$('dot').className='dot-indicator recording';$('stxt').textContent='Recording';
+interval=setInterval(()=>{elapsed++;$('timer').textContent=fmt(elapsed)},1000);
+$('bStart').disabled=true;$('bPause').disabled=false;$('bStop').disabled=false;drawWave();return}
+state='recording';elapsed=0;$('timer').textContent='00:00';
+$('dot').className='dot-indicator recording';$('stxt').textContent='Recording';
+$('summary').classList.remove('show');
+$('bStart').disabled=true;$('bPause').disabled=false;$('bStop').disabled=false;
+interval=setInterval(()=>{elapsed++;$('timer').textContent=fmt(elapsed)},1000);drawWave()}
+function pauseRec(){
+if(state!=='recording')return;state='paused';clearInterval(interval);cancelAnimationFrame(animId);
+$('dot').className='dot-indicator';$('stxt').textContent='Paused';
+$('bStart').disabled=false;$('bStart').textContent='▶';$('bPause').disabled=true}
+function tryStop(){if(state==='idle')return;document.getElementById('cfmOverlay').classList.add('show')}
+function cancelStop(){document.getElementById('cfmOverlay').classList.remove('show')}
+function confirmStop(){
+document.getElementById('cfmOverlay').classList.remove('show');
+clearInterval(interval);cancelAnimationFrame(animId);state='idle';
+$('dot').className='dot-indicator';$('stxt').textContent='Stopped';
+$('bStart').disabled=false;$('bStart').textContent='▶';$('bPause').disabled=true;$('bStop').disabled=true;
+$('summary').classList.add('show');
+$('sumText').innerHTML=`时长：<b>${fmt(elapsed)}</b><br>状态：已停止<br>段数：1段`}
+function $(id){return document.getElementById(id)}
+// Draw idle wave
+(function idle(){ctx.clearRect(0,0,c.width,c.height);const mid=c.height/2,t=Date.now()/1000;
+ctx.beginPath();ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;
+for(let x=0;x<c.width;x++){const y=mid+Math.sin(x*.01+t)*3;x===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}ctx.stroke();
+if(state==='idle')requestAnimationFrame(idle)})();
+</script>
+</body>
+</html>

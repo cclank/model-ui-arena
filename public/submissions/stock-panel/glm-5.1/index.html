@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Panel - GLM-5.1</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{display:flex;justify-content:center;align-items:center;min-height:100vh;background:#0a0a14;font-family:'Segoe UI',system-ui,sans-serif;color:#fff}
+.panel{width:370px;background:#12121f;border-radius:20px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.panel h2{font-size:16px;font-weight:500;margin-bottom:16px;opacity:.7}
+.stock-list{display:flex;flex-direction:column;gap:10px}
+.stock-item{background:rgba(255,255,255,.04);border-radius:14px;padding:14px 16px;cursor:pointer;transition:all .2s;border:1px solid transparent}
+.stock-item:hover{background:rgba(255,255,255,.08)}
+.stock-item.selected{border-color:rgba(100,149,237,.5);background:rgba(100,149,237,.08)}
+.stock-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.stock-name{font-weight:600;font-size:15px}
+.stock-price{font-size:15px;font-weight:600}
+.stock-meta{display:flex;gap:16px;font-size:12px;opacity:.5}
+.up{color:#00d2a0}.down{color:#ff4d6a}
+.change-badge{padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600}
+.change-badge.up{background:rgba(0,210,160,.12)}.change-badge.down{background:rgba(255,77,106,.12)}
+.chart-area{margin-top:14px;background:rgba(255,255,255,.03);border-radius:14px;padding:14px}
+.chart-area canvas{width:100%;height:110px}
+.chart-label{font-size:11px;opacity:.4;margin-top:6px;text-align:center}
+.ticker{display:flex;gap:6px;margin-top:12px;overflow:hidden}
+.ticker-item{white-space:nowrap;font-size:11px;opacity:.5;padding:4px 10px;background:rgba(255,255,255,.04);border-radius:8px}
+.flash{animation:flash .5s ease}
+@keyframes flash{0%{opacity:1}50%{opacity:.3}100%{opacity:1}}
+</style>
+</head>
+<body>
+<div class="panel">
+<h2>📈 股票监控</h2>
+<div class="stock-list" id="list"></div>
+<div class="chart-area">
+<canvas id="chart"></canvas>
+<div class="chart-label" id="chartLabel">点击股票查看趋势</div>
+</div>
+<div class="ticker" id="ticker"></div>
+</div>
+<script>
+const stocks=[
+{sym:'AAPL',name:'苹果',price:189.72,chg:2.35,pct:1.25,data:[185,186,187,185,188,189,190,188,189,189.72]},
+{sym:'TSLA',name:'特斯拉',price:248.50,chg:-5.12,pct:-2.02,data:[260,258,255,253,250,248,252,250,249,248.5]},
+{sym:'NVDA',name:'英伟达',price:925.30,chg:18.60,pct:2.05,data:[900,908,912,905,915,920,918,922,924,925.3]},
+{sym:'BABA',name:'阿里巴巴',price:78.40,chg:-1.80,pct:-2.24,data:[82,81,80,79,80,79,78,79,78.5,78.4]}
+];
+let selected=0;
+function renderList(){
+document.getElementById('list').innerHTML=stocks.map((s,i)=>{
+const up=s.chg>=0;return`<div class="stock-item${i===selected?' selected':''}" onclick="selectStock(${i})">
+<div class="stock-header"><div class="stock-name">${s.name} <span style="opacity:.4;font-size:12px">${s.sym}</span></div>
+<div class="stock-price ${up?'up':'down'}">${s.price.toFixed(2)}</div></div>
+<div class="stock-meta"><span>${up?'▲':'▼'} ${Math.abs(s.chg).toFixed(2)}</span>
+<span class="change-badge ${up?'up':'down'}">${up?'+':''}${s.pct.toFixed(2)}%</span></div></div>`}).join('')}
+function selectStock(i){selected=i;renderList();drawChart(stocks[i])}
+function drawChart(s){
+const cv=document.getElementById('chart'),ctx=cv.getContext('2d');
+cv.width=cv.offsetWidth*2;cv.height=220;const w=cv.width,h=cv.height,pad=20;
+const d=s.data,min=Math.min(...d)*.998,max=Math.max(...d)*1.002,range=max-min;
+const up=s.chg>=0;const clr=up?'#00d2a0':'#ff4d6a';
+ctx.clearRect(0,0,w,h);
+// grid
+ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth=1;
+for(let i=0;i<4;i++){const y=pad+i*(h-2*pad)/3;ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(w-pad,y);ctx.stroke()}
+// area
+ctx.beginPath();d.forEach((v,i)=>{const x=pad+i*(w-2*pad)/(d.length-1);const y=h-pad-(v-min)/range*(h-2*pad);
+i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});
+const lastX=pad+(d.length-1)*(w-2*pad)/(d.length-1);ctx.lineTo(lastX,h-pad);ctx.lineTo(pad,h-pad);ctx.closePath();
+const grd=ctx.createLinearGradient(0,0,0,h);grd.addColorStop(0,up?'rgba(0,210,160,.2)':'rgba(255,77,106,.2)');
+grd.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=grd;ctx.fill();
+// line
+ctx.beginPath();d.forEach((v,i)=>{const x=pad+i*(w-2*pad)/(d.length-1);const y=h-pad-(v-min)/range*(h-2*pad);
+i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.strokeStyle=clr;ctx.lineWidth=3;ctx.lineJoin='round';ctx.stroke();
+// dot
+const ly=h-pad-(d[d.length-1]-min)/range*(h-2*pad);ctx.beginPath();ctx.arc(lastX,ly,5,0,Math.PI*2);ctx.fillStyle=clr;ctx.fill();
+document.getElementById('chartLabel').textContent=`${s.name} (${s.sym}) 近10期走势`}
+function renderTicker(){
+document.getElementById('ticker').innerHTML=stocks.map(s=>{
+const up=s.chg>=0;return`<div class="ticker-item ${up?'up':'down'}">${s.sym} ${up?'▲':'▼'}${Math.abs(s.pct).toFixed(2)}%</div>`}).join('')}
+// Fake real-time update
+function fakeUpdate(){
+stocks.forEach(s=>{
+const delta=(Math.random()-.5)*s.price*.002;
+s.price=Math.round((s.price+delta)*100)/100;
+s.data.push(s.price);if(s.data.length>10)s.data.shift();
+s.chg=s.price-s.data[0];s.pct=s.chg/s.data[0]*100});
+renderList();drawChart(stocks[selected]);renderTicker()}
+renderList();drawChart(stocks[0]);renderTicker();
+setInterval(fakeUpdate,3000);
+</script>
+</body>
+</html>

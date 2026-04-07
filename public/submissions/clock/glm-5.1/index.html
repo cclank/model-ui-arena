@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clock - GLM-5.1</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{display:flex;justify-content:center;align-items:center;min-height:100vh;font-family:'Segoe UI',system-ui,sans-serif;transition:background 1.5s}
+body.day{background:linear-gradient(135deg,#74b9ff,#a29bfe,#fd79a8)}
+body.night{background:linear-gradient(135deg,#0c0c1d,#1a1a3e,#2d2d5e)}
+.clock-wrap{text-align:center;color:#fff;position:relative}
+.analog{width:260px;height:260px;border-radius:50%;border:4px solid rgba(255,255,255,.3);position:relative;margin:0 auto 30px;backdrop-filter:blur(10px);background:rgba(255,255,255,.08)}
+.hand{position:absolute;bottom:50%;left:50%;transform-origin:50% 100%;border-radius:4px;transition:background .8s}
+.h-hour{width:4px;height:70px;margin-left:-2px;background:#fff}
+.h-min{width:3px;height:95px;margin-left:-1.5px;background:rgba(255,255,255,.8)}
+.h-sec{width:1.5px;height:105px;margin-left:-.75px;background:#ff6b6b}
+.dot{width:10px;height:10px;border-radius:50%;background:#ff6b6b;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+.tick{position:absolute;width:2px;height:8px;background:rgba(255,255,255,.5);top:8px;left:50%;margin-left:-1px;transform-origin:50% 122px}
+.tick.major{height:14px;background:rgba(255,255,255,.9);width:3px;margin-left:-1.5px}
+.digital{font-size:56px;font-weight:200;letter-spacing:6px;text-shadow:0 0 30px rgba(255,255,255,.3)}
+.digital .sec{font-size:28px;opacity:.6;vertical-align:super}
+.date-line{margin-top:12px;font-size:14px;opacity:.6;letter-spacing:2px}
+.pulse{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.greeting{margin-top:24px;font-size:18px;opacity:.7}
+</style>
+</head>
+<body>
+<div class="clock-wrap">
+<div class="analog" id="analog">
+<div class="h-hour hand" id="hourH"></div>
+<div class="h-min hand" id="minH"></div>
+<div class="h-sec hand" id="secH"></div>
+<div class="dot pulse"></div>
+</div>
+<div class="digital"><span id="hm">--:--</span><span class="sec" id="ds">--</span></div>
+<div class="date-line" id="dateLine"></div>
+<div class="greeting" id="greet"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+function initTicks(){
+  const a=$('analog');
+  for(let i=0;i<60;i++){
+    const t=document.createElement('div');
+    t.className='tick'+(i%5===0?' major':'');
+    t.style.transform=`rotate(${i*6}deg)`;
+    a.appendChild(t);
+  }
+}
+function tick(){
+  const now=new Date();
+  const h=now.getHours(),m=now.getMinutes(),s=now.getSeconds(),ms=now.getMilliseconds();
+  const sd=s+ms/1000, md=m+sd/60, hd=h+md/60;
+  $('hourH').style.transform=`rotate(${hd*30}deg)`;
+  $('minH').style.transform=`rotate(${md*6}deg)`;
+  $('secH').style.transform=`rotate(${sd*6}deg)`;
+  $('hm').textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  $('ds').textContent=String(s).padStart(2,'0');
+  const days=['日','一','二','三','四','五','六'];
+  $('dateLine').textContent=`${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} 星期${days[now.getDay()]}`;
+  const isDay=h>=6&&h<18;
+  document.body.className=isDay?'day':'night';
+  $('greet').textContent=isDay?'☀️ Good Day':'🌙 Good Night';
+  requestAnimationFrame(tick);
+}
+initTicks();tick();
+</script>
+</body>
+</html>
