@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>Click Fireworks</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;overflow:hidden;touch-action:none}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro","Segoe UI",sans-serif;
+    background:radial-gradient(ellipse at 50% 120%,#1a1040,#0a0518 60%,#02010a 100%);
+    color:#fff;position:relative;cursor:crosshair;user-select:none;
+  }
+  #stars{position:fixed;inset:0;z-index:0;pointer-events:none}
+  #sky{position:fixed;inset:0;z-index:1;display:block;background:transparent}
+  .hud{
+    position:fixed;top:16px;left:0;right:0;display:flex;justify-content:space-between;
+    padding:0 18px;z-index:3;pointer-events:none;
+  }
+  .hud .title{
+    font-size:13px;letter-spacing:.35em;opacity:.85;font-weight:600;
+    text-shadow:0 0 20px rgba(255,180,80,.5);
+  }
+  .hud .count{
+    font-size:11px;letter-spacing:.2em;opacity:.6;font-variant-numeric:tabular-nums;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+    padding:5px 10px;border-radius:99px;backdrop-filter:blur(6px);
+  }
+  .tip{
+    position:fixed;bottom:26px;left:50%;transform:translateX(-50%);
+    font-size:11px;letter-spacing:.25em;opacity:.5;z-index:3;pointer-events:none;
+    animation:fade 2.4s ease-in-out infinite;
+  }
+  @keyframes fade{0%,100%{opacity:.3}50%{opacity:.7}}
+  .star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;
+    animation:tw 3s ease-in-out infinite}
+  @keyframes tw{0%,100%{opacity:.25}50%{opacity:.85}}
+</style>
+</head>
+<body>
+<div id="stars"></div>
+<canvas id="sky"></canvas>
+<div class="hud">
+  <div class="title">✦ NIGHT SKY</div>
+  <div class="count" id="count">BURSTS · 0</div>
+</div>
+<div class="tip">点击夜空任意位置 · 释放烟花</div>
+<script>
+(function(){
+  const starsBox=document.getElementById('stars');
+  for(let i=0;i<60;i++){
+    const s=document.createElement('div');s.className='star';
+    s.style.left=Math.random()*100+'%';s.style.top=Math.random()*70+'%';
+    s.style.opacity=(.3+Math.random()*.6).toFixed(2);
+    s.style.animationDelay=(Math.random()*3)+'s';
+    s.style.transform=`scale(${(.5+Math.random()*1.2).toFixed(2)})`;
+    starsBox.appendChild(s);
+  }
+  const canvas=document.getElementById('sky'),ctx=canvas.getContext('2d');
+  let W=0,H=0,DPR=Math.max(1,Math.min(2,window.devicePixelRatio||1));
+  function resize(){
+    W=canvas.clientWidth=window.innerWidth;H=canvas.clientHeight=window.innerHeight;
+    canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  resize();window.addEventListener('resize',resize);
+  const PAL=[
+    ['#ff6b9d','#ffcad4','#ff9fb3'],['#ffd166','#ffe29a','#ff9c54'],
+    ['#8ab6ff','#c7d9ff','#6a8bd6'],['#9dffb0','#d4ffde','#60c97a'],
+    ['#d59bff','#f0d4ff','#a776e0'],['#ff7a59','#ffc8b5','#e04a2f'],
+  ];
+  const MAX=800;let parts=[],rockets=[],trails=[],bursts=0;
+  const countEl=document.getElementById('count');
+  function rnd(a,b){return a+Math.random()*(b-a)}
+  function spawnBurst(x,y){
+    bursts++;countEl.textContent='BURSTS · '+bursts;
+    const pal=PAL[(Math.random()*PAL.length)|0];
+    const count=Math.min(90,Math.floor(40+Math.random()*55));
+    const radius=rnd(.9,1.5),baseSpd=rnd(2.6,4.2)*radius;
+    const kind=Math.random()<.35?'ring':(Math.random()<.5?'chrys':'peony');
+    for(let i=0;i<count;i++){
+      let vx,vy;
+      if(kind==='ring'){
+        const a=(i/count)*Math.PI*2,sp=baseSpd*rnd(.9,1.05);
+        vx=Math.cos(a)*sp;vy=Math.sin(a)*sp;
+      }else{
+        const a=Math.random()*Math.PI*2,r=baseSpd*Math.sqrt(Math.random());
+        vx=Math.cos(a)*r;vy=Math.sin(a)*r;
+      }
+      parts.push({
+        x,y,vx,vy,life:1,
+        decay:rnd(.010,.020),
+        color:pal[(Math.random()*pal.length)|0],
+        size:rnd(1.4,2.4),trail:kind==='chrys',
+        gravity:.04+Math.random()*.03,
+      });
+    }
+    if(parts.length>MAX)parts.splice(0,parts.length-MAX);
+  }
+  function launch(x,y){
+    const sx=x+rnd(-20,20),sy=H+10;
+    rockets.push({x:sx,y:sy,tx:x,ty:y,vy:-rnd(7,9),color:'#ffd28a'});
+  }
+  function tick(){
+    ctx.fillStyle='rgba(6,4,14,0.22)';ctx.fillRect(0,0,W,H);
+    for(let i=rockets.length-1;i>=0;i--){
+      const r=rockets[i];r.y+=r.vy;r.vy+=.14;
+      trails.push({x:r.x,y:r.y,life:.6,color:r.color});
+      if(r.y<=r.ty){spawnBurst(r.x,r.y);rockets.splice(i,1);}
+    }
+    for(let i=trails.length-1;i>=0;i--){
+      const t=trails[i];t.life-=.045;
+      if(t.life<=0){trails.splice(i,1);continue;}
+      ctx.globalAlpha=t.life;ctx.fillStyle=t.color;
+      ctx.beginPath();ctx.arc(t.x,t.y,1.4,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalCompositeOperation='lighter';
+    for(let i=parts.length-1;i>=0;i--){
+      const p=parts[i];
+      if(p.trail){
+        ctx.globalAlpha=p.life*.4;ctx.fillStyle=p.color;
+        ctx.beginPath();ctx.arc(p.x-p.vx*.6,p.y-p.vy*.6,p.size*.7,0,Math.PI*2);ctx.fill();
+      }
+      p.x+=p.vx;p.y+=p.vy;p.vx*=.985;p.vy=p.vy*.985+p.gravity;p.life-=p.decay;
+      if(p.life<=0){parts.splice(i,1);continue;}
+      ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;
+      const r=p.size*(0.5+p.life*.8);
+      ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fill();
+      if(p.life>.7){
+        ctx.globalAlpha=p.life*.25;ctx.beginPath();ctx.arc(p.x,p.y,r*2.4,0,Math.PI*2);ctx.fill();
+      }
+    }
+    ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+    requestAnimationFrame(tick);
+  }
+  tick();
+  function getXY(e){
+    const t=e.touches&&e.touches[0]?e.touches[0]:e;
+    return{x:t.clientX,y:t.clientY};
+  }
+  function trigger(e){
+    e.preventDefault();const{x,y}=getXY(e);
+    if(y>H-40)spawnBurst(x,y);else launch(x,y);
+  }
+  document.addEventListener('mousedown',trigger);
+  document.addEventListener('touchstart',trigger,{passive:false});
+  setTimeout(()=>{launch(W*.3,H*.35);setTimeout(()=>launch(W*.7,H*.4),420);},600);
+})();
+</script>
+</body>
+</html>

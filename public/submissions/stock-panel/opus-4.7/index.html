@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>Stock Panel</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a0e16;--panel:#121724;--line:rgba(255,255,255,.06);
+    --ink:#e6ebf5;--mute:#7a8499;--up:#22c55e;--down:#ef4444;--warn:#f59e0b;
+  }
+  body{
+    font-family:-apple-system,"SF Mono",Menlo,"PingFang SC",sans-serif;
+    background:radial-gradient(ellipse at top,#18203a,#070a12 70%);
+    color:var(--ink);min-height:100vh;padding:20px;
+  }
+  .wrap{max-width:380px;margin:0 auto}
+  header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px}
+  header h1{font-size:18px;font-weight:700;letter-spacing:.02em}
+  header .sub{font-size:10px;color:var(--mute);letter-spacing:.25em;text-transform:uppercase}
+  .market{
+    display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mute);
+    margin-bottom:18px;padding:10px 12px;border-radius:10px;
+    background:var(--panel);border:1px solid var(--line);
+  }
+  .pulse{width:8px;height:8px;border-radius:50%;background:var(--up);
+    box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:pulse 1.6s ease-out infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.6)}70%{box-shadow:0 0 0 10px rgba(34,197,94,0)}}
+  .market .sep{opacity:.4}
+  .market .val{color:var(--ink);font-variant-numeric:tabular-nums}
+  .list{display:flex;flex-direction:column;gap:10px}
+  .card{
+    padding:14px 16px;border-radius:16px;background:var(--panel);
+    border:1px solid var(--line);position:relative;overflow:hidden;
+    transition:transform .15s;
+  }
+  .card.flash-up{animation:flashU .7s ease}
+  .card.flash-down{animation:flashD .7s ease}
+  @keyframes flashU{0%{background:rgba(34,197,94,.15)}100%{background:var(--panel)}}
+  @keyframes flashD{0%{background:rgba(239,68,68,.15)}100%{background:var(--panel)}}
+  .row1{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+  .name{font-weight:700;font-size:15px;letter-spacing:.02em}
+  .code{font-size:10px;color:var(--mute);margin-top:2px;letter-spacing:.12em}
+  .price{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right;line-height:1}
+  .chg{font-size:11px;margin-top:4px;font-variant-numeric:tabular-nums;text-align:right}
+  .up{color:var(--up)}.down{color:var(--down)}.flat{color:var(--mute)}
+  .row2{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+  .spark{flex:1;height:36px}
+  .warn{
+    display:inline-flex;align-items:center;gap:4px;font-size:9px;color:var(--warn);
+    padding:2px 6px;border-radius:4px;background:rgba(245,158,11,.12);
+    border:1px solid rgba(245,158,11,.25);letter-spacing:.1em;
+  }
+  .mini{font-size:10px;color:var(--mute);display:flex;gap:10px;font-variant-numeric:tabular-nums}
+  .mini b{color:var(--ink);font-weight:600}
+  footer{margin-top:18px;text-align:center;font-size:10px;color:var(--mute);letter-spacing:.2em}
+  .dot-up{color:var(--up)}.dot-down{color:var(--down)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>MARKET PULSE</h1>
+      <div class="sub">watchlist · cn-a</div>
+    </div>
+    <div style="font-size:11px;color:var(--mute)" id="clk">—</div>
+  </header>
+  <div class="market">
+    <span class="pulse"></span>
+    <span>实时行情</span>
+    <span class="sep">|</span>
+    <span>上证 <span class="val up" id="idx">3214.56</span></span>
+    <span class="sep">|</span>
+    <span>成交 <span class="val" id="vol">—</span></span>
+  </div>
+  <div class="list" id="list"></div>
+  <footer>MOCK DATA · 每 1.5s 模拟流式刷新</footer>
+</div>
+<script>
+(function(){
+  const stocks=[
+    {c:'NVDA.O',n:'英伟达',p:846.20,base:846.20,hist:[800,812,830,820,845,852,846]},
+    {c:'600519',n:'贵州茅台',p:1680.5,base:1680.5,hist:[1650,1672,1690,1681,1675,1690,1680]},
+    {c:'AAPL.O',n:'苹果',p:189.4,base:189.4,hist:[195,193,190,188,186,189,189]},
+    {c:'TSLA.O',n:'特斯拉',p:214.8,base:214.8,hist:[230,224,220,218,222,216,215]},
+  ];
+  const list=document.getElementById('list');
+  stocks.forEach((s,i)=>{
+    const card=document.createElement('div');card.className='card';card.dataset.i=i;
+    card.innerHTML=`
+      <div class="row1">
+        <div><div class="name">${s.n}</div><div class="code">${s.c}</div></div>
+        <div><div class="price" data-p>--</div><div class="chg" data-c>--</div></div>
+      </div>
+      <div class="row2">
+        <div class="mini">
+          <span>开 <b data-o>--</b></span><span>高 <b data-h>--</b></span><span>低 <b data-l>--</b></span>
+        </div>
+        <svg class="spark" data-s viewBox="0 0 100 36" preserveAspectRatio="none"></svg>
+      </div>
+      <div style="margin-top:8px" data-warn></div>`;
+    list.appendChild(card);
+    s.open=s.base;s.high=s.base;s.low=s.base;
+  });
+  function drawSpark(svg,hist,up){
+    const W=100,H=36,max=Math.max(...hist),min=Math.min(...hist),rng=Math.max(.01,max-min);
+    const pts=hist.map((v,i)=>{
+      const x=(i*W)/(hist.length-1);const y=H-2-((v-min)/rng)*(H-4);return x.toFixed(1)+','+y.toFixed(1);
+    }).join(' ');
+    const color=up?'#22c55e':'#ef4444';
+    const fillPts=`0,${H} `+pts+` ${W},${H}`;
+    svg.innerHTML=`<polyline points="${fillPts}" fill="${color}" opacity=".12" stroke="none"/>
+      <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="${W}" cy="${H-2-((hist[hist.length-1]-min)/rng)*(H-4)}" r="2" fill="${color}"/>`;
+  }
+  function fmt(n,d=2){return n.toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g,',')}
+  function render(i,flash){
+    const s=stocks[i],card=list.children[i];
+    const diff=s.p-s.base,pct=(diff/s.base)*100;
+    const up=diff>=0;const cls=Math.abs(diff)<.001?'flat':(up?'up':'down');
+    card.querySelector('[data-p]').textContent=fmt(s.p,2);
+    card.querySelector('[data-p]').className='price '+cls;
+    const sign=up?'+':'';
+    card.querySelector('[data-c]').textContent=`${sign}${fmt(diff,2)}  ${sign}${pct.toFixed(2)}%`;
+    card.querySelector('[data-c]').className='chg '+cls;
+    card.querySelector('[data-o]').textContent=fmt(s.open,2);
+    card.querySelector('[data-h]').textContent=fmt(s.high,2);
+    card.querySelector('[data-l]').textContent=fmt(s.low,2);
+    drawSpark(card.querySelector('[data-s]'),s.hist,up);
+    const wrap=card.querySelector('[data-warn]');
+    if(Math.abs(pct)>=3){
+      wrap.innerHTML=`<span class="warn">⚠ 波动 ${pct.toFixed(2)}%，注意风险</span>`;
+    }else wrap.innerHTML='';
+    if(flash){card.classList.remove('flash-up','flash-down');
+      void card.offsetWidth;card.classList.add(up?'flash-up':'flash-down');}
+  }
+  stocks.forEach((_,i)=>render(i,false));
+  function tick(){
+    stocks.forEach((s,i)=>{
+      const delta=(Math.random()-.48)*s.base*.008;
+      s.p=Math.max(0.01,s.p+delta);
+      s.high=Math.max(s.high,s.p);s.low=Math.min(s.low,s.p);
+      s.hist.push(s.p);if(s.hist.length>20)s.hist.shift();
+      render(i,true);
+    });
+  }
+  setInterval(tick,1500);
+  const clk=document.getElementById('clk'),idx=document.getElementById('idx'),vol=document.getElementById('vol');
+  let idxV=3214.56,volV=1842.3;
+  function upd(){
+    const d=new Date(),pad=n=>String(n).padStart(2,'0');
+    clk.textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    idxV+=(Math.random()-.5)*3;volV+=(Math.random()-.3)*8;
+    idx.textContent=idxV.toFixed(2);idx.className='val '+(idxV>=3214.56?'up':'down');
+    vol.textContent=Math.max(0,volV).toFixed(1)+' 亿';
+  }
+  upd();setInterval(upd,1000);
+})();
+</script>
+</body>
+</html>

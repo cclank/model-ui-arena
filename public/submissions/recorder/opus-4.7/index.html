@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>Voice Recorder</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro","Segoe UI",sans-serif;
+    min-height:100vh;background:#0e1116;color:#e6ebf2;
+    display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .app{
+    width:100%;max-width:360px;background:linear-gradient(160deg,#161b24,#0e1116);
+    border-radius:28px;padding:28px 22px 26px;
+    box-shadow:0 30px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.05);
+  }
+  .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  .head h1{font-size:14px;letter-spacing:.2em;font-weight:600;color:#9aa6bc}
+  .badge{
+    display:flex;align-items:center;gap:6px;font-size:11px;color:#9aa6bc;
+    padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.06);
+  }
+  .dot{width:8px;height:8px;border-radius:50%;background:#5a6273;transition:.3s}
+  .app.rec .dot{background:#ff4d5e;animation:pulse 1.1s ease-in-out infinite}
+  .app.pause .dot{background:#f5b041}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,77,94,.6)}50%{box-shadow:0 0 0 10px rgba(255,77,94,0)}}
+  .timer{
+    font-variant-numeric:tabular-nums;font-size:56px;font-weight:700;
+    letter-spacing:.04em;text-align:center;margin:8px 0 16px;
+    text-shadow:0 0 24px rgba(138,182,255,.15);
+  }
+  .timer .ms{font-size:22px;color:#6b7690;margin-left:4px}
+  .wave{
+    height:120px;display:flex;align-items:center;justify-content:center;gap:3px;
+    padding:0 10px;margin:6px 0 22px;border-radius:18px;
+    background:linear-gradient(180deg,rgba(138,182,255,.06),rgba(138,182,255,0));
+    border:1px solid rgba(255,255,255,.04);overflow:hidden;
+  }
+  .bar{
+    width:3px;border-radius:2px;background:linear-gradient(180deg,#8ab6ff,#5c7fd1);
+    height:6px;transition:height .12s ease;opacity:.55;
+  }
+  .app.rec .bar{opacity:1}
+  .app.idle .bar{height:4px!important}
+  .controls{display:flex;justify-content:center;gap:18px;align-items:center;margin-top:8px}
+  button{
+    border:none;cursor:pointer;font-family:inherit;outline:none;color:#fff;
+    transition:transform .15s,box-shadow .2s,background .25s;
+  }
+  button:active{transform:scale(.94)}
+  .btn-main{
+    width:78px;height:78px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%,#ff6478,#d42a44);
+    box-shadow:0 10px 30px rgba(255,77,94,.4),inset 0 2px 4px rgba(255,255,255,.3);
+    font-size:22px;display:flex;align-items:center;justify-content:center;
+  }
+  .app.rec .btn-main{background:radial-gradient(circle at 30% 30%,#f5b041,#c97b10)}
+  .btn-side{
+    width:56px;height:56px;border-radius:50%;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+    color:#9aa6bc;font-size:18px;display:flex;align-items:center;justify-content:center;
+  }
+  .btn-side:disabled{opacity:.3;cursor:not-allowed}
+  .btn-main svg,.btn-side svg{width:22px;height:22px;fill:currentColor}
+  .summary{
+    margin-top:22px;padding:16px;border-radius:16px;
+    background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);
+    display:none;
+  }
+  .summary.show{display:block;animation:slide .4s ease}
+  @keyframes slide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .summary h2{font-size:12px;letter-spacing:.2em;color:#9aa6bc;margin-bottom:10px}
+  .summary .row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0}
+  .summary .row span:first-child{color:#6b7690}
+  .summary .row span:last-child{font-weight:600;font-variant-numeric:tabular-nums}
+  .hint{text-align:center;color:#6b7690;font-size:11px;margin-top:14px;letter-spacing:.15em}
+  .modal{
+    position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;
+    align-items:center;justify-content:center;padding:24px;z-index:10;
+    backdrop-filter:blur(4px);
+  }
+  .modal.show{display:flex}
+  .modal .card{
+    background:#1a1f2a;border-radius:18px;padding:22px;max-width:300px;width:100%;
+    border:1px solid rgba(255,255,255,.08);text-align:center;
+  }
+  .modal h3{font-size:15px;margin-bottom:6px}
+  .modal p{font-size:12px;color:#9aa6bc;margin-bottom:16px}
+  .modal .actions{display:flex;gap:10px}
+  .modal button{flex:1;padding:10px;border-radius:10px;font-size:13px;font-weight:600}
+  .btn-cancel{background:rgba(255,255,255,.06);color:#e6ebf2}
+  .btn-confirm{background:#ff4d5e;color:#fff}
+</style>
+</head>
+<body>
+<div class="app idle" id="app">
+  <div class="head">
+    <h1>RECORDER · 01</h1>
+    <div class="badge"><span class="dot"></span><span id="state">就绪</span></div>
+  </div>
+  <div class="timer"><span id="t">00:00</span><span class="ms" id="ms">.00</span></div>
+  <div class="wave" id="wave"></div>
+  <div class="controls">
+    <button class="btn-side" id="pauseBtn" disabled title="暂停/继续">⏸</button>
+    <button class="btn-main" id="mainBtn" title="开始/停止">●</button>
+    <button class="btn-side" id="stopBtn" disabled title="停止">■</button>
+  </div>
+  <div class="summary" id="summary">
+    <h2>录音摘要</h2>
+    <div class="row"><span>时长</span><span id="sDur">00:00</span></div>
+    <div class="row"><span>状态</span><span id="sStat">已保存</span></div>
+    <div class="row"><span>文件名</span><span id="sName">REC_001.wav</span></div>
+  </div>
+  <div class="hint">点击中央按钮开始录音</div>
+</div>
+<div class="modal" id="modal">
+  <div class="card">
+    <h3>停止录音？</h3>
+    <p>停止后将结束当前录制并生成摘要。</p>
+    <div class="actions">
+      <button class="btn-cancel" id="mNo">继续</button>
+      <button class="btn-confirm" id="mYes">停止</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  const app=document.getElementById('app'),mainBtn=document.getElementById('mainBtn');
+  const pauseBtn=document.getElementById('pauseBtn'),stopBtn=document.getElementById('stopBtn');
+  const tEl=document.getElementById('t'),msEl=document.getElementById('ms'),stEl=document.getElementById('state');
+  const waveEl=document.getElementById('wave'),summary=document.getElementById('summary');
+  const sDur=document.getElementById('sDur'),sStat=document.getElementById('sStat'),sName=document.getElementById('sName');
+  const modal=document.getElementById('modal'),mNo=document.getElementById('mNo'),mYes=document.getElementById('mYes');
+  const BARS=40,bars=[];
+  for(let i=0;i<BARS;i++){const b=document.createElement('div');b.className='bar';waveEl.appendChild(b);bars.push(b);}
+  let state='idle',startTs=0,elapsed=0,raf=0,count=1;
+  const pad=n=>String(n).padStart(2,'0');
+  function fmt(ms){const s=Math.floor(ms/1000);return pad(Math.floor(s/60))+':'+pad(s%60);}
+  function tick(){
+    const now=state==='rec'?(Date.now()-startTs+elapsed):elapsed;
+    tEl.textContent=fmt(now);
+    msEl.textContent='.'+pad(Math.floor((now%1000)/10));
+    if(state==='rec'){
+      const t=Date.now()/120;
+      bars.forEach((b,i)=>{
+        const v=Math.abs(Math.sin(t+i*.35))*Math.abs(Math.sin(t*.3+i*.08));
+        b.style.height=(6+v*100)+'px';
+      });
+    }
+    raf=requestAnimationFrame(tick);
+  }
+  function setState(s){
+    state=s;app.className='app '+s;
+    stEl.textContent={idle:'就绪',rec:'录音中',pause:'已暂停'}[s];
+    pauseBtn.disabled=s==='idle';stopBtn.disabled=s==='idle';
+    pauseBtn.textContent=s==='pause'?'▶':'⏸';
+    mainBtn.innerHTML=s==='idle'?'●':'■';
+  }
+  mainBtn.addEventListener('click',()=>{
+    if(state==='idle'){
+      summary.classList.remove('show');elapsed=0;startTs=Date.now();setState('rec');tick();
+    }else{modal.classList.add('show');}
+  });
+  pauseBtn.addEventListener('click',()=>{
+    if(state==='rec'){elapsed+=Date.now()-startTs;setState('pause');}
+    else if(state==='pause'){startTs=Date.now();setState('rec');}
+  });
+  stopBtn.addEventListener('click',()=>modal.classList.add('show'));
+  mNo.addEventListener('click',()=>modal.classList.remove('show'));
+  mYes.addEventListener('click',()=>{
+    modal.classList.remove('show');
+    const total=state==='rec'?(Date.now()-startTs+elapsed):elapsed;
+    cancelAnimationFrame(raf);setState('idle');
+    sDur.textContent=fmt(total);sStat.textContent='已保存';
+    sName.textContent='REC_'+pad(count++)+'.wav';
+    summary.classList.add('show');bars.forEach(b=>b.style.height='4px');
+    tEl.textContent='00:00';msEl.textContent='.00';elapsed=0;
+  });
+})();
+</script>
+</body>
+</html>

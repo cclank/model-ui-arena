@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>Weather Card</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro","Segoe UI",sans-serif;
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+    background:#0a0f18;color:#fff;transition:background 1s ease;
+  }
+  body.sun{background:linear-gradient(160deg,#ffb347 0%,#ff7b54 60%,#c94f3d 100%)}
+  body.rain{background:linear-gradient(160deg,#3e5871 0%,#2a3e56 60%,#1a2838 100%)}
+  body.cloud{background:linear-gradient(160deg,#9ba9bc 0%,#6b7a8f 60%,#3e4a5e 100%)}
+  body.snow{background:linear-gradient(160deg,#d8e3ef 0%,#a5b6cc 60%,#6b7b95 100%);color:#1a2838}
+  .card{
+    width:100%;max-width:340px;border-radius:26px;padding:22px;
+    background:rgba(255,255,255,.1);backdrop-filter:blur(18px);
+    border:1px solid rgba(255,255,255,.14);
+    box-shadow:0 20px 60px rgba(0,0,0,.25);position:relative;overflow:hidden;
+  }
+  .scene{
+    position:absolute;inset:0;pointer-events:none;opacity:.7;
+  }
+  .city-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px}
+  .city-row::-webkit-scrollbar{display:none}
+  .chip{
+    flex:0 0 auto;padding:7px 14px;border-radius:99px;font-size:12px;
+    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12);
+    cursor:pointer;white-space:nowrap;transition:.25s;color:inherit;
+  }
+  .chip:hover{background:rgba(255,255,255,.2)}
+  .chip.active{background:rgba(255,255,255,.95);color:#1a2838;font-weight:600;border-color:transparent}
+  .hero{display:flex;align-items:center;justify-content:space-between;margin:6px 0 18px;position:relative;z-index:2}
+  .hero .left .loc{font-size:18px;font-weight:600;letter-spacing:.04em}
+  .hero .left .desc{font-size:12px;opacity:.8;margin-top:4px}
+  .hero .left .time{font-size:11px;opacity:.6;margin-top:2px;letter-spacing:.1em}
+  .temp{font-size:72px;font-weight:200;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+  .temp sup{font-size:24px;font-weight:400;vertical-align:top;margin-left:2px}
+  .stats{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:10px;position:relative;z-index:2;
+    padding:12px;border-radius:14px;background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.08);margin-bottom:14px;
+  }
+  .stat{text-align:center}
+  .stat .k{font-size:10px;opacity:.7;letter-spacing:.15em;text-transform:uppercase}
+  .stat .v{font-size:16px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
+  .trend{position:relative;z-index:2;margin-top:4px}
+  .trend .lbl{font-size:11px;opacity:.7;letter-spacing:.15em;margin-bottom:8px;text-transform:uppercase}
+  .chart{height:72px;width:100%}
+  .chart path.line{fill:none;stroke:rgba(255,255,255,.9);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .chart path.fill{fill:rgba(255,255,255,.18);stroke:none}
+  .chart text{font-size:9px;fill:rgba(255,255,255,.7)}
+  body.snow .chart path.line{stroke:#1a2838}
+  body.snow .chart path.fill{fill:rgba(26,40,56,.18)}
+  body.snow .chart text{fill:rgba(26,40,56,.6)}
+  .sun-disk{position:absolute;top:40px;right:-40px;width:160px;height:160px;border-radius:50%;
+    background:radial-gradient(circle,#fff5c2,#ffbe55 60%,transparent 70%);
+    filter:blur(2px);animation:sway 6s ease-in-out infinite}
+  @keyframes sway{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  .cloud-shape{position:absolute;background:rgba(255,255,255,.35);border-radius:50%;
+    filter:blur(6px);animation:drift 18s linear infinite}
+  @keyframes drift{from{transform:translateX(-20%)}to{transform:translateX(120%)}}
+  .rain-drop{position:absolute;width:1.5px;height:14px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.7));
+    animation:fall 1s linear infinite}
+  @keyframes fall{from{transform:translateY(-20px)}to{transform:translateY(320px)}}
+  .flake{position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.9);
+    animation:float 5s linear infinite}
+  @keyframes float{from{transform:translateY(-20px) translateX(0)}to{transform:translateY(340px) translateX(30px)}}
+</style>
+</head>
+<body class="sun">
+<div class="card">
+  <div class="scene" id="scene"></div>
+  <div class="city-row" id="cities"></div>
+  <div class="hero">
+    <div class="left">
+      <div class="loc" id="loc">—</div>
+      <div class="desc" id="desc">—</div>
+      <div class="time" id="time">—</div>
+    </div>
+    <div class="temp"><span id="t">--</span><sup>°C</sup></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="k">风速</div><div class="v"><span id="w">-</span> km/h</div></div>
+    <div class="stat"><div class="k">湿度</div><div class="v"><span id="h">-</span>%</div></div>
+    <div class="stat"><div class="k">体感</div><div class="v"><span id="f">-</span>°</div></div>
+  </div>
+  <div class="trend">
+    <div class="lbl">未来 6 天趋势</div>
+    <svg class="chart" id="chart" viewBox="0 0 300 80" preserveAspectRatio="none"></svg>
+  </div>
+</div>
+<script>
+(function(){
+  const data=[
+    {id:'bj',name:'北京',desc:'晴',kind:'sun',t:24,w:12,h:38,f:25,trend:[22,24,27,26,23,21]},
+    {id:'sh',name:'上海',desc:'小雨',kind:'rain',t:19,w:18,h:82,f:18,trend:[20,19,18,17,19,21]},
+    {id:'cd',name:'成都',desc:'多云',kind:'cloud',t:21,w:8,h:68,f:21,trend:[19,21,22,20,18,17]},
+    {id:'hrb',name:'哈尔滨',desc:'小雪',kind:'snow',t:-3,w:14,h:76,f:-6,trend:[-4,-3,-2,-5,-7,-6]},
+  ];
+  const cities=document.getElementById('cities'),scene=document.getElementById('scene');
+  const loc=document.getElementById('loc'),desc=document.getElementById('desc'),timeEl=document.getElementById('time');
+  const tEl=document.getElementById('t'),wEl=document.getElementById('w'),hEl=document.getElementById('h'),fEl=document.getElementById('f');
+  const chart=document.getElementById('chart');
+  data.forEach(c=>{
+    const b=document.createElement('button');b.className='chip';b.textContent=c.name;
+    b.onclick=()=>select(c.id);cities.appendChild(b);b.dataset.id=c.id;
+  });
+  function buildScene(kind){
+    scene.innerHTML='';
+    if(kind==='sun'){
+      scene.innerHTML='<div class="sun-disk"></div>';
+    }else if(kind==='rain'){
+      for(let i=0;i<28;i++){
+        const d=document.createElement('div');d.className='rain-drop';
+        d.style.left=Math.random()*100+'%';d.style.top=Math.random()*100+'%';
+        d.style.animationDelay=-Math.random()*1+'s';
+        d.style.animationDuration=(.6+Math.random()*.7)+'s';scene.appendChild(d);
+      }
+    }else if(kind==='cloud'){
+      for(let i=0;i<3;i++){
+        const c=document.createElement('div');c.className='cloud-shape';
+        const sz=80+Math.random()*80;c.style.width=sz+'px';c.style.height=(sz*.45)+'px';
+        c.style.top=(20+Math.random()*60)+'%';c.style.animationDelay=-Math.random()*18+'s';
+        c.style.animationDuration=(14+Math.random()*10)+'s';scene.appendChild(c);
+      }
+    }else if(kind==='snow'){
+      for(let i=0;i<30;i++){
+        const d=document.createElement('div');d.className='flake';
+        d.style.left=Math.random()*100+'%';d.style.top=Math.random()*100+'%';
+        d.style.animationDelay=-Math.random()*5+'s';
+        d.style.animationDuration=(3+Math.random()*4)+'s';scene.appendChild(d);
+      }
+    }
+  }
+  function drawChart(trend){
+    const W=300,H=80,pad=12,max=Math.max(...trend),min=Math.min(...trend),rng=Math.max(1,max-min);
+    const pts=trend.map((v,i)=>{
+      const x=pad+(i*(W-pad*2))/(trend.length-1);
+      const y=H-12-((v-min)/rng)*(H-36);return[x,y,v];
+    });
+    const line=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+    const fill=line+` L ${W-pad} ${H-4} L ${pad} ${H-4} Z`;
+    let svg=`<path class="fill" d="${fill}"/><path class="line" d="${line}"/>`;
+    pts.forEach(p=>{svg+=`<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="currentColor" opacity=".9"/>`;
+      svg+=`<text x="${p[0]}" y="${p[1]-6}" text-anchor="middle">${p[2]}°</text>`;});
+    chart.innerHTML=svg;
+  }
+  function select(id){
+    const c=data.find(x=>x.id===id);if(!c)return;
+    document.body.className=c.kind;
+    document.querySelectorAll('.chip').forEach(el=>el.classList.toggle('active',el.dataset.id===id));
+    loc.textContent=c.name;desc.textContent=c.desc;
+    const now=new Date(),pad=n=>String(n).padStart(2,'0');
+    timeEl.textContent=`${pad(now.getHours())}:${pad(now.getMinutes())} · 本地`;
+    animateNum(tEl,c.t);wEl.textContent=c.w;hEl.textContent=c.h;
+    animateNum(fEl,c.f);buildScene(c.kind);drawChart(c.trend);
+  }
+  function animateNum(el,target){
+    const start=parseFloat(el.textContent)||0,dur=480,t0=performance.now();
+    function step(t){const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);
+      el.textContent=Math.round(start+(target-start)*e);if(p<1)requestAnimationFrame(step);}
+    requestAnimationFrame(step);
+  }
+  select('bj');
+})();
+</script>
+</body>
+</html>

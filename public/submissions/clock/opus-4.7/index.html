@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>Aurora Clock</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg1:#0b1026;--bg2:#1a2044;--accent:#8ab6ff;--ink:#e8eeff;
+    --mute:rgba(232,238,255,.55);--ring:rgba(232,238,255,.08);
+    --tick:rgba(232,238,255,.35);--glow:rgba(138,182,255,.35);
+  }
+  body.day{
+    --bg1:#f6efe3;--bg2:#ffd6a3;--accent:#ff7a59;--ink:#2a1d12;
+    --mute:rgba(42,29,18,.6);--ring:rgba(42,29,18,.08);
+    --tick:rgba(42,29,18,.35);--glow:rgba(255,122,89,.3);
+  }
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro","Segoe UI",sans-serif;
+    min-height:100vh;color:var(--ink);
+    background:radial-gradient(ellipse at top,var(--bg2),var(--bg1) 65%);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:24px;transition:background 1.2s ease,color 1.2s ease;
+    overflow:hidden;
+  }
+  .stage{position:relative;width:min(86vw,330px);aspect-ratio:1}
+  .halo{
+    position:absolute;inset:-18%;border-radius:50%;
+    background:radial-gradient(circle,var(--glow) 0%,transparent 62%);
+    filter:blur(8px);animation:breathe 4.2s ease-in-out infinite;
+    pointer-events:none;
+  }
+  @keyframes breathe{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.08);opacity:1}}
+  .dial{
+    position:absolute;inset:0;border-radius:50%;
+    background:
+      radial-gradient(circle at 50% 48%,transparent 58%,var(--ring) 59%,transparent 60%),
+      radial-gradient(circle at 30% 25%,rgba(255,255,255,.08),transparent 45%),
+      linear-gradient(145deg,rgba(255,255,255,.04),rgba(0,0,0,.15));
+    box-shadow:0 30px 60px rgba(0,0,0,.35),
+      inset 0 0 0 1px var(--ring),
+      inset 0 2px 20px rgba(255,255,255,.06);
+    backdrop-filter:blur(10px);
+  }
+  .ticks{position:absolute;inset:0}
+  .tick{
+    position:absolute;left:50%;top:6%;width:2px;height:10px;
+    background:var(--tick);transform-origin:50% calc(50vw);
+    border-radius:2px;
+  }
+  .tick.major{height:16px;width:3px;background:var(--ink);opacity:.75}
+  .num{
+    position:absolute;left:50%;top:50%;font-size:13px;font-weight:600;
+    letter-spacing:.05em;color:var(--mute);transform-origin:0 0;
+  }
+  .hand{
+    position:absolute;left:50%;top:50%;transform-origin:50% 100%;
+    border-radius:6px;background:var(--ink);
+    transition:transform .3s cubic-bezier(.2,1.7,.4,1);
+  }
+  .h-hour{width:6px;height:26%;margin-left:-3px;margin-top:-26%;opacity:.95}
+  .h-min{width:4px;height:36%;margin-left:-2px;margin-top:-36%;opacity:.85}
+  .h-sec{width:2px;height:42%;margin-left:-1px;margin-top:-42%;background:var(--accent);
+    box-shadow:0 0 12px var(--glow);transition:transform .15s cubic-bezier(.2,1.9,.4,1);}
+  .pin{
+    position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;
+    border-radius:50%;background:var(--ink);
+    box-shadow:0 0 0 3px var(--bg1),0 0 0 4px var(--accent);
+  }
+  .digital{
+    margin-top:28px;text-align:center;
+  }
+  .digital .time{
+    font-variant-numeric:tabular-nums;font-size:36px;font-weight:700;
+    letter-spacing:.06em;line-height:1;
+    text-shadow:0 0 22px var(--glow);
+  }
+  .digital .time .sep{opacity:.45;animation:blink 1s steps(2) infinite}
+  @keyframes blink{50%{opacity:.15}}
+  .digital .meta{
+    margin-top:8px;font-size:12px;color:var(--mute);letter-spacing:.18em;
+    text-transform:uppercase;
+  }
+  .mode{
+    position:fixed;top:16px;right:16px;font-size:11px;letter-spacing:.2em;
+    padding:6px 10px;border:1px solid var(--ring);border-radius:99px;
+    color:var(--mute);background:rgba(255,255,255,.02);backdrop-filter:blur(6px);
+  }
+  .stars{position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:0;transition:opacity 1s}
+  body.night .stars{opacity:.9}
+  .star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;
+    animation:tw 3s ease-in-out infinite}
+  @keyframes tw{0%,100%{opacity:.2}50%{opacity:.9}}
+</style>
+</head>
+<body>
+<div class="mode" id="mode">— —</div>
+<div class="stars" id="stars"></div>
+<div class="stage">
+  <div class="halo"></div>
+  <div class="dial"></div>
+  <div class="ticks" id="ticks"></div>
+  <div class="hand h-hour" id="hh"></div>
+  <div class="hand h-min" id="mh"></div>
+  <div class="hand h-sec" id="sh"></div>
+  <div class="pin"></div>
+</div>
+<div class="digital">
+  <div class="time" id="time">
+    <span id="H">00</span><span class="sep">:</span><span id="M">00</span><span class="sep">:</span><span id="S">00</span>
+  </div>
+  <div class="meta" id="date">— —</div>
+</div>
+<script>
+(function(){
+  const ticks=document.getElementById('ticks');
+  for(let i=0;i<60;i++){
+    const t=document.createElement('div');
+    t.className='tick'+(i%5===0?' major':'');
+    t.style.transform=`translateX(-50%) rotate(${i*6}deg)`;
+    ticks.appendChild(t);
+  }
+  for(let i=1;i<=12;i++){
+    const n=document.createElement('div');
+    n.className='num';n.textContent=i;
+    const a=(i*30-90)*Math.PI/180,r=42;
+    const x=Math.cos(a)*r,y=Math.sin(a)*r;
+    n.style.transform=`translate(calc(${x}% - 50%),calc(${y}% - 50%))`;
+    ticks.appendChild(n);
+  }
+  const stars=document.getElementById('stars');
+  for(let i=0;i<36;i++){
+    const s=document.createElement('div');s.className='star';
+    s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';
+    s.style.animationDelay=(Math.random()*3)+'s';
+    s.style.opacity=.3+Math.random()*.7;stars.appendChild(s);
+  }
+  const hh=document.getElementById('hh'),mh=document.getElementById('mh'),sh=document.getElementById('sh');
+  const H=document.getElementById('H'),M=document.getElementById('M'),S=document.getElementById('S');
+  const dEl=document.getElementById('date'),mode=document.getElementById('mode');
+  const pad=n=>String(n).padStart(2,'0');
+  const days=['周日','周一','周二','周三','周四','周五','周六'];
+  let lastKey='';
+  function tick(){
+    const d=new Date();
+    const ms=d.getMilliseconds(),ss=d.getSeconds()+ms/1000;
+    const mm=d.getMinutes()+ss/60,hr=(d.getHours()%12)+mm/60;
+    sh.style.transform=`rotate(${ss*6}deg)`;
+    mh.style.transform=`rotate(${mm*6}deg)`;
+    hh.style.transform=`rotate(${hr*30}deg)`;
+    H.textContent=pad(d.getHours());M.textContent=pad(d.getMinutes());S.textContent=pad(d.getSeconds());
+    const key=d.toDateString()+d.getHours();
+    if(key!==lastKey){
+      lastKey=key;
+      dEl.textContent=`${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())} · ${days[d.getDay()]}`;
+      const h=d.getHours(),isDay=h>=6&&h<18;
+      document.body.classList.toggle('day',isDay);
+      document.body.classList.toggle('night',!isDay);
+      mode.textContent=isDay?'DAYLIGHT':'NIGHTFALL';
+    }
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+</script>
+</body>
+</html>
