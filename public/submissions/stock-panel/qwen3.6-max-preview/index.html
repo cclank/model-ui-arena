@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Stock Panel</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0e17;color:#e6edf3;font-family:'Segoe UI',system-ui,sans-serif;
+  display:flex;justify-content:center;min-height:100vh;padding:16px}
+.panel{width:min(95vw,420px)}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.header h1{font-size:1rem;font-weight:500;letter-spacing:1px}
+.header .time{font-size:.75rem;opacity:.4}
+.stock{background:#161b22;border-radius:14px;padding:16px;margin-bottom:10px;
+  border:1px solid #21262d;transition:border-color .3s}
+.stock:hover{border-color:#30363d}
+.stock-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.name{font-weight:600;font-size:.95rem}
+.code{font-size:.7rem;opacity:.4;margin-left:6px}
+.price{font-size:1.5rem;font-weight:300;font-variant-numeric:tabular-nums}
+.change{font-size:.85rem;font-weight:600;padding:3px 8px;border-radius:6px;margin-left:8px}
+.up{color:#3fb950}.up .change{background:rgba(63,185,80,.15);color:#3fb950}
+.down{color:#f85149}.down .change{background:rgba(248,81,73,.15);color:#f85149}
+.meta{display:flex;gap:12px;font-size:.7rem;opacity:.4;margin-top:6px}
+.chart{height:40px;margin-top:10px;position:relative}
+.chart svg{width:100%;height:100%}
+.flash{animation:flash .5s}
+@keyframes flash{0%{opacity:1}50%{opacity:.5}100%{opacity:1}}
+.risk{background:rgba(248,81,73,.08);border:1px solid rgba(248,81,73,.2);
+  border-radius:8px;padding:8px 12px;font-size:.7rem;color:#f85149;margin-top:12px;
+  display:flex;align-items:center;gap:6px}
+</style>
+</head>
+<body>
+<div class="panel">
+  <div class="header">
+    <h1>📊 股票监控</h1>
+    <span class="time" id="clock"></span>
+  </div>
+  <div id="stocks"></div>
+  <div class="risk">⚠️ 模拟数据，仅供展示，不构成投资建议</div>
+</div>
+<script>
+const stocks=[
+  {name:'贵州茅台',code:'600519',price:1785.50,base:1785,vol:3},
+  {name:'腾讯控股',code:'00700',price:412.80,base:412,vol:2.5},
+  {name:'宁德时代',code:'300750',price:198.30,base:198,vol:4},
+  {name:'比亚迪',code:'002594',price:285.60,base:285,vol:3.5},
+  {name:'阿里巴巴',code:'BABA',price:128.40,base:128,vol:2}
+];
+function genChart(base,vol,n=20){
+  let p=base,data=[];
+  for(let i=0;i<n;i++){p+=(Math.random()-.5)*vol;data.push(p)}
+  return data;
+}
+function renderChart(data,up){
+  const min=Math.min(...data),max=Math.max(...data),range=max-min||1;
+  const w=100,h=40;
+  const pts=data.map((v,i)=>`${(i/(data.length-1))*w},${h-((v-min)/range)*h*0.8-h*0.1}`).join(' ');
+  const color=up?'#3fb950':'#f85149';
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>
+    <polyline points="${pts} ${w},${h} 0,${h}" fill="${color}" opacity=".08"/>
+  </svg>`;
+}
+function render(){
+  const container=document.getElementById('stocks');
+  container.innerHTML='';
+  stocks.forEach((s,i)=>{
+    const change=s.price-s.base;
+    const pct=(change/s.base*100).toFixed(2);
+    const up=change>=0;
+    const chart=genChart(s.base,s.vol);
+    const div=document.createElement('div');
+    div.className='stock';div.id='s'+i;
+    div.innerHTML=`<div class="stock-top">
+      <span><span class="name">${s.name}</span><span class="code">${s.code}</span></span>
+      <span class="${up?'up':'down'}"><span class="price">${s.price.toFixed(2)}</span>
+      <span class="change">${up?'+':''}${change.toFixed(2)} (${up?'+':''}${pct}%)</span></span>
+    </div>
+    <div class="meta"><span>最高 ${(s.base+s.vol*1.5).toFixed(2)}</span><span>最低 ${(s.base-s.vol*1.5).toFixed(2)}</span><span>成交量 ${(Math.random()*500+100).toFixed(0)}万</span></div>
+    <div class="chart">${renderChart(chart,up)}</div>`;
+    container.appendChild(div);
+  });
+}
+render();
+setInterval(()=>{
+  stocks.forEach(s=>{s.price+=(Math.random()-.5)*s.vol*0.3;s.price=Math.round(s.price*100)/100});
+  render();
+  document.querySelectorAll('.stock').forEach(el=>el.classList.add('flash'));
+  setTimeout(()=>document.querySelectorAll('.stock').forEach(el=>el.classList.remove('flash')),500);
+},3000);
+setInterval(()=>{
+  const now=new Date();
+  document.getElementById('clock').textContent=now.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+},1000);
+</script>
+</body>
+</html>

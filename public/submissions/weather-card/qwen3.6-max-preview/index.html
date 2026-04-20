@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Weather Card</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{display:flex;justify-content:center;align-items:center;min-height:100vh;
+  font-family:'Segoe UI',system-ui,sans-serif;transition:background 1s}
+body.sunny{background:linear-gradient(135deg,#f6d365,#fda085)}
+body.rainy{background:linear-gradient(135deg,#667eea,#764ba2)}
+body.cloudy{background:linear-gradient(135deg,#89959b,#bdc3c7)}
+body.snowy{background:linear-gradient(135deg,#e6e9f0,#eef1f5)}
+.card{background:rgba(255,255,255,.18);backdrop-filter:blur(20px);
+  border-radius:24px;padding:28px 24px;width:min(90vw,360px);
+  box-shadow:0 8px 32px rgba(0,0,0,.15);color:#fff}
+.tabs{display:flex;gap:6px;margin-bottom:20px}
+.tab{flex:1;padding:8px 0;border-radius:10px;border:none;background:rgba(255,255,255,.15);
+  color:#fff;font-size:.8rem;cursor:pointer;transition:all .3s}
+.tab.active{background:rgba(255,255,255,.35);font-weight:600}
+.icon{font-size:3.5rem;text-align:center;margin:8px 0;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.temp{text-align:center;font-size:3.2rem;font-weight:200;letter-spacing:-2px}
+.desc{text-align:center;font-size:.95rem;opacity:.85;margin-bottom:16px}
+.details{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.detail{background:rgba(255,255,255,.12);border-radius:12px;padding:10px;text-align:center}
+.detail .label{font-size:.7rem;opacity:.6;display:block;margin-bottom:2px}
+.detail .val{font-size:1rem;font-weight:500}
+.trend{background:rgba(255,255,255,.1);border-radius:12px;padding:12px}
+.trend h3{font-size:.75rem;opacity:.6;margin-bottom:8px;font-weight:400}
+.trend-bars{display:flex;align-items:flex-end;gap:4px;height:50px}
+.trend-bar{flex:1;border-radius:4px 4px 0 0;background:rgba(255,255,255,.4);
+  transition:height .5s ease;position:relative}
+.trend-bar span{position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);
+  font-size:.55rem;opacity:.5}
+.rain-drop{position:absolute;width:2px;height:8px;background:rgba(255,255,255,.4);
+  border-radius:0 0 2px 2px;animation:drop 1.5s linear infinite}
+@keyframes drop{from{top:-10px;opacity:1}to{top:100%;opacity:0}}
+</style>
+</head>
+<body class="sunny">
+<div class="card">
+  <div class="tabs">
+    <button class="tab active" data-city="beijing">北京</button>
+    <button class="tab" data-city="shanghai">上海</button>
+    <button class="tab" data-city="shenzhen">深圳</button>
+    <button class="tab" data-city="harbin">哈尔滨</button>
+  </div>
+  <div class="icon" id="icon">☀️</div>
+  <div class="temp" id="temp">28°</div>
+  <div class="desc" id="desc">晴朗</div>
+  <div class="details">
+    <div class="detail"><span class="label">风速</span><span class="val" id="wind">3 m/s</span></div>
+    <div class="detail"><span class="label">湿度</span><span class="val" id="humid">45%</span></div>
+    <div class="detail"><span class="label">体感</span><span class="val" id="feels">30°</span></div>
+    <div class="detail"><span class="label">紫外线</span><span class="val" id="uv">强</span></div>
+  </div>
+  <div class="trend">
+    <h3>未来 6 小时温度趋势</h3>
+    <div class="trend-bars" id="trendBars"></div>
+  </div>
+</div>
+<script>
+const data={
+  beijing:{weather:'sunny',icon:'☀️',temp:28,desc:'晴朗',wind:'3 m/s',humid:'45%',feels:'30°',uv:'强',trend:[27,28,29,30,29,27]},
+  shanghai:{weather:'rainy',icon:'🌧️',temp:22,desc:'中雨',wind:'5 m/s',humid:'82%',feels:'20°',uv:'弱',trend:[22,21,21,20,20,19]},
+  shenzhen:{weather:'cloudy',icon:'⛅',temp:30,desc:'多云',wind:'2 m/s',humid:'65%',feels:'33°',uv:'中',trend:[30,31,31,30,29,28]},
+  harbin:{weather:'snowy',icon:'🌨️',temp:-5,desc:'小雪',wind:'4 m/s',humid:'78%',feels:'-10°',uv:'弱',trend:[-5,-6,-7,-8,-7,-6]}
+};
+const tabs=document.querySelectorAll('.tab');
+const trendBars=document.getElementById('trendBars');
+function render(city){
+  const d=data[city];
+  document.body.className=d.weather;
+  document.getElementById('icon').textContent=d.icon;
+  document.getElementById('temp').textContent=d.temp+'°';
+  document.getElementById('desc').textContent=d.desc;
+  document.getElementById('wind').textContent=d.wind;
+  document.getElementById('humid').textContent=d.humid;
+  document.getElementById('feels').textContent=d.feels;
+  document.getElementById('uv').textContent=d.uv;
+  const max=Math.max(...d.trend),min=Math.min(...d.trend),range=max-min||1;
+  trendBars.innerHTML='';
+  const labels=['+1h','+2h','+3h','+4h','+5h','+6h'];
+  d.trend.forEach((t,i)=>{
+    const h=10+((t-min)/range)*40;
+    const bar=document.createElement('div');
+    bar.className='trend-bar';bar.style.height=h+'%';
+    bar.innerHTML=`<span>${labels[i]}</span>`;
+    trendBars.appendChild(bar);
+  });
+}
+tabs.forEach(tab=>tab.addEventListener('click',()=>{
+  tabs.forEach(t=>t.classList.remove('active'));
+  tab.classList.add('active');
+  render(tab.dataset.city);
+}));
+render('beijing');
+</script>
+</body>
+</html>

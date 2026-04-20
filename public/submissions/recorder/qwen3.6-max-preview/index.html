@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Recorder</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{display:flex;justify-content:center;align-items:center;min-height:100vh;
+  background:#0d1117;color:#e6edf3;font-family:'Segoe UI',system-ui,sans-serif}
+.card{background:#161b22;border-radius:20px;padding:32px 28px;width:min(90vw,380px);
+  box-shadow:0 8px 40px rgba(0,0,0,.4);text-align:center}
+h1{font-size:1.1rem;font-weight:400;letter-spacing:2px;margin-bottom:24px;opacity:.7}
+.wave-box{height:80px;display:flex;align-items:center;justify-content:center;gap:2px;margin-bottom:20px}
+.bar{width:3px;border-radius:3px;background:linear-gradient(180deg,#f97316,#ef4444);
+  transition:height .1s ease;height:6px}
+.bar.active{animation:pulse .6s ease-in-out infinite alternate}
+@keyframes pulse{from{height:8px}to{height:var(--h)}}
+.timer{font-size:2.4rem;font-weight:300;font-variant-numeric:tabular-nums;
+  letter-spacing:3px;margin-bottom:6px}
+.status{font-size:.8rem;opacity:.5;margin-bottom:24px;min-height:1.2em}
+.btns{display:flex;gap:12px;justify-content:center;margin-bottom:20px}
+.btn{width:56px;height:56px;border-radius:50%;border:2px solid #30363d;
+  background:transparent;color:#e6edf3;font-size:1.3rem;cursor:pointer;
+  transition:all .2s;display:flex;align-items:center;justify-content:center}
+.btn:hover{border-color:#58a6ff;background:rgba(88,166,255,.1)}
+.btn:active{transform:scale(.93)}
+.btn.rec{border-color:#ef4444;color:#ef4444}
+.btn.rec.on{background:#ef4444;color:#fff;animation:glow 1.5s infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}
+  50%{box-shadow:0 0 0 10px rgba(239,68,68,0)}}
+.btn:disabled{opacity:.25;cursor:not-allowed}
+.summary{background:#0d1117;border-radius:12px;padding:16px;font-size:.85rem;
+  text-align:left;opacity:0;transition:opacity .4s;min-height:60px}
+.summary.show{opacity:1}
+.summary .row{display:flex;justify-content:space-between;padding:4px 0}
+.summary .label{opacity:.5}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:#ef4444;margin-right:6px;vertical-align:middle}
+.dot.green{background:#3fb950}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🎙 RECORDER</h1>
+  <div class="wave-box" id="wave"></div>
+  <div class="timer" id="timer">00:00</div>
+  <div class="status" id="status">就绪</div>
+  <div class="btns">
+    <button class="btn rec" id="btnStart" title="开始">⏺</button>
+    <button class="btn" id="btnPause" disabled title="暂停">⏸</button>
+    <button class="btn" id="btnStop" disabled title="停止">⏹</button>
+  </div>
+  <div class="summary" id="summary"></div>
+</div>
+<script>
+const bars=[];const wave=document.getElementById('wave');
+for(let i=0;i<40;i++){const b=document.createElement('div');b.className='bar';wave.appendChild(b);bars.push(b)}
+let state='idle',elapsed=0,interval=null,animId=null;
+const timer=document.getElementById('timer'),status=document.getElementById('status');
+const btnStart=document.getElementById('btnStart'),btnPause=document.getElementById('btnPause'),btnStop=document.getElementById('btnStop');
+const summary=document.getElementById('summary');
+function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function animateBars(){
+  bars.forEach(b=>{
+    const h=6+Math.random()*50;
+    b.style.height=h+'px';
+    b.style.setProperty('--h',h+'px');
+    b.classList.add('active');
+  });
+  animId=requestAnimationFrame(()=>setTimeout(animateBars,100));
+}
+function stopBars(){bars.forEach(b=>{b.style.height='6px';b.classList.remove('active')});cancelAnimationFrame(animId)}
+function tick(){elapsed++;timer.textContent=fmt(elapsed)}
+function setState(s){
+  state=s;
+  btnStart.disabled=s==='recording'||s==='paused';
+  btnPause.disabled=s!=='recording';
+  btnStop.disabled=s==='idle';
+  btnStart.classList.toggle('on',s==='recording');
+  if(s==='recording'){status.textContent='● 录音中…';animateBars()}
+  else if(s==='paused'){status.textContent='⏸ 已暂停';stopBars();clearInterval(interval)}
+  else if(s==='idle'){status.textContent='就绪';stopBars();clearInterval(interval)}
+}
+btnStart.onclick=()=>{
+  if(state==='idle'){elapsed=0;timer.textContent='00:00';summary.classList.remove('show');setState('recording');interval=setInterval(tick,1000)}
+};
+btnPause.onclick=()=>{
+  if(state==='recording')setState('paused');
+  else if(state==='paused'){setState('recording');interval=setInterval(tick,1000)}
+};
+btnStop.onclick=()=>{
+  if(state!=='idle'){
+    const finalTime=fmt(elapsed);
+    setState('idle');timer.textContent='00:00';
+    summary.innerHTML=`<div class="row"><span class="label">录音时长</span><span>${finalTime}</span></div>
+      <div class="row"><span class="label">状态</span><span><span class="dot green"></span>已完成</span></div>
+      <div class="row"><span class="label">片段</span><span>1 段</span></div>`;
+    summary.classList.add('show');
+  }
+};
+</script>
+</body>
+</html>
