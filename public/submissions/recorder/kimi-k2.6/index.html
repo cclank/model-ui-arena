@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>录音机</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d0d12;color:#e0e0e0;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.recorder{width:100%;max-width:390px;padding:32px 24px;display:flex;flex-direction:column;align-items:center;gap:28px}
+.status-dot{width:14px;height:14px;border-radius:50%;background:#555;transition:background .3s}
+.status-dot.rec{background:#ff3b30;animation:pulse .8s ease-in-out infinite alternate}
+.status-dot.pau{background:#ff9500;animation:blink 1s ease-in-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,59,48,.6)}100%{box-shadow:0 0 0 18px rgba(255,59,48,0)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.wave{display:flex;align-items:center;justify-content:center;gap:4px;height:64px}
+.wave span{display:block;width:4px;border-radius:2px;background:#ff3b30;transition:height .1s}
+.timer{font-size:52px;font-weight:200;letter-spacing:2px;font-variant-numeric:tabular-nums;color:#fff}
+.btns{display:flex;gap:16px;align-items:center}
+.btn{width:64px;height:64px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s,opacity .2s;font-size:22px}
+.btn:active{transform:scale(.92)}
+.btn:disabled{opacity:.25;pointer-events:none}
+.btn-rec{background:#ff3b30;color:#fff}
+.btn-pau{background:#ff9500;color:#fff;width:54px;height:54px;font-size:18px}
+.btn-stop{background:#555;color:#fff;width:54px;height:54px;font-size:18px}
+.label{font-size:11px;color:#888;margin-top:6px;text-align:center}
+.summary{background:rgba(255,255,255,.07);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:20px 24px;width:100%;display:flex;flex-direction:column;gap:8px;animation:slideUp .35s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.summary .row{display:flex;justify-content:space-between;font-size:15px}
+.summary .row span:first-child{color:#888}
+.summary .row span:last-child{color:#fff;font-weight:500}
+.summary .close{margin-top:10px;text-align:center;color:#ff9500;font-size:13px;cursor:pointer}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:10}
+.modal{background:#1a1a24;border-radius:16px;padding:28px 32px;text-align:center;display:flex;flex-direction:column;gap:16px;animation:slideUp .25s ease}
+.modal p{font-size:15px;color:#ccc}
+.modal-btns{display:flex;gap:12px;justify-content:center}
+.modal-btns button{padding:10px 28px;border-radius:10px;border:none;cursor:pointer;font-size:14px;font-weight:500}
+.m-cancel{background:#333;color:#ccc}
+.m-confirm{background:#ff3b30;color:#fff}
+</style>
+</head>
+<body>
+<div class="recorder">
+  <div class="status-dot" id="dot"></div>
+  <div class="wave" id="wave"></div>
+  <div class="timer" id="timer">00:00</div>
+  <div class="btns">
+    <button class="btn btn-pau" id="btnPau" disabled>⏸</button>
+    <button class="btn btn-rec" id="btnRec">⏺</button>
+    <button class="btn btn-stop" id="btnStop" disabled>⏹</button>
+  </div>
+  <div class="label" id="label">点击红色按钮开始录音</div>
+  <div id="summary"></div>
+</div>
+<script>
+let state='idle',elapsed=0,interval,bars=[];
+const $=id=>document.getElementById(id);
+const dot=$('dot'),timer=$('timer'),label=$('label'),summary=$('summary');
+const btnRec=$('btnRec'),btnPau=$('btnPau'),btnStop=$('btnStop');
+const wave=$('wave');
+// init 24 wave bars
+for(let i=0;i<24;i++){const s=document.createElement('span');s.style.height='6px';s.style.background='#444';wave.appendChild(s);bars.push(s)}
+function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function tick(){elapsed++;timer.textContent=fmt(elapsed)}
+function animate(){const t=Date.now();bars.forEach((b,i)=>{const h=state==='rec'?6+Math.abs(Math.sin(t/180+i*.45))*48:6;b.style.height=h+'px';b.style.background=state==='rec'?'#ff3b30':state==='pau'?'#ff9500':'#444'});if(state!=='idle')requestAnimationFrame(animate)}
+function rec(){state='rec';dot.className='status-dot rec';btnRec.disabled=true;btnPau.disabled=false;btnStop.disabled=false;label.textContent='录音中...';summary.innerHTML='';interval=setInterval(tick,1000);animate()}
+function pau(){if(state==='rec'){state='pau';dot.className='status-dot pau';clearInterval(interval);btnRec.disabled=false;btnPau.disabled=true;label.textContent='已暂停'}else if(state==='pau'){state='rec';dot.className='status-dot rec';interval=setInterval(tick,1000);btnRec.disabled=true;btnPau.disabled=false;label.textContent='录音中...';animate()}}
+function stop(){
+  const ov=document.createElement('div');ov.className='overlay';
+  ov.innerHTML=`<div class="modal"><p>确定停止录音吗？</p><div class="modal-btns"><button class="m-cancel">取消</button><button class="m-confirm">确认停止</button></div></div>`;
+  ov.querySelector('.m-cancel').onclick=()=>ov.remove();
+  ov.querySelector('.m-confirm').onclick=()=>{ov.remove();state='idle';dot.className='status-dot';clearInterval(interval);btnRec.disabled=false;btnPau.disabled=true;btnStop.disabled=true;label.textContent='录音已保存';
+  summary.innerHTML=`<div class="summary"><div class="row"><span>时长</span><span>${fmt(elapsed)}</span></div><div class="row"><span>状态</span><span>✅ 已保存</span></div><div class="close" onclick="this.parentElement.remove()">关闭</div></div>`;
+  elapsed=0;timer.textContent='00:00'};
+  document.body.appendChild(ov)}
+btnRec.onclick=rec;btnPau.onclick=pau;btnStop.onclick=stop;
+</script>
+</body>
+</html>

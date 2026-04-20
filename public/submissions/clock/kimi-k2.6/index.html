@@ -1,0 +1,62 @@
+<!DOCTYPE html><html lang="zh">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>呼吸时钟</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:-apple-system,"SF Pro","PingFang SC",sans-serif;transition:background 2s ease;color:var(--tc)}
+:root{--tc:#1a1a2e;--ac:#e94560;--sc:#533483;--bg1:#f5f0eb;--bg2:#e8e0d8}
+.night{--tc:#e8e8f0;--ac:#ff6b8a;--sc:#7b68ee;--bg1:#0f0c29;--bg2:#302b63}
+body{background:linear-gradient(145deg,var(--bg1),var(--bg2))}
+.face{position:relative;width:min(85vw,320px);aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,rgba(255,255,255,.12),transparent 65%),
+  radial-gradient(circle,var(--bg2),var(--bg1) 70%);
+  box-shadow:0 8px 40px rgba(0,0,0,.18),inset 0 2px 8px rgba(255,255,255,.06);transition:box-shadow 2s}
+.tick{position:absolute;left:50%;top:6%;width:2px;height:8%;transform-origin:50% 50%;transform:translateX(-50%)}
+.tick::after{content:'';display:block;width:100%;height:100%;border-radius:2px;
+  background:var(--tc);opacity:.35;transition:opacity .3s,box-shadow .3s}
+.tick.major::after{height:130%;opacity:.7;width:2.5px;margin-top:-15%}
+.tick.breathe::after{opacity:1;box-shadow:0 0 6px var(--ac)}
+.hnd{position:absolute;bottom:50%;left:50%;transform-origin:50% 100%;border-radius:4px;transition:transform .6s cubic-bezier(.4,2,.6,1)}
+.h{width:5px;height:24%;background:var(--tc);margin-left:-2.5px;z-index:3}
+.m{width:3.5px;height:33%;background:var(--tc);margin-left:-1.75px;z-index:4;opacity:.85}
+.s{width:1.5px;height:38%;background:var(--ac);margin-left:-.75px;z-index:5}
+.s::after{content:'';position:absolute;bottom:-22%;left:50%;transform:translateX(-50%);
+  width:6px;height:6px;border-radius:50%;background:var(--ac);box-shadow:0 0 10px var(--ac)}
+.center-dot{position:absolute;top:50%;left:50%;width:12px;height:12px;border-radius:50%;
+  background:var(--ac);transform:translate(-50%,-50%);z-index:6;box-shadow:0 0 8px var(--ac)}
+.digital{margin-top:28px;text-align:center}
+.time{font-size:clamp(32px,9vw,52px);font-weight:200;letter-spacing:4px;color:var(--tc)}
+.time .sep{opacity:.4;animation:pulse 1s infinite}
+.date{font-size:clamp(12px,3.2vw,16px);margin-top:6px;opacity:.5;letter-spacing:2px}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+</style></head>
+<body><div class="face" id="f">
+<div class="center-dot"></div>
+<div class="hnd h" id="hh"></div>
+<div class="hnd m" id="mm"></div>
+<div class="hnd s" id="ss"></div>
+</div>
+<div class="digital">
+<div class="time" id="dt"><span id="H">00</span><span class="sep">:</span><span id="M">00</span><span class="sep">:</span><span id="S">00</span></div>
+<div class="date" id="DD"></div></div>
+<script>
+const f=document.getElementById('f'),DN=['日','一','二','三','四','五','六'];
+for(let i=0;i<60;i++){const t=document.createElement('div');t.className='tick'+(i%5===0?' major':'');
+t.style.transform=`translateX(-50%) rotate(${i*6}deg)`;t.dataset.i=i;f.insertBefore(t,f.firstChild)}
+const pad=n=>String(n).padStart(2,'0');
+function tick(){const d=new Date(),h=d.getHours(),m=d.getMinutes(),s=d.getSeconds(),ms=d.getMilliseconds();
+const isN=h<6||h>=19;document.body.classList.toggle('night',isN);
+document.getElementById('H').textContent=pad(h);
+document.getElementById('M').textContent=pad(m);
+document.getElementById('S').textContent=pad(s);
+document.getElementById('DD').textContent=`${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())} 星期${DN[d.getDay()]}`;
+const sDeg=(s+ms/1000)*6,mDeg=(m+s/60)*6,hDeg=((h%12)+m/60)*30;
+document.getElementById('ss').style.transform=`rotate(${sDeg}deg)`;
+document.getElementById('mm').style.transform=`rotate(${mDeg}deg)`;
+document.getElementById('hh').style.transform=`rotate(${hDeg}deg)`;
+document.querySelectorAll('.tick').forEach(t=>{const ti=+t.dataset.i;
+t.classList.toggle('breathe',Math.abs(ti-(s%60))<=1||(ti===0&&(s%60)===59)||(ti===59&&(s%60)===0))});
+requestAnimationFrame(tick)}
+tick();
+</script></body></html>

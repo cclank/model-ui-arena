@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0e1a;display:flex;justify-content:center;align-items:center;height:100vh;font-family:system-ui,sans-serif}
+.panel{width:380px;background:#111827;border-radius:20px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.header h2{color:#e2e8f0;font-size:18px;font-weight:500}
+.live{color:#10b981;font-size:12px;display:flex;align-items:center;gap:6px}
+.live::before{content:'';width:7px;height:7px;background:#10b981;border-radius:50%;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.stock{padding:14px;background:#1e293b;border-radius:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;transition:0.2s}
+.stock:hover{background:#27354f}
+.info{flex:1}
+.code{color:#94a3b8;font-size:13px}
+.name{color:#e2e8f0;font-size:15px;margin-top:2px}
+.price{text-align:right}
+.current{color:#e2e8f0;font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+.change{font-size:13px;margin-top:3px;font-weight:500}
+.up{color:#10b981}
+.down{color:#ef4444}
+.chart{height:50px;margin-top:8px}
+.chart svg{width:100%;height:100%}
+.alert{margin-top:14px;padding:10px 14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:10px;color:#f87171;font-size:12px;display:none}
+.alert.show{display:block}
+.time{color:#475569;font-size:11px;text-align:center;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="panel">
+<div class="header">
+<h2>自选股</h2>
+<div class="live">实时</div>
+</div>
+<div id="stocks"></div>
+<div class="alert" id="alert">⚠️ 300888 波动异常，注意风险</div>
+<div class="time" id="time">--:--:--</div>
+</div>
+<script>
+const stocks=[
+{code:'600519',name:'贵州茅台',price:1688.00,prev:1675.50,data:[1650,1660,1670,1665,1675,1680,1688]},
+{code:'000858',name:'五粮液',price:142.30,prev:145.00,data:[145,144.5,144,143,143.5,142.8,142.3]},
+{code:'300888',name:'稳健医疗',price:35.60,prev:32.10,data:[32,33,34,33.5,34.5,35.2,35.6]}
+];
+function fmt(n){return n.toFixed(2);}
+function spark(arr,up){
+const w=100,h=40,min=Math.min(...arr)*0.998,max=Math.max(...arr)*1.002;
+const pts=arr.map((v,i)=>((i/(arr.length-1))*w)+','+((1-(v-min)/(max-min))*h)).join(' ');
+return'<svg viewBox="0 0 '+w+' '+h+'"><polyline points="'+pts+'" fill="none" stroke="'+(up?'#10b981':'#ef4444')+'" stroke-width="1.5"/></svg>';
+}
+function render(){
+const el=document.getElementById('stocks');
+let html='';
+stocks.forEach((s,i)=>{
+const diff=s.price-s.prev,pct=(diff/s.prev*100);
+const isUp=diff>=0;
+html+='<div class="stock"><div class="info"><div class="code">'+s.code+'</div><div class="name">'+s.name+'</div><div class="chart">'+spark(s.data,isUp)+'</div></div><div class="price"><div class="current">'+fmt(s.price)+'</div><div class="change '+(isUp?'up':'down')+'">'+(isUp?'+':'')+fmt(diff)+' ('+(isUp?'+':'')+fmt(pct)+'%)</div></div></div>';
+});
+el.innerHTML=html;
+const risky=stocks.find(s=>(s.price-s.prev)/s.prev>0.08);
+document.getElementById('alert').classList.toggle('show',!!risky);
+if(risky)document.getElementById('alert').textContent='⚠️ '+risky.code+' '+risky.name+' 涨幅超 8%，注意风险';
+}
+function update(){
+stocks.forEach(s=>{const noise=(Math.random()-0.48)*0.5;s.price=Math.max(0.01,s.price+noise);s.data.shift();s.data.push(s.price);});
+render();
+document.getElementById('time').textContent=new Date().toLocaleTimeString('zh-CN');
+}
+render();
+setInterval(update,2000);
+</script>
+</body>
+</html>
