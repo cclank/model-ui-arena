@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recorder</title>
+<style>
+:root{color-scheme:dark;--bg:#101214;--panel:#f3eee6;--ink:#16181a;--muted:#687178;--line:#d5cdc1;--red:#d84b4b;--green:#2b8a63;--blue:#326ddf}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:linear-gradient(145deg,#202529,#0b0d0f);font-family:Inter,system-ui,sans-serif;color:var(--ink)}
+.shell{width:min(820px,100%);padding:18px;display:grid;grid-template-columns:310px 1fr;gap:16px}
+.device,.list{background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 24px 60px #0008}
+.device{padding:20px;display:flex;flex-direction:column;gap:18px}
+.top{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:13px;text-transform:uppercase}
+.led{width:12px;height:12px;border-radius:50%;background:#8b969d;box-shadow:0 0 0 4px #0001}.recording .led{background:var(--red);box-shadow:0 0 18px var(--red)}
+.timer{font-size:56px;font-weight:800;letter-spacing:0;color:var(--ink)}
+canvas{width:100%;height:130px;background:#fffaf2;border:1px solid var(--line);border-radius:8px}
+.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+button{border:0;border-radius:8px;padding:12px 10px;font:700 14px Inter,system-ui,sans-serif;cursor:pointer;color:white}
+#rec{background:var(--red)}#pause{background:var(--blue)}#stop{background:#24282b}button:disabled{opacity:.45;cursor:not-allowed}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;color:var(--muted);font-size:13px}
+.meta b{display:block;color:var(--ink);font-size:18px;margin-top:3px}
+.list{padding:18px;color:var(--ink);min-height:420px}
+h1{font-size:22px;margin:0 0 12px}.hint{color:var(--muted);font-size:14px;margin-bottom:16px}
+.take{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border-top:1px solid var(--line);padding:12px 0}
+.take span{color:var(--muted);font-size:13px}.take button{background:#222;color:white;padding:8px 10px}
+audio{grid-column:1/3;width:100%;height:34px}
+@media(max-width:690px){.shell{grid-template-columns:1fr;padding:12px}.timer{font-size:46px}.list{min-height:auto}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <section class="device" id="device">
+    <div class="top"><span>Field recorder</span><i class="led"></i></div>
+    <div class="timer" id="timer">00:00</div>
+    <canvas id="scope" width="640" height="260" aria-label="audio waveform"></canvas>
+    <div class="controls">
+      <button id="rec">Record</button>
+      <button id="pause" disabled>Pause</button>
+      <button id="stop" disabled>Stop</button>
+    </div>
+    <div class="meta">
+      <div>Input<b id="input">Ready</b></div>
+      <div>Level<b id="level">0%</b></div>
+    </div>
+  </section>
+  <section class="list">
+    <h1>Recordings</h1>
+    <div class="hint">Start a take. If microphone access is unavailable, the deck records a silent timed take for review.</div>
+    <div id="takes"></div>
+  </section>
+</main>
+<script>
+const $=id=>document.getElementById(id), ctx=$("scope").getContext("2d");
+let media,recorder,chunks=[],start=0,elapsed=0,paused=false,anim=0,stream=null,analyser=null,data=null;
+function draw(){
+  const w=640,h=260;ctx.clearRect(0,0,w,h);ctx.fillStyle="#fffaf2";ctx.fillRect(0,0,w,h);ctx.strokeStyle="#25313a";ctx.lineWidth=3;ctx.beginPath();
+  let amp=0;
+  if(analyser){analyser.getByteTimeDomainData(data)}
+  for(let x=0;x<w;x++){
+    const v=analyser?(data[Math.floor(x/w*data.length)]-128)/128:Math.sin((x+elapsed*7)/18)*(.2+Math.random()*.18);
+    amp+=Math.abs(v);const y=h/2+v*h*.35;(x?ctx.lineTo(x,y):ctx.moveTo(x,y));
+  }
+  ctx.stroke();const pct=Math.min(100,Math.round(amp/w*120));$("level").textContent=pct+"%";
+  if(start&&!paused){elapsed=(Date.now()-start)/1000;$("timer").textContent=fmt(elapsed)}
+  anim=requestAnimationFrame(draw);
+}
+const fmt=s=>`${String(Math.floor(s/60)).padStart(2,"0")}:${String(Math.floor(s%60)).padStart(2,"0")}`;
+async function begin(){
+  chunks=[];elapsed=0;paused=false;$("device").classList.add("recording");$("rec").disabled=true;$("pause").disabled=false;$("stop").disabled=false;$("input").textContent="Listening";start=Date.now();
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    media=new AudioContext();const src=media.createMediaStreamSource(stream);analyser=media.createAnalyser();analyser.fftSize=1024;data=new Uint8Array(analyser.frequencyBinCount);src.connect(analyser);
+    recorder=new MediaRecorder(stream);recorder.ondataavailable=e=>chunks.push(e.data);recorder.start();$("input").textContent="Mic";
+  }catch(e){$("input").textContent="Fallback";recorder=null}
+}
+function finish(){
+  $("device").classList.remove("recording");$("rec").disabled=false;$("pause").disabled=true;$("stop").disabled=true;
+  if(recorder&&recorder.state!=="inactive")recorder.stop();
+  if(stream)stream.getTracks().forEach(t=>t.stop());
+  const blob=chunks.length?new Blob(chunks,{type:"audio/webm"}):new Blob([new Uint8Array(Math.max(1,elapsed*800))],{type:"audio/webm"});
+  const row=document.createElement("div");row.className="take";row.innerHTML=`<div><b>Take ${takes.children.length+1}</b><span>${fmt(elapsed)} duration</span></div><button>Save</button><audio controls src="${URL.createObjectURL(blob)}"></audio>`;
+  takes.prepend(row);start=0;elapsed=0;$("timer").textContent="00:00";$("input").textContent="Ready";
+}
+$("rec").onclick=begin;$("stop").onclick=finish;$("pause").onclick=()=>{
+  paused=!paused;$("pause").textContent=paused?"Resume":"Pause";
+  if(recorder&&recorder.state==="recording")recorder.pause();else if(recorder&&recorder.state==="paused")recorder.resume();
+  if(!paused)start=Date.now()-elapsed*1000;
+};
+draw();
+</script>
+</body>
+</html>

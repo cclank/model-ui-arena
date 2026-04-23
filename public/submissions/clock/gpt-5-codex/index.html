@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clock</title>
+<style>
+:root{color-scheme:dark;--bg:#111315;--panel:#191d20;--line:#2e363b;--text:#edf2f4;--muted:#91a0a8;--accent:#f0b84a;--blue:#73b7ff}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 30% 20%,#27313a,var(--bg) 55%);font-family:Inter,system-ui,sans-serif;color:var(--text)}
+.app{width:min(860px,100%);padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.clock,.side{background:color-mix(in srgb,var(--panel) 94%,white 6%);border:1px solid var(--line);border-radius:8px;box-shadow:0 22px 70px #0008}
+.clock{aspect-ratio:1;position:relative;display:grid;place-items:center;overflow:hidden}
+.dial{position:absolute;inset:8%;border-radius:50%;border:1px solid #41505a;background:radial-gradient(circle,#20262a 0 55%,#171b1e 56%)}
+.tick{position:absolute;left:50%;top:50%;width:2px;height:46%;transform-origin:50% 0}
+.tick span{display:block;width:100%;height:10px;background:#c8d3d8;border-radius:4px;opacity:.5}
+.tick.big span{height:18px;background:var(--accent);opacity:1}
+.hand{position:absolute;left:50%;top:50%;transform-origin:50% 100%;border-radius:999px}
+.hour{width:8px;height:25%;margin-left:-4px;margin-top:-25%;background:#f5f0df}
+.minute{width:5px;height:34%;margin-left:-2.5px;margin-top:-34%;background:var(--blue)}
+.second{width:2px;height:38%;margin-left:-1px;margin-top:-38%;background:#ff6d6d}
+.pin{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 6px #0006}
+.side{padding:22px;display:flex;flex-direction:column;gap:18px;justify-content:space-between}
+.time{font-size:clamp(42px,8vw,76px);font-weight:800;letter-spacing:0}
+.date{color:var(--muted);font-size:15px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+button{border:1px solid var(--line);background:#22292e;color:var(--text);border-radius:8px;padding:10px 12px;font:inherit;cursor:pointer}
+button.active{border-color:var(--accent);background:#3a2f1b}
+.meters{display:grid;gap:10px}
+.meter{display:grid;grid-template-columns:72px 1fr 46px;gap:10px;align-items:center;color:var(--muted);font-size:13px}
+.bar{height:8px;border-radius:999px;background:#2a3237;overflow:hidden}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--blue))}
+@media(max-width:640px){.app{grid-template-columns:1fr;padding:14px}.side{padding:16px}.clock{min-height:330px}.meter{grid-template-columns:64px 1fr 40px}}
+</style>
+</head>
+<body>
+<main class="app">
+  <section class="clock" aria-label="analog clock">
+    <div class="dial" id="dial"></div>
+    <div class="hand hour" id="hour"></div>
+    <div class="hand minute" id="minute"></div>
+    <div class="hand second" id="second"></div>
+    <div class="pin"></div>
+  </section>
+  <section class="side">
+    <div>
+      <div class="date" id="zone">Local time</div>
+      <div class="time" id="time">00:00:00</div>
+      <div class="date" id="date">Loading</div>
+    </div>
+    <div class="row">
+      <button id="fmt" class="active">24 hour</button>
+      <button data-zone="local" class="zone active">Local</button>
+      <button data-zone="UTC" class="zone">UTC</button>
+      <button data-zone="Asia/Shanghai" class="zone">Shanghai</button>
+    </div>
+    <div class="meters">
+      <div class="meter"><span>Day</span><div class="bar"><i id="day"></i></div><b id="dayPct">0%</b></div>
+      <div class="meter"><span>Hour</span><div class="bar"><i id="hr"></i></div><b id="hrPct">0%</b></div>
+      <div class="meter"><span>Minute</span><div class="bar"><i id="min"></i></div><b id="minPct">0%</b></div>
+    </div>
+  </section>
+</main>
+<script>
+const dial=document.getElementById("dial");
+for(let i=0;i<60;i++){
+  const t=document.createElement("i");
+  t.className="tick"+(i%5===0?" big":"");
+  t.style.transform=`rotate(${i*6}deg)`;
+  t.innerHTML="<span></span>";
+  dial.appendChild(t);
+}
+const state={zone:"local",hour24:true};
+const pad=n=>String(n).padStart(2,"0");
+const parts=(date,zone)=>{
+  const opts={hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false};
+  if(zone!=="local")opts.timeZone=zone;
+  const arr=new Intl.DateTimeFormat("en-GB",opts).formatToParts(date);
+  return Object.fromEntries(arr.filter(x=>x.type!=="literal").map(x=>[x.type,+x.value]));
+};
+function tick(){
+  const now=new Date(), p=parts(now,state.zone);
+  const sec=p.second, min=p.minute+sec/60, hr=(p.hour%12)+min/60;
+  hour.style.transform=`rotate(${hr*30}deg)`;
+  minute.style.transform=`rotate(${min*6}deg)`;
+  second.style.transform=`rotate(${sec*6}deg)`;
+  let h=p.hour, suffix="";
+  if(!state.hour24){suffix=h>=12?" PM":" AM";h=h%12||12}
+  time.textContent=`${pad(h)}:${pad(p.minute)}:${pad(p.second)}${suffix}`;
+  const fmt={weekday:"long",month:"long",day:"numeric",year:"numeric"};
+  if(state.zone!=="local")fmt.timeZone=state.zone;
+  date.textContent=new Intl.DateTimeFormat("en-US",fmt).format(now);
+  zone.textContent=state.zone==="local"?"Local time":state.zone;
+  const dayProg=(p.hour*3600+p.minute*60+p.second)/86400;
+  const hrProg=(p.minute*60+p.second)/3600;
+  const minProg=p.second/60;
+  [[day,dayPct,dayProg],[hr,hrPct,hrProg],[min,minPct,minProg]].forEach(([bar,label,val])=>{bar.style.width=(val*100).toFixed(1)+"%";label.textContent=Math.round(val*100)+"%"});
+  requestAnimationFrame(()=>setTimeout(tick,250));
+}
+fmt.onclick=()=>{state.hour24=!state.hour24;fmt.textContent=state.hour24?"24 hour":"12 hour";fmt.classList.toggle("active",state.hour24)};
+document.querySelectorAll(".zone").forEach(b=>b.onclick=()=>{document.querySelectorAll(".zone").forEach(x=>x.classList.remove("active"));b.classList.add("active");state.zone=b.dataset.zone});
+tick();
+</script>
+</body>
+</html>

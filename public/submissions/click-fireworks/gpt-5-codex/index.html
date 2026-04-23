@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Click Fireworks</title>
+<style>
+:root{color-scheme:dark;--panel:#12161de6;--line:#2d3745;--text:#eef4ff;--muted:#93a4b8;--accent:#ffd166}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;overflow:hidden;background:#05070b;font-family:Inter,system-ui,sans-serif;color:var(--text)}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;background:radial-gradient(circle at 50% 35%,#172033,#05070b 68%)}
+.hud{position:fixed;left:18px;right:18px;top:18px;display:flex;justify-content:space-between;gap:12px;align-items:center;pointer-events:none}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;backdrop-filter:blur(10px);box-shadow:0 18px 50px #0008}
+h1{margin:0;font-size:18px}.sub{color:var(--muted);font-size:13px;margin-top:3px}
+.tools{display:flex;gap:8px;pointer-events:auto}button{border:1px solid var(--line);background:#1d2530;color:var(--text);border-radius:8px;padding:9px 11px;font:700 13px Inter,system-ui,sans-serif;cursor:pointer}button.active{border-color:var(--accent);background:#3a3018}
+.score{position:fixed;left:18px;bottom:18px;color:var(--muted);font-size:13px}.score b{color:var(--text)}
+@media(max-width:560px){.hud{top:12px;left:12px;right:12px;align-items:stretch;flex-direction:column}.tools{display:grid;grid-template-columns:repeat(3,1fr)}button{padding:10px 8px}.score{left:12px;bottom:12px}}
+</style>
+</head>
+<body>
+<canvas id="sky"></canvas>
+<div class="hud">
+  <div class="panel"><h1>Click Fireworks</h1><div class="sub">Click or tap anywhere in the sky</div></div>
+  <div class="tools">
+    <button id="burst" class="active">Burst</button>
+    <button id="willow">Willow</button>
+    <button id="clear">Clear</button>
+  </div>
+</div>
+<div class="score">bursts <b id="count">0</b> particles <b id="parts">0</b></div>
+<script>
+const canvas=document.getElementById("sky"),ctx=canvas.getContext("2d");
+let W=0,H=0,particles=[],rockets=[],mode="burst",bursts=0,hue=0;
+function size(){W=canvas.width=innerWidth*devicePixelRatio;H=canvas.height=innerHeight*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}
+addEventListener("resize",size);size();
+class P{
+  constructor(x,y,a,s,c,life,fall){this.x=x;this.y=y;this.vx=Math.cos(a)*s;this.vy=Math.sin(a)*s;this.c=c;this.life=life;this.max=life;this.fall=fall;this.r=Math.random()*2+1}
+  step(){this.x+=this.vx;this.y+=this.vy;this.vx*=.985;this.vy=this.vy*.985+this.fall;this.life--;return this.life>0}
+  draw(){ctx.globalAlpha=Math.max(0,this.life/this.max);ctx.fillStyle=this.c;ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);ctx.fill()}
+}
+class R{
+  constructor(x,y){this.x=x;this.y=innerHeight+20;this.tx=x;this.ty=y;this.vy=-9-Math.random()*3;this.c=`hsl(${hue},95%,65%)`}
+  step(){this.y+=this.vy;particles.push(new P(this.x,this.y,Math.random()*6.28,Math.random()*1.2,this.c,24,.02));if(this.y<=this.ty){explode(this.tx,this.ty);return false}return true}
+  draw(){ctx.strokeStyle=this.c;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(this.x,this.y+16);ctx.lineTo(this.x,this.y);ctx.stroke()}
+}
+function explode(x,y){
+  bursts++;count.textContent=bursts;hue=(hue+37)%360;const total=mode==="willow"?140:92;
+  for(let i=0;i<total;i++){
+    const a=i/total*Math.PI*2+Math.random()*.08,s=(mode==="willow"?2.4:4.7)*(0.45+Math.random());
+    const light=mode==="willow"?`hsl(${42+Math.random()*18},95%,70%)`:`hsl(${hue+Math.random()*45},95%,65%)`;
+    particles.push(new P(x,y,a,s,light,mode==="willow"?150:86,mode==="willow"?.045:.028));
+  }
+}
+function launch(x,y){rockets.push(new R(x,y))}
+canvas.addEventListener("pointerdown",e=>{launch(e.clientX,e.clientY)});
+burst.onclick=()=>{mode="burst";burst.classList.add("active");willow.classList.remove("active")};
+willow.onclick=()=>{mode="willow";willow.classList.add("active");burst.classList.remove("active")};
+clear.onclick=()=>{particles=[];rockets=[]};
+function stars(){
+  ctx.fillStyle="#ffffff";
+  for(let i=0;i<70;i++){const x=(i*97%innerWidth),y=(i*53%innerHeight);ctx.globalAlpha=.15+(i%5)*.09;ctx.fillRect(x,y,1.4,1.4)}
+  ctx.globalAlpha=1;
+}
+function loop(){
+  ctx.globalCompositeOperation="source-over";ctx.fillStyle="rgba(5,7,11,.26)";ctx.fillRect(0,0,innerWidth,innerHeight);stars();
+  ctx.globalCompositeOperation="lighter";rockets=rockets.filter(r=>{r.draw();return r.step()});particles=particles.filter(p=>{p.draw();return p.step()});parts.textContent=particles.length;
+  requestAnimationFrame(loop);
+}
+setTimeout(()=>launch(innerWidth*.5,innerHeight*.36),400);loop();
+</script>
+</body>
+</html>

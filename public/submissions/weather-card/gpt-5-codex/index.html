@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weather Card</title>
+<style>
+:root{color-scheme:light;--sky:#cfe9ff;--ink:#16212a;--muted:#5b6c78;--card:#fffdf8;--line:#d9e2e7;--sun:#f7b733;--rain:#377dc5}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:linear-gradient(160deg,#8fc7ff,#e9f6ff 52%,#f7efe1);font-family:Inter,system-ui,sans-serif;color:var(--ink)}
+.card{width:min(760px,100%);margin:0;padding:22px;border-radius:8px;background:rgba(255,253,248,.9);border:1px solid var(--line);box-shadow:0 28px 70px #33515d42;display:grid;grid-template-columns:1.05fr .95fr;gap:20px;overflow:hidden}
+.hero{position:relative;min-height:360px;border-radius:8px;background:linear-gradient(#7ec8ff,#e8f6ff);padding:22px;overflow:hidden}
+.city{font-weight:800;font-size:28px}.sub{color:var(--muted);font-size:14px;margin-top:4px}
+.temp{position:absolute;left:22px;bottom:24px;font-size:92px;font-weight:900;line-height:.9}
+.temp small{font-size:28px}.condition{position:absolute;right:22px;bottom:30px;text-align:right;font-weight:700}
+.sun{position:absolute;right:34px;top:46px;width:96px;height:96px;border-radius:50%;background:var(--sun);box-shadow:0 0 0 22px #f7b73333,0 0 70px #f7b733}
+.cloud{position:absolute;left:44%;top:36%;width:170px;height:62px;background:white;border-radius:999px;box-shadow:0 22px 45px #54728538}
+.cloud:before,.cloud:after{content:"";position:absolute;border-radius:50%;background:white}.cloud:before{width:82px;height:82px;left:24px;top:-36px}.cloud:after{width:64px;height:64px;right:28px;top:-24px}
+.rain{position:absolute;left:52%;top:55%;display:flex;gap:16px}.rain i{width:3px;height:34px;background:var(--rain);border-radius:4px;animation:fall 1s linear infinite}.rain i:nth-child(2){animation-delay:.2s}.rain i:nth-child(3){animation-delay:.4s}
+@keyframes fall{from{transform:translateY(-8px);opacity:0}45%{opacity:1}to{transform:translateY(26px);opacity:0}}
+.panel{display:flex;flex-direction:column;gap:14px}
+.unit{display:flex;gap:8px;justify-content:flex-end}button{border:1px solid var(--line);background:white;border-radius:8px;padding:8px 10px;font:700 14px Inter,system-ui,sans-serif;cursor:pointer}button.active{background:#16212a;color:white}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.metric{border:1px solid var(--line);border-radius:8px;padding:14px;background:white}.metric span{color:var(--muted);font-size:13px}.metric b{display:block;font-size:24px;margin-top:6px}
+.hours{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.hour{background:#f6f9fb;border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center}.hour b{display:block;margin:7px 0;font-size:20px}.dot{width:28px;height:28px;border-radius:50%;margin:auto;background:linear-gradient(135deg,var(--sun) 45%,#fff 46%)}
+.note{border-left:4px solid var(--rain);padding:12px;background:#eef7ff;border-radius:0 8px 8px 0;color:#234}
+@media(max-width:680px){.card{grid-template-columns:1fr;padding:12px}.hero{min-height:310px}.temp{font-size:72px}.hours{grid-template-columns:repeat(2,1fr)}.cloud{left:34%;transform:scale(.82)}}
+</style>
+</head>
+<body>
+<main class="card">
+  <section class="hero">
+    <div class="city">San Francisco</div>
+    <div class="sub" id="stamp">Updated just now</div>
+    <div class="sun"></div><div class="cloud"></div><div class="rain"><i></i><i></i><i></i></div>
+    <div class="temp"><span id="temp">64</span><small id="unitMark">F</small></div>
+    <div class="condition">Sun showers<br><span class="sub">Light west wind</span></div>
+  </section>
+  <section class="panel">
+    <div class="unit"><button id="f" class="active">F</button><button id="c">C</button></div>
+    <div class="grid">
+      <div class="metric"><span>Feels like</span><b id="feels">62 F</b></div>
+      <div class="metric"><span>Humidity</span><b>68%</b></div>
+      <div class="metric"><span>Wind</span><b id="wind">12 mph</b></div>
+      <div class="metric"><span>Rain chance</span><b>38%</b></div>
+    </div>
+    <div class="hours" id="hours"></div>
+    <div class="note">Best window for a walk is 3 PM to 5 PM, after the brief shower band clears.</div>
+  </section>
+</main>
+<script>
+const forecast=[["Now",64],["1 PM",65],["2 PM",63],["3 PM",66],["4 PM",67],["5 PM",65],["6 PM",61],["7 PM",59]];
+let metric=false;
+const cv=f=>metric?Math.round((f-32)*5/9):f;
+function render(){
+  temp.textContent=cv(64);unitMark.textContent=metric?"C":"F";feels.textContent=cv(62)+" "+unitMark.textContent;wind.textContent=metric?"19 kmh":"12 mph";
+  hours.innerHTML=forecast.slice(0,4).map(([t,v])=>`<div class="hour"><span>${t}</span><div class="dot"></div><b>${cv(v)}${unitMark.textContent}</b><span>${v>64?"clear":"shower"}</span></div>`).join("");
+  f.classList.toggle("active",!metric);c.classList.toggle("active",metric);
+  stamp.textContent="Updated "+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+}
+f.onclick=()=>{metric=false;render()};c.onclick=()=>{metric=true;render()};render();
+</script>
+</body>
+</html>

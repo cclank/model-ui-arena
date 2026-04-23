@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stock Panel</title>
+<style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--line:#2b343e;--text:#eef3f7;--muted:#8c9aa5;--green:#35c275;--red:#f25f5c;--amber:#e8b44b}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#0d1014;font-family:Inter,system-ui,sans-serif;color:var(--text);display:grid;place-items:center}
+.terminal{width:min(920px,100%);padding:18px;display:grid;grid-template-columns:250px 1fr;gap:14px}
+.watch,.main{background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:0 25px 70px #0007}
+.watch{padding:14px}.brand{font-size:13px;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+.ticker{display:grid;grid-template-columns:1fr auto;gap:4px;padding:12px;border-radius:8px;border:1px solid transparent;cursor:pointer}
+.ticker:hover,.ticker.active{background:#202832;border-color:#3a4652}.ticker b{font-size:15px}.ticker span{color:var(--muted);font-size:12px}.up{color:var(--green)}.down{color:var(--red)}
+.main{padding:18px;display:grid;gap:14px}.head{display:flex;justify-content:space-between;gap:12px;align-items:start}
+h1{font-size:38px;margin:0}.name{color:var(--muted);font-size:14px;margin-top:4px}
+.price{text-align:right;font-size:34px;font-weight:900}.chg{font-size:14px;margin-top:4px}
+canvas{width:100%;height:260px;background:#11171d;border:1px solid var(--line);border-radius:8px}
+.ranges{display:flex;gap:8px;flex-wrap:wrap}button{background:#222b34;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font:700 13px Inter,system-ui,sans-serif;cursor:pointer}button.active{border-color:var(--amber);background:#372d18}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{background:#11171d;border:1px solid var(--line);border-radius:8px;padding:12px}.stat span{color:var(--muted);font-size:12px}.stat b{display:block;font-size:18px;margin-top:5px}
+.news{display:grid;gap:8px}.news div{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding-top:10px;color:var(--muted);font-size:13px}.news b{color:var(--text)}
+@media(max-width:720px){.terminal{grid-template-columns:1fr;padding:12px}.watch{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.brand{grid-column:1/3}.head{flex-direction:column}.price{text-align:left}.stats{grid-template-columns:repeat(2,1fr)}h1{font-size:30px}}
+</style>
+</head>
+<body>
+<main class="terminal">
+  <aside class="watch">
+    <div class="brand">Watchlist</div>
+    <div id="list"></div>
+  </aside>
+  <section class="main">
+    <div class="head">
+      <div><h1 id="symbol">NVDA</h1><div class="name" id="company">NVIDIA Corp.</div></div>
+      <div class="price"><span id="price">$0.00</span><div class="chg" id="change">0.00%</div></div>
+    </div>
+    <canvas id="chart" width="900" height="300" aria-label="price sparkline"></canvas>
+    <div class="ranges"><button class="active">1D</button><button>1W</button><button>1M</button><button>1Y</button></div>
+    <div class="stats">
+      <div class="stat"><span>Open</span><b id="open"></b></div><div class="stat"><span>High</span><b id="high"></b></div>
+      <div class="stat"><span>Low</span><b id="low"></b></div><div class="stat"><span>Volume</span><b id="vol"></b></div>
+    </div>
+    <div class="news">
+      <div><b>AI chip demand keeps semiconductor tape firm</b><span>09:42</span></div>
+      <div><b>Indexes mixed as yields cool into afternoon session</b><span>10:15</span></div>
+    </div>
+  </section>
+</main>
+<script>
+const stocks=[
+{s:"NVDA",n:"NVIDIA Corp.",p:118.37,c:1.84,v:"54.2M"},
+{s:"AAPL",n:"Apple Inc.",p:193.12,c:-.42,v:"38.7M"},
+{s:"MSFT",n:"Microsoft",p:421.63,c:.76,v:"21.1M"},
+{s:"TSLA",n:"Tesla Inc.",p:247.80,c:-2.18,v:"88.4M"},
+{s:"SPY",n:"S&P 500 ETF",p:512.44,c:.31,v:"72.9M"}];
+let active=0,range=0,series=[];
+const money=x=>"$"+x.toFixed(2);
+function makeSeries(base,trend){
+  let v=base,a=[];for(let i=0;i<80;i++){v+=Math.sin(i/7+range)*trend*.06+(Math.random()-.48)*base*.006;a.push(v)}return a;
+}
+function draw(){
+  const c=chart.getContext("2d"),w=900,h=300,s=stocks[active];c.clearRect(0,0,w,h);c.fillStyle="#11171d";c.fillRect(0,0,w,h);
+  const min=Math.min(...series),max=Math.max(...series),pad=28;c.strokeStyle=s.c>=0?"#35c275":"#f25f5c";c.lineWidth=4;c.beginPath();
+  series.forEach((v,i)=>{const x=pad+i*(w-pad*2)/(series.length-1),y=h-pad-(v-min)/(max-min||1)*(h-pad*2);i?c.lineTo(x,y):c.moveTo(x,y)});
+  c.stroke();c.lineTo(w-pad,h-pad);c.lineTo(pad,h-pad);c.fillStyle=s.c>=0?"#35c27522":"#f25f5c22";c.fill();
+  c.strokeStyle="#2b343e";c.lineWidth=1;for(let i=1;i<4;i++){c.beginPath();c.moveTo(pad,i*h/4);c.lineTo(w-pad,i*h/4);c.stroke()}
+}
+function render(){
+  const s=stocks[active];series=makeSeries(s.p,s.c);symbol.textContent=s.s;company.textContent=s.n;price.textContent=money(s.p);change.textContent=(s.c>0?"+":"")+s.c.toFixed(2)+"%";change.className="chg "+(s.c>=0?"up":"down");
+  open.textContent=money(series[0]);high.textContent=money(Math.max(...series));low.textContent=money(Math.min(...series));vol.textContent=s.v;
+  list.innerHTML=stocks.map((x,i)=>`<div class="ticker ${i===active?"active":""}" data-i="${i}"><b>${x.s}</b><b class="${x.c>=0?"up":"down"}">${x.c>0?"+":""}${x.c}%</b><span>${x.n}</span><span>${money(x.p)}</span></div>`).join("");
+  document.querySelectorAll(".ticker").forEach(t=>t.onclick=()=>{active=+t.dataset.i;render()});draw();
+}
+document.querySelectorAll(".ranges button").forEach((b,i)=>b.onclick=()=>{range=i;document.querySelectorAll(".ranges button").forEach(x=>x.classList.remove("active"));b.classList.add("active");render()});
+setInterval(()=>{stocks.forEach(s=>{s.p+=s.p*(Math.random()-.48)*.002});render()},5000);render();
+</script>
+</body>
+</html>
