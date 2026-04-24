@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fireworks - DeepSeek V4 Pro</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; }
+body {
+  background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+  cursor: crosshair; font-family: 'Segoe UI', system-ui, sans-serif;
+}
+canvas { display: block; }
+
+.hint {
+  position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+  color: rgba(255,255,255,0.45); font-size: 0.9rem; letter-spacing: 2px;
+  pointer-events: none; animation: fadeHint 2s ease-in-out infinite;
+}
+@keyframes fadeHint { 0%,100% { opacity:0.3; } 50% { opacity:0.7; } }
+
+.counter {
+  position: fixed; top: 1rem; right: 1.5rem;
+  color: rgba(255,255,255,0.35); font-size: 0.8rem;
+  font-variant-numeric: tabular-nums; font-family: 'SF Mono', 'Fira Code', monospace;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hint">点击任意位置放烟花</div>
+<div class="counter" id="counter">0</div>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const counterEl = document.getElementById('counter');
+
+let W, H;
+const particles = [];
+const GRAVITY = 0.08;
+const MAX_PARTICLES = 4000;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+const palettes = [
+  ['#ff6b6b','#ff8787','#ffa8a8','#ffd43b','#ff922b'],
+  ['#748ffc','#91a7ff','#bac8ff','#cc5de8','#da77f2'],
+  ['#51cf66','#69db7c','#8ce99a','#ffd43b','#ffe066'],
+  ['#ff922b','#ffa94d','#ffc078','#ff6b6b','#ff8787'],
+  ['#20c997','#38d9a9','#63e6be','#339af0','#4dabf7'],
+  ['#f06595','#f783ac','#fcc2d7','#845ef7','#9775fa'],
+];
+
+const cache = [];
+function getCirclePath(r) {
+  if (r in cache) return cache[r];
+  const c = document.createElement('canvas');
+  c.width = c.height = r * 2 + 4;
+  const cx = c.getContext('2d');
+  cx.beginPath();
+  cx.arc(r + 2, r + 2, r, 0, Math.PI * 2);
+  cx.fill();
+  cache[r] = c;
+  return c;
+}
+
+function spawn(x, y) {
+  const palette = palettes[Math.floor(Math.random() * palettes.length)];
+  const count = 40 + Math.floor(Math.random() * 50);
+  const baseSpd = 2 + Math.random() * 5;
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.3;
+    const speed = baseSpd * (0.5 + Math.random() * 0.7);
+    const life = 40 + Math.random() * 45;
+    particles.push({
+      x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+      life, maxLife: life, color: palette[Math.floor(Math.random() * palette.length)],
+      size: 1.5 + Math.random() * 2.5, r: 0.8 + Math.random() * 1.8,
+    });
+  }
+  // Trail sparks
+  for (let i = 0; i < 12; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const spd = 1 + Math.random() * 2;
+    particles.push({
+      x: x + (Math.random()-0.5)*20, y: y + (Math.random()-0.5)*20,
+      vx: Math.cos(a)*spd, vy: Math.sin(a)*spd - 1,
+      life: 15 + Math.random() * 15, maxLife: 30, color: '#ffe066',
+      size: 1, r: 0.5 + Math.random(),
+    });
+  }
+
+  if (particles.length > MAX_PARTICLES) particles.splice(0, particles.length - MAX_PARTICLES);
+  counterEl.textContent = particles.length;
+}
+
+function update() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += GRAVITY;
+    p.vx *= 0.99;
+    p.vy *= 0.99;
+    p.life--;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+  counterEl.textContent = particles.length;
+}
+
+function draw() {
+  ctx.fillStyle = 'rgba(9,10,15,0.18)';
+  ctx.fillRect(0, 0, W, H);
+
+  for (const p of particles) {
+    const alpha = p.life / p.maxLife;
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = p.color;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 4 * alpha;
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * alpha + 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.shadowBlur = 0;
+
+  // Glow for bright particles
+  for (const p of particles) {
+    if (p.life / p.maxLife < 0.3) continue;
+    const alpha = (p.life / p.maxLife) * 0.25;
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * 3 * alpha, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+let animId;
+function loop() {
+  update();
+  draw();
+  animId = requestAnimationFrame(loop);
+}
+
+canvas.addEventListener('click', e => {
+  spawn(e.clientX, e.clientY);
+});
+
+// Touch support
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) spawn(t.clientX, t.clientY);
+}, { passive: false });
+
+loop();
+</script>
+</body>
+</html>

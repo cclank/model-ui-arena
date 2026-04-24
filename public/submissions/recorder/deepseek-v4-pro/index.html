@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recorder - DeepSeek V4 Pro</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  color: #e0e0e0;
+}
+
+.card {
+  width: 340px; padding: 2rem 1.5rem;
+  background: rgba(255,255,255,0.06);
+  border-radius: 20px;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex; flex-direction: column; align-items: center; gap: 1.5rem;
+}
+
+.header { display: flex; align-items: center; gap: 0.6rem; font-size: 1.2rem; font-weight: 600; letter-spacing: 2px; }
+
+/* Record indicator dot */
+.dot {
+  width: 12px; height: 12px; border-radius: 50%; background: #666;
+  transition: all 0.3s ease;
+}
+.dot.recording {
+  background: #ff4757;
+  box-shadow: 0 0 12px #ff4757;
+  animation: blink 0.8s ease-in-out infinite;
+}
+.dot.paused { background: #ffa502; box-shadow: 0 0 8px #ffa502; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* Timer */
+.timer {
+  font-size: 3rem; font-weight: 200; letter-spacing: 3px;
+  font-variant-numeric: tabular-nums; font-family: 'SF Mono', 'Fira Code', monospace;
+  color: #fff;
+}
+
+/* Waveform visualization */
+.wave-container {
+  width: 100%; height: 80px; display: flex; align-items: center; justify-content: center; gap: 3px;
+}
+.wave-bar {
+  width: 4px; background: #444; border-radius: 2px;
+  transition: height 0.15s ease, background 0.3s ease;
+}
+.wave-bar.active { background: #ff6b81; }
+.wave-bar.paused { background: #ffa502; }
+
+/* Summary */
+.summary {
+  width: 100%; padding: 0.8rem 1rem;
+  background: rgba(255,255,255,0.05); border-radius: 10px;
+  font-size: 0.85rem; color: #aaa; display: none; gap: 0.4rem; flex-direction: column;
+}
+.summary.visible { display: flex; }
+.summary strong { color: #fff; }
+
+/* Buttons */
+.controls { display: flex; gap: 0.8rem; }
+.btn {
+  padding: 0.6rem 1.4rem; border: none; border-radius: 25px;
+  font-size: 0.9rem; font-weight: 600; cursor: pointer; letter-spacing: 1px;
+  transition: all 0.2s ease; outline: none;
+}
+.btn-record { background: #ff4757; color: #fff; }
+.btn-record:hover { background: #ff3343; transform: translateY(-1px); }
+.btn-pause { background: #ffa502; color: #1a1a2e; }
+.btn-pause:hover { background: #ff9700; transform: translateY(-1px); }
+.btn-stop { background: rgba(255,255,255,0.15); color: #ccc; }
+.btn-stop:hover { background: rgba(255,255,255,0.25); transform: translateY(-1px); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+/* Confirm dialog */
+.confirm-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  display: none; align-items: center; justify-content: center; z-index: 100;
+}
+.confirm-overlay.show { display: flex; }
+.confirm-box {
+  background: #2a2a4a; padding: 1.5rem; border-radius: 16px;
+  text-align: center; gap: 1rem; display: flex; flex-direction: column;
+}
+.confirm-box p { color: #ccc; font-size: 0.95rem; }
+.confirm-btns { display: flex; gap: 0.6rem; justify-content: center; }
+.btn-cancel { background: rgba(255,255,255,0.1); color: #ccc; padding: 0.4rem 1.2rem; border-radius: 20px; border: none; cursor: pointer; }
+.btn-cancel:hover { background: rgba(255,255,255,0.2); }
+
+@media (max-width: 390px) {
+  .card { width: 100%; margin: 1rem; border-radius: 14px; }
+  .timer { font-size: 2.4rem; }
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="dot" id="dot"></div>
+    <span>RECORDER</span>
+  </div>
+  <div class="timer" id="timer">00:00</div>
+  <div class="wave-container" id="waves"></div>
+  <div class="controls">
+    <button class="btn btn-record" id="btnRec" onclick="startRec()">REC</button>
+    <button class="btn btn-pause" id="btnPause" onclick="togglePause()" disabled>PAUSE</button>
+    <button class="btn btn-stop" id="btnStop" onclick="requestStop()" disabled>STOP</button>
+  </div>
+  <div class="summary" id="summary">
+    <div><strong>时长：</strong><span id="sumDuration">-</span></div>
+    <div><strong>状态：</strong><span id="sumStatus">-</span></div>
+  </div>
+</div>
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <p>确认停止录音？已录内容将被保存。</p>
+    <div class="confirm-btns">
+      <button class="btn btn-stop" onclick="confirmStop()">确认停止</button>
+      <button class="btn-cancel" onclick="cancelStop()">取消</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const BAR_COUNT = 32;
+let state = 'idle'; // idle | recording | paused
+let elapsed = 0;
+let intervalId = null;
+let waveInterval = null;
+
+const dot = document.getElementById('dot');
+const timerEl = document.getElementById('timer');
+const wavesEl = document.getElementById('waves');
+const summaryEl = document.getElementById('summary');
+const btnRec = document.getElementById('btnRec');
+const btnPause = document.getElementById('btnPause');
+const btnStop = document.getElementById('btnStop');
+const overlay = document.getElementById('confirmOverlay');
+
+// Build wave bars
+for (let i = 0; i < BAR_COUNT; i++) {
+  const bar = document.createElement('div');
+  bar.className = 'wave-bar';
+  bar.style.height = '4px';
+  wavesEl.appendChild(bar);
+}
+const bars = wavesEl.querySelectorAll('.wave-bar');
+
+function fmtTime(sec) {
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function animateWave() {
+  bars.forEach((b, i) => {
+    const randH = state === 'recording'
+      ? Math.max(4, 4 + Math.random() * 64 + Math.sin(Date.now() / 150 + i * 0.4) * 20)
+      : state === 'paused' ? 6 + Math.sin(i) * 3 : 4;
+    b.style.height = `${randH}px`;
+  });
+}
+
+function setUI(s) {
+  state = s;
+  dot.className = 'dot';
+  bars.forEach(b => { b.className = 'wave-bar'; });
+  if (s === 'recording') { dot.classList.add('recording'); bars.forEach(b => b.classList.add('active')); }
+  else if (s === 'paused') { dot.classList.add('paused'); bars.forEach(b => b.classList.add('paused')); }
+
+  btnRec.disabled = s === 'recording';
+  btnPause.disabled = s === 'idle';
+  btnStop.disabled = s === 'idle';
+  btnPause.textContent = s === 'paused' ? 'RESUME' : 'PAUSE';
+}
+
+function startRec() {
+  if (state === 'idle') { elapsed = 0; timerEl.textContent = '00:00'; summaryEl.classList.remove('visible'); }
+  setUI('recording');
+  intervalId = setInterval(() => { elapsed++; timerEl.textContent = fmtTime(elapsed); }, 1000);
+  waveInterval = setInterval(animateWave, 120);
+}
+
+function togglePause() {
+  if (state === 'recording') {
+    clearInterval(intervalId); clearInterval(waveInterval);
+    setUI('paused');
+  } else if (state === 'paused') {
+    intervalId = setInterval(() => { elapsed++; timerEl.textContent = fmtTime(elapsed); }, 1000);
+    waveInterval = setInterval(animateWave, 120);
+    setUI('recording');
+  }
+}
+
+function requestStop() {
+  if (state === 'idle') return;
+  overlay.classList.add('show');
+}
+
+function confirmStop() {
+  overlay.classList.remove('show');
+  clearInterval(intervalId); clearInterval(waveInterval);
+  document.getElementById('sumDuration').textContent = fmtTime(elapsed);
+  document.getElementById('sumStatus').textContent = state === 'paused' ? '已暂停后停止' : '正常完成';
+  summaryEl.classList.add('visible');
+  setUI('idle');
+  timerEl.textContent = '00:00';
+  bars.forEach(b => { b.style.height = '4px'; });
+}
+
+function cancelStop() {
+  overlay.classList.remove('show');
+}
+</script>
+</body>
+</html>

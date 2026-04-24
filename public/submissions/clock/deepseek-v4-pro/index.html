@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clock - DeepSeek V4 Pro</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; transition: background 0.8s ease;
+}
+body.day { background: linear-gradient(135deg, #87CEEB 0%, #E0F7FA 50%, #F1F8E9 100%); }
+body.night { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+
+.container {
+  display: flex; flex-direction: column; align-items: center; gap: 2rem;
+  padding: 2rem;
+}
+
+/* Analog clock */
+.clock-face {
+  position: relative; width: 240px; height: 240px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(12px);
+  border: 3px solid rgba(255,255,255,0.3);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.15), inset 0 0 30px rgba(255,255,255,0.1);
+}
+.night .clock-face { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); }
+
+.hand {
+  position: absolute; bottom: 50%; left: 50%;
+  transform-origin: bottom center; border-radius: 4px;
+  transition: none;
+}
+.hand-hour {
+  width: 5px; height: 55px; margin-left: -2.5px;
+  background: #222; border-radius: 4px;
+}
+.hand-minute {
+  width: 3px; height: 80px; margin-left: -1.5px;
+  background: #444; border-radius: 3px;
+}
+.hand-second {
+  width: 1.5px; height: 90px; margin-left: -0.75px;
+  background: #e63946; border-radius: 2px;
+  transition: none;
+}
+.night .hand-hour { background: #eee; }
+.night .hand-minute { background: #ccc; }
+
+.center-dot {
+  position: absolute; top: 50%; left: 50%;
+  width: 12px; height: 12px; margin: -6px;
+  border-radius: 50%; background: #e63946;
+  box-shadow: 0 0 10px rgba(230,57,70,0.5); z-index: 10;
+}
+
+.tick {
+  position: absolute; top: 8px; left: 50%; margin-left: -0.5px;
+  width: 1px; height: 14px; background: currentColor;
+  transform-origin: 0px 112px; opacity: 0.4;
+}
+.tick.major { height: 22px; opacity: 0.8; width: 2px; margin-left: -1px; }
+.day .tick { color: #333; }
+.night .tick { color: #ccc; }
+
+/* Digital display */
+.digital {
+  font-size: 3rem; font-weight: 300; letter-spacing: 4px;
+  font-variant-numeric: tabular-nums; font-family: 'SF Mono', 'Fira Code', monospace;
+  text-align: center; line-height: 1;
+}
+.day .digital { color: #1a1a2e; }
+.night .digital { color: #e0e0e0; }
+
+.date-display {
+  font-size: 1rem; letter-spacing: 2px;
+  text-transform: uppercase; opacity: 0.7;
+}
+.day .date-display { color: #444; }
+.night .date-display { color: #aaa; }
+
+/* Breathing ring */
+.breath-ring {
+  position: absolute; top: -6px; left: -6px; right: -6px; bottom: -6px;
+  border-radius: 50%; border: 2px solid rgba(230,57,70,0.3);
+  animation: breathe 2s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.04); opacity: 0.7; }
+}
+
+@media (max-width: 390px) {
+  .clock-face { width: 180px; height: 180px; }
+  .hand-hour { height: 40px; }
+  .hand-minute { height: 58px; }
+  .hand-second { height: 66px; }
+  .digital { font-size: 2.2rem; }
+  .tick { transform-origin: 0px 82px; }
+}
+</style>
+</head>
+<body class="day">
+<div class="container">
+  <div class="clock-face" id="clockFace">
+    <div class="breath-ring"></div>
+    <div class="center-dot"></div>
+    <div class="hand hand-hour" id="handH"></div>
+    <div class="hand hand-minute" id="handM"></div>
+    <div class="hand hand-second" id="handS"></div>
+  </div>
+  <div>
+    <div class="digital" id="digital">00:00:00</div>
+    <div class="date-display" id="dateDisplay">---</div>
+  </div>
+</div>
+<script>
+const face = document.getElementById('clockFace');
+const hH = document.getElementById('handH');
+const hM = document.getElementById('handM');
+const hS = document.getElementById('handS');
+const digi = document.getElementById('digital');
+const dateEl = document.getElementById('dateDisplay');
+const body = document.body;
+
+// Create ticks
+for (let i = 0; i < 60; i++) {
+  const tick = document.createElement('div');
+  tick.className = i % 5 === 0 ? 'tick major' : 'tick';
+  tick.style.transform = `rotate(${i * 6}deg)`;
+  face.appendChild(tick);
+}
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function update() {
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+  const s = now.getSeconds();
+  const ms = now.getMilliseconds();
+
+  const secDeg = (s + ms / 1000) * 6;
+  const minDeg = (m + s / 60) * 6;
+  const hrDeg = ((h % 12) + m / 60) * 30;
+
+  hS.style.transform = `rotate(${secDeg}deg)`;
+  hM.style.transform = `rotate(${minDeg}deg)`;
+  hH.style.transform = `rotate(${hrDeg}deg)`;
+
+  digi.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+
+  const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  dateEl.textContent = `${days[now.getDay()]} · ${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())}`;
+
+  // Day/night switch
+  if (h >= 6 && h < 18 && body.classList.contains('night')) {
+    body.classList.replace('night', 'day');
+  } else if ((h < 6 || h >= 18) && body.classList.contains('day')) {
+    body.classList.replace('day', 'night');
+  }
+}
+update();
+setInterval(update, 200);
+</script>
+</body>
+</html>

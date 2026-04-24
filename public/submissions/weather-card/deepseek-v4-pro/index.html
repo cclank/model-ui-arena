@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather Card - DeepSeek V4 Pro</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; transition: background 0.6s ease;
+}
+body.sun { background: linear-gradient(150deg, #ff7e5f, #feb47b, #ffd89b); }
+body.rain { background: linear-gradient(150deg, #4e54c8, #8f94fb, #6c7290); }
+body.cloud { background: linear-gradient(150deg, #bdc3c7, #d9e4ea, #96a5b8); }
+body.snow { background: linear-gradient(150deg, #e6e9f0, #c9d6e2, #a3b5c9); }
+
+.card {
+  width: 340px; padding: 1.8rem;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow: 0 10px 50px rgba(0,0,0,0.12);
+  color: #fff; text-align: center;
+}
+
+/* City tabs */
+.tabs {
+  display: flex; gap: 0.3rem; margin-bottom: 1.2rem;
+  background: rgba(0,0,0,0.1); border-radius: 14px; padding: 4px;
+}
+.tab {
+  flex: 1; padding: 0.4rem 0; border: none; background: none;
+  color: rgba(255,255,255,0.65); font-size: 0.85rem; font-weight: 600;
+  cursor: pointer; border-radius: 11px; transition: all 0.25s ease;
+  letter-spacing: 0.5px;
+}
+.tab.active { background: rgba(255,255,255,0.25); color: #fff; }
+
+/* Main weather */
+.weather-icon { font-size: 4.5rem; line-height: 1.2; margin: 0.5rem 0; animation: float 3s ease-in-out infinite; }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+.temperature { font-size: 4rem; font-weight: 200; line-height: 1; letter-spacing: -2px; }
+
+.desc { font-size: 1.1rem; opacity: 0.85; margin: 0.3rem 0; letter-spacing: 1px; }
+
+/* Details grid */
+.details {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.6rem;
+  margin: 1.2rem 0; padding: 0.8rem;
+  background: rgba(255,255,255,0.1); border-radius: 14px;
+}
+.detail-item { text-align: center; }
+.detail-label { font-size: 0.7rem; opacity: 0.65; text-transform: uppercase; letter-spacing: 1px; }
+.detail-value { font-size: 1rem; font-weight: 600; margin-top: 2px; }
+
+/* Trend mini bars */
+.trend { display: flex; align-items: flex-end; justify-content: center; gap: 4px; height: 50px; padding-top: 0.5rem; }
+.trend-bar {
+  width: 10px; border-radius: 4px 4px 0 0;
+  background: rgba(255,255,255,0.5);
+  transition: height 0.4s ease;
+  animation: fadeUp 0.6s ease backwards;
+}
+.snow .trend-bar { background: rgba(255,255,255,0.7); }
+@keyframes fadeUp { from { height: 0; opacity: 0; } }
+
+/* Rain drops */
+.raindrops { position: fixed; inset: 0; pointer-events: none; overflow: hidden; display: none; }
+.rain .raindrops { display: block; }
+.drop {
+  position: absolute; top: -20px; width: 2px;
+  background: rgba(255,255,255,0.3); border-radius: 0 0 3px 3px;
+  animation: fall linear infinite;
+}
+@keyframes fall { to { transform: translateY(105vh); opacity: 0; } }
+
+@media (max-width: 390px) {
+  .card { width: 100%; margin: 0.6rem; border-radius: 18px; padding: 1.2rem; }
+  .temperature { font-size: 3rem; }
+  .weather-icon { font-size: 3.5rem; }
+}
+</style>
+</head>
+<body class="sun">
+<div class="card">
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-city="0">北京</button>
+    <button class="tab" data-city="1">上海</button>
+    <button class="tab" data-city="2">伦敦</button>
+  </div>
+  <div class="weather-icon" id="icon">☀️</div>
+  <div class="temperature" id="temp">32°</div>
+  <div class="desc" id="desc">晴朗</div>
+  <div class="details">
+    <div class="detail-item"><div class="detail-label">湿度</div><div class="detail-value" id="hum">35%</div></div>
+    <div class="detail-item"><div class="detail-label">风速</div><div class="detail-value" id="wind">12 km/h</div></div>
+    <div class="detail-item"><div class="detail-label">体感</div><div class="detail-value" id="feels">34°</div></div>
+  </div>
+  <div class="trend" id="trend"></div>
+</div>
+<div class="raindrops" id="raindrops"></div>
+
+<script>
+const data = [
+  { city:'北京', temp:32, desc:'晴朗', icon:'☀️', hum:'35%', wind:'12 km/h', feels:34, trend:[28,29,31,30,32,33,32], weather:'sun' },
+  { city:'上海', temp:24, desc:'小雨', icon:'🌧️', hum:'82%', wind:'18 km/h', feels:25, trend:[26,25,25,24,23,24,24], weather:'rain' },
+  { city:'伦敦', temp:12, desc:'多云', icon:'☁️', hum:'68%', wind:'22 km/h', feels:10, trend:[14,13,13,12,11,12,12], weather:'cloud' },
+];
+
+let currentIdx = 0;
+
+function renderRain() {
+  const container = document.getElementById('raindrops');
+  container.innerHTML = '';
+  const w = data[currentIdx].weather;
+  if (w !== 'rain') return;
+  for (let i = 0; i < 40; i++) {
+    const drop = document.createElement('div');
+    drop.className = 'drop';
+    drop.style.left = Math.random() * 100 + '%';
+    drop.style.height = (8 + Math.random() * 14) + 'px';
+    drop.style.animationDuration = (0.6 + Math.random() * 0.9) + 's';
+    drop.style.animationDelay = Math.random() * 2 + 's';
+    container.appendChild(drop);
+  }
+}
+
+function renderTrend(values) {
+  const container = document.getElementById('trend');
+  container.innerHTML = '';
+  const max = Math.max(...values);
+  values.forEach((v, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'trend-bar';
+    bar.style.height = `${(v / max) * 100}%`;
+    bar.style.animationDelay = `${i * 0.08}s`;
+    container.appendChild(bar);
+  });
+}
+
+function selectCity(idx) {
+  currentIdx = idx;
+  const d = data[idx];
+  document.getElementById('icon').textContent = d.icon;
+  document.getElementById('temp').textContent = d.temp + '°';
+  document.getElementById('desc').textContent = d.desc;
+  document.getElementById('hum').textContent = d.hum;
+  document.getElementById('wind').textContent = d.wind;
+  document.getElementById('feels').textContent = d.feels + '°';
+  document.body.className = d.weather;
+  renderTrend(d.trend);
+  renderRain();
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+}
+
+document.getElementById('tabs').addEventListener('click', e => {
+  if (e.target.classList.contains('tab')) selectCity(Number(e.target.dataset.city));
+});
+
+selectCity(0);
+</script>
+</body>
+</html>
