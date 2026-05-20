@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minimal Glassmorphic Clock</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      min-height: 100vh; font-family: system-ui, -apple-system, sans-serif;
+      transition: background 0.8s ease; overflow: hidden; color: #fff;
+    }
+    .day { background: linear-gradient(135deg, #e0eafc, #cfdef3); color: #2c3e50; }
+    .night { background: linear-gradient(135deg, #111827, #1f2937); color: #f3f4f6; }
+    .clock-container {
+      display: flex; flex-direction: column; align-items: center; gap: 24px;
+      padding: 30px; border-radius: 24px; width: 340px;
+      background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+      transition: all 0.5s ease;
+    }
+    .day .clock-container {
+      background: rgba(255, 255, 255, 0.45); border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 20px 50px rgba(31, 38, 135, 0.08);
+    }
+    .analog-clock {
+      position: relative; width: 200px; height: 200px;
+      border-radius: 50%; border: 3px solid currentColor; display: flex; justify-content: center; align-items: center;
+    }
+    .hand {
+      position: absolute; bottom: 50%; left: 50%; transform-origin: bottom;
+      border-radius: 4px; transition: transform 0.05s cubic-bezier(0.4, 2.08, 0.55, 1);
+    }
+    .hour-hand { width: 5px; height: 50px; background-color: currentColor; }
+    .minute-hand { width: 3.5px; height: 75px; background-color: currentColor; opacity: 0.8; }
+    .second-hand { width: 1.5px; height: 85px; background-color: #ff3b30; }
+    .center-dot {
+      position: absolute; width: 10px; height: 10px; border-radius: 50%; background-color: #ff3b30; z-index: 10;
+    }
+    .digital-time { font-size: 2.2rem; font-weight: 700; letter-spacing: 1px; }
+    .date-info { font-size: 0.95rem; opacity: 0.7; margin-top: -8px; font-weight: 500; }
+    .toggle-btn {
+      padding: 8px 16px; border-radius: 20px; border: none; cursor: pointer;
+      font-weight: 600; font-size: 0.85rem; background: currentColor; color: #111827;
+      transition: opacity 0.2s;
+    }
+    .day .toggle-btn { color: #fff; background: #2c3e50; }
+    .night .toggle-btn { color: #111827; background: #f3f4f6; }
+    .clock-mark {
+      position: absolute; width: 2px; height: 8px; background: currentColor; opacity: 0.4;
+    }
+  </style>
+</head>
+<body class="night">
+  <div class="clock-container">
+    <div class="analog-clock" id="analog">
+      <div class="center-dot"></div>
+      <div class="hand hour-hand" id="hour"></div>
+      <div class="hand minute-hand" id="minute"></div>
+      <div class="hand second-hand" id="second"></div>
+    </div>
+    <div class="digital-time" id="digital">00:00:00</div>
+    <div class="date-info" id="date">2026年5月20日</div>
+    <button class="toggle-btn" id="theme-toggle">切换日夜</button>
+  </div>
+  <script>
+    const hourHand = document.getElementById('hour');
+    const minHand = document.getElementById('minute');
+    const secHand = document.getElementById('second');
+    const digital = document.getElementById('digital');
+    const dateEl = document.getElementById('date');
+    const toggle = document.getElementById('theme-toggle');
+    const body = document.body;
+
+    const analog = document.getElementById('analog');
+    for (let i = 0; i < 12; i++) {
+      const mark = document.createElement('div');
+      mark.className = 'clock-mark';
+      mark.style.transform = `rotate(${i * 30}deg) translateY(-88px)`;
+      analog.appendChild(mark);
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const sec = now.getSeconds();
+      const min = now.getMinutes();
+      const hr = now.getHours();
+
+      const secDeg = (sec / 60) * 360;
+      const minDeg = (min / 60) * 360 + (sec / 60) * 6;
+      const hrDeg = (hr / 12) * 360 + (min / 60) * 30;
+
+      secHand.style.transform = `translateX(-50%) rotate(${secDeg}deg)`;
+      minHand.style.transform = `translateX(-50%) rotate(${minDeg}deg)`;
+      hourHand.style.transform = `translateX(-50%) rotate(${hrDeg}deg)`;
+
+      const pad = n => String(n).padStart(2, '0');
+      digital.textContent = `${pad(hr)}:${pad(min)}:${pad(sec)}`;
+
+      const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+      dateEl.textContent = now.toLocaleDateString('zh-CN', options);
+    }
+
+    toggle.addEventListener('click', () => {
+      if (body.classList.contains('night')) {
+        body.classList.replace('night', 'day');
+      } else {
+        body.classList.replace('day', 'night');
+      }
+    });
+
+    const curHour = new Date().getHours();
+    if (curHour >= 6 && curHour < 18) {
+      body.className = 'day';
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
+</body>
+</html>

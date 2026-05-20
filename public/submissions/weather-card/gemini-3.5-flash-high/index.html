@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      display: flex; justify-content: center; align-items: center; min-height: 100vh;
+      background: #0f172a; font-family: system-ui, sans-serif; color: #fff;
+    }
+    .weather-card {
+      width: 340px; padding: 24px; border-radius: 24px;
+      background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+      transition: background 0.8s ease, transform 0.5s ease;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .sunny { background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(217, 119, 6, 0.5)); }
+    .rainy { background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(29, 78, 216, 0.5)); }
+    .cloudy { background: linear-gradient(135deg, rgba(148, 163, 184, 0.3), rgba(71, 85, 105, 0.5)); }
+
+    .city-selector { display: flex; justify-content: space-between; gap: 8px; }
+    .city-btn {
+      flex: 1; padding: 8px; border-radius: 12px; border: none; cursor: pointer;
+      background: rgba(255, 255, 255, 0.1); color: #fff; font-weight: 600; font-size: 0.85rem;
+      transition: all 0.3s;
+    }
+    .city-btn.active { background: #fff; color: #1e293b; box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15); }
+    
+    .weather-info { display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .temp-container { font-size: 4.5rem; font-weight: 800; line-height: 1; display: flex; align-items: flex-start; }
+    .temp-unit { font-size: 2rem; font-weight: 500; margin-top: 8px; }
+    .condition { font-size: 1.25rem; font-weight: 600; margin-top: 8px; color: rgba(255, 255, 255, 0.9); }
+    
+    .icon-container { width: 80px; height: 80px; display: flex; justify-content: center; align-items: center; position: relative; }
+    .sun { width: 40px; height: 40px; background: #fbbf24; border-radius: 50%; box-shadow: 0 0 20px #fbbf24; animation: rotate 10s infinite linear; }
+    .cloud { width: 44px; height: 24px; background: #e2e8f0; border-radius: 20px; position: relative; animation: float 3s infinite ease-in-out; }
+    .cloud::before { content:''; width:24px; height:24px; background:#e2e8f0; border-radius:50%; position:absolute; top:-12px; left:8px; }
+    .cloud::after { content:''; width:20px; height:20px; background:#e2e8f0; border-radius:50%; position:absolute; top:-8px; left:20px; }
+    .rain-drops { display: flex; gap: 8px; position: absolute; bottom: 10px; }
+    .drop { width: 3px; height: 10px; background: #60a5fa; border-radius: 2px; animation: fall 1s infinite linear; }
+    .drop:nth-child(2) { animation-delay: 0.3s; }
+    .drop:nth-child(3) { animation-delay: 0.6s; }
+
+    @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    @keyframes fall { 0% { transform: translateY(-10px); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(15px); opacity: 0; } }
+
+    .details { display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; margin-top: 8px; }
+    .detail-item { text-align: center; }
+    .detail-label { font-size: 0.75rem; color: rgba(255,255,255,0.6); margin-bottom: 4px; }
+    .detail-val { font-size: 0.95rem; font-weight: 600; }
+    
+    .chart-container { margin-top: 12px; }
+    .chart-title { font-size: 0.75rem; color: rgba(255,255,255,0.6); margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+  <div class="weather-card sunny" id="card">
+    <div class="city-selector">
+      <button class="city-btn active" onclick="setCity('beijing')">北京</button>
+      <button class="city-btn" onclick="setCity('london')">伦敦</button>
+      <button class="city-btn" onclick="setCity('tokyo')">东京</button>
+    </div>
+    <div class="weather-info">
+      <div class="icon-container" id="icon-box"></div>
+      <div class="temp-container">
+        <span id="temp">26</span><span class="temp-unit">°C</span>
+      </div>
+      <div class="condition" id="cond">晴朗</div>
+    </div>
+    <div class="details">
+      <div class="detail-item">
+        <div class="detail-label">湿度</div>
+        <div class="detail-val" id="humidity">42%</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">风速</div>
+        <div class="detail-val" id="wind">3.2 m/s</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">气压</div>
+        <div class="detail-val" id="press">1012 hPa</div>
+      </div>
+    </div>
+    <div class="chart-container">
+      <div class="chart-title">今日温度趋势 (°C)</div>
+      <svg viewBox="0 0 300 50" style="width:100%; height:50px;">
+        <path id="trend-path" d="" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="3" stroke-linecap="round"/>
+        <g id="trend-dots"></g>
+      </svg>
+    </div>
+  </div>
+  <script>
+    const data = {
+      beijing: { temp: 26, cond: '晴朗', humidity: '42%', wind: '3.2 m/s', press: '1012 hPa', type: 'sunny', trend: [20, 23, 26, 25, 21] },
+      london: { temp: 14, cond: '小雨', humidity: '88%', wind: '5.8 m/s', press: '1008 hPa', type: 'rainy', trend: [11, 13, 14, 13, 12] },
+      tokyo: { temp: 19, cond: '多云', humidity: '65%', wind: '2.4 m/s', press: '1015 hPa', type: 'cloudy', trend: [16, 18, 19, 18, 17] }
+    };
+    
+    function setCity(cityId) {
+      document.querySelectorAll('.city-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = Array.from(document.querySelectorAll('.city-btn')).find(btn => btn.textContent === (cityId === 'beijing' ? '北京' : cityId === 'london' ? '伦敦' : '东京'));
+      if (activeBtn) activeBtn.classList.add('active');
+      const w = data[cityId];
+      const card = document.getElementById('card');
+      card.className = `weather-card ${w.type}`;
+      
+      document.getElementById('temp').textContent = w.temp;
+      document.getElementById('cond').textContent = w.cond;
+      document.getElementById('humidity').textContent = w.humidity;
+      document.getElementById('wind').textContent = w.wind;
+      document.getElementById('press').textContent = w.press;
+      
+      const iconBox = document.getElementById('icon-box');
+      iconBox.innerHTML = '';
+      if (w.type === 'sunny') {
+        iconBox.innerHTML = '<div class="sun"></div>';
+      } else if (w.type === 'cloudy') {
+        iconBox.innerHTML = '<div class="cloud"></div>';
+      } else if (w.type === 'rainy') {
+        iconBox.innerHTML = '<div class="cloud"></div><div class="rain-drops"><div class="drop"></div><div class="drop"></div><div class="drop"></div></div>';
+      }
+      
+      const minVal = Math.min(...w.trend) - 2;
+      const maxVal = Math.max(...w.trend) + 2;
+      const points = w.trend.map((t, idx) => {
+        const x = 20 + idx * 65;
+        const y = 40 - ((t - minVal) / (maxVal - minVal)) * 30;
+        return { x, y, t };
+      });
+      const pathD = `M ${points.map(p => `${p.x} ${p.y}`).join(' L ')}`;
+      document.getElementById('trend-path').setAttribute('d', pathD);
+      
+      const dotsGroup = document.getElementById('trend-dots');
+      dotsGroup.innerHTML = points.map(p => 
+        `<circle cx="${p.x}" cy="${p.y}" r="4" fill="#fff" />
+         <text x="${p.x}" y="${p.y - 8}" font-size="8" fill="rgba(255,255,255,0.8)" text-anchor="middle">${p.t}°</text>`
+      ).join('');
+    }
+    
+    setCity('beijing');
+  </script>
+</body>
+</html>

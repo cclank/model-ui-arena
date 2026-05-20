@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Monitor</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      display: flex; justify-content: center; align-items: center; min-height: 100vh;
+      background: #0b0f19; font-family: system-ui, sans-serif; color: #f3f4f6;
+    }
+    .panel {
+      width: 350px; padding: 20px; border-radius: 20px;
+      background: rgba(17, 24, 39, 0.8); backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .header h2 { font-size: 1.2rem; font-weight: 700; letter-spacing: 0.5px; }
+    .live-indicator { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: #9ca3af; }
+    .pulse { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: flash 1.5s infinite; }
+    @keyframes flash { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+    
+    .stock-list { display: flex; flex-direction: column; gap: 12px; }
+    .stock-card {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; border-radius: 12px; background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.04); transition: background-color 0.3s;
+    }
+    .stock-info { display: flex; flex-direction: column; gap: 2px; }
+    .stock-symbol { font-weight: 700; font-size: 1.05rem; }
+    .stock-name { font-size: 0.75rem; color: #9ca3af; }
+    
+    .stock-chart { width: 80px; height: 30px; }
+    
+    .stock-price-block { text-align: right; display: flex; flex-direction: column; gap: 2px; }
+    .stock-price { font-weight: 700; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+    .stock-change {
+      font-size: 0.8rem; font-weight: 600; padding: 2px 6px; border-radius: 6px;
+      font-variant-numeric: tabular-nums; display: inline-block;
+    }
+    .up { color: #f43f5e; }
+    .up-bg { background: rgba(244, 63, 94, 0.15); color: #f43f5e; }
+    .down { color: #10b981; }
+    .down-bg { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    
+    .flash-up { animation: flash-green 0.4s ease; }
+    .flash-down { animation: flash-red 0.4s ease; }
+    @keyframes flash-green { 0% { background: rgba(244, 63, 94, 0.4); } 100% { background: rgba(255,255,255,0.03); } }
+    @keyframes flash-red { 0% { background: rgba(16, 185, 129, 0.4); } 100% { background: rgba(255,255,255,0.03); } }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <div class="header">
+      <h2>自选股监控</h2>
+      <div class="live-indicator"><span class="pulse"></span>LIVE</div>
+    </div>
+    <div class="stock-list" id="list"></div>
+  </div>
+  <script>
+    const stocks = [
+      { s: 'GOOGL', n: 'Alphabet Inc.', p: 175.50, h: [173.2, 174.1, 173.8, 174.9, 175.5] },
+      { s: 'AAPL', n: 'Apple Inc.', p: 182.30, h: [184.5, 183.8, 183.1, 182.9, 182.3] },
+      { s: 'MSFT', n: 'Microsoft Corp.', p: 415.80, h: [412.1, 413.5, 412.9, 414.2, 415.8] }
+    ];
+
+    function makePath(history) {
+      const min = Math.min(...history) * 0.999;
+      const max = Math.max(...history) * 1.001;
+      return history.map((val, idx) => {
+        const x = idx * 20;
+        const y = 30 - ((val - min) / (max - min)) * 25 - 2;
+        return `${x},${y}`;
+      }).join(' ');
+    }
+
+    function render() {
+      const listEl = document.getElementById('list');
+      listEl.innerHTML = stocks.map((st, idx) => {
+        const lastVal = st.h[st.h.length - 2];
+        const change = st.p - lastVal;
+        const pct = (change / lastVal) * 100;
+        const isUp = change >= 0;
+        const sign = isUp ? '+' : '';
+        const cl = isUp ? 'up' : 'down';
+        const bgCl = isUp ? 'up-bg' : 'down-bg';
+        const stroke = isUp ? '#f43f5e' : '#10b981';
+
+        return `
+          <div class="stock-card" id="card-${idx}">
+            <div class="stock-info">
+              <span class="stock-symbol">${st.s}</span>
+              <span class="stock-name">${st.n}</span>
+            </div>
+            <svg class="stock-chart" viewBox="0 0 80 30">
+              <polyline fill="none" stroke="${stroke}" stroke-width="2" points="${makePath(st.h)}"/>
+            </svg>
+            <div class="stock-price-block">
+              <span class="stock-price ${cl}">$${st.p.toFixed(2)}</span>
+              <span class="stock-change ${bgCl}">${sign}${change.toFixed(2)} (${sign}${pct.toFixed(2)}%)</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function simulateUpdates() {
+      const targetIdx = Math.floor(Math.random() * stocks.length);
+      const st = stocks[targetIdx];
+      const delta = (Math.random() - 0.48) * (st.p * 0.005);
+      st.p += delta;
+      st.h.shift();
+      st.h.push(st.p);
+      
+      render();
+      
+      const card = document.getElementById(`card-${targetIdx}`);
+      if (card) {
+        card.classList.add(delta >= 0 ? 'flash-up' : 'flash-down');
+        setTimeout(() => {
+          card.classList.remove('flash-up', 'flash-down');
+        }, 400);
+      }
+      setTimeout(simulateUpdates, Math.random() * 2000 + 1000);
+    }
+
+    render();
+    setTimeout(simulateUpdates, 1500);
+  </script>
+</body>
+</html>
