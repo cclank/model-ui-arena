@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Voice Recorder</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      display: flex; justify-content: center; align-items: center; min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a, #1e293b); font-family: system-ui, sans-serif; color: #f1f5f9;
+    }
+    .card {
+      width: 340px; padding: 24px; border-radius: 20px;
+      background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      display: flex; flex-direction: column; gap: 20px; align-items: center;
+    }
+    .status-badge {
+      font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1.5px;
+      padding: 4px 10px; border-radius: 20px; background: rgba(255, 255, 255, 0.05);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .status-badge .dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #64748b;
+    }
+    .recording .status-badge .dot { background: #ef4444; animation: blink 1s infinite alternate; }
+    .paused .status-badge .dot { background: #eab308; }
+    @keyframes blink { from { opacity: 0.3; } to { opacity: 1; } }
+    .timer { font-size: 3rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #f8fafc; }
+    .wave-container { width: 100%; height: 60px; display: flex; align-items: center; justify-content: center; gap: 4px; }
+    .bar { width: 4px; height: 10px; background: #6366f1; border-radius: 2px; transition: height 0.1s ease; }
+    .btn-group { display: flex; gap: 16px; margin-top: 10px; }
+    .btn {
+      width: 54px; height: 54px; border-radius: 50%; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+      background: rgba(255, 255, 255, 0.1); color: #fff;
+    }
+    .btn:hover { transform: scale(1.08); background: rgba(255, 255, 255, 0.15); }
+    .btn-rec { background: #ef4444; color: white; }
+    .btn-rec:hover { background: #dc2626; }
+    .history {
+      width: 100%; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 16px;
+      font-size: 0.85rem; max-height: 100px; overflow-y: auto;
+    }
+    .history-title { font-weight: 600; margin-bottom: 8px; color: #94a3b8; }
+    .history-item {
+      display: flex; justify-content: space-between; padding: 6px 8px;
+      background: rgba(255, 255, 255, 0.03); border-radius: 6px; margin-bottom: 6px;
+    }
+    .confirm-modal {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.9); border-radius: 20px;
+      display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 16px;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 20;
+    }
+    .confirm-modal.active { opacity: 1; pointer-events: auto; }
+    .confirm-btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="card" style="position: relative;" id="recorder">
+    <div class="confirm-modal" id="modal">
+      <p style="font-weight: 500;">确定要停止录音吗？</p>
+      <div style="display: flex; gap: 12px;">
+        <button class="confirm-btn" style="background:#ef4444; color:white;" id="confirm-stop">确定</button>
+        <button class="confirm-btn" style="background:rgba(255,255,255,0.1); color:white;" id="cancel-stop">取消</button>
+      </div>
+    </div>
+    <div class="status-badge"><span class="dot"></span><span id="status-text">Ready</span></div>
+    <div class="timer" id="timer">00:00</div>
+    <div class="wave-container" id="wave"></div>
+    <div class="btn-group">
+      <button class="btn" id="btn-play-pause" title="开始/暂停">▶</button>
+      <button class="btn" id="btn-stop" title="结束" style="opacity: 0.5; pointer-events: none;">■</button>
+    </div>
+    <div class="history">
+      <div class="history-title">最近录音</div>
+      <div id="history-list"></div>
+    </div>
+  </div>
+  <script>
+    const recordEl = document.getElementById('recorder');
+    const timerEl = document.getElementById('timer');
+    const statusText = document.getElementById('status-text');
+    const btnPlayPause = document.getElementById('btn-play-pause');
+    const btnStop = document.getElementById('btn-stop');
+    const waveContainer = document.getElementById('wave');
+    const historyList = document.getElementById('history-list');
+    const modal = document.getElementById('modal');
+
+    let state = 'idle'; // idle, recording, paused
+    let seconds = 0, timerId = null, waveInterval = null;
+    const barsCount = 15;
+
+    for (let i = 0; i < barsCount; i++) {
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      waveContainer.appendChild(bar);
+    }
+    const bars = document.querySelectorAll('.bar');
+
+    function updateTimer() {
+      seconds++;
+      const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
+      const ss = String(seconds % 60).padStart(2, '0');
+      timerEl.textContent = `${mm}:${ss}`;
+    }
+
+    function animateWave() {
+      bars.forEach(bar => {
+        const height = state === 'recording' ? Math.floor(Math.random() * 45) + 5 : 8;
+        bar.style.height = `${height}px`;
+      });
+    }
+
+    function changeState(newState) {
+      state = newState;
+      recordEl.className = 'card ' + (state === 'recording' ? 'recording' : state === 'paused' ? 'paused' : '');
+      if (state === 'recording') {
+        statusText.textContent = 'Recording';
+        btnPlayPause.textContent = '‖';
+        btnPlayPause.classList.add('btn-rec');
+        btnStop.style.opacity = '1';
+        btnStop.style.pointerEvents = 'auto';
+        if (!timerId) timerId = setInterval(updateTimer, 1000);
+        if (!waveInterval) waveInterval = setInterval(animateWave, 100);
+      } else if (state === 'paused') {
+        statusText.textContent = 'Paused';
+        btnPlayPause.textContent = '▶';
+        clearInterval(timerId); timerId = null;
+        clearInterval(waveInterval); waveInterval = null;
+        animateWave();
+      } else if (state === 'idle') {
+        statusText.textContent = 'Ready';
+        btnPlayPause.textContent = '▶';
+        btnPlayPause.classList.remove('btn-rec');
+        btnStop.style.opacity = '0.5';
+        btnStop.style.pointerEvents = 'none';
+        clearInterval(timerId); timerId = null;
+        clearInterval(waveInterval); waveInterval = null;
+        seconds = 0;
+        timerEl.textContent = '00:00';
+        animateWave();
+      }
+    }
+
+    btnPlayPause.addEventListener('click', () => {
+      if (state === 'idle' || state === 'paused') changeState('recording');
+      else if (state === 'recording') changeState('paused');
+    });
+
+    btnStop.addEventListener('click', () => {
+      if (seconds >= 2) {
+        modal.classList.add('active');
+      } else {
+        finishRecording();
+      }
+    });
+
+    document.getElementById('cancel-stop').addEventListener('click', () => modal.classList.remove('active'));
+    document.getElementById('confirm-stop').addEventListener('click', () => {
+      modal.classList.remove('active');
+      finishRecording();
+    });
+
+    function finishRecording() {
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      const now = new Date().toLocaleTimeString('zh-CN', {hour12:false});
+      item.innerHTML = `<span>Voice_${now}</span><span style="color:#6366f1">${timerEl.textContent}</span>`;
+      historyList.prepend(item);
+      changeState('idle');
+    }
+  </script>
+</body>
+</html>
