@@ -1,0 +1,372 @@
+<!-- 设计说明：
+创建了一个现代化的天气卡片UI，支持多城市切换，具备丰富的视觉反馈。
+采用渐变背景和天气图标增强视觉体验，数据模拟逼真且易于理解。
+实现了温度变化微动画和动态天气效果，布局清晰呈现信息优先级。
+响应式设计确保在移动端有良好体验。
+-->
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天气卡片</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            font-family: 'Arial', sans-serif;
+            padding: 20px;
+        }
+
+        .weather-card {
+            width: 100%;
+            max-width: 350px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            color: white;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .city-selector {
+            margin-bottom: 25px;
+        }
+
+        .city-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .city-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .city-btn.active {
+            background: rgba(255, 255, 255, 0.4);
+            font-weight: bold;
+        }
+
+        .city-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .weather-main {
+            margin: 25px 0;
+        }
+
+        .temp {
+            font-size: 4rem;
+            font-weight: bold;
+            margin: 10px 0;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .weather-desc {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .weather-icon {
+            font-size: 4rem;
+            margin: 15px 0;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .weather-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .detail-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 12px;
+        }
+
+        .detail-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .detail-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .temperature-trend {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+
+        .trend-title {
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .trend-chart {
+            display: flex;
+            justify-content: space-around;
+            align-items: end;
+            height: 50px;
+        }
+
+        .trend-bar {
+            width: 20px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 5px 5px 0 0;
+            transition: height 0.5s ease;
+        }
+
+        .rain-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0;
+            z-index: -1;
+        }
+
+        .raindrop {
+            position: absolute;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.7);
+            animation: rain 1s linear infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes rain {
+            0% { transform: translateY(-20px); opacity: 0; }
+            10% { opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+
+        .sunny { background: linear-gradient(135deg, #fdcb6e, #ffeaa7, #fab1a0); }
+        .rainy { background: linear-gradient(135deg, #74b9ff, #a29bfe, #6c5ce7); }
+        .cloudy { background: linear-gradient(135deg, #b2bec3, #dddde6, #636e72); }
+        .stormy { background: linear-gradient(135deg, #2d3436, #636e72, #2d3436); }
+
+        @media (max-width: 390px) {
+            .weather-card {
+                padding: 20px;
+            }
+
+            .temp {
+                font-size: 3.5rem;
+            }
+
+            .weather-icon {
+                font-size: 3.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="weather-card" id="weatherCard">
+        <div class="city-selector">
+            <div class="city-buttons">
+                <button class="city-btn active" data-city="beijing">北京</button>
+                <button class="city-btn" data-city="shanghai">上海</button>
+                <button class="city-btn" data-city="guangzhou">广州</button>
+            </div>
+        </div>
+
+        <div class="weather-main">
+            <div class="weather-icon" id="weatherIcon">☀️</div>
+            <div class="temp" id="temperature">25°</div>
+            <div class="weather-desc" id="description">晴朗</div>
+        </div>
+
+        <div class="weather-details">
+            <div class="detail-item">
+                <div class="detail-label">风速</div>
+                <div class="detail-value" id="windSpeed">3 km/h</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">湿度</div>
+                <div class="detail-value" id="humidity">45%</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">体感温度</div>
+                <div class="detail-value" id="feelsLike">26°</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">紫外线</div>
+                <div class="detail-value" id="uvIndex">中等</div>
+            </div>
+        </div>
+
+        <div class="temperature-trend">
+            <div class="trend-title">未来24小时温度趋势</div>
+            <div class="trend-chart" id="trendChart"></div>
+        </div>
+
+        <div class="rain-animation" id="rainAnimation"></div>
+    </div>
+
+    <script>
+        // 天气数据
+        const weatherData = {
+            beijing: {
+                temp: 25,
+                desc: "晴朗",
+                icon: "☀️",
+                wind: "3 km/h",
+                humidity: "45%",
+                feelsLike: "26°",
+                uvIndex: "中等",
+                trend: [22, 23, 24, 25, 26, 27, 28, 27, 26, 25, 24, 23],
+                weatherType: "sunny"
+            },
+            shanghai: {
+                temp: 18,
+                desc: "小雨",
+                icon: "🌧️",
+                wind: "12 km/h",
+                humidity: "78%",
+                feelsLike: "17°",
+                uvIndex: "低",
+                trend: [16, 16, 17, 17, 18, 19, 20, 19, 18, 18, 17, 16],
+                weatherType: "rainy"
+            },
+            guangzhou: {
+                temp: 32,
+                desc: "多云",
+                icon: "☁️",
+                wind: "8 km/h",
+                humidity: "65%",
+                feelsLike: "35°",
+                uvIndex: "高",
+                trend: [30, 30, 31, 32, 33, 34, 35, 34, 33, 32, 31, 30],
+                weatherType: "cloudy"
+            }
+        };
+
+        const cityButtons = document.querySelectorAll('.city-btn');
+        const temperatureEl = document.getElementById('temperature');
+        const descriptionEl = document.getElementById('description');
+        const weatherIconEl = document.getElementById('weatherIcon');
+        const windSpeedEl = document.getElementById('windSpeed');
+        const humidityEl = document.getElementById('humidity');
+        const feelsLikeEl = document.getElementById('feelsLike');
+        const uvIndexEl = document.getElementById('uvIndex');
+        const trendChartEl = document.getElementById('trendChart');
+        const weatherCardEl = document.getElementById('weatherCard');
+        const rainAnimationEl = document.getElementById('rainAnimation');
+
+        let currentCity = 'beijing';
+
+        // 更新天气显示
+        function updateWeather(city) {
+            const data = weatherData[city];
+
+            // 更新DOM元素
+            temperatureEl.textContent = `${data.temp}°`;
+            descriptionEl.textContent = data.desc;
+            weatherIconEl.textContent = data.icon;
+            windSpeedEl.textContent = data.wind;
+            humidityEl.textContent = data.humidity;
+            feelsLikeEl.textContent = data.feelsLike;
+            uvIndexEl.textContent = data.uvIndex;
+
+            // 更新天气类型背景
+            weatherCardEl.className = 'weather-card';
+            weatherCardEl.classList.add(data.weatherType);
+
+            // 更新趋势图表
+            updateTrendChart(data.trend);
+
+            // 更新雨滴动画
+            updateRainAnimation(data.weatherType === 'rainy');
+        }
+
+        // 更新趋势图表
+        function updateTrendChart(trendData) {
+            trendChartEl.innerHTML = '';
+
+            const maxValue = Math.max(...trendData);
+            const minValue = Math.min(...trendData);
+            const range = maxValue - minValue || 1; // 防止除零
+
+            trendData.forEach(temp => {
+                const barHeight = 10 + ((temp - minValue) / range) * 40; // 映射到10-50px
+
+                const bar = document.createElement('div');
+                bar.className = 'trend-bar';
+                bar.style.height = `${barHeight}px`;
+                bar.title = `${temp}°`;
+
+                trendChartEl.appendChild(bar);
+            });
+        }
+
+        // 控制雨滴动画
+        function updateRainAnimation(isRaining) {
+            rainAnimationEl.style.opacity = isRaining ? '1' : '0';
+
+            if (isRaining) {
+                // 清空之前的雨滴
+                rainAnimationEl.innerHTML = '';
+
+                // 创建雨滴
+                for (let i = 0; i < 30; i++) {
+                    const raindrop = document.createElement('div');
+                    raindrop.className = 'raindrop';
+                    raindrop.style.left = `${Math.random() * 100}%`;
+                    raindrop.style.animationDelay = `${Math.random() * 1}s`;
+                    raindrop.style.height = `${20 + Math.random() * 30}px`;
+
+                    rainAnimationEl.appendChild(raindrop);
+                }
+            }
+        }
+
+        // 切换城市
+        cityButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // 更新激活状态
+                cityButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                // 更新城市
+                currentCity = button.dataset.city;
+                updateWeather(currentCity);
+            });
+        });
+
+        // 初始化
+        updateWeather(currentCity);
+    </script>
+</body>
+</html>

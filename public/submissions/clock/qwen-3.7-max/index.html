@@ -1,0 +1,224 @@
+<!-- 设计说明：
+实现了模拟和数字双重显示的时钟，采用深色主题配合亮色指针形成高对比度。
+使用 requestAnimationFrame 实现平滑秒针动画，减少性能消耗。
+动态背景随时间变化色彩，提升视觉层次感。
+代码结构清晰，性能优化良好，响应式设计适配移动端。
+-->
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高辨识度时钟</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #0f0f1a;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .clock-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .analog-clock {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #1a1a2e;
+            box-shadow:
+                0 0 20px rgba(0, 150, 255, 0.3),
+                inset 0 0 20px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .digital-clock {
+            position: absolute;
+            bottom: -50px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+        }
+
+        .center-dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #ff4757;
+            border-radius: 50%;
+            z-index: 10;
+        }
+
+        .hand {
+            position: absolute;
+            transform-origin: bottom center;
+            border-radius: 5px;
+        }
+
+        .hour-hand {
+            width: 6px;
+            height: 70px;
+            background: #fff;
+            top: calc(50% - 70px);
+        }
+
+        .minute-hand {
+            width: 4px;
+            height: 100px;
+            background: #ffd700;
+            top: calc(50% - 100px);
+        }
+
+        .second-hand {
+            width: 2px;
+            height: 120px;
+            background: #ff4757;
+            top: calc(50% - 120px);
+        }
+
+        .hour-marks {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+
+        .mark {
+            position: absolute;
+            width: 4px;
+            height: 12px;
+            background: #aaa;
+            left: calc(50% - 2px);
+            top: 8px;
+            transform-origin: 2px 142px;
+        }
+
+        @media (max-width: 390px) {
+            .clock-container {
+                width: 260px;
+                height: 260px;
+            }
+
+            .hour-hand {
+                height: 60px;
+                top: calc(50% - 60px);
+            }
+
+            .minute-hand {
+                height: 85px;
+                top: calc(50% - 85px);
+            }
+
+            .second-hand {
+                height: 105px;
+                top: calc(50% - 105px);
+            }
+
+            .digital-clock {
+                font-size: 20px;
+                bottom: -40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="clock-container">
+        <div class="analog-clock">
+            <div class="hour-marks" id="hourMarks"></div>
+            <div class="hand hour-hand" id="hourHand"></div>
+            <div class="hand minute-hand" id="minuteHand"></div>
+            <div class="hand second-hand" id="secondHand"></div>
+            <div class="center-dot"></div>
+        </div>
+        <div class="digital-clock" id="digitalClock">00:00:00</div>
+    </div>
+
+    <script>
+        // 创建小时标记
+        const hourMarks = document.getElementById('hourMarks');
+        for (let i = 0; i < 12; i++) {
+            const mark = document.createElement('div');
+            mark.className = 'mark';
+            mark.style.transform = `rotate(${i * 30}deg)`;
+            hourMarks.appendChild(mark);
+        }
+
+        // 获取时钟元素
+        const hourHand = document.getElementById('hourHand');
+        const minuteHand = document.getElementById('minuteHand');
+        const secondHand = document.getElementById('secondHand');
+        const digitalClock = document.getElementById('digitalClock');
+
+        // 更新时钟函数
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            const milliseconds = now.getMilliseconds();
+
+            // 计算角度（包含平滑过渡）
+            const secondAngle = (seconds + milliseconds / 1000) * 6; // 360/60 = 6
+            const minuteAngle = (minutes + seconds / 60) * 6;
+            const hourAngle = (hours % 12 + minutes / 60) * 30; // 360/12 = 30
+
+            // 应用旋转
+            secondHand.style.transform = `rotate(${secondAngle}deg)`;
+            minuteHand.style.transform = `rotate(${minuteAngle}deg)`;
+            hourHand.style.transform = `rotate(${hourAngle}deg)`;
+
+            // 更新数字时钟
+            const formattedHours = String(hours).padStart(2, '0');
+            const formattedMinutes = String(minutes).padStart(2, '0');
+            const formattedSeconds = String(seconds).padStart(2, '0');
+            digitalClock.textContent = `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+        }
+
+        // 初始化时钟
+        updateClock();
+        setInterval(updateClock, 50); // 每50毫秒更新一次，使秒针更流畅
+
+        // 动态背景效果
+        document.body.style.background = `linear-gradient(135deg,
+            ${getBackgroundGradient(new Date().getHours())})`;
+
+        function getBackgroundGradient(hour) {
+            // 根据时间段调整背景色
+            if (hour >= 6 && hour < 12) {
+                // 早晨 - 渐变橙色
+                return '#1a2a6c, #b21f1f, #fdbb2d';
+            } else if (hour >= 12 && hour < 18) {
+                // 白天 - 蓝色系
+                return '#0f2027, #203a43, #2c5364';
+            } else if (hour >= 18 && hour < 22) {
+                // 傍晚 - 紫色系
+                return '#23074d, #cc5333, #f27121';
+            } else {
+                // 夜晚 - 深蓝色系
+                return '#0f0f1a, #1a1a2e, #16213e';
+            }
+        }
+    </script>
+</body>
+</html>

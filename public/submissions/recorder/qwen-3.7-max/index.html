@@ -1,0 +1,316 @@
+<!-- 设计说明：
+创建了一个具有完整录音控制的交互原型，实现了 Start/Pause/Stop 三种状态。
+采用醒目的红色圆形按钮指示录音状态，波形动画提供实时视觉反馈。
+时长计时器精确显示 mm:ss 格式，底部显示当前状态及录音摘要。
+界面简洁直观，响应式布局适应移动设备。
+-->
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>录音机原型</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .recorder-container {
+            width: 100%;
+            max-width: 350px;
+            background: #2c3e50;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            color: white;
+        }
+
+        .display {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            background: #34495e;
+            padding: 15px;
+            border-radius: 10px;
+            letter-spacing: 2px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .record-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .pause-btn {
+            background: #f39c12;
+            color: white;
+        }
+
+        .stop-btn {
+            background: #3498db;
+            color: white;
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .control-btn:not(:disabled):hover {
+            transform: scale(1.1);
+        }
+
+        .visualizer {
+            height: 80px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            background: #34495e;
+        }
+
+        .waveform {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            height: 100%;
+            padding: 10px;
+            gap: 3px;
+        }
+
+        .bar {
+            width: 6px;
+            background: #e74c3c;
+            border-radius: 3px 3px 0 0;
+            transition: height 0.1s ease;
+            min-height: 5px;
+        }
+
+        .status-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #34495e;
+            border-radius: 10px;
+            text-align: left;
+        }
+
+        .status-text {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .summary {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #ecf0f1;
+        }
+
+        @media (max-width: 390px) {
+            .recorder-container {
+                padding: 20px;
+            }
+
+            .display {
+                font-size: 24px;
+            }
+
+            .control-btn {
+                width: 50px;
+                height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="recorder-container">
+        <h1>录音机</h1>
+
+        <div class="display" id="timer">00:00</div>
+
+        <div class="controls">
+            <button class="control-btn record-btn" id="recordBtn">●</button>
+            <button class="control-btn pause-btn" id="pauseBtn" disabled>⏸</button>
+            <button class="control-btn stop-btn" id="stopBtn" disabled>⏹</button>
+        </div>
+
+        <div class="visualizer">
+            <div class="waveform" id="waveform"></div>
+        </div>
+
+        <div class="status-info">
+            <div class="status-text" id="statusText">准备就绪</div>
+            <div class="summary" id="summary">上次录音: 无</div>
+        </div>
+    </div>
+
+    <script>
+        let startTime = null;
+        let elapsedTime = 0;
+        let timerInterval = null;
+        let isRecording = false;
+        let isPaused = false;
+        let lastRecordDuration = null;
+
+        const timerDisplay = document.getElementById('timer');
+        const recordBtn = document.getElementById('recordBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const statusText = document.getElementById('statusText');
+        const summary = document.getElementById('summary');
+        const waveform = document.getElementById('waveform');
+
+        // 初始化波形显示
+        for (let i = 0; i < 30; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            bar.style.height = '5px';
+            waveform.appendChild(bar);
+        }
+        const bars = waveform.querySelectorAll('.bar');
+
+        // 格式化时间为 mm:ss
+        function formatTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        // 更新定时器显示
+        function updateTimer() {
+            const currentTime = isPaused ? elapsedTime : Date.now() - startTime + elapsedTime;
+            timerDisplay.textContent = formatTime(currentTime);
+        }
+
+        // 更新波形动画
+        function updateWaveform() {
+            if (!isRecording || isPaused) {
+                // 如果没有在录音，保持低高度
+                bars.forEach(bar => {
+                    bar.style.height = '5px';
+                });
+                return;
+            }
+
+            // 随机生成波形动画
+            bars.forEach((bar, index) => {
+                // 基于时间和位置生成随机高度
+                const baseHeight = 10 + Math.sin(Date.now() / 200 + index) * 15;
+                const randomFactor = 0.7 + Math.random() * 0.6;
+                const height = Math.max(5, Math.min(70, baseHeight * randomFactor));
+                bar.style.height = `${height}px`;
+            });
+        }
+
+        // 开始录音
+        function startRecording() {
+            if (isRecording && !isPaused) return;
+
+            if (isPaused) {
+                // 从暂停恢复
+                startTime = Date.now();
+                isPaused = false;
+            } else {
+                // 新开始录音
+                startTime = Date.now();
+                elapsedTime = 0;
+                isRecording = true;
+            }
+
+            timerInterval = setInterval(() => {
+                updateTimer();
+                updateWaveform();
+            }, 100);
+
+            recordBtn.disabled = true;
+            pauseBtn.disabled = false;
+            stopBtn.disabled = false;
+            statusText.textContent = '正在录音...';
+
+            // 更新波形动画
+            setInterval(updateWaveform, 100);
+        }
+
+        // 暂停录音
+        function pauseRecording() {
+            if (!isRecording || isPaused) return;
+
+            clearInterval(timerInterval);
+            elapsedTime = Date.now() - startTime + elapsedTime;
+            isPaused = true;
+
+            recordBtn.disabled = false;
+            pauseBtn.disabled = true;
+            statusText.textContent = '已暂停';
+        }
+
+        // 停止录音
+        function stopRecording() {
+            if (!isRecording) return;
+
+            clearInterval(timerInterval);
+            if (!isPaused) {
+                elapsedTime = Date.now() - startTime + elapsedTime;
+            }
+
+            isRecording = false;
+            isPaused = false;
+            lastRecordDuration = elapsedTime;
+
+            recordBtn.disabled = false;
+            pauseBtn.disabled = true;
+            stopBtn.disabled = true;
+            statusText.textContent = '已停止';
+            summary.textContent = `上次录音: ${formatTime(lastRecordDuration)} (${new Date().toLocaleTimeString()})`;
+
+            // 重置波形为静默状态
+            bars.forEach(bar => {
+                bar.style.height = '5px';
+            });
+        }
+
+        // 事件监听器
+        recordBtn.addEventListener('click', startRecording);
+        pauseBtn.addEventListener('click', pauseRecording);
+        stopBtn.addEventListener('click', stopRecording);
+
+        // 初始化状态
+        updateTimer();
+    </script>
+</body>
+</html>

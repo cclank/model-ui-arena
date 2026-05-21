@@ -1,0 +1,392 @@
+<!-- 设计说明：
+创建了一个现代化的股票监控面板，展示多支股票的实时价格和趋势。
+采用颜色区分涨跌（绿色上涨，红色下跌），清晰易读的价格和涨跌幅显示。
+内置动态折线图展示股价趋势，带有假流式更新效果，增强实时感。
+整体布局紧凑高效，适合监控使用，响应式设计适配移动端。
+-->
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票监控面板</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            font-family: 'Arial', sans-serif;
+            padding: 20px;
+            color: #ecf0f1;
+        }
+
+        .stock-panel {
+            width: 100%;
+            max-width: 400px;
+            background: rgba(25, 30, 40, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .panel-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .panel-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #f1c40f;
+        }
+
+        .last-update {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .stock-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .stock-card {
+            background: rgba(30, 35, 45, 0.8);
+            border-radius: 12px;
+            padding: 15px;
+            transition: all 0.3s ease;
+            border-left: 4px solid #7f8c8d;
+        }
+
+        .stock-card.up {
+            border-left-color: #2ecc71;
+        }
+
+        .stock-card.down {
+            border-left-color: #e74c3c;
+        }
+
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .stock-name {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .stock-symbol {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .stock-price {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .price-change {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .up .price-change {
+            color: #2ecc71;
+        }
+
+        .down .price-change {
+            color: #e74c3c;
+        }
+
+        .trend-container {
+            margin-top: 10px;
+            height: 60px;
+            position: relative;
+        }
+
+        .trend-graph {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .trend-line {
+            width: 100%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        .trend-path {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .trend-point {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #bdc3c7;
+        }
+
+        .trend-path.up .trend-point {
+            background: #2ecc71;
+        }
+
+        .trend-path.down .trend-point {
+            background: #e74c3c;
+        }
+
+        .risk-indicator {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            text-align: right;
+        }
+
+        .low-risk {
+            color: #2ecc71;
+        }
+
+        .high-risk {
+            color: #e74c3c;
+        }
+
+        .refresh-indicator {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        @media (max-width: 390px) {
+            .stock-panel {
+                padding: 15px;
+            }
+
+            .stock-price {
+                font-size: 1.2rem;
+            }
+
+            .price-change {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stock-panel">
+        <div class="panel-header">
+            <div class="panel-title">股票监控面板</div>
+            <div class="last-update" id="lastUpdate">最后更新: 正在连接...</div>
+        </div>
+
+        <div class="stock-list" id="stockList">
+            <!-- 股票卡片将通过JS动态生成 -->
+        </div>
+
+        <div class="refresh-indicator pulse" id="refreshIndicator">● 实时刷新中</div>
+    </div>
+
+    <script>
+        // 模拟股票数据
+        const stocks = [
+            {
+                symbol: "AAPL",
+                name: "苹果公司",
+                price: 175.32,
+                change: 2.45,
+                changePercent: 1.42,
+                trend: [172.5, 173.1, 173.8, 174.2, 174.8, 175.1, 175.3, 175.32],
+                risk: "低风险"
+            },
+            {
+                symbol: "GOOGL",
+                name: "谷歌",
+                price: 2780.56,
+                change: -18.32,
+                changePercent: -0.66,
+                trend: [2795.2, 2790.1, 2788.5, 2786.3, 2784.1, 2782.7, 2781.2, 2780.56],
+                risk: "中风险"
+            },
+            {
+                symbol: "TSLA",
+                name: "特斯拉",
+                price: 248.91,
+                change: 12.74,
+                changePercent: 5.41,
+                trend: [235.8, 237.2, 238.9, 240.1, 242.5, 245.3, 247.2, 248.91],
+                risk: "高风险"
+            }
+        ];
+
+        const stockListEl = document.getElementById('stockList');
+        const lastUpdateEl = document.getElementById('lastUpdate');
+        const refreshIndicatorEl = document.getElementById('refreshIndicator');
+
+        // 生成股票卡片
+        function renderStocks() {
+            stockListEl.innerHTML = '';
+
+            stocks.forEach(stock => {
+                const isUp = stock.change >= 0;
+                const changeText = isUp ? `+${stock.change.toFixed(2)}` : stock.change.toFixed(2);
+                const changePercentText = isUp ? `+${stock.changePercent.toFixed(2)}%` : `${stock.changePercent.toFixed(2)}%`;
+
+                const card = document.createElement('div');
+                card.className = `stock-card ${isUp ? 'up' : 'down'}`;
+
+                card.innerHTML = `
+                    <div class="stock-header">
+                        <div class="stock-name">${stock.name}</div>
+                        <div class="stock-symbol">${stock.symbol}</div>
+                    </div>
+                    <div class="stock-price">$${stock.price.toFixed(2)}</div>
+                    <div class="price-change">${changeText} (${changePercentText})</div>
+                    <div class="trend-container">
+                        <div class="trend-graph">
+                            <div class="trend-line"></div>
+                            <div class="trend-path ${isUp ? 'up' : 'down'}" id="trend-${stock.symbol}"></div>
+                        </div>
+                    </div>
+                    <div class="risk-indicator ${stock.risk.includes('高') ? 'high-risk' : stock.risk.includes('低') ? 'low-risk' : ''}">
+                        ${stock.risk}
+                    </div>
+                `;
+
+                stockListEl.appendChild(card);
+
+                // 绘制趋势图
+                drawTrendGraph(`trend-${stock.symbol}`, stock.trend, isUp);
+            });
+
+            updateTimestamp();
+        }
+
+        // 绘制趋势图
+        function drawTrendGraph(containerId, data, isUp) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            // 清空容器
+            container.innerHTML = '';
+
+            // 找到最大值和最小值
+            const minVal = Math.min(...data);
+            const maxVal = Math.max(...data);
+            const range = maxVal - minVal || 1; // 防止除零
+
+            // 计算每个点的位置
+            const containerWidth = container.parentElement.clientWidth;
+            const containerHeight = container.parentElement.clientHeight;
+            const padding = 10;
+            const graphWidth = containerWidth - padding * 2;
+            const graphHeight = containerHeight - padding * 2;
+
+            const pointCount = data.length;
+            const spacing = graphWidth / (pointCount - 1);
+
+            data.forEach((value, index) => {
+                const x = padding + index * spacing;
+                // 将数值转换为Y坐标（反转，因为Y轴向下）
+                const y = padding + graphHeight - ((value - minVal) / range) * graphHeight;
+
+                const point = document.createElement('div');
+                point.className = 'trend-point';
+                point.style.left = `${x}px`;
+                point.style.top = `${y}px`;
+
+                container.appendChild(point);
+
+                // 连接线
+                if (index > 0) {
+                    const prevValue = data[index - 1];
+                    const prevX = padding + (index - 1) * spacing;
+                    const prevY = padding + graphHeight - ((prevValue - minVal) / range) * graphHeight;
+
+                    const line = document.createElement('div');
+                    line.style.position = 'absolute';
+                    line.style.height = '2px';
+                    line.style.backgroundColor = isUp ? '#2ecc71' : '#e74c3c';
+                    line.style.width = `${Math.sqrt(Math.pow(x - prevX, 2) + Math.pow(y - prevY, 2))}px`;
+                    line.style.transformOrigin = 'top left';
+                    line.style.transform = `rotate(${Math.atan2(y - prevY, x - prevX)}rad)`;
+                    line.style.left = `${prevX}px`;
+                    line.style.top = `${prevY}px`;
+
+                    container.appendChild(line);
+                }
+            });
+        }
+
+        // 更新时间戳
+        function updateTimestamp() {
+            const now = new Date();
+            lastUpdateEl.textContent = `最后更新: ${now.toLocaleTimeString()}`;
+        }
+
+        // 模拟实时更新
+        function simulateRealTimeUpdates() {
+            stocks.forEach(stock => {
+                // 随机小幅变动价格
+                const changeAmount = (Math.random() - 0.5) * 0.5;
+                stock.price += changeAmount;
+
+                // 更新变化值
+                stock.change = stock.price - (stock.price - changeAmount);
+                stock.changePercent = (stock.change / (stock.price - changeAmount)) * 100;
+
+                // 更新趋势数据（移除最旧的，添加最新的）
+                stock.trend.shift();
+                stock.trend.push(stock.price);
+
+                // 更新风险等级（随机变化）
+                if (stock.symbol === 'TSLA') {
+                    const risks = ['高风险', '中风险', '高风险'];
+                    stock.risk = risks[Math.floor(Math.random() * risks.length)];
+                }
+            });
+
+            renderStocks();
+        }
+
+        // 初始化
+        renderStocks();
+
+        // 设置定期更新
+        setInterval(simulateRealTimeUpdates, 3000);
+    </script>
+</body>
+</html>
