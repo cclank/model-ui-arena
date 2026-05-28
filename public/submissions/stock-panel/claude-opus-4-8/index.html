@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>股票监控</title>
+<style>
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ min-height:100vh; font-family:system-ui,sans-serif; background:#0a0e17; color:#e6ebf5;
+    display:flex; align-items:center; justify-content:center; padding:18px; }
+  .panel{ width:100%; max-width:380px; }
+  .head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .head h1{ font-size:17px; font-weight:700; letter-spacing:1px; }
+  .live{ font-size:11px; color:#43d18a; display:flex; align-items:center; gap:5px; }
+  .live::before{ content:''; width:7px; height:7px; border-radius:50%; background:#43d18a;
+    animation:pulse 1.4s infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.25; } }
+  .stock{ background:#121826; border:1px solid #1e2738; border-radius:16px; padding:15px 16px;
+    margin-bottom:11px; display:grid; grid-template-columns:1fr auto; gap:6px 10px; align-items:center; }
+  .name{ font-size:15px; font-weight:600; }
+  .code{ font-size:11px; color:#6b7890; margin-left:6px; font-weight:400; }
+  .price{ font-size:22px; font-weight:700; text-align:right; font-variant-numeric:tabular-nums;
+    transition:color .3s; }
+  .chg{ font-size:12px; text-align:right; font-variant-numeric:tabular-nums; }
+  .spark{ grid-column:1/-1; height:38px; width:100%; }
+  .up{ color:#ff5a6e; } .down{ color:#43d18a; }
+  .flash-up{ animation:fu .5s; } .flash-down{ animation:fd .5s; }
+  @keyframes fu{ 0%{ background:rgba(255,90,110,.18); } }
+  @keyframes fd{ 0%{ background:rgba(67,209,138,.18); } }
+  .tip{ font-size:11px; color:#6b7890; text-align:center; margin-top:6px; line-height:1.6; }
+</style>
+</head>
+<body>
+  <div class="panel">
+    <div class="head">
+      <h1>📈 自选股</h1>
+      <span class="live">实时</span>
+    </div>
+    <div id="list"></div>
+    <div class="tip">⚠️ 数据为模拟流式行情，仅作演示，不构成投资建议</div>
+  </div>
+<script>
+  const stocks=[
+    {name:'晨星科技',code:'SH600001',price:128.50,hist:[]},
+    {name:'蓝海能源',code:'SZ000123',price:42.80,hist:[]},
+    {name:'云图数据',code:'SH688520',price:215.30,hist:[]},
+  ];
+  const list=document.getElementById('list');
+  stocks.forEach((s,i)=>{
+    s.base=s.price;
+    for(let j=0;j<20;j++) s.hist.push(s.price*(1+(Math.random()-.5)*.04));
+    const el=document.createElement('div'); el.className='stock'; el.id='s'+i;
+    el.innerHTML=`<div class="name">${s.name}<span class="code">${s.code}</span></div>
+      <div class="price" id="p${i}"></div>
+      <div></div><div class="chg" id="c${i}"></div>
+      <svg class="spark" id="sp${i}" viewBox="0 0 340 38" preserveAspectRatio="none"></svg>`;
+    list.appendChild(el);
+  });
+  const f2=n=>n.toFixed(2);
+  function spark(i){
+    const h=stocks[i].hist, max=Math.max(...h),min=Math.min(...h),rng=max-min||1;
+    const up=h[h.length-1]>=h[0];
+    const col=up?'#ff5a6e':'#43d18a';
+    const pts=h.map((v,j)=>`${j*(340/(h.length-1))},${36-((v-min)/rng)*32}`).join(' ');
+    document.getElementById('sp'+i).innerHTML=
+      `<polyline fill="none" stroke="${col}" stroke-width="1.8" points="${pts}"/>`;
+  }
+  function render(i){
+    const s=stocks[i], chg=s.price-s.base, pct=chg/s.base*100, up=chg>=0;
+    const p=document.getElementById('p'+i), c=document.getElementById('c'+i);
+    p.textContent=f2(s.price); p.className='price '+(up?'up':'down');
+    c.className='chg '+(up?'up':'down');
+    c.textContent=`${up?'▲':'▼'} ${up?'+':''}${f2(chg)}  ${up?'+':''}${f2(pct)}%`;
+    spark(i);
+  }
+  stocks.forEach((_,i)=>render(i));
+  setInterval(()=>{
+    const i=Math.floor(Math.random()*stocks.length), s=stocks[i];
+    s.price=Math.max(1,s.price*(1+(Math.random()-.5)*.012));
+    s.hist.push(s.price); if(s.hist.length>20) s.hist.shift();
+    const el=document.getElementById('s'+i);
+    el.classList.remove('flash-up','flash-down');
+    void el.offsetWidth;
+    el.classList.add(s.price>=s.base?'flash-up':'flash-down');
+    render(i);
+  },900);
+</script>
+</body>
+</html>

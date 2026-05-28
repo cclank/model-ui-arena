@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>粒子引力场</title>
+<style>
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; overflow:hidden; }
+  body{ background:#04050c; font-family:system-ui,sans-serif; touch-action:none; }
+  canvas{ display:block; }
+  .hud{ position:fixed; top:14px; left:14px; display:flex; gap:8px; flex-wrap:wrap;
+    font-size:12px; color:#9fb0d0; pointer-events:none; }
+  .hud div{ background:rgba(20,28,48,.6); border:1px solid rgba(90,209,255,.2);
+    padding:6px 11px; border-radius:10px; backdrop-filter:blur(6px); }
+  .hud b{ color:#5ad1ff; font-variant-numeric:tabular-nums; }
+  .mode{ position:fixed; bottom:16px; left:50%; transform:translateX(-50%);
+    display:flex; gap:8px; }
+  .mode button{ padding:9px 16px; border:1px solid rgba(90,209,255,.3); background:rgba(20,28,48,.7);
+    color:#9fb0d0; border-radius:20px; font-size:12px; cursor:pointer; transition:.2s; backdrop-filter:blur(6px); }
+  .mode button.on{ background:#5ad1ff; color:#04050c; border-color:#5ad1ff; font-weight:600; }
+</style>
+</head>
+<body>
+  <canvas id="cv"></canvas>
+  <div class="hud">
+    <div>粒子 <b id="pc">0</b></div>
+    <div>能量 <b id="en">0</b></div>
+    <div>FPS <b id="fps">0</b></div>
+    <div>模式 <b id="md">吸引</b></div>
+  </div>
+  <div class="mode">
+    <button class="on" data-m="attract">吸引</button>
+    <button data-m="repel">排斥</button>
+    <button data-m="orbit">环绕</button>
+  </div>
+<script>
+  const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+  let W,H,DPR;
+  function resize(){ DPR=Math.min(devicePixelRatio||1,2);
+    W=cv.width=innerWidth*DPR; H=cv.height=innerHeight*DPR;
+    cv.style.width=innerWidth+'px'; cv.style.height=innerHeight+'px';
+    core.x=W/2; core.y=H/2; }
+  const core={x:0,y:0};
+  let mode='attract', pointer=null, shocks=[];
+  const N=Math.min(220, Math.floor(innerWidth*innerHeight/4500));
+  const parts=[];
+  const hues=[190,210,280,330,40];
+  function mk(){
+    return { x:Math.random()*W, y:Math.random()*H,
+      vx:(Math.random()-.5)*1.5, vy:(Math.random()-.5)*1.5,
+      h:hues[Math.floor(Math.random()*hues.length)], px:0,py:0 };
+  }
+  function init(){ parts.length=0; for(let i=0;i<N;i++) parts.push(mk()); }
+  resize(); init(); addEventListener('resize',()=>{ resize(); init(); });
+  let last=performance.now(), fps=0, frames=0, acc=0;
+  function step(now){
+    const dt=Math.min(32,now-last); last=now;
+    frames++; acc+=dt; if(acc>=500){ fps=Math.round(frames*1000/acc); frames=0; acc=0; }
+    ctx.fillStyle='rgba(4,5,12,0.18)'; ctx.fillRect(0,0,W,H);
+    const tx=pointer?pointer.x:core.x, ty=pointer?pointer.y:core.y;
+    let energy=0;
+    for(const p of parts){
+      let dx=tx-p.x, dy=ty-p.y;
+      let d2=dx*dx+dy*dy+400; let d=Math.sqrt(d2);
+      let f=(pointer?1400:600)/d2*DPR;
+      if(mode==='repel'&&pointer) f=-f*2;
+      if(mode==='orbit'){ p.vx+=-dy/d*f*0.6; p.vy+=dx/d*f*0.6; }
+      p.vx+=dx/d*f; p.vy+=dy/d*f;
+      for(const s of shocks){
+        let sx=p.x-s.x, sy=p.y-s.y, sd=Math.sqrt(sx*sx+sy*sy)+1;
+        if(sd<s.r){ const force=(1-sd/s.r)*s.power; p.vx+=sx/sd*force; p.vy+=sy/sd*force; }
+      }
+      p.vx*=0.96; p.vy*=0.96;
+      p.px=p.x; p.py=p.y; p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0||p.x>W) p.vx*=-.8, p.x=Math.max(0,Math.min(W,p.x));
+      if(p.y<0||p.y>H) p.vy*=-.8, p.y=Math.max(0,Math.min(H,p.y));
+      const sp=Math.hypot(p.vx,p.vy); energy+=sp;
+      const lum=40+Math.min(45,sp*16);
+      ctx.strokeStyle=`hsl(${p.h},90%,${lum}%)`;
+      ctx.lineWidth=1.4*DPR; ctx.beginPath();
+      ctx.moveTo(p.px,p.py); ctx.lineTo(p.x,p.y); ctx.stroke();
+    }
+    shocks=shocks.filter(s=>{ s.r+=14*DPR; s.power*=.9; return s.r<Math.max(W,H); });
+    // 核心
+    const grd=ctx.createRadialGradient(core.x,core.y,0,core.x,core.y,40*DPR);
+    grd.addColorStop(0,'rgba(120,220,255,.9)'); grd.addColorStop(1,'rgba(120,220,255,0)');
+    ctx.fillStyle=grd; ctx.beginPath(); ctx.arc(core.x,core.y,40*DPR,0,Math.PI*2); ctx.fill();
+    document.getElementById('pc').textContent=parts.length;
+    document.getElementById('en').textContent=Math.round(energy);
+    document.getElementById('fps').textContent=fps;
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+  const pos=e=>{ const t=e.touches?e.touches[0]:e; return {x:t.clientX*DPR,y:t.clientY*DPR}; };
+  function down(e){ pointer=pos(e); const p=pos(e);
+    shocks.push({x:p.x,y:p.y,r:1,power:(mode==='repel'?-6:6)*DPR}); }
+  function move(e){ if(pointer) pointer=pos(e); }
+  function up(){ pointer=null; }
+  cv.addEventListener('mousedown',down); cv.addEventListener('mousemove',move);
+  addEventListener('mouseup',up);
+  cv.addEventListener('touchstart',e=>{ e.preventDefault(); down(e); },{passive:false});
+  cv.addEventListener('touchmove',e=>{ e.preventDefault(); move(e); },{passive:false});
+  cv.addEventListener('touchend',up);
+  document.querySelectorAll('.mode button').forEach(b=>b.onclick=()=>{
+    mode=b.dataset.m;
+    document.querySelectorAll('.mode button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    document.getElementById('md').textContent=b.textContent;
+  });
+</script>
+</body>
+</html>

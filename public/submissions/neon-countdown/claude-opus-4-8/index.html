@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>最炫倒计时</title>
+<style>
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  body{ display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-height:100vh; gap:30px; font-family:"SF Pro Display",system-ui,sans-serif; overflow:hidden;
+    background:#06070f; color:#fff; transition:background .3s; }
+  body.tense{ animation:shake .5s infinite; }
+  @keyframes shake{ 25%{ transform:translateX(-2px);} 75%{ transform:translateX(2px);} }
+  body.done{ background:radial-gradient(circle,#1a0b2e,#06070f); }
+  .stage{ position:relative; width:min(80vw,300px); aspect-ratio:1;
+    display:flex; align-items:center; justify-content:center; }
+  .ring{ position:absolute; inset:0; transform:rotate(-90deg); }
+  .ring circle{ fill:none; stroke-width:8; }
+  .track{ stroke:rgba(255,255,255,.08); }
+  .bar{ stroke:var(--c,#5ad1ff); stroke-linecap:round;
+    filter:drop-shadow(0 0 12px var(--c,#5ad1ff)); transition:stroke .4s; }
+  .num{ font-size:clamp(90px,30vw,150px); font-weight:800; line-height:1;
+    color:var(--c,#5ad1ff); text-shadow:0 0 30px var(--c,#5ad1ff); font-variant-numeric:tabular-nums;
+    transition:color .4s,text-shadow .4s; }
+  .num.pulse{ animation:pop .9s ease-out; }
+  @keyframes pop{ 0%{ transform:scale(1.35); } 60%{ transform:scale(.96); } 100%{ transform:scale(1); } }
+  .label{ font-size:14px; letter-spacing:6px; opacity:.6; text-transform:uppercase; }
+  .done .num{ animation:none; }
+  .flash{ position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none; }
+  .flash.on{ animation:fl .4s; }
+  @keyframes fl{ 0%{ opacity:.5; } 100%{ opacity:0; } }
+  button{ padding:13px 38px; border:2px solid var(--c,#5ad1ff); background:transparent;
+    color:var(--c,#5ad1ff); border-radius:40px; font-size:15px; font-weight:600; letter-spacing:2px;
+    cursor:pointer; transition:.2s; }
+  button:hover{ background:var(--c,#5ad1ff); color:#06070f; box-shadow:0 0 24px var(--c,#5ad1ff); }
+  button:active{ transform:scale(.94); }
+  .msg{ font-size:32px; font-weight:800; opacity:0; transition:opacity .5s;
+    background:linear-gradient(90deg,#ff5a6e,#ffd166,#5ad1ff); -webkit-background-clip:text;
+    background-clip:text; color:transparent; }
+  .done .msg{ opacity:1; animation:pop .6s; }
+</style>
+</head>
+<body>
+  <div class="flash" id="flash"></div>
+  <div class="msg" id="msg">🎉 完成！</div>
+  <div class="stage">
+    <svg class="ring" viewBox="0 0 120 120">
+      <circle class="track" cx="60" cy="60" r="54"/>
+      <circle class="bar" id="bar" cx="60" cy="60" r="54"/>
+    </svg>
+    <div class="num" id="num">10</div>
+  </div>
+  <div class="label" id="label">Countdown</div>
+  <button id="restart">RESTART</button>
+<script>
+  const TOTAL=10, C=2*Math.PI*54;
+  const bar=document.getElementById('bar'), num=document.getElementById('num');
+  const label=document.getElementById('label'), flash=document.getElementById('flash');
+  const restart=document.getElementById('restart'), msg=document.getElementById('msg');
+  bar.style.strokeDasharray=C;
+  let left, timer;
+  function color(n){
+    if(n<=3) return '#ff3b5c';
+    if(n<=6) return '#ffb443';
+    return '#5ad1ff';
+  }
+  function paint(n,frac){
+    const c=color(n);
+    document.documentElement.style.setProperty('--c',c);
+    bar.style.strokeDashoffset=C*(1-frac);
+    num.textContent=n;
+    num.classList.remove('pulse'); void num.offsetWidth; num.classList.add('pulse');
+    flash.classList.remove('on'); void flash.offsetWidth; flash.classList.add('on');
+    document.body.classList.toggle('tense', n<=3 && n>0);
+  }
+  function finish(){
+    clearInterval(timer);
+    document.body.classList.remove('tense');
+    document.body.classList.add('done');
+    document.documentElement.style.setProperty('--c','#ff5a6e');
+    num.textContent='0'; bar.style.strokeDashoffset=C;
+    label.textContent='Time Up';
+  }
+  function start(){
+    clearInterval(timer);
+    document.body.classList.remove('done');
+    label.textContent='Countdown';
+    left=TOTAL; paint(left,1);
+    timer=setInterval(()=>{
+      left--;
+      if(left<=0){ finish(); return; }
+      paint(left,left/TOTAL);
+    },1000);
+  }
+  restart.onclick=start;
+  start();
+</script>
+</body>
+</html>
