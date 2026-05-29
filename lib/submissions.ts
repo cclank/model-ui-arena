@@ -1,5 +1,6 @@
 import { Dirent, promises as fs } from "node:fs";
 import path from "node:path";
+import generatedSubmissions from "@/lib/generated-submissions.json";
 
 export type ThemeMeta = {
   id: string;
@@ -19,12 +20,16 @@ export type Submission = {
   linesJs: number;
   sizeBytes: number;
   withinLineLimit: boolean;
+  unlimitedLines?: boolean;
+  usesBitmap?: boolean;
   updatedAt: string;
   questionText?: string;
   answerText?: string;
 };
 
 export const LINE_LIMIT = 220;
+
+export const UNLIMITED_LINE_THEMES = new Set<string>(["cheetah-trophy-run", "dslr-camera"]);
 
 export const CARWASH_Q1 =
   "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？";
@@ -56,6 +61,26 @@ export const THEMES: ThemeMeta[] = [
     objective: "点击交互响应、粒子动效表现、视觉冲击力"
   },
   {
+    id: "neon-countdown",
+    label: "最炫倒计时",
+    objective: "时间状态表达、节奏动效、结束瞬间爆发、数字可读性"
+  },
+  {
+    id: "particle-gravity",
+    label: "粒子引力场",
+    objective: "粒子物理、交互反馈、性能稳定性、视觉冲击力"
+  },
+  {
+    id: "cheetah-trophy-run",
+    label: "猎豹举杯冲刺",
+    objective: "SVG 造型、足球冠军叙事、奔跑动势、细节理解"
+  },
+  {
+    id: "dslr-camera",
+    label: "拟物相机",
+    objective: "拟物复刻：结构透视、材质光影、细节还原、纯手绘无贴图"
+  },
+  {
     id: "carwash-decision",
     label: "开放题：洗车决策",
     objective: "单问答推理能力：直接结论 + 理由解释"
@@ -79,6 +104,19 @@ function countInlineTagLines(html: string, tagName: "style" | "script"): number 
   return lines;
 }
 
+function usesBitmapAsset(content: string): boolean {
+  if (/<img\b/i.test(content)) {
+    return true;
+  }
+  if (/data:image\//i.test(content)) {
+    return true;
+  }
+  if (/url\(\s*['"]?[^'")]+\.(?:png|jpe?g|gif|webp|bmp|avif)\b/i.test(content)) {
+    return true;
+  }
+  return false;
+}
+
 function candidateFilesForTheme(themeId: string): string[] {
   if (themeId === "carwash-decision") {
     return ["response.md", "answer.md", "response.txt", "answer.txt", "index.html"];
@@ -87,7 +125,7 @@ function candidateFilesForTheme(themeId: string): string[] {
   return ["index.html"];
 }
 
-export async function scanSubmissions(): Promise<Submission[]> {
+async function scanFilesystemSubmissions(): Promise<Submission[]> {
   const submissionsRoot = path.join(process.cwd(), "public", "submissions");
 
   let themeDirs: Dirent[] = [];
@@ -144,6 +182,8 @@ export async function scanSubmissions(): Promise<Submission[]> {
       const linesTotal = content.split(/\r?\n/).length;
       const linesCss = isHtml ? countInlineTagLines(content, "style") : 0;
       const linesJs = isHtml ? countInlineTagLines(content, "script") : 0;
+      const unlimitedLines = UNLIMITED_LINE_THEMES.has(themeId);
+      const usesBitmap = isHtml ? usesBitmapAsset(content) : false;
 
       output.push({
         id: `${themeId}:${model}`,
@@ -156,7 +196,9 @@ export async function scanSubmissions(): Promise<Submission[]> {
         linesCss,
         linesJs,
         sizeBytes: stats.size,
-        withinLineLimit: linesTotal <= LINE_LIMIT,
+        withinLineLimit: unlimitedLines ? true : linesTotal <= LINE_LIMIT,
+        unlimitedLines,
+        usesBitmap,
         updatedAt: stats.mtime.toISOString(),
         questionText: themeId === "carwash-decision" && !isHtml ? CARWASH_Q1 : undefined,
         answerText: !isHtml ? content.trim() : undefined
@@ -172,4 +214,14 @@ export async function scanSubmissions(): Promise<Submission[]> {
   });
 
   return output;
+}
+
+export async function scanSubmissions(): Promise<Submission[]> {
+  const filesystemSubmissions = await scanFilesystemSubmissions();
+
+  if (filesystemSubmissions.length > 0) {
+    return filesystemSubmissions;
+  }
+
+  return generatedSubmissions as Submission[];
 }

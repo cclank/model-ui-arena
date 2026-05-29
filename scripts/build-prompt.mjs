@@ -1,6 +1,9 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
+const noCodeLimitThemes = new Set(["cheetah-trophy-run", "dslr-camera"]);
+const replicaThemes = new Set(["dslr-camera"]);
+
 function parseArgs(argv) {
   const args = {};
   for (let i = 0; i < argv.length; i += 1) {
@@ -31,7 +34,14 @@ async function run() {
   const maxLines = Number(args["max-lines"] ?? defaultMaxLines);
 
   const root = process.cwd();
-  const baseFile = theme === "carwash-decision" ? "base-reasoning.md" : "base.md";
+  const baseFile =
+    theme === "carwash-decision"
+      ? "base-reasoning.md"
+      : replicaThemes.has(theme)
+        ? "base-replica.md"
+        : noCodeLimitThemes.has(theme)
+          ? "base-svg.md"
+          : "base.md";
   const basePath = path.join(root, "prompts", baseFile);
   const themePath = path.join(root, "prompts", "themes", `${theme}.md`);
 

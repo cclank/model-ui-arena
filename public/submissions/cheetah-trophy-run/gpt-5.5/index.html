@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Cheetah Trophy Run</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#06111f;color:#f8fbff;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{display:grid;place-items:center;padding:18px;overflow:hidden;background:radial-gradient(circle at 76% 12%,rgba(255,207,78,.2),transparent 28%),linear-gradient(145deg,#071a30,#04101f 58%,#02060c)}
+.poster{width:min(1200px,calc(100vw - 36px));aspect-ratio:16/10;border-radius:28px;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.12);background:#07172a}
+svg{display:block;width:100%;height:100%}.speed{animation:dash 1.9s linear infinite}.confetti{animation:fall 3.6s linear infinite}.glow{animation:pulse 2.4s ease-in-out infinite}.cheetah{animation:run 1.2s ease-in-out infinite}.ball{animation:roll 1.5s linear infinite}
+@keyframes dash{to{transform:translateX(-70px)}}@keyframes fall{50%{transform:translateY(18px) rotate(10deg)}}@keyframes pulse{50%{opacity:.55}}@keyframes run{50%{transform:translateY(-8px)}}@keyframes roll{to{transform:rotate(360deg)}}@media(max-width:620px){body{padding:8px}.poster{width:calc(100vw - 16px);border-radius:16px}}
+</style>
+</head>
+<body>
+<main class="poster" aria-label="猎豹托举大力神杯冲刺 SVG 海报">
+<svg viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc" xmlns="http://www.w3.org/2000/svg">
+<title id="title">猎豹托举大力神杯冲刺</title>
+<desc id="desc">拟人化猎豹在夜晚足球场高速奔跑，双前爪托举金色大力神杯，背景有补时绝杀比分牌、足球、草痕、彩带和聚光灯。</desc>
+<defs>
+<linearGradient id="sky" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#102a4b"/><stop offset=".52" stop-color="#07172a"/><stop offset="1" stop-color="#04101e"/></linearGradient>
+<linearGradient id="grass" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#1d8f59"/><stop offset="1" stop-color="#07512f"/></linearGradient>
+<linearGradient id="gold" x1="0" x2="1"><stop stop-color="#8b5608"/><stop offset=".18" stop-color="#ffe27a"/><stop offset=".48" stop-color="#f7b72e"/><stop offset=".78" stop-color="#fff1a6"/><stop offset="1" stop-color="#9b6109"/></linearGradient>
+<linearGradient id="fur" x1="0" x2="1"><stop stop-color="#f8b22d"/><stop offset=".62" stop-color="#e8791a"/><stop offset="1" stop-color="#9b4316"/></linearGradient>
+<linearGradient id="furLight" x1="0" x2="1"><stop stop-color="#ffd783"/><stop offset="1" stop-color="#f08b25"/></linearGradient>
+<radialGradient id="light" cx=".5" cy=".45"><stop stop-color="#fff9c9" stop-opacity=".88"/><stop offset=".2" stop-color="#ffe27a" stop-opacity=".45"/><stop offset="1" stop-color="#ffe27a" stop-opacity="0"/></radialGradient>
+<filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="10" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000" flood-opacity=".38"/></filter>
+<pattern id="net" width="42" height="24" patternUnits="userSpaceOnUse"><path d="M0 24 42 0M-21 12 21-12M21 36 63 12" stroke="#ffffff" stroke-opacity=".08"/></pattern>
+</defs>
+
+<rect width="1600" height="1000" fill="url(#sky)"/>
+<g opacity=".75"><path d="M0 535 C270 485 515 515 780 478 S1325 430 1600 478 V760 H0Z" fill="#0c2441"/><path d="M0 548 C330 510 620 542 920 500 S1375 465 1600 502" fill="none" stroke="#6bb7ff" stroke-opacity=".14" stroke-width="7"/></g>
+<g class="glow"><ellipse cx="280" cy="108" rx="230" ry="70" fill="url(#light)"/><ellipse cx="1320" cy="95" rx="250" ry="80" fill="url(#light)"/><path d="M170 140 555 780M1330 135 930 780" stroke="#fff6b1" stroke-opacity=".2" stroke-width="80"/></g>
+<g opacity=".84"><rect x="0" y="505" width="1600" height="160" fill="#0b1b31"/><rect x="0" y="505" width="1600" height="160" fill="url(#net)"/><path d="M0 575 H1600" stroke="#ffffff" stroke-opacity=".1" stroke-width="3"/><circle cx="205" cy="585" r="22" fill="#ffd24b" opacity=".9"/><circle cx="1390" cy="585" r="22" fill="#ffd24b" opacity=".9"/></g>
+<g transform="translate(1125 188)" filter="url(#shadow)">
+  <rect width="250" height="138" rx="20" fill="#06101d" stroke="#80d5ff" stroke-opacity=".45"/>
+  <text x="24" y="38" fill="#8be4ff" font-size="22" font-weight="800" letter-spacing="2">FINAL</text>
+  <text x="28" y="86" fill="#ffffff" font-size="54" font-weight="900">3:2</text>
+  <text x="166" y="82" fill="#ffde68" font-size="30" font-weight="900">90+7'</text>
+  <text x="30" y="118" fill="#aab7d7" font-size="17">补时绝杀</text>
+</g>
+<g class="confetti" opacity=".96">
+  <path d="M352 160 l18 44" stroke="#ffcf33" stroke-width="9"/><path d="M415 110 l-28 45" stroke="#5df3ff" stroke-width="7"/><path d="M1040 130 l24 48" stroke="#ff4ea0" stroke-width="8"/><path d="M1190 120 l-34 35" stroke="#8cff6a" stroke-width="8"/><path d="M1460 190 l-24 50" stroke="#ffd96b" stroke-width="7"/>
+  <circle cx="680" cy="122" r="8" fill="#ff4ea0"/><circle cx="910" cy="170" r="6" fill="#79f7ff"/><circle cx="1260" cy="250" r="7" fill="#fff06a"/>
+</g>
+<g class="speed" opacity=".78">
+  <path d="M1420 360 H950" stroke="#6fe7ff" stroke-width="12" stroke-linecap="round" opacity=".18"/><path d="M1510 444 H1035" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity=".25"/><path d="M1370 710 H690" stroke="#ffd15c" stroke-width="9" stroke-linecap="round" opacity=".19"/><path d="M1565 625 H1050" stroke="#6fe7ff" stroke-width="5" stroke-linecap="round" opacity=".3"/>
+</g>
+<g><rect y="662" width="1600" height="338" fill="url(#grass)"/><path d="M0 830 C250 790 420 825 630 785 S1020 750 1600 785 V1000 H0Z" fill="#0b6f42"/><path d="M0 890 H1600" stroke="#cfffd6" stroke-opacity=".22" stroke-width="5"/><path d="M160 706 C420 760 720 750 950 720" fill="none" stroke="#caffb7" stroke-opacity=".28" stroke-width="3"/></g>
+<g transform="translate(1268 736)" class="ball">
+  <circle r="46" fill="#f5f8ff" stroke="#0a1728" stroke-width="5"/><path d="M0-18 18-5 11 18-12 18-19-5Z" fill="#111827"/><path d="M0-18 V-42M18-5 42-18M11 18 28 39M-12 18-31 37M-19-5-42-16" stroke="#111827" stroke-width="5"/>
+</g>
+<g opacity=".65"><path d="M1110 780 C1210 764 1320 780 1410 820" fill="none" stroke="#17421d" stroke-width="9" stroke-linecap="round"/><path d="M1055 810 C1160 802 1240 812 1360 855" fill="none" stroke="#17421d" stroke-width="5" stroke-linecap="round"/></g>
+
+<g class="cheetah" transform="translate(145 82)" filter="url(#shadow)">
+  <g id="trophy" transform="translate(605 58)">
+    <ellipse cx="132" cy="68" rx="92" ry="56" fill="url(#gold)" filter="url(#softGlow)"/>
+    <path d="M75 38 C32 65 28 125 78 153 C116 176 154 174 191 153 C238 124 233 66 190 38 C168 78 98 80 75 38Z" fill="url(#gold)" stroke="#fff3a8" stroke-width="4"/>
+    <path d="M76 50 C104 93 160 91 190 51" fill="none" stroke="#fff7b8" stroke-width="9" stroke-linecap="round" opacity=".9"/>
+    <path d="M86 155 C101 190 164 190 180 155 C164 179 104 181 86 155Z" fill="#b96b09"/>
+    <rect x="94" y="187" width="76" height="33" rx="8" fill="#1c9a56" stroke="#d9ffb1" stroke-width="3"/>
+    <path d="M112 188 C118 168 146 168 152 188" fill="none" stroke="#f6cf51" stroke-width="12"/>
+    <circle cx="105" cy="88" r="18" fill="#ffe886" opacity=".8"/><circle cx="160" cy="75" r="12" fill="#fff6c1" opacity=".8"/>
+    <path d="M59 96 C26 86 17 123 41 150 C55 166 75 167 90 155" fill="none" stroke="#f2bc35" stroke-width="15" stroke-linecap="round"/>
+    <path d="M205 96 C238 86 247 123 223 150 C209 166 189 167 174 155" fill="none" stroke="#f2bc35" stroke-width="15" stroke-linecap="round"/>
+    <text x="132" y="250" text-anchor="middle" fill="#fff3aa" font-size="19" font-weight="900">WORLD CHAMPION</text>
+  </g>
+  <g id="arms" fill="url(#furLight)" stroke="#5e210f" stroke-width="5" stroke-linecap="round">
+    <path d="M590 270 C600 204 640 160 690 130 C704 122 722 140 708 154 C660 194 639 231 628 285Z"/>
+    <path d="M833 270 C822 205 786 160 735 130 C720 121 703 140 717 154 C764 194 786 232 795 286Z"/>
+    <path d="M676 125 C690 109 715 109 730 126 C715 142 692 142 676 125Z"/>
+    <path d="M694 123 C705 108 728 111 739 128 C724 140 707 139 694 123Z"/>
+  </g>
+  <g id="tail" fill="none" stroke-linecap="round">
+    <path d="M550 512 C370 470 283 360 170 390 C88 412 98 508 184 505" stroke="#f49a22" stroke-width="42"/>
+    <path d="M186 505 C128 500 112 448 155 424" stroke="#17110b" stroke-width="34"/>
+    <path d="M540 505 C400 470 310 405 214 398" stroke="#ffd27b" stroke-width="12" opacity=".48"/>
+  </g>
+  <g id="legs" stroke="#5e210f" stroke-width="6" stroke-linecap="round">
+    <path d="M603 596 C535 650 475 712 386 840 L328 823 C398 720 462 640 548 562Z" fill="url(#fur)"/>
+    <path d="M386 840 C350 878 286 885 248 858 C284 836 315 821 328 823Z" fill="#2a150c"/>
+    <path d="M742 592 C830 635 930 675 1052 724 L1038 785 C900 760 786 715 690 630Z" fill="url(#fur)"/>
+    <path d="M1052 724 C1105 735 1142 775 1138 816 C1095 807 1065 800 1038 785Z" fill="#2a150c"/>
+    <path d="M646 612 C614 690 622 760 662 850 L604 870 C552 760 548 670 592 592Z" fill="url(#furLight)"/>
+    <path d="M662 850 C638 895 574 915 526 893 C556 865 584 850 604 870Z" fill="#2a150c"/>
+  </g>
+  <g id="body">
+    <path d="M457 437 C512 300 690 235 839 291 C940 329 990 430 952 526 C909 634 750 672 598 632 C486 602 414 545 457 437Z" fill="url(#fur)" stroke="#5e210f" stroke-width="7"/>
+    <path d="M542 391 C610 317 740 296 835 335 C907 365 944 425 924 488 C887 426 820 401 726 400 C639 400 582 422 542 391Z" fill="#ffd783" opacity=".55"/>
+  </g>
+  <g id="spots" fill="#24120a">
+    <circle cx="548" cy="422" r="12"/><circle cx="600" cy="376" r="9"/><circle cx="648" cy="430" r="14"/><circle cx="716" cy="357" r="12"/><circle cx="782" cy="420" r="11"/><circle cx="858" cy="474" r="15"/><circle cx="742" cy="523" r="13"/><circle cx="660" cy="561" r="10"/><circle cx="570" cy="530" r="14"/><circle cx="508" cy="480" r="9"/><circle cx="820" cy="548" r="10"/><circle cx="914" cy="505" r="8"/><circle cx="514" cy="626" r="9"/><circle cx="453" cy="392" r="7"/>
+    <circle cx="522" cy="692" r="9"/><circle cx="458" cy="744" r="7"/><circle cx="812" cy="650" r="8"/><circle cx="900" cy="702" r="9"/><circle cx="312" cy="423" r="8"/><circle cx="252" cy="438" r="6"/>
+  </g>
+  <g id="head" transform="translate(865 275)">
+    <path d="M0 86 C22 30 92 5 149 26 C205 46 232 104 210 155 C184 214 105 232 48 200 C4 176-17 130 0 86Z" fill="url(#furLight)" stroke="#5e210f" stroke-width="6"/>
+    <path d="M25 55 L26 2 L64 33Z" fill="#f2a135" stroke="#5e210f" stroke-width="5"/><path d="M146 28 L176-18 L183 50Z" fill="#f2a135" stroke="#5e210f" stroke-width="5"/>
+    <ellipse cx="105" cy="156" rx="60" ry="45" fill="#ffe0a0"/><circle cx="73" cy="96" r="10" fill="#07101d"/><circle cx="152" cy="94" r="10" fill="#07101d"/><path d="M108 118 l20 12-23 13Z" fill="#1a0e08"/>
+    <path d="M67 112 C66 138 77 156 96 171" stroke="#19100a" stroke-width="8" stroke-linecap="round"/><path d="M153 110 C147 136 134 155 114 170" stroke="#19100a" stroke-width="8" stroke-linecap="round"/>
+    <path d="M69 184 C96 207 135 207 164 184" fill="none" stroke="#5e210f" stroke-width="5" stroke-linecap="round"/>
+    <g fill="#24120a"><circle cx="32" cy="88" r="7"/><circle cx="50" cy="55" r="6"/><circle cx="188" cy="126" r="8"/><circle cx="174" cy="63" r="6"/><circle cx="112" cy="38" r="7"/><circle cx="202" cy="158" r="5"/></g>
+  </g>
+  <g id="front-leg" fill="url(#furLight)" stroke="#5e210f" stroke-width="6" stroke-linecap="round">
+    <path d="M900 515 C962 568 1030 605 1128 635 L1118 694 C1016 676 922 624 856 556Z"/>
+    <path d="M1128 635 C1173 642 1208 668 1222 706 C1178 710 1140 708 1118 694Z" fill="#2a150c"/>
+  </g>
+  <g id="ground-effects">
+    <path d="M210 842 C390 790 520 812 696 845" fill="none" stroke="#d2ffb2" stroke-opacity=".55" stroke-width="8" stroke-linecap="round"/>
+    <path d="M280 875 C420 845 540 856 720 890" fill="none" stroke="#204e23" stroke-opacity=".85" stroke-width="10" stroke-linecap="round"/>
+    <g fill="#b8ff8c"><ellipse cx="430" cy="805" rx="10" ry="4" transform="rotate(-20 430 805)"/><ellipse cx="502" cy="828" rx="13" ry="5" transform="rotate(16 502 828)"/><ellipse cx="615" cy="850" rx="10" ry="4" transform="rotate(-12 615 850)"/><ellipse cx="760" cy="820" rx="12" ry="5" transform="rotate(24 760 820)"/></g>
+  </g>
+</g>
+
+<g transform="translate(82 82)">
+  <text x="0" y="0" fill="#7ee7ff" font-size="18" font-weight="800" letter-spacing="4">SVG CAPABILITY TEST</text>
+  <text x="0" y="50" fill="#fff7cf" font-size="56" font-weight="950">猎豹托举大力神杯冲刺</text>
+  <text x="3" y="86" fill="#aab7d7" font-size="22">速度、奖杯识别、决赛叙事、细节分层</text>
+</g>
+</svg>
+</main>
+</body>
+</html>

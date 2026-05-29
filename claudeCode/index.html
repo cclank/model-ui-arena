@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Claude Code SVG Playground</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg-1: #130f12;
+        --bg-2: #26171e;
+        --text: #fff5f4;
+        --muted: #d3b7b5;
+        --accent: #ff9f8d;
+        --accent-2: #ffd36e;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background:
+          radial-gradient(circle at 20% 16%, rgba(255, 159, 141, 0.18), transparent 24%),
+          radial-gradient(circle at 82% 12%, rgba(255, 211, 110, 0.14), transparent 24%),
+          linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+        font-family: Georgia, "Times New Roman", serif;
+        color: var(--text);
+      }
+
+      .panel {
+        width: min(920px, 100%);
+        border: 1px solid rgba(255, 159, 141, 0.2);
+        border-radius: 28px;
+        padding: 28px;
+        background: rgba(30, 18, 24, 0.82);
+        box-shadow: 0 28px 80px rgba(0, 0, 0, 0.32);
+      }
+
+      .head {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(32px, 5vw, 52px);
+        line-height: 0.95;
+      }
+
+      p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 38px;
+        padding: 0 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 159, 141, 0.22);
+        background: rgba(255, 159, 141, 0.08);
+      }
+
+      svg {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .orbit {
+        transform-origin: center;
+        animation: drift 14s ease-in-out infinite;
+      }
+
+      .orbit.alt {
+        animation-duration: 18s;
+        animation-delay: 1.2s;
+      }
+
+      .beam {
+        animation: beamPulse 3.8s ease-in-out infinite;
+      }
+
+      .beam.alt {
+        animation-delay: 1.4s;
+      }
+
+      .halo {
+        animation: halo 5.2s linear infinite;
+      }
+
+      .caption {
+        display: grid;
+        gap: 8px;
+        margin-top: 18px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      code {
+        color: var(--accent);
+      }
+
+      @keyframes drift {
+        0%,
+        100% {
+          transform: rotate(0deg) scale(1);
+        }
+
+        50% {
+          transform: rotate(180deg) scale(1.04);
+        }
+      }
+
+      @keyframes beamPulse {
+        0%,
+        100% {
+          opacity: 0.28;
+        }
+
+        50% {
+          opacity: 0.92;
+        }
+      }
+
+      @keyframes halo {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="panel">
+      <div class="head">
+        <div>
+          <h1>Claude Code<br />SVG Lab</h1>
+          <p>这里放了一个独立占位页。后续可以直接在这个目录里继续打磨 SVG 视觉效果。</p>
+        </div>
+        <div class="badge">claudeCode/index.html</div>
+      </div>
+
+      <svg viewBox="0 0 960 560" aria-label="Claude Code SVG placeholder">
+        <defs>
+          <linearGradient id="claude-wash" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#1f1118" />
+            <stop offset="55%" stop-color="#2b1820" />
+            <stop offset="100%" stop-color="#160d12" />
+          </linearGradient>
+          <linearGradient id="beam" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#ff9f8d" stop-opacity="0" />
+            <stop offset="50%" stop-color="#ffcf8f" stop-opacity="1" />
+            <stop offset="100%" stop-color="#ff9f8d" stop-opacity="0" />
+          </linearGradient>
+          <radialGradient id="core" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#fff4e0" />
+            <stop offset="35%" stop-color="#ffd36e" />
+            <stop offset="100%" stop-color="#6c2a22" />
+          </radialGradient>
+        </defs>
+
+        <rect width="960" height="560" rx="28" fill="url(#claude-wash)" />
+
+        <g class="orbit">
+          <ellipse cx="480" cy="280" rx="270" ry="132" fill="none" stroke="#ff9f8d" stroke-width="1.5" opacity="0.28" />
+          <ellipse cx="480" cy="280" rx="208" ry="88" fill="none" stroke="#ffd36e" stroke-width="1.5" opacity="0.22" />
+        </g>
+
+        <g class="orbit alt">
+          <rect x="246" y="110" width="468" height="340" rx="112" fill="none" stroke="#ffd36e" stroke-width="1.2" opacity="0.18" />
+        </g>
+
+        <g class="halo" transform="translate(480 280)">
+          <path d="M0 -190 L16 -136 L70 -154 L48 -100 L104 -82 L48 -62 L74 -10 L18 -28 L0 26 L-18 -28 L-74 -10 L-48 -62 L-104 -82 L-48 -100 L-70 -154 L-16 -136 Z" fill="#ff9f8d" opacity="0.08" />
+        </g>
+
+        <g>
+          <rect x="210" y="270" width="540" height="12" rx="6" fill="url(#beam)" class="beam" />
+          <rect x="282" y="226" width="396" height="10" rx="5" fill="url(#beam)" class="beam alt" />
+          <rect x="282" y="326" width="396" height="10" rx="5" fill="url(#beam)" class="beam" />
+        </g>
+
+        <g transform="translate(480 280)">
+          <circle r="94" fill="url(#core)" />
+          <circle r="58" fill="#2b1319" opacity="0.78" />
+          <circle r="20" fill="#fff7e7" />
+        </g>
+
+        <path
+          d="M96 430 C186 382 276 468 366 420 S548 352 642 398 S810 470 886 418"
+          fill="none"
+          stroke="#ff9f8d"
+          stroke-width="4"
+          stroke-linecap="round"
+          opacity="0.62"
+        />
+        <path
+          d="M118 470 C246 518 362 400 486 446 S734 520 842 420"
+          fill="none"
+          stroke="#ffd36e"
+          stroke-width="3"
+          stroke-linecap="round"
+          opacity="0.76"
+        />
+      </svg>
+
+      <div class="caption">
+        <span>当前文件适合作为 Claude Code 的独立开发入口。</span>
+        <span>当前文件：<code>claudeCode/index.html</code></span>
+      </div>
+    </section>
+  </body>
+</html>

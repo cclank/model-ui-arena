@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LUMINAR RX-7 · 拟物单反相机</title>
+<!--
+  设计说明：3/4 视角单反相机 LUMINAR RX-7，全部用内联 SVG 手绘，零位图。
+  统一左上光源：磨砂机身（宽柔高光）、金属镜环（窄锐高光）、深色玻璃（大块反光+镀膜环）三种质感分明。
+  镜头由竖向椭圆环叠成圆柱，含变焦滚花、对焦距离刻度与红色装饰环；顶部有军舰头、热靴、可点击旋转的模式转盘。
+  动效：镜片高光循环流动、对焦辅助灯呼吸；点击模式转盘可切换 AUTO/P/A/S/M/B。
+-->
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    min-height:100%;
+    display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(125% 120% at 28% 18%, #313847 0%, #1a1d25 46%, #0a0b0f 100%);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+    padding:24px;color:#e7ebf2;
+  }
+  .stage{
+    width:100%;max-width:780px;aspect-ratio:1/1;position:relative;
+    display:flex;align-items:center;justify-content:center;
+  }
+  svg{width:100%;height:auto;display:block;overflow:visible;}
+  .cam{filter:drop-shadow(0 26px 34px rgba(0,0,0,.5));}
+
+  @keyframes sheen{
+    0%{transform:translate(-26px,20px);opacity:0;}
+    18%{opacity:.5;}
+    52%{transform:translate(16px,-14px);opacity:.78;}
+    100%{transform:translate(40px,-34px);opacity:0;}
+  }
+  .sheen{animation:sheen 6.8s ease-in-out infinite;transform-origin:center;mix-blend-mode:screen;}
+  @keyframes blink{0%,100%{opacity:.3}50%{opacity:1}}
+  .led{animation:blink 2.6s ease-in-out infinite;transform-origin:center;}
+
+  #modeDial{transform-box:fill-box;transform-origin:center;
+    transition:transform .55s cubic-bezier(.34,1.56,.64,1);cursor:pointer;}
+  .shutter{cursor:pointer;transition:transform .09s ease;transform-box:fill-box;transform-origin:center;}
+  .shutter:active{transform:translateY(2.5px) scale(.985);}
+
+  .hint{
+    position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
+    color:#8b94a3;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    font-weight:500;opacity:.78;user-select:none;white-space:nowrap;
+  }
+  .hint b{color:#d7dde6;font-weight:600;}
+</style>
+</head>
+<body>
+  <div class="stage">
+    <svg viewBox="0 0 1040 720" role="img" aria-label="单反相机 LUMINAR RX-7 立体拟物图">
+      <defs>
+        <radialGradient id="gShadow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#000" stop-opacity=".55"/>
+          <stop offset="60%" stop-color="#000" stop-opacity=".32"/>
+          <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+        </radialGradient>
+
+        <linearGradient id="gFront" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#5a616e"/>
+          <stop offset="42%" stop-color="#2c3038"/>
+          <stop offset="100%" stop-color="#15171c"/>
+        </linearGradient>
+        <linearGradient id="gTop" x1="0" y1="0" x2="0.4" y2="1">
+          <stop offset="0%" stop-color="#767f8d"/>
+          <stop offset="55%" stop-color="#454b56"/>
+          <stop offset="100%" stop-color="#2c313a"/>
+        </linearGradient>
+        <linearGradient id="gSide" x1="0" y1="0" x2="1" y2="0.4">
+          <stop offset="0%" stop-color="#23262d"/>
+          <stop offset="100%" stop-color="#0d0e12"/>
+        </linearGradient>
+        <linearGradient id="gHump" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#838c9a"/>
+          <stop offset="100%" stop-color="#373c45"/>
+        </linearGradient>
+        <linearGradient id="gGrip" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#3b414b"/>
+          <stop offset="55%" stop-color="#1d2026"/>
+          <stop offset="100%" stop-color="#0c0d11"/>
+        </linearGradient>
+
+        <linearGradient id="gBarrel" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#202227"/>
+          <stop offset="17%" stop-color="#565c66"/>
+          <stop offset="37%" stop-color="#777d87"/>
+          <stop offset="52%" stop-color="#565b64"/>
+          <stop offset="100%" stop-color="#161719"/>
+        </linearGradient>
+        <linearGradient id="gSilver" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#eef2f7"/>
+          <stop offset="22%" stop-color="#aeb6c1"/>
+          <stop offset="40%" stop-color="#f4f7fb"/>
+          <stop offset="62%" stop-color="#7e8893"/>
+          <stop offset="100%" stop-color="#c4ccd6"/>
+        </linearGradient>
+        <linearGradient id="gDarkRing" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#41464e"/>
+          <stop offset="50%" stop-color="#202329"/>
+          <stop offset="100%" stop-color="#0c0d10"/>
+        </linearGradient>
+        <linearGradient id="gRed" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ff6a5a"/>
+          <stop offset="50%" stop-color="#e23026"/>
+          <stop offset="100%" stop-color="#9c130d"/>
+        </linearGradient>
+
+        <radialGradient id="gGlass" cx="40%" cy="34%" r="72%">
+          <stop offset="0%" stop-color="#23454f"/>
+          <stop offset="38%" stop-color="#0e2630"/>
+          <stop offset="72%" stop-color="#06121a"/>
+          <stop offset="100%" stop-color="#02070b"/>
+        </radialGradient>
+        <linearGradient id="gCoat" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#7a4bff" stop-opacity=".55"/>
+          <stop offset="45%" stop-color="#1ea0c8" stop-opacity=".25"/>
+          <stop offset="100%" stop-color="#13e0b0" stop-opacity=".4"/>
+        </linearGradient>
+        <radialGradient id="gDial" cx="42%" cy="34%" r="70%">
+          <stop offset="0%" stop-color="#cfd6df"/>
+          <stop offset="55%" stop-color="#878f9b"/>
+          <stop offset="100%" stop-color="#41464e"/>
+        </radialGradient>
+        <radialGradient id="gShutter" cx="40%" cy="32%" r="70%">
+          <stop offset="0%" stop-color="#e9edf2"/>
+          <stop offset="60%" stop-color="#9aa2ad"/>
+          <stop offset="100%" stop-color="#454a52"/>
+        </radialGradient>
+
+        <pattern id="pKnurl" patternUnits="userSpaceOnUse" width="7.4" height="12">
+          <rect width="7.4" height="12" fill="#23262b"/>
+          <rect x="0.6" width="2.4" height="12" fill="#535963"/>
+          <rect x="4.2" width="1.3" height="12" fill="#121316"/>
+        </pattern>
+        <pattern id="pKnurlFine" patternUnits="userSpaceOnUse" width="4.6" height="12">
+          <rect width="4.6" height="12" fill="#2a2e34"/>
+          <rect x="0.5" width="1.5" height="12" fill="#5a616b"/>
+          <rect x="2.7" width="0.9" height="12" fill="#141518"/>
+        </pattern>
+
+        <filter id="fSoft" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="7"/>
+        </filter>
+        <filter id="fGround" x="-30%" y="-60%" width="160%" height="220%">
+          <feGaussianBlur stdDeviation="16"/>
+        </filter>
+      </defs>
+
+      <!-- 地面接触投影 -->
+      <ellipse cx="556" cy="650" rx="372" ry="50" fill="url(#gShadow)" filter="url(#fGround)"/>
+
+      <g class="cam">
+        <!-- ===== 机身 立体盒 ===== -->
+        <!-- 右侧面（背光，暗） -->
+        <path d="M792,330 L845,282 L845,520 L792,566 Z" fill="url(#gSide)"/>
+        <!-- 顶面（受光最多，亮） -->
+        <path d="M452,318 L792,330 L845,282 L505,270 Z" fill="url(#gTop)"/>
+        <!-- 顶面后缘高光 -->
+        <path d="M505,270 L845,282" fill="none" stroke="#aeb7c4" stroke-opacity=".5" stroke-width="2"/>
+
+        <!-- 军舰头（取景器棱镜凸起） -->
+        <path d="M516,300 L612,306 L600,236 L536,232 Z" fill="url(#gHump)"/>
+        <path d="M536,232 L600,236 L600,236" fill="none" stroke="#b8c0cd" stroke-opacity=".6" stroke-width="2"/>
+        <path d="M516,300 L536,232 L600,236 L612,306" fill="none" stroke="#0e1014" stroke-opacity=".4" stroke-width="1.5"/>
+        <!-- 热靴 -->
+        <g>
+          <rect x="540" y="226" width="56" height="16" rx="3" fill="url(#gSilver)"/>
+          <rect x="548" y="230" width="40" height="8" rx="2" fill="#1a1c20"/>
+          <rect x="552" y="222" width="32" height="6" rx="2" fill="#6b727c"/>
+        </g>
+        <!-- 品牌字（军舰头正面斜面） -->
+        <text x="528" y="288" font-size="20" font-weight="700" letter-spacing="2"
+              fill="#dfe5ee" transform="rotate(-4 528 288)">LUMINAR</text>
+
+        <!-- 正面（主面） -->
+        <path d="M452,318 L792,330 L792,566 L452,560 Z" fill="url(#gFront)"/>
+        <!-- 正面边缘高光/暗边 -->
+        <path d="M452,318 L452,560" stroke="#7b828d" stroke-opacity=".5" stroke-width="2" fill="none"/>
+        <path d="M452,560 L792,566" stroke="#0a0b0e" stroke-opacity=".5" stroke-width="2" fill="none"/>
+
+        <!-- 手柄握把（正面右侧凸起 + 防滑横纹） -->
+        <path d="M712,332 C770,336 800,352 800,384 L800,536 C800,558 768,566 724,564 L712,562 Z"
+              fill="url(#gGrip)"/>
+        <g stroke="#0a0b0e" stroke-opacity=".55" stroke-width="3" stroke-linecap="round">
+          <line x1="726" y1="392" x2="784" y2="396"/>
+          <line x1="726" y1="408" x2="786" y2="412"/>
+          <line x1="726" y1="424" x2="786" y2="428"/>
+          <line x1="726" y1="440" x2="786" y2="444"/>
+          <line x1="726" y1="456" x2="785" y2="460"/>
+          <line x1="726" y1="472" x2="784" y2="476"/>
+          <line x1="726" y1="488" x2="782" y2="492"/>
+          <line x1="726" y1="504" x2="780" y2="508"/>
+          <line x1="726" y1="520" x2="776" y2="524"/>
+        </g>
+        <g stroke="#4a515b" stroke-opacity=".5" stroke-width="1.4" stroke-linecap="round">
+          <line x1="726" y1="388" x2="784" y2="392"/>
+          <line x1="726" y1="404" x2="786" y2="408"/>
+          <line x1="726" y1="420" x2="786" y2="424"/>
+          <line x1="726" y1="436" x2="786" y2="440"/>
+          <line x1="726" y1="452" x2="785" y2="456"/>
+          <line x1="726" y1="468" x2="784" y2="472"/>
+        </g>
+
+        <!-- 型号牌 + 对焦辅助灯 -->
+        <text x="470" y="352" font-size="15" font-weight="600" letter-spacing="1" fill="#aab2bd">RX-7</text>
+        <circle class="led" cx="690" cy="356" r="6" fill="#ff4d3d"/>
+        <circle cx="690" cy="356" r="6" fill="none" stroke="#ffb3a8" stroke-opacity=".7" stroke-width="1"/>
+
+        <!-- ===== 镜头组（从机身向左前伸出）===== -->
+        <!-- 机身上的镜头安装座（法兰，让镜头长在机身上） -->
+        <ellipse cx="636" cy="452" rx="70" ry="138" fill="#0c0e11"/>
+        <ellipse cx="636" cy="452" rx="70" ry="138" fill="none" stroke="#4a505a" stroke-opacity=".6" stroke-width="2"/>
+
+        <!-- 镜头圆柱侧壁（右端插入机身座） -->
+        <path d="M624,328 L250,350 L250,602 L624,576 Z" fill="url(#gBarrel)"/>
+        <path d="M624,344 L250,366" stroke="#9aa0a9" stroke-opacity=".55" stroke-width="6" fill="none"/>
+        <path d="M624,560 L250,584" stroke="#000" stroke-opacity=".4" stroke-width="6" fill="none"/>
+
+        <!-- 卡口银环（套在镜头根部的窄环，内填筒色不中空） -->
+        <ellipse cx="600" cy="452" rx="58" ry="128" fill="url(#gSilver)"/>
+        <ellipse cx="600" cy="452" rx="49" ry="118" fill="url(#gBarrel)"/>
+        <!-- 卡口红色对位点 -->
+        <circle cx="600" cy="332" r="5" fill="#e23026"/>
+        <!-- 卡口释放按钮（机身座右侧） -->
+        <ellipse cx="678" cy="488" rx="10" ry="22" fill="#2a2d33" stroke="#5a616b" stroke-width="1"/>
+
+        <!-- 变焦滚花环 -->
+        <path d="M556,330 L468,336 L468,588 L556,580 Z" fill="url(#pKnurl)"/>
+        <path d="M556,330 L468,336" stroke="#7e848d" stroke-opacity=".6" stroke-width="2" fill="none"/>
+        <path d="M468,588 L556,580" stroke="#000" stroke-opacity=".45" stroke-width="2" fill="none"/>
+        <ellipse cx="468" cy="462" rx="11" ry="126" fill="#181a1d" opacity=".55"/>
+
+        <!-- 对焦环 + 距离刻度 -->
+        <path d="M444,338 L356,344 L356,596 L444,590 Z" fill="url(#pKnurlFine)"/>
+        <g font-size="11" font-weight="600" fill="#cfd5de" text-anchor="middle">
+          <text x="400" y="352">∞</text>
+          <text x="400" y="366">5</text>
+          <text x="400" y="382">3</text>
+          <text x="400" y="402">2</text>
+          <text x="400" y="560">1.2</text>
+          <text x="400" y="578">0.9</text>
+        </g>
+        <line x1="356" y1="462" x2="444" y2="462" stroke="#f0d24a" stroke-width="2" opacity=".9"/>
+
+        <!-- 红色装饰环 -->
+        <path d="M322,346 L300,348 L300,592 L322,590 Z" fill="url(#gRed)"/>
+        <path d="M300,348 L300,592" stroke="#ff8a7d" stroke-opacity=".7" stroke-width="2" fill="none"/>
+
+        <!-- 镜头前框（银/黑双环） -->
+        <ellipse cx="252" cy="476" rx="50" ry="126" fill="url(#gSilver)"/>
+        <ellipse cx="248" cy="476" rx="44" ry="118" fill="#0c0e11"/>
+        <text x="252" y="600" font-size="12" font-weight="600" fill="#c2c9d2" text-anchor="middle"
+              transform="rotate(-90 252 476)" opacity=".9">LM 50mm 1:1.2</text>
+
+        <!-- 前镜片（玻璃） -->
+        <ellipse cx="238" cy="476" rx="40" ry="110" fill="url(#gGlass)"/>
+        <!-- 镀膜反光环 -->
+        <ellipse cx="238" cy="476" rx="40" ry="110" fill="none" stroke="url(#gCoat)" stroke-width="4"/>
+        <ellipse cx="238" cy="476" rx="28" ry="86" fill="none" stroke="#10707d" stroke-opacity=".5" stroke-width="2"/>
+        <!-- 内反光小核 -->
+        <ellipse cx="248" cy="512" rx="9" ry="22" fill="#1d6f7a" opacity=".4" filter="url(#fSoft)"/>
+        <!-- 玻璃大高光（流动动效） -->
+        <ellipse class="sheen" cx="224" cy="438" rx="15" ry="46" fill="#eaf6ff" opacity=".7" filter="url(#fSoft)"/>
+        <!-- 边缘锐高光 -->
+        <path d="M214,402 Q200,470 220,540" fill="none" stroke="#dff2ff" stroke-opacity=".55" stroke-width="3" stroke-linecap="round"/>
+
+        <!-- ===== 顶面控件 ===== -->
+        <!-- 模式转盘（圆形组 + 透视压扁） -->
+        <g transform="translate(770,300) scale(1,0.5)">
+          <circle cx="0" cy="0" r="52" fill="#1b1d22"/>
+          <g id="modeDial">
+            <circle cx="0" cy="0" r="48" fill="url(#gDial)"/>
+            <circle cx="0" cy="0" r="30" fill="#3a3f47"/>
+            <circle cx="0" cy="0" r="30" fill="none" stroke="#111316" stroke-width="2"/>
+            <!-- 刻度 -->
+            <g stroke="#15171b" stroke-width="3" stroke-linecap="round">
+              <line x1="0" y1="-46" x2="0" y2="-38"/>
+              <line x1="40" y1="-23" x2="33" y2="-19"/>
+              <line x1="46" y1="0" x2="38" y2="0"/>
+              <line x1="40" y1="23" x2="33" y2="19"/>
+              <line x1="0" y1="46" x2="0" y2="38"/>
+              <line x1="-40" y1="23" x2="-33" y2="19"/>
+              <line x1="-46" y1="0" x2="-38" y2="0"/>
+              <line x1="-40" y1="-23" x2="-33" y2="-19"/>
+            </g>
+            <g font-size="13" font-weight="700" fill="#1a1c20" text-anchor="middle" font-family="Arial,sans-serif">
+              <text x="0" y="-32">M</text>
+              <text x="34" y="5">S</text>
+              <text x="0" y="44">A</text>
+              <text x="-34" y="5">P</text>
+            </g>
+            <!-- 当前档高亮缺口 -->
+            <circle id="dialMark" cx="0" cy="-39" r="4.4" fill="#f0d24a"/>
+          </g>
+        </g>
+        <!-- 转盘固定指示三角 -->
+        <path d="M770,268 l7,11 l-14,0 Z" fill="#eef2f7"/>
+
+        <!-- 快门按钮（机身肩部凸起） -->
+        <g class="shutter">
+          <ellipse cx="694" cy="306" rx="26" ry="14" fill="#22252b"/>
+          <ellipse cx="694" cy="302" rx="22" ry="11" fill="url(#gShutter)"/>
+          <ellipse cx="690" cy="299" rx="9" ry="4.5" fill="#fff" opacity=".5"/>
+        </g>
+        <!-- 电源小拨钮 -->
+        <ellipse cx="640" cy="312" rx="13" ry="7" fill="#3a3f47" stroke="#111316" stroke-width="1.5"/>
+        <ellipse cx="640" cy="310" rx="5" ry="3" fill="#9aa2ad"/>
+      </g>
+    </svg>
+    <div class="hint">点击模式转盘切换档位 · 当前 <b id="modeLabel">AUTO</b></div>
+  </div>
+
+<script>
+  (function(){
+    var dial = document.getElementById('modeDial');
+    var label = document.getElementById('modeLabel');
+    var modes = ['AUTO','P','A','S','M','B'];
+    var i = 0;
+    if(!dial) return;
+    dial.addEventListener('click', function(){
+      i = (i + 1) % modes.length;
+      dial.style.transform = 'rotate(' + (i * -60) + 'deg)';
+      label.textContent = modes[i];
+    });
+    dial.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); dial.click(); }
+    });
+    dial.setAttribute('tabindex','0');
+    dial.setAttribute('role','button');
+    dial.setAttribute('aria-label','模式转盘');
+  })();
+</script>
+</body>
+</html>

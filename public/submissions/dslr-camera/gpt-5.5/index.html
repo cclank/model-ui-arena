@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>DSLR Camera Replica</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0c1017;color:#f4f7ff;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{display:grid;place-items:center;padding:18px;overflow:hidden;background:radial-gradient(circle at 22% 14%,rgba(112,168,255,.2),transparent 30%),radial-gradient(circle at 78% 18%,rgba(255,212,134,.15),transparent 28%),linear-gradient(160deg,#141c2a,#080c13 62%,#04070c)}.stage{width:min(1280px,calc(100vw - 36px));aspect-ratio:16/10;border-radius:26px;overflow:hidden;background:#101722;box-shadow:0 32px 100px rgba(0,0,0,.58),0 0 0 1px rgba(255,255,255,.12)}svg{display:block;width:100%;height:100%}.dial{cursor:pointer;transform-box:fill-box;transform-origin:center}.dial.spin{animation:dialSpin .8s cubic-bezier(.2,.7,.18,1)}.glassSweep{animation:sweep 3.4s ease-in-out infinite}.shine{animation:pulse 3s ease-in-out infinite}@keyframes dialSpin{to{transform:rotate(55deg)}}@keyframes sweep{0%,28%{transform:translateX(-150px) rotate(-12deg);opacity:0}44%,62%{opacity:.85}86%,100%{transform:translateX(180px) rotate(-12deg);opacity:0}}@keyframes pulse{50%{opacity:.48}}@media(max-width:620px){body{padding:8px}.stage{width:calc(100vw - 16px);border-radius:16px}}
+</style>
+</head>
+<body>
+<main class="stage" aria-label="拟物单反相机 3/4 视角纯 SVG 复刻">
+<svg viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc" xmlns="http://www.w3.org/2000/svg">
+<title id="title">拟物单反相机</title>
+<desc id="desc">一台 3/4 侧前方视角的手绘单反相机，包含厚实机身、可拆镜头、军舰头、模式转盘、热靴、快门、握把、防滑纹理、金属镜环和玻璃镜片高光。</desc>
+<defs>
+<linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#1b2738"/><stop offset=".54" stop-color="#0d1420"/><stop offset="1" stop-color="#060910"/></linearGradient>
+<linearGradient id="table" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#2a303b"/><stop offset=".52" stop-color="#171d26"/><stop offset="1" stop-color="#0a0d13"/></linearGradient>
+<linearGradient id="bodyFace" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#343b45"/><stop offset=".26" stop-color="#151a22"/><stop offset=".62" stop-color="#262d36"/><stop offset="1" stop-color="#090c12"/></linearGradient>
+<linearGradient id="bodyTop" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#5c6671"/><stop offset=".42" stop-color="#242b34"/><stop offset="1" stop-color="#11161d"/></linearGradient>
+<linearGradient id="bodySide" x1="0" x2="1"><stop stop-color="#222933"/><stop offset=".6" stop-color="#0c1017"/><stop offset="1" stop-color="#05070b"/></linearGradient>
+<linearGradient id="rubber" x1="0" x2="1"><stop stop-color="#212833"/><stop offset=".5" stop-color="#0b0f15"/><stop offset="1" stop-color="#242b35"/></linearGradient>
+<linearGradient id="metal" x1="0" x2="1"><stop stop-color="#7e8792"/><stop offset=".16" stop-color="#eef3fa"/><stop offset=".34" stop-color="#87909b"/><stop offset=".58" stop-color="#363c45"/><stop offset=".82" stop-color="#cdd5df"/><stop offset="1" stop-color="#565e68"/></linearGradient>
+<linearGradient id="redRing" x1="0" x2="1"><stop stop-color="#5a0d12"/><stop offset=".48" stop-color="#d62733"/><stop offset="1" stop-color="#6f1219"/></linearGradient>
+<radialGradient id="glass" cx=".44" cy=".34" r=".72"><stop stop-color="#c9f5ff" stop-opacity=".9"/><stop offset=".12" stop-color="#3cc6ff" stop-opacity=".62"/><stop offset=".36" stop-color="#15386e"/><stop offset=".68" stop-color="#081327"/><stop offset="1" stop-color="#02050d"/></radialGradient>
+<radialGradient id="aperture" cx=".5" cy=".5" r=".52"><stop stop-color="#061124"/><stop offset=".42" stop-color="#02050d"/><stop offset="1" stop-color="#000"/></radialGradient>
+<radialGradient id="softLight" cx=".5" cy=".5" r=".5"><stop stop-color="#ffffff" stop-opacity=".72"/><stop offset=".28" stop-color="#8edcff" stop-opacity=".22"/><stop offset="1" stop-color="#8edcff" stop-opacity="0"/></radialGradient>
+<filter id="drop" x="-20%" y="-25%" width="150%" height="160%"><feDropShadow dx="0" dy="26" stdDeviation="24" flood-color="#000" flood-opacity=".46"/></filter>
+<filter id="innerGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="10" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<pattern id="gripPattern" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M0 18 18 0M-9 9 9-9M9 27 27 9" stroke="#ffffff" stroke-opacity=".09" stroke-width="3"/></pattern>
+<pattern id="focusRibs" width="16" height="42" patternUnits="userSpaceOnUse"><rect width="7" height="42" fill="#05070b"/><rect x="8" width="4" height="42" fill="#2a3038"/></pattern>
+</defs>
+
+<rect width="1600" height="1000" fill="url(#bg)"/>
+<g opacity=".7">
+  <ellipse class="shine" cx="820" cy="195" rx="475" ry="82" fill="url(#softLight)"/>
+  <path d="M250 220 710 760M1200 210 980 780" stroke="#ffffff" stroke-opacity=".1" stroke-width="96"/>
+</g>
+<path d="M0 705 C270 668 472 718 760 684 S1290 645 1600 684 V1000 H0Z" fill="url(#table)"/>
+<path d="M120 756 C420 720 690 752 970 720 S1340 698 1538 730" fill="none" stroke="#edf4ff" stroke-opacity=".1" stroke-width="5"/>
+<ellipse cx="825" cy="806" rx="540" ry="78" fill="#000" opacity=".46"/>
+<ellipse cx="880" cy="772" rx="430" ry="42" fill="#000" opacity=".32"/>
+
+<g transform="translate(120 72)" filter="url(#drop)">
+  <g id="body">
+    <path d="M310 336 C310 294 340 270 386 270 H883 C935 270 975 300 986 347 L1037 358 C1090 368 1125 410 1125 462 V640 C1125 696 1083 735 1027 735 H392 C336 735 296 696 296 641 V410 C296 374 300 351 310 336Z" fill="#090d14"/>
+    <path d="M342 324 C342 292 366 276 408 276 H846 C895 276 930 305 944 350 L1005 365 C1050 376 1080 410 1080 455 V616 C1080 670 1040 704 988 704 H404 C350 704 316 668 316 614 V388 C316 362 324 341 342 324Z" fill="url(#bodyFace)" stroke="#4d5663" stroke-width="5"/>
+    <path d="M945 350 L1046 378 C1092 390 1120 424 1120 470 V622 C1120 676 1086 714 1033 724 L987 704 C1040 704 1080 670 1080 616 V455 C1080 410 1050 376 1005 365Z" fill="url(#bodySide)" stroke="#101621" stroke-width="5"/>
+    <path d="M380 282 H846 C894 282 922 303 936 340 H329 C339 303 356 282 380 282Z" fill="url(#bodyTop)" opacity=".94"/>
+    <path d="M360 336 C480 315 650 318 832 326" stroke="#ffffff" stroke-opacity=".12" stroke-width="9" stroke-linecap="round"/>
+    <path d="M380 678 C540 704 822 700 992 676" stroke="#ffffff" stroke-opacity=".08" stroke-width="8" stroke-linecap="round"/>
+
+    <g id="pentaprism">
+      <path d="M540 271 L596 168 H758 L826 271 Z" fill="#0b1017" stroke="#46505d" stroke-width="5"/>
+      <path d="M596 168 L632 120 H730 L758 168Z" fill="url(#bodyTop)" stroke="#4d5663" stroke-width="5"/>
+      <path d="M582 261 L620 188 H752 L800 261Z" fill="#1a2029"/>
+      <path d="M640 137 H718" stroke="#dce6f4" stroke-opacity=".18" stroke-width="6" stroke-linecap="round"/>
+    </g>
+
+    <g id="hotshoe" transform="translate(628 175)">
+      <rect x="0" y="0" width="116" height="34" rx="8" fill="#070a10" stroke="url(#metal)" stroke-width="4"/>
+      <rect x="22" y="8" width="72" height="18" rx="3" fill="#2e3742"/>
+      <path d="M14 30 H102" stroke="#ffffff" stroke-opacity=".18" stroke-width="3"/>
+    </g>
+
+    <g id="topControls">
+      <g class="dial" transform="translate(403 234)">
+        <ellipse cx="0" cy="22" rx="82" ry="30" fill="#060910" opacity=".8"/>
+        <ellipse cx="0" cy="0" rx="82" ry="42" fill="url(#metal)" stroke="#161c24" stroke-width="5"/>
+        <ellipse cx="0" cy="0" rx="60" ry="30" fill="#1f2630" stroke="#6d7783" stroke-width="3"/>
+        <g stroke="#dfe8f4" stroke-width="4" stroke-linecap="round">
+          <path d="M-54 -15 l-18 -7"/><path d="M-29 -27 l-9 -15"/><path d="M0 -32 V-50"/><path d="M31 -27 l10 -15"/><path d="M55 -13 l18 -8"/><path d="M61 9 l22 3"/><path d="M-62 8 l-22 3"/>
+        </g>
+        <text x="-24" y="8" fill="#edf4ff" font-size="24" font-weight="900">M</text>
+        <text x="10" y="9" fill="#b9c4d2" font-size="15" font-weight="800">Av</text>
+      </g>
+      <g transform="translate(868 249)">
+        <ellipse cx="0" cy="12" rx="62" ry="24" fill="#05070b" opacity=".75"/>
+        <ellipse cx="0" cy="0" rx="58" ry="31" fill="#121923" stroke="#414b58" stroke-width="4"/>
+        <ellipse cx="5" cy="-6" rx="38" ry="17" fill="url(#metal)"/>
+        <circle cx="15" cy="-8" r="9" fill="#eff5ff" opacity=".6"/>
+      </g>
+    </g>
+
+    <g id="grip">
+      <path d="M934 354 C1030 362 1085 420 1082 526 C1078 622 1027 686 946 701 C916 636 910 440 934 354Z" fill="#070a10"/>
+      <path d="M956 374 C1017 390 1050 437 1048 525 C1046 602 1012 652 960 673 C940 598 938 448 956 374Z" fill="url(#rubber)" stroke="#303946" stroke-width="4"/>
+      <path d="M964 392 C1005 420 1020 470 1015 540 C1010 604 990 638 964 660" fill="url(#gripPattern)" opacity=".82"/>
+      <path d="M976 405 C990 470 988 575 974 640" stroke="#ffffff" stroke-opacity=".1" stroke-width="6" stroke-linecap="round"/>
+    </g>
+
+    <g id="leftGrip" opacity=".92">
+      <path d="M324 402 C284 420 262 476 270 570 C278 646 320 690 390 696 C357 598 354 480 382 397 C360 394 340 396 324 402Z" fill="#080b11"/>
+      <path d="M326 426 C303 451 294 510 300 572 C306 632 330 666 370 680 C342 595 340 500 362 427Z" fill="url(#gripPattern)"/>
+    </g>
+
+    <g id="brand">
+      <text x="404" y="392" fill="#eff5ff" font-size="34" font-weight="900" letter-spacing="3">AURORA</text>
+      <text x="407" y="427" fill="#9faabd" font-size="18" font-weight="800" letter-spacing="5">X7 MIRRORPRO</text>
+      <rect x="404" y="445" width="112" height="18" rx="9" fill="#171e27" stroke="#56616f"/>
+      <circle cx="426" cy="454" r="5" fill="#78d6ff"/><circle cx="451" cy="454" r="5" fill="#ffcf66"/><circle cx="476" cy="454" r="5" fill="#76ef94"/>
+    </g>
+
+    <g id="viewfinderWindow">
+      <rect x="760" y="316" width="112" height="64" rx="11" fill="#080c12" stroke="#44505f" stroke-width="4"/>
+      <rect x="778" y="330" width="75" height="33" rx="5" fill="#1c2c41"/>
+      <path d="M782 333 L850 361" stroke="#87daff" stroke-opacity=".35" stroke-width="6"/>
+    </g>
+  </g>
+
+  <g id="mount" transform="translate(585 382)">
+    <ellipse cx="172" cy="162" rx="258" ry="222" fill="#0a0d13" stroke="#4b5563" stroke-width="9"/>
+    <ellipse cx="172" cy="162" rx="226" ry="194" fill="#171d26" stroke="url(#metal)" stroke-width="12"/>
+    <ellipse cx="172" cy="162" rx="190" ry="162" fill="#080b11"/>
+    <g stroke="#aab4c0" stroke-opacity=".35" stroke-width="6" stroke-linecap="round">
+      <path d="M42 75 C92 26 158 7 234 24"/><path d="M306 92 C350 158 340 232 290 292"/><path d="M70 300 C18 248 10 164 40 102"/>
+    </g>
+  </g>
+
+  <g id="lens" transform="translate(590 380)">
+    <path d="M100 115 C180 70 332 72 430 110 C510 142 548 194 540 260 C529 345 448 400 323 407 C202 414 101 365 70 285 C45 219 55 150 100 115Z" fill="#07090e" opacity=".72"/>
+    <path d="M98 94 C170 43 336 42 440 93 C516 130 554 191 549 258 C542 356 442 424 304 420 C184 417 83 362 55 280 C31 210 46 130 98 94Z" fill="#111721" stroke="#3b4553" stroke-width="7"/>
+    <path d="M142 85 C210 61 334 66 416 105 C477 134 507 180 502 238 C497 308 424 358 316 360 C224 361 143 324 112 266 C78 202 90 122 142 85Z" fill="url(#rubber)" stroke="#020409" stroke-width="5"/>
+    <path d="M104 132 C210 100 352 108 468 158" fill="none" stroke="#ffffff" stroke-opacity=".11" stroke-width="14" stroke-linecap="round"/>
+    <path d="M110 328 C210 390 398 382 498 314" fill="none" stroke="#ffffff" stroke-opacity=".08" stroke-width="10" stroke-linecap="round"/>
+
+    <g opacity=".96">
+      <path d="M159 95 C220 71 337 75 412 111 C466 138 493 180 489 235 C484 304 416 348 318 348 C236 348 165 315 137 263 C105 202 112 126 159 95Z" fill="url(#focusRibs)" stroke="#2b333d" stroke-width="5"/>
+      <g stroke="#667180" stroke-opacity=".45" stroke-width="4">
+        <path d="M180 91 C160 155 162 270 190 328"/><path d="M214 82 C196 158 198 279 226 341"/><path d="M252 78 C237 158 240 287 268 346"/><path d="M294 78 C285 164 286 286 310 348"/><path d="M340 82 C336 162 333 282 350 344"/><path d="M386 94 C390 166 387 274 394 335"/>
+      </g>
+    </g>
+
+    <path d="M244 78 C316 69 408 90 468 137 C510 171 530 215 523 263 C512 344 423 395 310 384 C211 375 141 320 133 244 C124 162 167 90 244 78Z" fill="#070b12" stroke="url(#metal)" stroke-width="14"/>
+    <path d="M254 103 C320 95 396 115 446 154 C483 183 501 221 495 263 C486 326 415 366 321 361 C241 357 181 316 174 252 C166 183 193 111 254 103Z" fill="#0e141e" stroke="url(#redRing)" stroke-width="10"/>
+    <ellipse cx="333" cy="236" rx="152" ry="126" fill="url(#glass)" stroke="#0b111b" stroke-width="10"/>
+    <ellipse cx="333" cy="236" rx="112" ry="91" fill="url(#aperture)" opacity=".75"/>
+    <g opacity=".5" stroke="#7edcff" stroke-width="3" fill="none">
+      <ellipse cx="333" cy="236" rx="138" ry="113"/><ellipse cx="333" cy="236" rx="92" ry="75"/><ellipse cx="333" cy="236" rx="52" ry="42"/>
+    </g>
+    <path d="M250 172 C290 124 378 126 431 174 C380 153 307 150 250 172Z" fill="#f5fdff" opacity=".28"/>
+    <path d="M270 301 C314 334 392 320 436 276" stroke="#9eeaff" stroke-opacity=".22" stroke-width="16" stroke-linecap="round"/>
+    <ellipse cx="282" cy="188" rx="34" ry="17" fill="#ffffff" opacity=".72" transform="rotate(-22 282 188)"/>
+    <ellipse cx="392" cy="170" rx="18" ry="9" fill="#c8f4ff" opacity=".58" transform="rotate(18 392 170)"/>
+    <path class="glassSweep" d="M205 105 C260 150 313 220 365 340" stroke="#f9feff" stroke-width="34" stroke-linecap="round" opacity=".0"/>
+
+    <g id="markings" font-family="ui-monospace,Menlo,monospace" font-weight="800">
+      <text x="145" y="365" fill="#ccd6e3" font-size="16" letter-spacing="2">35 50 85 135</text>
+      <text x="412" y="115" fill="#e8edf5" font-size="15" letter-spacing="2">F1.4</text>
+      <path d="M172 378 H422" stroke="#e7eef9" stroke-opacity=".24" stroke-width="3"/>
+      <path d="M188 374 V382M232 374 V382M278 374 V382M330 374 V382M384 374 V382" stroke="#e7eef9" stroke-opacity=".55" stroke-width="3"/>
+    </g>
+  </g>
+
+  <g id="smallDetails">
+    <rect x="355" y="536" width="106" height="72" rx="14" fill="#080c13" stroke="#424b57" stroke-width="4"/>
+    <circle cx="408" cy="572" r="25" fill="#162334" stroke="#627084" stroke-width="4"/>
+    <path d="M395 560 L423 585" stroke="#9bdcff" stroke-opacity=".42" stroke-width="6"/>
+    <rect x="458" y="612" width="92" height="30" rx="8" fill="#151c25" stroke="#43505d" stroke-width="3"/>
+    <text x="476" y="633" fill="#b8c3d1" font-size="15" font-weight="900">RAW</text>
+    <g stroke="#ffffff" stroke-opacity=".13" stroke-width="3">
+      <path d="M1012 398 C1058 436 1062 606 1010 666"/><path d="M996 418 C1036 456 1037 586 995 642"/><path d="M976 438 C1008 478 1009 566 978 620"/>
+    </g>
+  </g>
+
+  <g id="floorReflections" opacity=".55">
+    <path d="M400 738 C568 770 885 772 1047 735" stroke="#73829a" stroke-opacity=".18" stroke-width="12" stroke-linecap="round"/>
+    <path d="M560 772 C690 797 880 796 1008 770" stroke="#d8e8ff" stroke-opacity=".08" stroke-width="8" stroke-linecap="round"/>
+  </g>
+</g>
+
+<g transform="translate(92 92)">
+  <text x="0" y="0" fill="#84dfff" font-size="18" font-weight="900" letter-spacing="5">REPLICA CAPABILITY TEST</text>
+  <text x="0" y="50" fill="#f5f7ff" font-size="58" font-weight="950">拟物单反相机</text>
+  <text x="2" y="88" fill="#aeb8ca" font-size="21">3/4 透视、镜头玻璃、金属镜环、磨砂机身、纯 SVG 手绘</text>
+</g>
+</svg>
+</main>
+<script>
+const dial=document.querySelector(".dial");
+dial?.addEventListener("click",()=>{dial.classList.remove("spin");void dial.getBoundingClientRect();dial.classList.add("spin");});
+</script>
+</body>
+</html>

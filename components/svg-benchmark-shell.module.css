@@ -1,0 +1,212 @@
+.shell {
+  min-height: 100vh;
+  padding: 32px 20px 56px;
+  background:
+    radial-gradient(circle at 12% 14%, rgba(104, 216, 255, 0.16), transparent 26%),
+    radial-gradient(circle at 88% 8%, rgba(126, 231, 135, 0.12), transparent 24%),
+    linear-gradient(180deg, #0c1018 0%, #111726 100%);
+}
+
+.wrap {
+  width: min(1440px, 100%);
+  margin: 0 auto;
+}
+
+.hero {
+  margin-bottom: 20px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #68d8ff;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, serif;
+  font-size: clamp(36px, 6vw, 72px);
+  line-height: 0.96;
+  color: #edf1ff;
+}
+
+.summary {
+  max-width: 760px;
+  margin: 14px 0 0;
+  color: #9aa8c8;
+  line-height: 1.7;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding: 18px 20px;
+  border: 1px solid rgba(104, 216, 255, 0.16);
+  border-radius: 20px;
+  background: rgba(14, 19, 31, 0.84);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+}
+
+.toolbarMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: #9aa8c8;
+  font-size: 14px;
+}
+
+.metaPill {
+  padding: 8px 12px;
+  border: 1px solid rgba(104, 216, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(104, 216, 255, 0.06);
+}
+
+.toolbarActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.button,
+.ghostLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font: inherit;
+  text-decoration: none;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.button {
+  border: 1px solid rgba(126, 231, 135, 0.42);
+  background: #7ee787;
+  color: #07120d;
+  cursor: pointer;
+}
+
+.ghostLink {
+  border: 1px solid rgba(104, 216, 255, 0.18);
+  background: rgba(10, 15, 24, 0.86);
+  color: #edf1ff;
+}
+
+.button:hover,
+.ghostLink:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+}
+
+.grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.card {
+  border: 1px solid rgba(104, 216, 255, 0.16);
+  border-radius: 24px;
+  padding: 18px;
+  background:
+    radial-gradient(circle at top right, rgba(104, 216, 255, 0.1), transparent 32%),
+    linear-gradient(180deg, rgba(16, 22, 36, 0.96) 0%, rgba(12, 17, 28, 0.98) 100%);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+}
+
+.cardTop {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.cardHead {
+  min-width: 0;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 28px;
+  color: #edf1ff;
+}
+
+.cardText {
+  margin: 8px 0 0;
+  color: #9aa8c8;
+  line-height: 1.6;
+}
+
+.cardActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.tag {
+  padding: 7px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(104, 216, 255, 0.14);
+  background: rgba(104, 216, 255, 0.08);
+  color: #d7e6ff;
+  font-size: 13px;
+}
+
+.frame {
+  width: 100%;
+  min-height: 720px;
+  border: 1px solid rgba(104, 216, 255, 0.14);
+  border-radius: 18px;
+  background: #071018;
+}
+
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .frame {
+    min-height: 560px;
+  }
+}
+
+@media (max-width: 640px) {
+  .shell {
+    padding: 24px 14px 40px;
+  }
+
+  .toolbar,
+  .card {
+    padding: 16px;
+  }
+
+  .cardTitle {
+    font-size: 24px;
+  }
+
+  .frame {
+    min-height: 460px;
+  }
+}

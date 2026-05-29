@@ -1,4 +1,7 @@
 .next
 .next-dev
+.open-next
+.wrangler
+.claude
 node_modules
 .DS_Store

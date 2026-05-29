@@ -19,7 +19,11 @@ Required themes:
 3. `weather-card`
 4. `stock-panel`
 5. `click-fireworks`
-6. `carwash-decision`
+6. `neon-countdown`
+7. `particle-gravity`
+8. `cheetah-trophy-run`
+9. `dslr-camera`
+10. `carwash-decision`
 
 For each requested model, agent must generate and save one submission per theme.
 
@@ -48,6 +52,10 @@ Themes:
 3. `weather-card`
 4. `stock-panel`
 5. `click-fireworks`
+6. `neon-countdown`
+7. `particle-gravity`
+8. `cheetah-trophy-run`
+9. `dslr-camera`
 
 File name must be:
 
@@ -81,6 +89,32 @@ Generation command:
 npm run prompt -- --theme <theme> --model <model_name> --max-lines <N> --language "HTML + CSS + JavaScript"
 ```
 
+### Unlimited SVG theme prompt base
+
+Use this for `cheetah-trophy-run`:
+1. `prompts/base-svg.md`
+2. `prompts/themes/cheetah-trophy-run.md`
+
+Generation command:
+
+```bash
+npm run prompt -- --theme cheetah-trophy-run --model <model_name> --language "HTML + CSS + SVG + JavaScript"
+```
+
+### Replica theme prompt base (拟物复刻)
+
+Use this for `dslr-camera` (and future replica tasks):
+1. `prompts/base-replica.md`
+2. `prompts/themes/dslr-camera.md`
+
+No line limit. Anti-cheat is the core of this task type: the object must be hand-drawn with HTML + CSS + inline SVG only; no `<img>`, base64 / `data:` images, `<canvas>` bitmaps, emoji, or ready-made SVG/icon assets.
+
+Generation command:
+
+```bash
+npm run prompt -- --theme dslr-camera --model <model_name> --language "HTML + CSS + SVG + JavaScript"
+```
+
 ### Reasoning theme prompt base
 
 Use:
@@ -101,6 +135,21 @@ npm run prompt -- --theme carwash-decision --model <model_name>
 2. No external dependencies
 3. Responsive at mobile width `390px`
 4. Default line limit: `<= 220` (or as user specifies)
+
+### Unlimited SVG theme
+
+1. Theme: `cheetah-trophy-run`
+2. Single file: `index.html`
+3. Main artwork must be inline SVG
+4. No code line limit, prioritize best visual effect and semantic detail
+
+### Replica theme (拟物复刻)
+
+1. Theme: `dslr-camera`
+2. Single file: `index.html`
+3. No code line limit; draw the object as realistically as possible
+4. Anti-cheat (scored 0 if violated): no `<img>`, base64 / `data:` images, `<canvas>` bitmaps, emoji, or ready-made SVG/icon assets. The object must be hand-drawn with HTML + CSS + inline SVG shapes
+5. Dashboard shows a 手绘 / 贴图 badge from automatic bitmap detection
 
 ### Reasoning theme
 
@@ -153,7 +202,11 @@ Create:
 3. `public/submissions/weather-card/gpt-5.3-codex/index.html`
 4. `public/submissions/stock-panel/gpt-5.3-codex/index.html`
 5. `public/submissions/click-fireworks/gpt-5.3-codex/index.html`
-6. `public/submissions/carwash-decision/gpt-5.3-codex/response.md`
+6. `public/submissions/neon-countdown/gpt-5.3-codex/index.html`
+7. `public/submissions/particle-gravity/gpt-5.3-codex/index.html`
+8. `public/submissions/cheetah-trophy-run/gpt-5.3-codex/index.html`
+9. `public/submissions/dslr-camera/gpt-5.3-codex/index.html`
+10. `public/submissions/carwash-decision/gpt-5.3-codex/response.md`
 
 ### Example B: Single custom reasoning task
 
@@ -172,3 +225,4 @@ If `<custom-theme>` is new, agent should:
 4. Keep outputs deterministic and reproducible.
 5. If overwriting same model output, clear only `public/submissions/<theme>/<model>/` before writing new files.
 6. Anti-cheating rule: never read or inspect other model directories under `public/submissions/<theme>/`; only write to the current target model directory.
+7. Replica anti-cheat (`dslr-camera` and replica tasks): hand-draw with HTML + CSS + inline SVG only; no `<img>`, base64 / `data:` images, `<canvas>` bitmaps, emoji, or ready-made SVG/icon assets. Submissions using bitmaps are flagged 贴图 in the dashboard.

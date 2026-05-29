@@ -31,9 +31,9 @@ public/submissions/carwash-decision/gemini-3.1-pro-high/response.md
 
 硬性要求（按主题类型）：
 
-- 视觉主题（`clock` / `recorder` / `weather-card` / `stock-panel` / `click-fireworks`）文件名必须是 `index.html`
+- 视觉主题（`clock` / `recorder` / `weather-card` / `stock-panel` / `click-fireworks` / `neon-countdown` / `particle-gravity` / `cheetah-trophy-run` / `dslr-camera`）文件名必须是 `index.html`
 - 问答主题（`carwash-decision`）文件名推荐 `response.md`（也支持 `answer.md` / `response.txt` / `answer.txt`）
-- 目录名必须是已支持主题之一（`clock` / `recorder` / `weather-card` / `stock-panel` / `click-fireworks` / `carwash-decision`）
+- 目录名必须是已支持主题之一（`clock` / `recorder` / `weather-card` / `stock-panel` / `click-fireworks` / `neon-countdown` / `particle-gravity` / `cheetah-trophy-run` / `dslr-camera` / `carwash-decision`）
 - 一个模型一个目录（目录名就是模型名）
 - 反作弊：严禁查看 `public/submissions/<theme>/` 下其他模型目录；只能写入当前目标模型目录
 
@@ -50,7 +50,7 @@ This project enforces a consistent benchmark surface so you can compare models f
 ## Core Features
 
 - Unified benchmark dashboard (single-page comparison)
-- Theme switching (Clock, Recorder, Weather Card, Stock Panel, Click Fireworks, Carwash Decision)
+- Theme switching (Clock, Recorder, Weather Card, Stock Panel, Click Fireworks, Neon Countdown, Particle Gravity, Cheetah Trophy Run, DSLR Camera, Carwash Decision)
 - Model filtering (multi-select)
 - Automatic submission discovery from filesystem
 - Constraint inspection per submission:
@@ -83,6 +83,8 @@ model-ui-arena/
     submissions.ts                # scanner + metrics + theme metadata
   prompts/
     base.md                       # shared hard constraints
+    base-svg.md                   # unlimited inline SVG task constraints
+    base-replica.md               # unlimited hand-drawn replica task constraints
     full-prompts.md               # full ready-to-use prompts
     themes/
       clock.md
@@ -90,6 +92,10 @@ model-ui-arena/
       weather-card.md
       stock-panel.md
       click-fireworks.md
+      neon-countdown.md
+      particle-gravity.md
+      cheetah-trophy-run.md
+      dslr-camera.md
       carwash-decision.md
   public/
     submissions/
@@ -140,6 +146,10 @@ Anti-cheating policy:
 - `weather-card`
 - `stock-panel`
 - `click-fireworks`
+- `neon-countdown`
+- `particle-gravity`
+- `cheetah-trophy-run`
+- `dslr-camera`
 - `carwash-decision`
 
 ## Prompt Workflow
@@ -169,7 +179,7 @@ The benchmark page updates from filesystem scans.
 
 - Runtime: visual themes use `HTML + CSS + JavaScript`; carwash-decision is text reasoning
 - File count: exactly `1` per model per theme
-- Max lines: `180-220` (adjust by pressure level)
+- Max lines: `180-220` for standard visual themes; `cheetah-trophy-run` and `dslr-camera` have no code line limit
 - External dependencies: forbidden
 - Mobile baseline: width `390px`
 

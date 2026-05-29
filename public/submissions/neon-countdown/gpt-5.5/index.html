@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Neon Countdown</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#05060c;color:#f8fbff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;overflow:hidden}
+body:before{content:"";position:fixed;inset:-20%;background:radial-gradient(circle at 50% 46%,rgba(0,238,255,.34),transparent 22%),radial-gradient(circle at 20% 12%,rgba(255,0,112,.25),transparent 28%),radial-gradient(circle at 82% 76%,rgba(117,255,79,.18),transparent 30%),linear-gradient(135deg,#090a16,#02030a 64%,#0d1020);filter:saturate(1.3);animation:bg 8s linear infinite}
+main{position:relative;width:min(720px,94vw);aspect-ratio:1.25;border:1px solid rgba(130,229,255,.24);border-radius:28px;padding:clamp(18px,4vw,36px);display:grid;grid-template-columns:1fr;place-items:center;background:linear-gradient(160deg,rgba(9,14,30,.88),rgba(5,7,16,.66));box-shadow:0 0 70px rgba(0,229,255,.18),inset 0 0 80px rgba(255,255,255,.04);isolation:isolate;overflow:hidden}
+.scan{position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 1px,transparent 1px 6px);mix-blend-mode:screen;opacity:.35;pointer-events:none}
+.ring{position:relative;width:min(430px,76vw);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:conic-gradient(from -90deg,#7cff6b calc(var(--p)*1%),rgba(104,216,255,.24) 0),radial-gradient(circle,#070914 58%,rgba(0,238,255,.22) 60%,rgba(255,0,128,.08) 72%,transparent 74%);box-shadow:0 0 34px rgba(126,255,107,.3),0 0 110px rgba(104,216,255,.2);transition:filter .25s}
+.ring:before{content:"";position:absolute;inset:18px;border-radius:50%;border:1px dashed rgba(230,247,255,.26);animation:spin 8s linear infinite}
+.ring:after{content:"";position:absolute;inset:38px;border-radius:50%;box-shadow:inset 0 0 34px rgba(104,216,255,.22)}
+.num{font-size:clamp(86px,25vw,178px);font-weight:900;letter-spacing:-.08em;text-shadow:0 0 18px #fff,0 0 42px #35e9ff,0 0 76px #ff2ea6;z-index:1;transform:scale(var(--beat));transition:transform .16s}
+.label{position:absolute;top:28px;left:28px;color:#68d8ff;text-transform:uppercase;letter-spacing:.24em;font-size:12px}
+.status{position:absolute;bottom:28px;left:28px;right:28px;display:flex;align-items:center;justify-content:space-between;gap:12px;color:#aab7d7;font-size:13px}
+.bar{height:8px;flex:1;border-radius:999px;background:rgba(255,255,255,.1);overflow:hidden}.bar i{display:block;height:100%;width:calc(var(--p)*1%);background:linear-gradient(90deg,#ff2ea6,#68d8ff,#7cff6b);box-shadow:0 0 16px #68d8ff;transition:width .25s}
+button{border:1px solid rgba(104,216,255,.45);border-radius:999px;padding:10px 14px;background:#091120;color:#eaf8ff;font:inherit;cursor:pointer;box-shadow:0 0 24px rgba(104,216,255,.16)}
+.burst{position:absolute;inset:0;pointer-events:none}.burst i{position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:50%;background:hsl(var(--h),100%,65%);box-shadow:0 0 16px currentColor;transform:rotate(var(--a)) translateX(var(--d));opacity:0;animation:boom .9s ease-out}
+.danger .ring{filter:hue-rotate(300deg) saturate(1.8)}.danger main{animation:shake .2s linear infinite}.done .ring{filter:brightness(1.35) saturate(1.8)}.done .num{letter-spacing:-.02em}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes bg{to{transform:rotate(1turn)}}@keyframes boom{0%{opacity:1;transform:rotate(var(--a)) translateX(0) scale(1)}100%{opacity:0;transform:rotate(var(--a)) translateX(var(--d)) scale(.2)}}@keyframes shake{50%{transform:translateY(1px)}}@media(max-width:520px){main{aspect-ratio:.76}.status{align-items:flex-start;flex-direction:column}.bar{width:100%}.label{left:20px;top:20px}}
+</style>
+</head>
+<body>
+<main>
+  <div class="scan"></div>
+  <p class="label">final ten seconds</p>
+  <section class="ring" style="--p:100;--beat:1">
+    <div class="num">10</div>
+  </section>
+  <div class="burst"></div>
+  <div class="status"><span id="text">倒计时运行中</span><div class="bar"><i></i></div><button id="restart">Restart</button></div>
+</main>
+<script>
+const root=document.documentElement,ring=document.querySelector(".ring"),num=document.querySelector(".num"),text=document.querySelector("#text"),bar=document.querySelector(".bar i"),burst=document.querySelector(".burst"),btn=document.querySelector("#restart");
+let start=0,raf=0,didBoom=false,duration=10000;
+function boom(){burst.innerHTML="";for(let i=0;i<72;i++){let p=document.createElement("i");p.style.setProperty("--a",i*5+"deg");p.style.setProperty("--d",80+Math.random()*250+"px");p.style.setProperty("--h",Math.random()*360);burst.appendChild(p)}}
+function draw(t){if(!start)start=t;let left=Math.max(0,duration-(t-start)),sec=Math.ceil(left/1000),p=left/duration*100;ring.style.setProperty("--p",p);ring.style.setProperty("--beat",1+(1-p/100)*.08);num.textContent=sec;bar.style.width=p+"%";document.body.classList.toggle("danger",sec<=3&&left>0);if(left<=0){num.textContent="0";text.textContent="完成，能量释放";document.body.classList.add("done");if(!didBoom){didBoom=true;boom()}return}text.textContent=sec<=3?"最后冲刺":"倒计时运行中";raf=requestAnimationFrame(draw)}
+function reset(){cancelAnimationFrame(raf);start=0;didBoom=false;burst.innerHTML="";document.body.className="";text.textContent="倒计时运行中";raf=requestAnimationFrame(draw)}
+btn.onclick=reset;reset();
+</script>
+</body>
+</html>
