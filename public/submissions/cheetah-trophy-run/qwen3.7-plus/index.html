@@ -1,0 +1,319 @@
+<!-- 设计说明：
+     创建了一个高质量SVG猎豹托举大力神杯冲刺场景，
+     包含猎豹特征、奔跑姿态、大力神杯、足球场景元素 -->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猎豹托举大力神杯冲刺</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #1a2980, #26d0ce);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 600px;
+        }
+
+        .scene {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(to top, #2e8b57, #3cb371);
+        }
+
+        .crowd {
+            position: absolute;
+            bottom: 150px;
+            width: 100%;
+            height: 80px;
+            background: repeating-linear-gradient(
+                45deg,
+                #8b4513,
+                #8b4513 10px,
+                #a0522d 10px,
+                #a0522d 20px
+            );
+        }
+
+        .spotlights {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 200px;
+            background: radial-gradient(circle at 30% 0%, rgba(255, 255, 200, 0.3), transparent 70%),
+                        radial-gradient(circle at 70% 0%, rgba(255, 255, 200, 0.3), transparent 70%);
+        }
+
+        .scoreboard {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 60px;
+            background: #111;
+            border: 3px solid gold;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: gold;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .banners {
+            position: absolute;
+            top: 90px;
+            width: 100%;
+            height: 20px;
+            background: repeating-linear-gradient(
+                90deg,
+                #ffd700,
+                #ffd700 20px,
+                #ffffff 20px,
+                #ffffff 40px
+            );
+        }
+
+        .cheetah-scene {
+            position: absolute;
+            bottom: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px;
+            height: 300px;
+        }
+
+        .ball {
+            position: absolute;
+            bottom: 155px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 15px;
+            height: 15px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .speed-lines {
+            position: absolute;
+            bottom: 150px;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.3) 10px,
+                rgba(255,255,255,0.3) 20px
+            );
+            animation: speedMove 0.5s linear infinite;
+        }
+
+        @keyframes speedMove {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(20px); }
+        }
+
+        .title {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 24px;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="scene">
+            <div class="title">猎豹托举大力神杯冲刺</div>
+
+            <div class="spotlights"></div>
+
+            <div class="scoreboard">
+                <div>90+7'</div>
+                <div>3:2</div>
+            </div>
+
+            <div class="banners"></div>
+
+            <div class="crowd"></div>
+
+            <div class="speed-lines"></div>
+
+            <div class="ground"></div>
+
+            <div class="cheetah-scene">
+                <svg width="400" height="300" viewBox="0 0 400 300">
+                    <!-- Grass texture -->
+                    <defs>
+                        <pattern id="grass" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+                            <rect width="10" height="10" fill="#2e8b57"/>
+                            <path d="M0,10 Q2,8 4,10 T8,10" fill="none" stroke="#228B22" stroke-width="0.5"/>
+                            <path d="M5,10 Q7,6 9,10" fill="none" stroke="#3cb371" stroke-width="0.5"/>
+                        </pattern>
+
+                        <!-- Gradient for sky -->
+                        <linearGradient id="skyGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#1a2980"/>
+                            <stop offset="100%" stop-color="#26d0ce"/>
+                        </linearGradient>
+
+                        <!-- Gold gradient for trophy -->
+                        <linearGradient id="goldGradient" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stop-color="#FFD700"/>
+                            <stop offset="50%" stop-color="#DAA520"/>
+                            <stop offset="100%" stop-color="#B8860B"/>
+                        </linearGradient>
+
+                        <!-- Animation for glow -->
+                        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur"/>
+                            <feComposite in="blur" in2="SourceGraphic" operator="over"/>
+                        </filter>
+                    </defs>
+
+                    <!-- Sky background -->
+                    <rect x="0" y="0" width="400" height="300" fill="url(#skyGradient)"/>
+
+                    <!-- Stars -->
+                    <circle cx="50" cy="40" r="1" fill="white"/>
+                    <circle cx="100" cy="60" r="1.2" fill="white"/>
+                    <circle cx="150" cy="30" r="0.8" fill="white"/>
+                    <circle cx="200" cy="50" r="1" fill="white"/>
+                    <circle cx="250" cy="40" r="1.1" fill="white"/>
+                    <circle cx="300" cy="60" r="0.9" fill="white"/>
+                    <circle cx="350" cy="35" r="1" fill="white"/>
+
+                    <!-- Stadium lights -->
+                    <rect x="0" y="20" width="400" height="5" fill="rgba(255,255,200,0.3)"/>
+
+                    <!-- Crowd in the background -->
+                    <rect x="0" y="120" width="400" height="40" fill="#8b4513"/>
+
+                    <!-- Ground/grass -->
+                    <rect x="0" y="160" width="400" height="140" fill="url(#grass)"/>
+
+                    <!-- Soccer ball -->
+                    <g transform="translate(180, 170)">
+                        <circle cx="0" cy="0" r="8" fill="white" stroke="#ccc" stroke-width="0.5"/>
+                        <!-- Pentagons and hexagons pattern -->
+                        <path d="M0,-6 L1.7,-2.4 L5.5,-2.4 L2.4,0 L5.5,2.4 L1.7,2.4 L0,6 L-1.7,2.4 L-5.5,2.4 L-2.4,0 L-5.5,-2.4 L-1.7,-2.4 Z"
+                              fill="none" stroke="black" stroke-width="0.8"/>
+                    </g>
+
+                    <!-- Cheetah running with trophy -->
+                    <g transform="translate(200, 180) scale(0.8)">
+                        <!-- Body -->
+                        <ellipse cx="0" cy="0" rx="40" ry="15" fill="#d2b48c" transform="rotate(-15)"/>
+
+                        <!-- Head -->
+                        <circle cx="-35" cy="-10" r="15" fill="#d2b48c"/>
+
+                        <!-- Legs -->
+                        <rect x="-30" y="10" width="6" height="25" fill="#d2b48c" transform="rotate(20 -27 10)"/>
+                        <rect x="-10" y="10" width="6" height="25" fill="#d2b48c" transform="rotate(-10 -7 10)"/>
+                        <rect x="15" y="10" width="6" height="25" fill="#d2b48c" transform="rotate(10 18 10)"/>
+                        <rect x="35" y="10" width="6" height="25" fill="#d2b48c" transform="rotate(-20 38 10)"/>
+
+                        <!-- Tail -->
+                        <path d="M30,0 Q60,-20 70,10 Q60,20 50,5" stroke="#d2b48c" stroke-width="6" fill="none"/>
+
+                        <!-- Spots on body -->
+                        <circle cx="-25" cy="-5" r="3" fill="#8b4513"/>
+                        <circle cx="-15" cy="-8" r="2.5" fill="#8b4513"/>
+                        <circle cx="-5" cy="-10" r="3" fill="#8b4513"/>
+                        <circle cx="10" cy="-7" r="2.5" fill="#8b4513"/>
+                        <circle cx="25" cy="-3" r="3" fill="#8b4513"/>
+
+                        <!-- Face features -->
+                        <!-- Eyes -->
+                        <circle cx="-40" cy="-12" r="2" fill="black"/>
+                        <circle cx="-35" cy="-15" r="1" fill="white"/>
+
+                        <!-- Nose -->
+                        <ellipse cx="-35" cy="-5" rx="2" ry="1" fill="#333"/>
+
+                        <!-- Mouth -->
+                        <path d="M-38,-3 Q-35,-1 -32,-3" stroke="#333" stroke-width="1" fill="none"/>
+
+                        <!-- Black tear stripe -->
+                        <path d="M-38,-8 L-42,-10 L-40,-12 L-36,-10 Z" fill="#333"/>
+
+                        <!-- Trophy held high -->
+                        <g transform="translate(-50, -40)">
+                            <!-- Trophy base -->
+                            <rect x="-5" y="0" width="10" height="5" fill="url(#goldGradient)"/>
+
+                            <!-- Trophy stem -->
+                            <rect x="-2" y="-20" width="4" height="20" fill="url(#goldGradient)"/>
+
+                            <!-- Trophy globe -->
+                            <circle cx="0" cy="-25" r="8" fill="url(#goldGradient)" stroke="#b8860b" stroke-width="1"/>
+
+                            <!-- People holding the globe -->
+                            <path d="M-6,-25 L-8,-30 L-4,-32 L0,-25 M6,-25 L8,-30 L4,-32 L0,-25"
+                                  fill="url(#goldGradient)" stroke="#b8860b" stroke-width="0.5"/>
+
+                            <!-- Glow effect -->
+                            <circle cx="0" cy="-25" r="10" fill="none" stroke="gold" stroke-width="2" filter="url(#glow)"/>
+                        </g>
+
+                        <!-- Arms holding trophy -->
+                        <path d="M-45,-20 Q-50,-35 -50,-40" stroke="#d2b48c" stroke-width="4" fill="none"/>
+                        <path d="M-35,-22 Q-45,-35 -50,-40" stroke="#d2b48c" stroke-width="4" fill="none"/>
+                    </g>
+
+                    <!-- Speed lines -->
+                    <g opacity="0.6">
+                        <line x1="50" y1="200" x2="70" y2="190" stroke="white" stroke-width="2"/>
+                        <line x1="60" y1="220" x2="80" y2="210" stroke="white" stroke-width="2"/>
+                        <line x1="70" y1="240" x2="90" y2="230" stroke="white" stroke-width="2"/>
+                        <line x1="80" y1="260" x2="100" y2="250" stroke="white" stroke-width="2"/>
+                        <line x1="90" y1="280" x2="110" y2="270" stroke="white" stroke-width="2"/>
+                    </g>
+
+                    <!-- Confetti -->
+                    <g opacity="0.7">
+                        <rect x="100" y="50" width="5" height="5" fill="gold" transform="rotate(45)"/>
+                        <rect x="150" y="30" width="5" height="5" fill="white" transform="rotate(20)"/>
+                        <rect x="250" y="40" width="5" height="5" fill="gold" transform="rotate(70)"/>
+                        <rect x="300" y="60" width="5" height="5" fill="white" transform="rotate(10)"/>
+                        <rect x="350" y="20" width="5" height="5" fill="gold" transform="rotate(80)"/>
+                    </g>
+                </svg>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

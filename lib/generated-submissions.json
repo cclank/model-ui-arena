@@ -504,6 +504,24 @@
     "answerText": "结论：走过去。\n\n理由1：距离仅 50 米，开车需要找停车位、启动引擎、倒车出库，整个过程耗时远超步行 1-2 分钟，时间成本完全不划算。\n\n理由2：50 米属于极短距离，车辆刚启动引擎还未达到正常工作温度就到达目的地，频繁短途行驶对发动机和电瓶损耗更大，反而伤车。\n\n理由3：洗车本身需要等待 20-40 分钟，走过去可以顺便活动身体、呼吸新鲜空气，比坐在车里干等更健康舒适。\n\n理由4：50 米范围内大概率有步行道，而开车可能面临小区内部道路限速、行人避让、甚至找不到停车位的麻烦。\n\n建议：直接走过去，顺便带杯咖啡或手机打发洗车等待时间，既省事又惬意。"
   },
   {
+    "id": "carwash-decision:qwen3.7-plus",
+    "theme": "carwash-decision",
+    "model": "qwen3.7-plus",
+    "filename": "response.md",
+    "publicPath": "/submissions/carwash-decision/qwen3.7-plus/response.md",
+    "renderKind": "text",
+    "linesTotal": 9,
+    "linesCss": 0,
+    "linesJs": 0,
+    "sizeBytes": 451,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-01T23:34:48.663Z",
+    "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
+    "answerText": "结论：走过去\n\n理由1：距离极近，50米步行仅需约1分钟，非常便捷，无需考虑停车、钥匙携带等问题。\n\n理由2：洗车店就在附近，开车去洗车可能导致洗车后还需再次开车回家，增加不必要的出行次数。\n\n理由3：近距离步行既环保又健康，还能随时观察洗车效果，便于与工作人员沟通。\n\n建议：50米的距离非常适合步行前往，既方便又实用。"
+  },
+  {
     "id": "carwash-decision:Seed-2.0-Pro",
     "theme": "carwash-decision",
     "model": "Seed-2.0-Pro",
@@ -552,6 +570,22 @@
     "unlimitedLines": true,
     "usesBitmap": false,
     "updatedAt": "2026-05-29T00:30:06.637Z"
+  },
+  {
+    "id": "cheetah-trophy-run:qwen3.7-plus",
+    "theme": "cheetah-trophy-run",
+    "model": "qwen3.7-plus",
+    "filename": "index.html",
+    "publicPath": "/submissions/cheetah-trophy-run/qwen3.7-plus/index.html",
+    "renderKind": "html",
+    "linesTotal": 319,
+    "linesCss": 143,
+    "linesJs": 0,
+    "sizeBytes": 12660,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-01T23:33:46.845Z"
   },
   {
     "id": "click-fireworks:claude-opus-4-8",
@@ -1000,6 +1034,22 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-04-23T22:33:01.014Z"
+  },
+  {
+    "id": "click-fireworks:qwen3.7-plus",
+    "theme": "click-fireworks",
+    "model": "qwen3.7-plus",
+    "filename": "index.html",
+    "publicPath": "/submissions/click-fireworks/qwen3.7-plus/index.html",
+    "renderKind": "html",
+    "linesTotal": 285,
+    "linesCss": 69,
+    "linesJs": 193,
+    "sizeBytes": 9193,
+    "withinLineLimit": false,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-01T23:31:01.616Z"
   },
   {
     "id": "click-fireworks:Seed-2.0-Pro",
@@ -1466,6 +1516,22 @@
     "updatedAt": "2026-04-23T22:33:01.014Z"
   },
   {
+    "id": "clock:qwen3.7-plus",
+    "theme": "clock",
+    "model": "qwen3.7-plus",
+    "filename": "index.html",
+    "publicPath": "/submissions/clock/qwen3.7-plus/index.html",
+    "renderKind": "html",
+    "linesTotal": 201,
+    "linesCss": 106,
+    "linesJs": 64,
+    "sizeBytes": 6539,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-01T23:28:17.325Z"
+  },
+  {
     "id": "clock:Seed-2.0-Pro",
     "theme": "clock",
     "model": "Seed-2.0-Pro",
@@ -1480,6 +1546,22 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-04-16T14:36:40.368Z"
+  },
+  {
+    "id": "data-dashboard:claude-opus-4-8",
+    "theme": "data-dashboard",
+    "model": "claude-opus-4-8",
+    "filename": "index.html",
+    "publicPath": "/submissions/data-dashboard/claude-opus-4-8/index.html",
+    "renderKind": "html",
+    "linesTotal": 83,
+    "linesCss": 24,
+    "linesJs": 30,
+    "sizeBytes": 4593,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-01T16:00:06.999Z"
   },
   {
     "id": "dslr-camera:claude-opus-4-8",
@@ -1514,6 +1596,22 @@
     "updatedAt": "2026-05-29T00:57:45.528Z"
   },
   {
+    "id": "dslr-camera:qwen3.7-plus",
+    "theme": "dslr-camera",
+    "model": "qwen3.7-plus",
+    "filename": "index.html",
+    "publicPath": "/submissions/dslr-camera/qwen3.7-plus/index.html",
+    "renderKind": "html",
+    "linesTotal": 443,
+    "linesCss": 339,
+    "linesJs": 29,
+    "sizeBytes": 12509,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-01T23:34:37.500Z"
+  },
+  {
     "id": "neon-countdown:claude-opus-4-8",
     "theme": "neon-countdown",
     "model": "claude-opus-4-8",
@@ -1546,6 +1644,22 @@
     "updatedAt": "2026-05-28T22:52:42.967Z"
   },
   {
+    "id": "neon-countdown:qwen3.7-plus",
+    "theme": "neon-countdown",
+    "model": "qwen3.7-plus",
+    "filename": "index.html",
+    "publicPath": "/submissions/neon-countdown/qwen3.7-plus/index.html",
+    "renderKind": "html",
+    "linesTotal": 420,
+    "linesCss": 186,
+    "linesJs": 192,
+    "sizeBytes": 12916,
+    "withinLineLimit": false,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-01T23:31:36.503Z"
+  },
+  {
     "id": "particle-gravity:claude-opus-4-8",
     "theme": "particle-gravity",
     "model": "claude-opus-4-8",
@@ -1576,6 +1690,22 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-05-28T22:52:42.968Z"
+  },
+  {
+    "id": "particle-gravity:qwen3.7-plus",
+    "theme": "particle-gravity",
+    "model": "qwen3.7-plus",
+    "filename": "index.html",
+    "publicPath": "/submissions/particle-gravity/qwen3.7-plus/index.html",
+    "renderKind": "html",
+    "linesTotal": 327,
+    "linesCss": 48,
+    "linesJs": 246,
+    "sizeBytes": 11410,
+    "withinLineLimit": false,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-01T23:32:09.342Z"
   },
   {
     "id": "recorder:claude-opus-4-8",
@@ -2024,6 +2154,22 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-04-23T22:33:01.015Z"
+  },
+  {
+    "id": "recorder:qwen3.7-plus",
+    "theme": "recorder",
+    "model": "qwen3.7-plus",
+    "filename": "index.html",
+    "publicPath": "/submissions/recorder/qwen3.7-plus/index.html",
+    "renderKind": "html",
+    "linesTotal": 269,
+    "linesCss": 137,
+    "linesJs": 94,
+    "sizeBytes": 7707,
+    "withinLineLimit": false,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-01T23:28:39.378Z"
   },
   {
     "id": "recorder:Seed-2.0-Pro",
@@ -2490,6 +2636,22 @@
     "updatedAt": "2026-04-23T22:33:01.016Z"
   },
   {
+    "id": "stock-panel:qwen3.7-plus",
+    "theme": "stock-panel",
+    "model": "qwen3.7-plus",
+    "filename": "index.html",
+    "publicPath": "/submissions/stock-panel/qwen3.7-plus/index.html",
+    "renderKind": "html",
+    "linesTotal": 329,
+    "linesCss": 155,
+    "linesJs": 149,
+    "sizeBytes": 9802,
+    "withinLineLimit": false,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-01T23:30:29.583Z"
+  },
+  {
     "id": "stock-panel:Seed-2.0-Pro",
     "theme": "stock-panel",
     "model": "Seed-2.0-Pro",
@@ -2512,14 +2674,14 @@
     "filename": "index.html",
     "publicPath": "/submissions/weather-card/claude-opus-4-8/index.html",
     "renderKind": "html",
-    "linesTotal": 96,
-    "linesCss": 31,
-    "linesJs": 33,
-    "sizeBytes": 5299,
+    "linesTotal": 80,
+    "linesCss": 27,
+    "linesJs": 32,
+    "sizeBytes": 5429,
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-28T22:32:36.667Z"
+    "updatedAt": "2026-06-01T16:03:51.854Z"
   },
   {
     "id": "weather-card:claude-opus-4.6",
@@ -2952,6 +3114,22 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-04-23T22:33:01.017Z"
+  },
+  {
+    "id": "weather-card:qwen3.7-plus",
+    "theme": "weather-card",
+    "model": "qwen3.7-plus",
+    "filename": "index.html",
+    "publicPath": "/submissions/weather-card/qwen3.7-plus/index.html",
+    "renderKind": "html",
+    "linesTotal": 493,
+    "linesCss": 178,
+    "linesJs": 261,
+    "sizeBytes": 16432,
+    "withinLineLimit": false,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-01T23:30:01.107Z"
   },
   {
     "id": "weather-card:Seed-2.0-Pro",

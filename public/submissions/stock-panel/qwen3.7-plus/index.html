@@ -1,0 +1,329 @@
+<!-- 设计说明：
+     创建了一个股票监控面板，展示3支股票的实时数据，
+     包含简易趋势图，涨跌颜色区分明显，具备假流式更新效果 -->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票监控面板</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #2c3e50, #1a1a2e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #ecf0f1;
+        }
+
+        .stock-container {
+            width: 90%;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
+        .panel-title {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 30px;
+            color: #f1c40f;
+        }
+
+        .stock-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .stock-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stock-symbol {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .stock-name {
+            font-size: 14px;
+            color: #bdc3c7;
+        }
+
+        .stock-price {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .price-change {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .positive {
+            color: #2ecc71;
+        }
+
+        .negative {
+            color: #e74c3c;
+        }
+
+        .trend-chart {
+            height: 80px;
+            margin-top: 15px;
+            position: relative;
+        }
+
+        .chart-line {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .chart-path {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            height: 2px;
+            background: #f1c40f;
+            transition: width 0.5s ease;
+        }
+
+        .chart-points {
+            position: absolute;
+            bottom: 8px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+        }
+
+        .chart-point {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #f1c40f;
+            border-radius: 50%;
+            transform: translateX(-50%);
+        }
+
+        .risk-indicator {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 12px;
+            padding: 5px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .low-risk {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+        }
+
+        .high-risk {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+
+        .update-time {
+            text-align: right;
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 10px;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="stock-container">
+        <h1 class="panel-title">股票监控面板</h1>
+
+        <div class="stock-cards" id="stockCards">
+            <!-- Stock cards will be dynamically generated -->
+        </div>
+    </div>
+
+    <script>
+        // 模拟股票数据
+        const stockData = [
+            {
+                symbol: "AAPL",
+                name: "苹果公司",
+                price: 189.25,
+                change: 2.15,
+                changePercent: 1.15,
+                history: [185, 186.5, 187.2, 188.1, 187.8, 188.5, 189.25],
+                risk: "low"
+            },
+            {
+                symbol: "TSLA",
+                name: "特斯拉",
+                price: 248.50,
+                change: -3.25,
+                changePercent: -1.29,
+                history: [255, 253.2, 252.8, 250.1, 249.5, 248.8, 248.50],
+                risk: "high"
+            },
+            {
+                symbol: "MSFT",
+                name: "微软",
+                price: 412.75,
+                change: 1.80,
+                changePercent: 0.44,
+                history: [408, 409.5, 410.2, 411.1, 410.8, 412.0, 412.75],
+                risk: "low"
+            }
+        ];
+
+        const stockCardsContainer = document.getElementById('stockCards');
+
+        // 渲染股票卡片
+        function renderStockCards() {
+            stockCardsContainer.innerHTML = '';
+
+            stockData.forEach(stock => {
+                const card = document.createElement('div');
+                card.className = 'stock-card';
+
+                // 计算颜色和符号
+                const isPositive = stock.change >= 0;
+                const changeSign = isPositive ? '+' : '';
+                const changeClass = isPositive ? 'positive' : 'negative';
+                const changeSymbol = isPositive ? '▲' : '▼';
+
+                // 创建趋势图
+                const chartHtml = createTrendChart(stock.history);
+
+                card.innerHTML = `
+                    <div class="stock-header">
+                        <div>
+                            <div class="stock-symbol">${stock.symbol}</div>
+                            <div class="stock-name">${stock.name}</div>
+                        </div>
+                    </div>
+
+                    <div class="stock-price">$${stock.price.toFixed(2)}</div>
+
+                    <div class="price-change ${changeClass}">
+                        ${changeSymbol} ${changeSign}${stock.change.toFixed(2)} (${changeSign}${stock.changePercent.toFixed(2)}%)
+                    </div>
+
+                    <div class="trend-chart">
+                        ${chartHtml}
+                    </div>
+
+                    <div class="risk-indicator ${stock.risk}-risk">
+                        ${stock.risk === 'low' ? '低风险' : '高风险'}
+                    </div>
+
+                    <div class="update-time" id="time-${stock.symbol}">
+                        更新时间: --
+                    </div>
+                `;
+
+                stockCardsContainer.appendChild(card);
+            });
+        }
+
+        // 创建趋势图
+        function createTrendChart(history) {
+            const minVal = Math.min(...history);
+            const maxVal = Math.max(...history);
+            const range = maxVal - minVal || 1; // 防止范围为0
+
+            let chartHtml = '<div class="chart-line"></div><div class="chart-path" id="path"></div><div class="chart-points">';
+
+            history.forEach((val, index) => {
+                const percent = ((val - minVal) / range) * 100;
+                const leftPos = (index / (history.length - 1)) * 100;
+
+                chartHtml += `<div class="chart-point" style="left: ${leftPos}%; bottom: ${percent}%"></div>`;
+            });
+
+            chartHtml += '</div>';
+
+            // 更新路径宽度
+            setTimeout(() => {
+                const path = document.querySelector('.chart-path');
+                if (path) {
+                    path.style.width = '100%';
+                }
+            }, 10);
+
+            return chartHtml;
+        }
+
+        // 更新股票价格（模拟实时更新）
+        function updateStockPrices() {
+            stockData.forEach(stock => {
+                // 模拟小幅波动
+                const fluctuation = (Math.random() - 0.5) * 2;
+                const oldPrice = stock.price;
+                stock.price = Math.max(0, parseFloat((stock.price + fluctuation).toFixed(2)));
+
+                // 计算新的涨跌
+                stock.change = parseFloat((stock.price - (oldPrice - stock.change)).toFixed(2));
+                stock.changePercent = parseFloat(((stock.change / (oldPrice - stock.change)) * 100).toFixed(2));
+
+                // 更新历史记录
+                stock.history.push(stock.price);
+                if (stock.history.length > 7) {
+                    stock.history.shift();
+                }
+
+                // 更新时间显示
+                const now = new Date();
+                const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+                const timeEl = document.getElementById(`time-${stock.symbol}`);
+                if (timeEl) {
+                    timeEl.textContent = `更新时间: ${timeStr}`;
+                    timeEl.classList.add('pulse');
+                    setTimeout(() => {
+                        if(timeEl) timeEl.classList.remove('pulse');
+                    }, 1000);
+                }
+            });
+
+            // 重新渲染卡片
+            renderStockCards();
+        }
+
+        // 初始化
+        renderStockCards();
+
+        // 每5秒更新一次数据
+        setInterval(updateStockPrices, 5000);
+    </script>
+</body>
+</html>

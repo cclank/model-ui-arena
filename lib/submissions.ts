@@ -71,6 +71,11 @@ export const THEMES: ThemeMeta[] = [
     objective: "粒子物理、交互反馈、性能稳定性、视觉冲击力"
   },
   {
+    id: "data-dashboard",
+    label: "数据仪表盘",
+    objective: "信息层级、图表绘制、数据联动、响应式布局"
+  },
+  {
     id: "cheetah-trophy-run",
     label: "猎豹举杯冲刺",
     objective: "SVG 造型、足球冠军叙事、奔跑动势、细节理解"

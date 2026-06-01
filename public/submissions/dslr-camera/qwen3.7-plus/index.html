@@ -1,0 +1,443 @@
+<!-- 设计说明：
+     用手绘方式创建了一台3/4视角的单反相机，包含机身、镜头、
+     取景器、控制按钮等组件，使用CSS和SVG绘制，体现不同材质质感 -->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单反相机拟物复刻</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 600px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .camera-container {
+            position: relative;
+            width: 500px;
+            height: 300px;
+            transform: perspective(800px) rotateX(15deg) rotateY(-20deg);
+        }
+
+        .dslr-camera {
+            position: relative;
+            width: 400px;
+            height: 180px;
+            background: #222;
+            border-radius: 20px 40px 40px 20px;
+            box-shadow:
+                0 20px 40px rgba(0, 0, 0, 0.5),
+                inset 0 0 20px rgba(0, 0, 0, 0.8),
+                0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .camera-top {
+            position: absolute;
+            top: -20px;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: #333;
+            border-radius: 20px 40px 5px 5px;
+            box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .viewfinder {
+            position: absolute;
+            top: -15px;
+            left: 50px;
+            width: 40px;
+            height: 25px;
+            background: #444;
+            border-radius: 50%;
+            border: 2px solid #666;
+            box-shadow:
+                inset 0 0 10px rgba(0, 0, 0, 0.5),
+                0 0 5px rgba(255, 255, 255, 0.2);
+        }
+
+        .viewfinder-inner {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 30px;
+            height: 15px;
+            background: radial-gradient(circle, #111, #000);
+            border-radius: 50%;
+            border: 1px solid #555;
+        }
+
+        .hot-shoe {
+            position: absolute;
+            top: -15px;
+            left: 100px;
+            width: 20px;
+            height: 10px;
+            background: #555;
+            border-radius: 3px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .control-panel {
+            position: absolute;
+            top: 10px;
+            left: 130px;
+            width: 120px;
+            height: 60px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 5px;
+        }
+
+        .lcd-screen {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            width: 80px;
+            height: 50px;
+            background: #001a00;
+            border: 2px solid #444;
+            border-radius: 3px;
+            box-shadow: inset 0 0 10px rgba(0, 30, 0, 0.8);
+        }
+
+        .lcd-content {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            color: #00cc00;
+            font-size: 8px;
+            font-family: monospace;
+        }
+
+        .mode-dial {
+            position: absolute;
+            top: 20px;
+            left: 150px;
+            width: 30px;
+            height: 30px;
+            background: #444;
+            border-radius: 50%;
+            border: 2px solid #666;
+        }
+
+        .dial-marks {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .dial-mark {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 2px;
+            height: 5px;
+            background: #fff;
+            transform-origin: bottom center;
+        }
+
+        .shutter-button {
+            position: absolute;
+            top: 80px;
+            right: 50px;
+            width: 25px;
+            height: 25px;
+            background: radial-gradient(circle, #ddd, #999);
+            border-radius: 50%;
+            border: 2px solid #777;
+            box-shadow:
+                inset 0 0 10px rgba(0, 0, 0, 0.3),
+                0 2px 5px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+        }
+
+        .shutter-button:active {
+            background: radial-gradient(circle, #bbb, #888);
+            transform: scale(0.95);
+        }
+
+        .brand {
+            position: absolute;
+            top: 40px;
+            left: 20px;
+            color: #fff;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .strap-hook {
+            position: absolute;
+            top: 50px;
+            left: -10px;
+            width: 10px;
+            height: 20px;
+            background: #555;
+            border-radius: 5px 0 0 5px;
+        }
+
+        .lens {
+            position: absolute;
+            left: -80px;
+            top: 40px;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #111, #000);
+            box-shadow:
+                0 0 30px rgba(0, 0, 0, 0.8),
+                inset 0 0 20px rgba(0, 0, 0, 0.8);
+            transform: rotateY(-30deg);
+        }
+
+        .lens-ring {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid #444;
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .lens-glass {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #333, #111);
+            box-shadow:
+                inset 0 0 30px rgba(0, 0, 0, 0.8),
+                0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-reflection {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 15px;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            filter: blur(2px);
+        }
+
+        .focus-ring {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            width: 110px;
+            height: 20px;
+            background: #555;
+            border-radius: 10px;
+            transform: rotateX(70deg);
+        }
+
+        .zoom-ring {
+            position: absolute;
+            top: 20px;
+            left: -5px;
+            width: 110px;
+            height: 15px;
+            background: #666;
+            border-radius: 8px;
+            transform: rotateX(70deg);
+        }
+
+        .handle {
+            position: absolute;
+            right: -30px;
+            top: 80px;
+            width: 40px;
+            height: 80px;
+            background: linear-gradient(to right, #222, #333);
+            border-radius: 0 10px 10px 0;
+            box-shadow: 5px 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .handle-texture {
+            position: absolute;
+            top: 10px;
+            left: 5px;
+            width: 30px;
+            height: 60px;
+            background-image: repeating-linear-gradient(
+                to bottom,
+                transparent,
+                transparent 3px,
+                rgba(0,0,0,0.3) 3px,
+                rgba(0,0,0,0.3) 5px
+            );
+            border-radius: 0 7px 7px 0;
+        }
+
+        .contact-shadow {
+            position: absolute;
+            top: 180px;
+            left: 100px;
+            width: 250px;
+            height: 30px;
+            background: radial-gradient(ellipse, rgba(0,0,0,0.4), transparent 70%);
+            filter: blur(5px);
+            transform: rotateX(80deg);
+        }
+
+        .controls {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-btn {
+            width: 20px;
+            height: 20px;
+            background: #444;
+            border-radius: 50%;
+            border: 1px solid #666;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+            color: #aaa;
+        }
+
+        .shadow {
+            position: absolute;
+            top: 190px;
+            left: 120px;
+            width: 200px;
+            height: 20px;
+            background: radial-gradient(ellipse, rgba(0, 0, 0, 0.5), transparent 70%);
+            filter: blur(10px);
+            transform: rotateX(80deg);
+        }
+
+        .title {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">Professional DSLR Camera (3/4 View)</div>
+
+        <div class="camera-container">
+            <div class="dslr-camera">
+                <div class="camera-top">
+                    <div class="viewfinder">
+                        <div class="viewfinder-inner"></div>
+                    </div>
+                    <div class="hot-shoe"></div>
+                </div>
+
+                <div class="brand">PRO-CAM</div>
+
+                <div class="control-panel">
+                    <div class="mode-dial">
+                        <div class="dial-marks" id="dialMarks"></div>
+                    </div>
+                </div>
+
+                <div class="lcd-screen">
+                    <div class="lcd-content">
+                        ISO: 100<br>
+                        F: 5.6<br>
+                        S: 1/125
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <div class="control-btn">M</div>
+                    <div class="control-btn">+</div>
+                    <div class="control-btn">-</div>
+                </div>
+
+                <div class="shutter-button"></div>
+
+                <div class="handle">
+                    <div class="handle-texture"></div>
+                </div>
+
+                <div class="lens">
+                    <div class="focus-ring"></div>
+                    <div class="zoom-ring"></div>
+                    <div class="lens-ring">
+                        <div class="lens-glass">
+                            <div class="glass-reflection"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="strap-hook"></div>
+            </div>
+
+            <div class="contact-shadow"></div>
+            <div class="shadow"></div>
+        </div>
+    </div>
+
+    <script>
+        // Create dial marks for mode dial
+        const dialMarks = document.getElementById('dialMarks');
+        for (let i = 0; i < 12; i++) {
+            const mark = document.createElement('div');
+            mark.className = 'dial-mark';
+            mark.style.transform = `rotate(${i * 30}deg)`;
+            dialMarks.appendChild(mark);
+        }
+
+        // Add subtle animation to glass reflection
+        const reflection = document.querySelector('.glass-reflection');
+        let rotation = 0;
+
+        function animateReflection() {
+            rotation = (rotation + 0.5) % 360;
+            reflection.style.transform = `rotate(${rotation}deg) translate(10px, 10px)`;
+            requestAnimationFrame(animateReflection);
+        }
+
+        animateReflection();
+
+        // Add click effect to shutter button
+        const shutterBtn = document.querySelector('.shutter-button');
+        shutterBtn.addEventListener('click', function() {
+            this.style.background = 'radial-gradient(circle, #eee, #aaa)';
+            setTimeout(() => {
+                this.style.background = 'radial-gradient(circle, #ddd, #999)';
+            }, 150);
+        });
+    </script>
+</body>
+</html>

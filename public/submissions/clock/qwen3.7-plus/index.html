@@ -1,0 +1,201 @@
+<!-- 设计说明：
+     构建了一个圆形时钟，包含模拟指针和数字时间显示，
+     并有昼夜模式切换，背景随时间动态变化 -->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能时钟</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 1s ease;
+        }
+
+        .container {
+            text-align: center;
+            position: relative;
+        }
+
+        .clock-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto 20px;
+        }
+
+        .clock-face {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hand {
+            position: absolute;
+            transform-origin: bottom center;
+            border-radius: 5px;
+        }
+
+        .hour-hand {
+            width: 6px;
+            height: 70px;
+            background: #333;
+            top: calc(50% - 70px);
+        }
+
+        .minute-hand {
+            width: 4px;
+            height: 100px;
+            background: #555;
+            top: calc(50% - 100px);
+        }
+
+        .second-hand {
+            width: 2px;
+            height: 120px;
+            background: #e74c3c;
+            top: calc(50% - 120px);
+        }
+
+        .center-circle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #333;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+
+        .digital-time {
+            font-size: 48px;
+            font-weight: bold;
+            color: #333;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .date-display {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .tick {
+            position: absolute;
+            width: 2px;
+            height: 10px;
+            background: #666;
+            left: calc(50% - 1px);
+            top: 10px;
+            transform-origin: bottom center;
+        }
+
+        .daytime-indicator {
+            margin-top: 15px;
+            padding: 8px 15px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="digital-time" id="digitalTime">00:00:00</div>
+        <div class="date-display" id="dateDisplay">2026年06月02日 星期二</div>
+        <div class="clock-container">
+            <div class="clock-face" id="clockFace">
+                <div class="hand hour-hand" id="hourHand"></div>
+                <div class="hand minute-hand" id="minuteHand"></div>
+                <div class="hand second-hand" id="secondHand"></div>
+                <div class="center-circle"></div>
+            </div>
+        </div>
+        <div class="daytime-indicator" id="daytimeIndicator">白天模式</div>
+    </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+
+            // 更新数字时间
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('digitalTime').textContent = `${hours}:${minutes}:${seconds}`;
+
+            // 更新日期
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const date = String(now.getDate()).padStart(2, '0');
+            const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            const weekday = weekdays[now.getDay()];
+            document.getElementById('dateDisplay').textContent = `${year}年${month}月${date}日 ${weekday}`;
+
+            // 获取时间角度
+            const hour = now.getHours() % 12;
+            const minute = now.getMinutes();
+            const second = now.getSeconds();
+
+            const hourDeg = (hour * 30) + (minute * 0.5);
+            const minuteDeg = (minute * 6) + (second * 0.1);
+            const secondDeg = second * 6;
+
+            // 设置指针旋转
+            document.getElementById('hourHand').style.transform = `rotate(${hourDeg}deg)`;
+            document.getElementById('minuteHand').style.transform = `rotate(${minuteDeg}deg)`;
+            document.getElementById('secondHand').style.transform = `rotate(${secondDeg}deg)`;
+
+            // 昼夜模式切换
+            const isDaytime = hour >= 6 && hour < 18;
+            const body = document.body;
+            const indicator = document.getElementById('daytimeIndicator');
+
+            if (isDaytime) {
+                body.style.background = 'linear-gradient(to bottom, #87CEEB, #E0F6FF)';
+                indicator.textContent = '白天模式';
+            } else {
+                body.style.background = 'linear-gradient(to bottom, #1a1a2e, #16213e)';
+                indicator.textContent = '夜间模式';
+            }
+
+            // 添加呼吸效果到秒针
+            const secondHand = document.getElementById('secondHand');
+            secondHand.style.opacity = Math.abs(Math.sin(Date.now() * 0.005)) * 0.5 + 0.5;
+        }
+
+        // 创建刻度标记
+        function createTicks() {
+            const clockFace = document.getElementById('clockFace');
+            for (let i = 0; i < 12; i++) {
+                const tick = document.createElement('div');
+                tick.className = 'tick';
+                tick.style.transform = `rotate(${i * 30}deg)`;
+                clockFace.appendChild(tick);
+            }
+        }
+
+        // 初始化刻度并启动时钟
+        createTicks();
+        updateClock();
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>

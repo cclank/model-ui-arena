@@ -1,0 +1,493 @@
+<!-- 设计说明：
+     创建了一个可切换城市的天气卡片，包含当前天气和5天预报，
+     具备动态天气效果，如雨滴动画、阳光粒子等，支持移动端适配 -->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天气卡片</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.5s ease;
+        }
+
+        .weather-container {
+            width: 90%;
+            max-width: 500px;
+            margin: 20px auto;
+        }
+
+        .weather-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+
+        .city-selector {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .city-btn {
+            background: transparent;
+            border: 2px solid #74b9ff;
+            color: #74b9ff;
+            padding: 8px 16px;
+            margin: 0 5px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .city-btn.active {
+            background: #74b9ff;
+            color: white;
+        }
+
+        .current-weather {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .temperature {
+            font-size: 72px;
+            font-weight: bold;
+            color: #2d3436;
+            margin: 10px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .weather-desc {
+            font-size: 24px;
+            color: #636e72;
+            margin-bottom: 15px;
+        }
+
+        .weather-details {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+        }
+
+        .detail-item {
+            text-align: center;
+        }
+
+        .detail-value {
+            font-weight: bold;
+            color: #2d3436;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #636e72;
+        }
+
+        .forecast {
+            margin-top: 30px;
+        }
+
+        .forecast-title {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #2d3436;
+        }
+
+        .forecast-container {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .forecast-day {
+            text-align: center;
+            flex: 1;
+        }
+
+        .forecast-date {
+            font-size: 14px;
+            color: #636e72;
+            margin-bottom: 5px;
+        }
+
+        .forecast-icon {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+
+        .forecast-temp {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2d3436;
+        }
+
+        .temp-graph {
+            height: 60px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .temp-line {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background: #74b9ff;
+            bottom: 30px;
+        }
+
+        .temp-point {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #74b9ff;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            bottom: 28px;
+        }
+
+        .raindrop {
+            position: absolute;
+            width: 2px;
+            height: 10px;
+            background: #74b9ff;
+            opacity: 0;
+        }
+
+        .sun-particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #fdcb6e;
+            border-radius: 50%;
+            opacity: 0;
+        }
+
+        @keyframes rainFall {
+            to {
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+        }
+
+        @keyframes sunPulse {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 0.9; }
+        }
+    </style>
+</head>
+<body>
+    <div class="weather-container">
+        <div class="weather-card">
+            <div class="city-selector">
+                <button class="city-btn active" data-city="beijing">北京</button>
+                <button class="city-btn" data-city="shanghai">上海</button>
+                <button class="city-btn" data-city="guangzhou">广州</button>
+            </div>
+
+            <div class="current-weather">
+                <h2 id="cityName">北京</h2>
+                <div class="temperature" id="currentTemp">22°</div>
+                <div class="weather-desc" id="currentDesc">多云</div>
+                <div class="weather-details">
+                    <div class="detail-item">
+                        <div class="detail-value" id="windSpeed">12 km/h</div>
+                        <div class="detail-label">风速</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-value" id="humidity">65%</div>
+                        <div class="detail-label">湿度</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="temp-graph" id="tempGraph">
+                <!-- Temperature graph will be drawn here -->
+            </div>
+
+            <div class="forecast">
+                <h3 class="forecast-title">5天预报</h3>
+                <div class="forecast-container" id="forecastContainer">
+                    <!-- Forecast items will be added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 天气数据
+        const weatherData = {
+            beijing: {
+                current: { temp: 22, desc: "多云", wind: "12 km/h", humidity: "65%" },
+                forecast: [
+                    { day: "今天", date: "6/2", high: 24, low: 18, icon: "⛅" },
+                    { day: "明天", date: "6/3", high: 26, low: 19, icon: "☀️" },
+                    { day: "周四", date: "6/4", high: 23, low: 17, icon: "🌧️" },
+                    { day: "周五", date: "6/5", high: 25, low: 20, icon: "🌤️" },
+                    { day: "周六", date: "6/6", high: 27, low: 21, icon: "☀️" }
+                ],
+                weatherType: "cloudy"
+            },
+            shanghai: {
+                current: { temp: 25, desc: "晴", wind: "8 km/h", humidity: "70%" },
+                forecast: [
+                    { day: "今天", date: "6/2", high: 27, low: 22, icon: "☀️" },
+                    { day: "明天", date: "6/3", high: 28, low: 23, icon: "🌤️" },
+                    { day: "周四", date: "6/4", high: 26, low: 21, icon: "⛅" },
+                    { day: "周五", date: "6/5", high: 24, low: 19, icon: "🌦️" },
+                    { day: "周六", date: "6/6", high: 25, low: 20, icon: "🌧️" }
+                ],
+                weatherType: "sunny"
+            },
+            guangzhou: {
+                current: { temp: 30, desc: "雨", wind: "15 km/h", humidity: "85%" },
+                forecast: [
+                    { day: "今天", date: "6/2", high: 31, low: 26, icon: "🌧️" },
+                    { day: "明天", date: "6/3", high: 29, low: 25, icon: "🌦️" },
+                    { day: "周四", date: "6/4", high: 28, low: 24, icon: "🌧️" },
+                    { day: "周五", date: "6/5", high: 27, low: 23, icon: "⛅" },
+                    { day: "周六", date: "6/6", high: 28, low: 24, icon: "🌤️" }
+                ],
+                weatherType: "rainy"
+            }
+        };
+
+        // DOM元素
+        const cityNameEl = document.getElementById('cityName');
+        const currentTempEl = document.getElementById('currentTemp');
+        const currentDescEl = document.getElementById('currentDesc');
+        const windSpeedEl = document.getElementById('windSpeed');
+        const humidityEl = document.getElementById('humidity');
+        const forecastContainer = document.getElementById('forecastContainer');
+        const tempGraph = document.getElementById('tempGraph');
+        const cityButtons = document.querySelectorAll('.city-btn');
+
+        let currentCity = 'beijing';
+
+        // 更新天气显示
+        function updateWeather(city) {
+            currentCity = city;
+            const data = weatherData[city];
+
+            // 更新当前天气
+            cityNameEl.textContent = city === 'beijing' ? '北京' :
+                                     city === 'shanghai' ? '上海' : '广州';
+            currentTempEl.textContent = data.current.temp + '°';
+            currentDescEl.textContent = data.current.desc;
+            windSpeedEl.textContent = data.current.wind;
+            humidityEl.textContent = data.current.humidity;
+
+            // 更新预报
+            forecastContainer.innerHTML = '';
+            data.forecast.forEach((day, index) => {
+                const forecastItem = document.createElement('div');
+                forecastItem.className = 'forecast-day';
+                forecastItem.innerHTML = `
+                    <div class="forecast-date">${day.day}<br>${day.date}</div>
+                    <div class="forecast-icon">${day.icon}</div>
+                    <div class="forecast-temp">${day.high}°/${day.low}°</div>
+                `;
+                forecastContainer.appendChild(forecastItem);
+            });
+
+            // 绘制温度曲线
+            drawTempGraph(data.forecast);
+
+            // 更新背景和动画效果
+            updateBackground(data.weatherType);
+
+            // 更新按钮状态
+            cityButtons.forEach(btn => {
+                if (btn.dataset.city === city) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // 绘制温度曲线
+        function drawTempGraph(forecast) {
+            tempGraph.innerHTML = '';
+
+            const maxValue = Math.max(...forecast.map(d => d.high));
+            const minValue = Math.min(...forecast.map(d => d.low));
+            const range = maxValue - minValue;
+
+            const padding = 10;
+            const graphWidth = tempGraph.clientWidth;
+            const graphHeight = 50;
+
+            forecast.forEach((day, index) => {
+                const x = (graphWidth - padding * 2) / (forecast.length - 1) * index + padding;
+
+                // 高温点
+                const highY = graphHeight - ((day.high - minValue) / range) * graphHeight;
+                const highPoint = document.createElement('div');
+                highPoint.className = 'temp-point';
+                highPoint.style.left = x + 'px';
+                highPoint.style.bottom = highY + 'px';
+                tempGraph.appendChild(highPoint);
+
+                // 低温点
+                const lowY = graphHeight - ((day.low - minValue) / range) * graphHeight;
+                const lowPoint = document.createElement('div');
+                lowPoint.className = 'temp-point';
+                lowPoint.style.left = x + 'px';
+                lowPoint.style.bottom = lowY + 'px';
+                lowPoint.style.backgroundColor = '#636e72';
+                tempGraph.appendChild(lowPoint);
+            });
+        }
+
+        // 更新背景和动画效果
+        function updateBackground(weatherType) {
+            const body = document.body;
+
+            if (weatherType === 'sunny') {
+                body.style.background = 'linear-gradient(135deg, #fdcb6e, #ffeaa7)';
+                createSunParticles();
+                clearRain();
+            } else if (weatherType === 'cloudy') {
+                body.style.background = 'linear-gradient(135deg, #74b9ff, #a29bfe)';
+                clearSunParticles();
+                clearRain();
+            } else if (weatherType === 'rainy') {
+                body.style.background = 'linear-gradient(135deg, #2d3436, #636e72)';
+                createRain();
+                clearSunParticles();
+            }
+        }
+
+        // 创建阳光粒子效果
+        function createSunParticles() {
+            clearAnimations();
+            const body = document.body;
+
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const particle = document.createElement('div');
+                    particle.className = 'sun-particle';
+
+                    // 随机位置
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.top = Math.random() * 100 + '%';
+
+                    // 动画
+                    particle.style.animation = `sunPulse ${2 + Math.random() * 3}s infinite`;
+                    particle.style.opacity = '0';
+
+                    body.appendChild(particle);
+
+                    // 渐显
+                    setTimeout(() => {
+                        particle.style.opacity = '0.7';
+                    }, 10);
+
+                    // 移除元素
+                    setTimeout(() => {
+                        if (particle.parentNode) {
+                            particle.parentNode.removeChild(particle);
+                        }
+                    }, 5000);
+                }, i * 300);
+            }
+        }
+
+        // 创建雨滴效果
+        function createRain() {
+            clearAnimations();
+            const body = document.body;
+
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const raindrop = document.createElement('div');
+                    raindrop.className = 'raindrop';
+
+                    // 随机位置和大小
+                    raindrop.style.left = Math.random() * 100 + '%';
+                    raindrop.style.height = 10 + Math.random() * 15 + 'px';
+                    raindrop.style.opacity = '0';
+
+                    // 动画
+                    const duration = 0.5 + Math.random() * 1;
+                    raindrop.style.animation = `rainFall ${duration}s linear forwards`;
+
+                    body.appendChild(raindrop);
+
+                    // 渐显
+                    setTimeout(() => {
+                        raindrop.style.opacity = 0.7;
+                    }, 10);
+
+                    // 移除元素
+                    setTimeout(() => {
+                        if (raindrop.parentNode) {
+                            raindrop.parentNode.removeChild(raindrop);
+                        }
+                    }, duration * 1000 + 100);
+                }, i * 100);
+            }
+        }
+
+        // 清除动画元素
+        function clearAnimations() {
+            const particles = document.querySelectorAll('.sun-particle, .raindrop');
+            particles.forEach(p => {
+                if (p.parentNode) {
+                    p.parentNode.removeChild(p);
+                }
+            });
+        }
+
+        // 清除阳光粒子
+        function clearSunParticles() {
+            const particles = document.querySelectorAll('.sun-particle');
+            particles.forEach(p => {
+                if (p.parentNode) {
+                    p.parentNode.removeChild(p);
+                }
+            });
+        }
+
+        // 清除雨滴
+        function clearRain() {
+            const raindrops = document.querySelectorAll('.raindrop');
+            raindrops.forEach(drop => {
+                if (drop.parentNode) {
+                    drop.parentNode.removeChild(drop);
+                }
+            });
+        }
+
+        // 城市切换事件
+        cityButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const city = btn.dataset.city;
+                updateWeather(city);
+            });
+        });
+
+        // 初始化
+        updateWeather(currentCity);
+
+        // 响应式处理
+        window.addEventListener('resize', () => {
+            const data = weatherData[currentCity];
+            drawTempGraph(data.forecast);
+        });
+    </script>
+</body>
+</html>

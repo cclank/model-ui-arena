@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { PromptDrawer } from "@/components/prompt-drawer";
+import { ScatterChart } from "@/components/scatter-chart";
 
 type ThemeMeta = {
   id: string;
@@ -68,7 +70,10 @@ export function ArenaDashboard() {
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [panesPerRow, setPanesPerRow] = useState<number>(4);
   const [modelQuery, setModelQuery] = useState<string>("");
-  const [showOnlySelected, setShowOnlySelected] = useState<boolean>(false);
+  const [pickerOpen, setPickerOpen] = useState<boolean>(false);
+  const [showAllModels, setShowAllModels] = useState<boolean>(false);
+  const [promptOpen, setPromptOpen] = useState<boolean>(false);
+  const [chartOpen, setChartOpen] = useState<boolean>(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -110,7 +115,19 @@ export function ArenaDashboard() {
       return [];
     }
 
-    return [...new Set(payload.submissions.map((item) => item.model))].sort();
+    const latestByModel = new Map<string, number>();
+    for (const item of payload.submissions) {
+      const time = new Date(item.updatedAt).getTime();
+      const prev = latestByModel.get(item.model) ?? 0;
+      if (time > prev) {
+        latestByModel.set(item.model, time);
+      }
+    }
+
+    return [...latestByModel.keys()].sort((a, b) => {
+      const diff = (latestByModel.get(b) ?? 0) - (latestByModel.get(a) ?? 0);
+      return diff !== 0 ? diff : a.localeCompare(b);
+    });
   }, [payload]);
 
   const filtered = useMemo(() => {
@@ -118,9 +135,9 @@ export function ArenaDashboard() {
       return [];
     }
 
-    return payload.submissions.filter(
-      (item) => item.theme === activeTheme && selectedModels.includes(item.model)
-    );
+    return payload.submissions
+      .filter((item) => item.theme === activeTheme && selectedModels.includes(item.model))
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }, [activeTheme, payload, selectedModels]);
 
   const selectedModelSet = useMemo(() => new Set(selectedModels), [selectedModels]);
@@ -144,10 +161,11 @@ export function ArenaDashboard() {
 
     return availableModels.filter((model) => {
       const matchesQuery = !query || model.toLowerCase().includes(query);
-      const matchesSelectedFilter = !showOnlySelected || selectedModelSet.has(model);
-      return matchesQuery && matchesSelectedFilter;
+      const inScope =
+        showAllModels || modelsForActiveTheme.has(model) || selectedModelSet.has(model);
+      return matchesQuery && inScope;
     });
-  }, [availableModels, modelQuery, selectedModelSet, showOnlySelected]);
+  }, [availableModels, modelQuery, selectedModelSet, showAllModels, modelsForActiveTheme]);
 
   const visibleSelectedCount = useMemo(() => {
     return visibleModels.filter((model) => selectedModelSet.has(model)).length;
@@ -240,9 +258,9 @@ export function ArenaDashboard() {
 
       {error ? <p className="error-banner">加载失败：{error}</p> : null}
 
-      <section className="panel controls">
-        <div className="theme-bar">
-          <span className="label">主题</span>
+      <section className="toolbar">
+        <div className="toolbar-themes">
+          <span className="toolbar-label">主题</span>
           <div className="chips">
             {payload?.themes.map((theme) => (
               <button
@@ -256,159 +274,151 @@ export function ArenaDashboard() {
             ))}
           </div>
         </div>
-        <div className="control-layout">
-          <div className="control-main">
-            <div className="row">
-              <span className="label">每行</span>
-              <div className="range-wrap">
-                <input
-                  type="range"
-                  min={1}
-                  max={6}
-                  step={1}
-                  value={panesPerRow}
-                  onChange={(event) => setPanesPerRow(Number(event.target.value))}
-                  className="range-input"
-                  aria-label="Panes per row"
-                />
-                <div className="range-ticks" aria-hidden="true">
-                  <span>1</span>
-                  <span>2</span>
-                  <span>3</span>
-                  <span>4</span>
-                  <span>5</span>
-                  <span>6</span>
-                </div>
-              </div>
-            </div>
 
-            <div className="stats">
-              <div>
-                <p>当前主题</p>
-                <strong>{activeThemeMeta?.label ?? "-"}</strong>
-              </div>
-              <div>
-                <p>已选模型</p>
-                <strong>{selectedModels.length}</strong>
-              </div>
-              <div>
-                <p>作品数</p>
-                <strong>{filtered.length}</strong>
-              </div>
-              <div>
-                <p>约束通过率</p>
-                <strong>{passRate}%</strong>
-              </div>
-              <div>
-                <p>行数上限</p>
-                <strong>{activeThemeHasUnlimitedLines ? "不限" : (payload?.constraints.maxLines ?? "-")}</strong>
-              </div>
-              <div>
-                <p>每行窗格</p>
-                <strong>{panesPerRow}</strong>
-              </div>
-            </div>
+        <div className="toolbar-controls">
+          <div className="per-row-mini" title="每行窗格数">
+            <span className="toolbar-label">每行</span>
+            <input
+              type="range"
+              min={1}
+              max={6}
+              step={1}
+              value={panesPerRow}
+              onChange={(event) => setPanesPerRow(Number(event.target.value))}
+              className="range-input mini"
+              aria-label="每行窗格数"
+            />
+            <strong className="per-row-value">{panesPerRow}</strong>
           </div>
 
-          <div className="model-picker">
-            <div className="model-picker-head">
-              <div>
-                <span className="label-eyebrow">Model</span>
-                <h2>模型选择</h2>
-                <p>
-                  {selectedModels.length} selected / {availableModels.length} total
-                </p>
-              </div>
-              <button
-                type="button"
-                className={showOnlySelected ? "view-toggle active" : "view-toggle"}
-                onClick={() => setShowOnlySelected((value) => !value)}
-              >
-                只看已选
-              </button>
-            </div>
+          <div className="model-trigger-wrap">
+            <button
+              type="button"
+              className={pickerOpen ? "model-trigger open" : "model-trigger"}
+              onClick={() => setPickerOpen((value) => !value)}
+              aria-expanded={pickerOpen}
+            >
+              <span>模型</span>
+              <strong>{selectedModels.length}</strong>
+              <span className="slash">/ {availableModels.length}</span>
+              <svg className="caret" viewBox="0 0 12 12" aria-hidden="true">
+                <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.6" />
+              </svg>
+            </button>
 
-            <input
-              className="model-search"
-              type="search"
-              value={modelQuery}
-              onChange={(event) => setModelQuery(event.target.value)}
-              placeholder="搜索 gpt / claude / qwen / gemini"
-              aria-label="Search models"
-            />
+            {pickerOpen ? (
+              <>
+                <div className="popover-backdrop" onClick={() => setPickerOpen(false)} />
+                <div className="model-popover" role="dialog" aria-label="模型选择">
+                  <div className="popover-head">
+                    <div>
+                      <span className="label-eyebrow">Model</span>
+                      <p>
+                        {selectedModels.length} 已选 / {availableModels.length} 总数 · 本主题{" "}
+                        {modelsForActiveTheme.size} 可对比
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className="popover-close"
+                      onClick={() => setPickerOpen(false)}
+                      aria-label="关闭"
+                    >
+                      ×
+                    </button>
+                  </div>
 
-            <div className="model-actions">
-              <button type="button" className="action-button" onClick={selectReferenceModels}>
-                参考组合
-              </button>
-              <button type="button" className="action-button" onClick={selectThemeModels}>
-                当前主题全选
-              </button>
-              <button
-                type="button"
-                className="action-button"
-                onClick={allVisibleSelected ? removeVisibleModels : addVisibleModels}
-              >
-                {allVisibleSelected ? "移除可见" : "加入可见"}
-              </button>
-              <button
-                type="button"
-                className="action-button ghost"
-                onClick={() => setSelectedModels([])}
-              >
-                清空
-              </button>
-            </div>
+                  <input
+                    className="model-search"
+                    type="search"
+                    value={modelQuery}
+                    onChange={(event) => setModelQuery(event.target.value)}
+                    placeholder="搜索 gpt / claude / qwen / gemini"
+                    aria-label="搜索模型"
+                  />
 
-            <div className="selected-tray" aria-label="Selected models">
-              {selectedModels.length ? (
-                selectedModels.map((model) => (
-                  <button
-                    key={model}
-                    type="button"
-                    className="selected-pill"
-                    onClick={() => toggleModel(model)}
-                    title={`Remove ${model}`}
-                  >
-                    <span>{model}</span>
-                    <span aria-hidden="true">x</span>
-                  </button>
-                ))
-              ) : (
-                <span className="empty-selection">还没有选择模型</span>
-              )}
-            </div>
+                  <div className="model-actions">
+                    <button type="button" className="action-button" onClick={selectReferenceModels}>
+                      参考组合
+                    </button>
+                    <button type="button" className="action-button" onClick={selectThemeModels}>
+                      本主题全选
+                    </button>
+                    <button
+                      type="button"
+                      className="action-button"
+                      onClick={allVisibleSelected ? removeVisibleModels : addVisibleModels}
+                    >
+                      {allVisibleSelected ? "移除可见" : "加入可见"}
+                    </button>
+                    <button
+                      type="button"
+                      className="action-button ghost"
+                      onClick={() => setSelectedModels([])}
+                    >
+                      清空
+                    </button>
+                  </div>
 
-            <div className="model-list-head">
-              <span>
-                可见 {visibleModels.length} / 已选 {visibleSelectedCount}
-              </span>
-              <span>当前主题可用 {modelsForActiveTheme.size}</span>
-            </div>
-
-            <div className="model-list">
-              {visibleModels.map((model) => {
-                const isSelected = selectedModelSet.has(model);
-                const hasActiveTheme = modelsForActiveTheme.has(model);
-
-                return (
-                  <label
-                    key={model}
-                    className={isSelected ? "model-option active" : "model-option"}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => toggleModel(model)}
-                    />
-                    <span className="model-name">{model}</span>
-                    <span className={hasActiveTheme ? "model-availability" : "model-availability muted"}>
-                      {hasActiveTheme ? "可对比" : "缺主题"}
+                  <div className="model-list-head">
+                    <button
+                      type="button"
+                      className={showAllModels ? "scope-toggle" : "scope-toggle active"}
+                      onClick={() => setShowAllModels((value) => !value)}
+                    >
+                      {showAllModels ? `显示全部 ${availableModels.length}` : "仅可对比 + 已选"}
+                    </button>
+                    <span>
+                      可见 {visibleModels.length} / 已选 {visibleSelectedCount}
                     </span>
-                  </label>
-                );
-              })}
-            </div>
+                  </div>
+
+                  <div className="model-list">
+                    {visibleModels.map((model) => {
+                      const isSelected = selectedModelSet.has(model);
+                      const hasActiveTheme = modelsForActiveTheme.has(model);
+
+                      return (
+                        <label
+                          key={model}
+                          className={isSelected ? "model-option active" : "model-option"}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleModel(model)}
+                          />
+                          <span className="model-name">{model}</span>
+                          <span className={hasActiveTheme ? "model-availability" : "model-availability muted"}>
+                            {hasActiveTheme ? "可对比" : "缺主题"}
+                          </span>
+                        </label>
+                      );
+                    })}
+                    {visibleModels.length === 0 ? (
+                      <p className="empty-selection">没有匹配的模型</p>
+                    ) : null}
+                  </div>
+
+                  {selectedModels.length ? (
+                    <div className="selected-tray" aria-label="已选模型">
+                      {selectedModels.map((model) => (
+                        <button
+                          key={model}
+                          type="button"
+                          className="selected-pill"
+                          onClick={() => toggleModel(model)}
+                          title={`移除 ${model}`}
+                        >
+                          <span>{model}</span>
+                          <span aria-hidden="true">×</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </>
+            ) : null}
           </div>
         </div>
       </section>
@@ -419,10 +429,30 @@ export function ArenaDashboard() {
             <h2>{activeThemeMeta.label}</h2>
             <p>{activeThemeMeta.objective}</p>
           </div>
-          <a className="task-link" href={`/tasks/${activeTheme}`}>
-            打开任务页
-          </a>
+          <div className="theme-head-right">
+            <span className="theme-count">
+              {filtered.length} 件作品 · {activeThemeHasUnlimitedLines ? "不限行" : `通过 ${passRate}%`}
+            </span>
+            <button type="button" className="task-link" onClick={() => setChartOpen((v) => !v)}>
+              {chartOpen ? "隐藏分布" : "分布图"}
+            </button>
+            <button type="button" className="task-link" onClick={() => setPromptOpen(true)}>
+              查看题目
+            </button>
+            <a className="task-link" href={`/compare?theme=${activeTheme}`}>
+              并排对比
+            </a>
+            <a className="task-link" href={`/tasks/${activeTheme}`}>
+              打开任务页
+            </a>
+          </div>
         </div>
+      ) : null}
+
+      {chartOpen ? (
+        <section className="panel scatter-panel">
+          <ScatterChart data={filtered} />
+        </section>
       ) : null}
 
       <section
@@ -477,6 +507,14 @@ export function ArenaDashboard() {
           </article>
         ))}
       </section>
+
+      {promptOpen && activeThemeMeta ? (
+        <PromptDrawer
+          theme={activeTheme}
+          label={activeThemeMeta.label}
+          onClose={() => setPromptOpen(false)}
+        />
+      ) : null}
     </main>
   );
 }

@@ -1,95 +1,79 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>天气卡片</title>
 <style>
-  *{ box-sizing:border-box; margin:0; padding:0; }
-  body{ min-height:100vh; display:flex; align-items:center; justify-content:center;
-    font-family:system-ui,sans-serif; background:#0e1320; padding:20px; }
-  .card{ width:100%; max-width:340px; border-radius:28px; padding:26px; color:#fff;
-    position:relative; overflow:hidden; transition:background 1s ease;
-    box-shadow:0 24px 60px rgba(0,0,0,.45); min-height:440px; }
-  .sunny{ background:linear-gradient(160deg,#4a9eff,#8ec9ff 60%,#ffd86b); }
-  .rainy{ background:linear-gradient(160deg,#3a4a66,#5a6b8a); }
-  .cloudy{ background:linear-gradient(160deg,#6a7a95,#9aa8c0); }
-  .tabs{ display:flex; gap:8px; position:relative; z-index:3; }
-  .tabs button{ flex:1; padding:8px; border:none; border-radius:12px; font-size:13px; cursor:pointer;
-    background:rgba(255,255,255,.18); color:#fff; transition:.2s; backdrop-filter:blur(4px); }
-  .tabs button.on{ background:rgba(255,255,255,.9); color:#1a2740; font-weight:700; }
-  .city{ margin-top:28px; font-size:22px; font-weight:600; position:relative; z-index:3; }
-  .desc{ opacity:.85; font-size:14px; margin-top:2px; }
-  .temp{ font-size:78px; font-weight:300; line-height:1; margin-top:18px; position:relative; z-index:3; }
-  .temp sup{ font-size:28px; vertical-align:super; opacity:.8; }
-  .icon{ position:absolute; top:70px; right:24px; font-size:64px; z-index:2;
-    filter:drop-shadow(0 4px 12px rgba(0,0,0,.2)); animation:float 4s ease-in-out infinite; }
-  @keyframes float{ 50%{ transform:translateY(-10px); } }
-  .meta{ display:flex; gap:10px; margin-top:24px; position:relative; z-index:3; }
-  .meta div{ flex:1; background:rgba(255,255,255,.16); border-radius:14px; padding:12px; text-align:center; }
-  .meta .v{ font-size:18px; font-weight:600; } .meta .k{ font-size:11px; opacity:.75; margin-top:2px; }
-  .trend{ margin-top:20px; position:relative; z-index:3; }
-  .trend svg{ width:100%; height:54px; }
-  .trend .lbl{ display:flex; justify-content:space-between; font-size:10px; opacity:.7; margin-top:4px; }
-  .rain{ position:absolute; inset:0; z-index:1; pointer-events:none; opacity:0; transition:opacity .6s; }
-  .rainy .rain{ opacity:1; }
-  .rain i{ position:absolute; top:-20px; width:2px; height:16px; background:rgba(255,255,255,.5);
-    border-radius:2px; animation:drop linear infinite; }
-  @keyframes drop{ to{ transform:translateY(480px); } }
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;font:14px/1.4 -apple-system,"PingFang SC",sans-serif;background:#1a1f2e;padding:16px}
+.card{width:100%;max-width:420px;border-radius:20px;padding:24px;position:relative;overflow:hidden;transition:background .6s}
+.card.sunny{background:linear-gradient(135deg,#1e3a5f,#2d6fa0)}
+.card.rainy{background:linear-gradient(135deg,#1c2a3a,#2a3d52)}
+.card.cloudy{background:linear-gradient(135deg,#2a2f3d,#3d4556)}
+.cities{display:flex;gap:8px;margin-bottom:18px}
+.cities button{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:20px;padding:5px 14px;font:inherit;cursor:pointer;transition:.2s}
+.cities button.active{background:rgba(255,255,255,.28);border-color:rgba(255,255,255,.5)}
+.now{text-align:center;margin-bottom:20px;color:#fff;opacity:0;transform:translateY(8px);transition:opacity .4s,transform .4s}
+.now.show{opacity:1;transform:translateY(0)}
+.temp{font-size:56px;font-weight:200;letter-spacing:-2px}
+.desc{font-size:16px;opacity:.85;margin:4px 0 10px}
+.meta{display:flex;justify-content:center;gap:16px;font-size:12px;opacity:.7}
+.forecast{display:flex;justify-content:space-between;gap:6px;margin-bottom:8px;color:#fff}
+.day{flex:1;text-align:center;font-size:11px;opacity:.85}
+.day .hi{font-weight:600;font-size:13px}
+.day .lo{opacity:.6}
+svg.fc{width:100%;height:36px;display:block;margin-top:6px}
+.fc polyline{fill:none;stroke:rgba(255,255,255,.7);stroke-width:2;stroke-linecap:round}
+.fc circle{fill:#fff}
+.particles{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.drop{position:absolute;width:2px;height:16px;background:rgba(200,220,255,.55);border-radius:2px;animation:fall linear infinite}
+@keyframes fall{0%{transform:translateY(-20px)}100%{transform:translateY(calc(100vh + 20px))}}
+.glow{position:absolute;border-radius:50%;background:rgba(255,220,100,.25);filter:blur(6px);animation:float 4s ease-in-out infinite alternate}
+@keyframes float{0%{transform:translate(0,0) scale(1)}100%{transform:translate(12px,8px) scale(1.3)}}
+@media(max-width:480px){.card{padding:18px}.temp{font-size:44px}.forecast{gap:2px}.day{font-size:10px}}
 </style>
 </head>
 <body>
-  <div class="card sunny" id="card">
-    <div class="rain" id="rain"></div>
-    <div class="tabs" id="tabs"></div>
-    <div class="city" id="city"></div>
-    <div class="desc" id="desc"></div>
-    <div class="icon" id="icon"></div>
-    <div class="temp" id="temp"></div>
-    <div class="meta">
-      <div><div class="v" id="wind"></div><div class="k">风速 km/h</div></div>
-      <div><div class="v" id="humid"></div><div class="k">湿度</div></div>
-      <div><div class="v" id="feel"></div><div class="k">体感</div></div>
-    </div>
-    <div class="trend">
-      <svg viewBox="0 0 280 54" id="chart"></svg>
-      <div class="lbl"><span>06</span><span>10</span><span>14</span><span>18</span><span>22</span></div>
-    </div>
-  </div>
+<div class="card" id="card">
+  <div class="particles" id="fx"></div>
+  <div class="cities" id="cities"></div>
+  <div class="now" id="now"></div>
+  <div class="forecast" id="fc"></div>
+  <svg class="fc" viewBox="0 0 400 36" preserveAspectRatio="none" id="svg"></svg>
+</div>
 <script>
-  const data=[
-    {city:'上海',cls:'sunny',icon:'☀️',desc:'晴朗',temp:26,wind:12,humid:'45%',feel:28,trend:[22,25,28,27,23]},
-    {city:'北京',cls:'cloudy',icon:'⛅',desc:'多云转阴',temp:19,wind:18,humid:'60%',feel:17,trend:[15,18,20,19,16]},
-    {city:'广州',cls:'rainy',icon:'🌧',desc:'中雨',temp:23,wind:24,humid:'88%',feel:25,trend:[21,22,24,23,22]},
-  ];
-  const card=document.getElementById('card'), tabs=document.getElementById('tabs');
-  const rain=document.getElementById('rain');
-  for(let i=0;i<22;i++){ const r=document.createElement('i');
-    r.style.left=Math.random()*100+'%'; r.style.animationDuration=(.5+Math.random()*.5)+'s';
-    r.style.animationDelay=Math.random()+'s'; rain.appendChild(r); }
-  data.forEach((d,i)=>{ const b=document.createElement('button'); b.textContent=d.city;
-    b.onclick=()=>render(i); tabs.appendChild(b); });
-  function chart(arr){
-    const max=Math.max(...arr),min=Math.min(...arr),rng=max-min||1;
-    const pts=arr.map((v,i)=>`${10+i*65},${48-((v-min)/rng)*38}`).join(' ');
-    return `<polyline fill="none" stroke="rgba(255,255,255,.9)" stroke-width="2.5"
-      stroke-linecap="round" stroke-linejoin="round" points="${pts}"/>`+
-      arr.map((v,i)=>`<circle cx="${10+i*65}" cy="${48-((v-min)/rng)*38}" r="3" fill="#fff"/>`).join('');
-  }
-  function render(i){
-    const d=data[i];
-    card.className='card '+d.cls;
-    document.getElementById('city').textContent=d.city;
-    document.getElementById('desc').textContent=d.desc;
-    document.getElementById('icon').textContent=d.icon;
-    document.getElementById('temp').innerHTML=d.temp+'<sup>°C</sup>';
-    document.getElementById('wind').textContent=d.wind;
-    document.getElementById('humid').textContent=d.humid;
-    document.getElementById('feel').textContent=d.feel+'°';
-    document.getElementById('chart').innerHTML=chart(d.trend);
-    [...tabs.children].forEach((b,j)=>b.classList.toggle('on',j===i));
-  }
-  render(0);
+(function(){
+var C=[
+{name:'北京',type:'sunny',temp:28,desc:'晴',wind:'北风 3级',hum:'32%',days:[{d:'周二',hi:30,lo:18},{d:'周三',hi:32,lo:20},{d:'周四',hi:28,lo:17},{d:'周五',hi:26,lo:16},{d:'周六',hi:29,lo:18}]},
+{name:'上海',type:'rainy',temp:22,desc:'中雨',wind:'东风 4级',hum:'78%',days:[{d:'周二',hi:22,lo:17},{d:'周三',hi:20,lo:16},{d:'周四',hi:18,lo:15},{d:'周五',hi:21,lo:16},{d:'周六',hi:23,lo:17}]},
+{name:'成都',type:'cloudy',temp:19,desc:'多云',wind:'微风',hum:'65%',days:[{d:'周二',hi:19,lo:13},{d:'周三',hi:17,lo:12},{d:'周四',hi:18,lo:13},{d:'周五',hi:20,lo:14},{d:'周六',hi:21,lo:15}]}
+];
+var cur=0,card=document.getElementById('card'),nowEl=document.getElementById('now');
+function render(){
+  var c=C[cur]; card.className='card '+c.type;
+  nowEl.className='now'; setTimeout(function(){nowEl.className='now show';},50);
+  nowEl.innerHTML='<div class="temp">'+c.temp+'°</div><p class="desc">'+c.desc+'</p><div class="meta"><span>'+c.wind+'</span><span>湿度 '+c.hum+'</span></div>';
+  var fh='';c.days.forEach(function(d){fh+='<div class="day"><div>'+d.d+'</div><div class="hi">'+d.hi+'°</div><div class="lo">'+d.lo+'°</div></div>';});
+  document.getElementById('fc').innerHTML=fh;
+  var hi=c.days.map(function(d){return d.hi;}),mn=Math.min.apply(null,hi),mx=Math.max.apply(null,hi),r=mx-mn||1;
+  var pts=hi.map(function(v,i){return (i*100)+','+(32-(v-mn)/r*26);});
+  var svg='<polyline points="'+pts.join(' ')+'"/>';
+  pts.forEach(function(p){svg+='<circle cx="'+p.split(',')[0]+'" cy="'+p.split(',')[1]+'" r="3"/>';});
+  document.getElementById('svg').innerHTML=svg;
+  makeFx(c.type);
+}
+function makeFx(type){
+  var fx=document.getElementById('fx');fx.innerHTML='';
+  if(type==='rainy'){for(var i=0;i<18;i++){var d=document.createElement('span');d.className='drop';d.style.left=Math.random()*100+'%';d.style.animationDuration=(0.6+Math.random()*0.8)+'s';d.style.animationDelay=Math.random()*2+'s';fx.appendChild(d);}}
+  if(type==='sunny'){for(var i=0;i<5;i++){var g=document.createElement('span');g.className='glow';g.style.width=g.style.height=(20+Math.random()*30)+'px';g.style.left=Math.random()*80+'%';g.style.top=Math.random()*60+'%';g.style.animationDelay=Math.random()*3+'s';fx.appendChild(g);}}
+}
+function initCities(){
+  var h='';C.forEach(function(c,i){h+='<button'+(i===cur?' class="active"':'')+' data-i="'+i+'">'+c.name+'</button>';});
+  var el=document.getElementById('cities');el.innerHTML=h;
+  el.onclick=function(e){var b=e.target.closest('button');if(!b)return;cur=+b.dataset.i;el.querySelectorAll('button').forEach(function(x,i){x.className=i===cur?'active':'';});render();};
+}
+initCities();render();
+})();
 </script>
 </body>
 </html>
