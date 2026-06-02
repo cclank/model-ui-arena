@@ -1,34 +1,25 @@
-<!-- 设计说明：
-     构建了一个圆形时钟，包含模拟指针和数字时间显示，
-     并有昼夜模式切换，背景随时间动态变化 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智能时钟</title>
+    <title>Clock</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            transition: background-color 1s ease;
-        }
-
-        .container {
-            text-align: center;
-            position: relative;
+            transition: background 1s ease;
+            overflow: hidden;
         }
 
         .clock-container {
             position: relative;
             width: 300px;
             height: 300px;
-            margin: 0 auto 20px;
         }
 
         .clock-face {
@@ -37,8 +28,8 @@
             height: 100%;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(0, 0, 0, 0.1);
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -47,88 +38,87 @@
         .hand {
             position: absolute;
             transform-origin: bottom center;
-            border-radius: 5px;
+            border-radius: 3px;
         }
 
         .hour-hand {
-            width: 6px;
-            height: 70px;
-            background: #333;
-            top: calc(50% - 70px);
+            width: 8px;
+            height: 80px;
+            background: linear-gradient(to top, rgba(255,255,255,0.2), #ffffff);
+            top: calc(50% - 80px);
+            filter: drop-shadow(0 0 2px rgba(255,255,255,0.5));
         }
 
         .minute-hand {
-            width: 4px;
-            height: 100px;
-            background: #555;
-            top: calc(50% - 100px);
+            width: 6px;
+            height: 110px;
+            background: linear-gradient(to top, rgba(255,255,255,0.2), #ffffff);
+            top: calc(50% - 110px);
+            filter: drop-shadow(0 0 2px rgba(255,255,255,0.5));
         }
 
         .second-hand {
             width: 2px;
-            height: 120px;
-            background: #e74c3c;
-            top: calc(50% - 120px);
+            height: 130px;
+            background: linear-gradient(to top, rgba(255,100,100,0.2), #ff6464);
+            top: calc(50% - 130px);
         }
 
         .center-circle {
             position: absolute;
             width: 12px;
             height: 12px;
-            background: #333;
+            background: #ff6464;
             border-radius: 50%;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 10;
+            box-shadow: 0 0 10px #ff6464;
         }
 
         .digital-time {
-            font-size: 48px;
+            position: absolute;
+            top: -60px;
+            font-size: 36px;
             font-weight: bold;
-            color: #333;
-            margin: 20px 0;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .date-display {
-            font-size: 18px;
-            color: #666;
-            margin-bottom: 20px;
+            color: white;
+            text-shadow: 0 0 10px rgba(255,255,255,0.7);
+            opacity: 0.9;
         }
 
         .tick {
             position: absolute;
-            width: 2px;
-            height: 10px;
-            background: #666;
-            left: calc(50% - 1px);
-            top: 10px;
+            width: 3px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.7);
+            left: calc(50% - 1.5px);
+            top: 8px;
             transform-origin: bottom center;
+            border-radius: 1px;
         }
 
-        .daytime-indicator {
-            margin-top: 15px;
-            padding: 8px 15px;
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 20px;
-            display: inline-block;
+        .glow {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: inset 0 0 50px rgba(255, 255, 255, 0.1),
+                        0 0 60px rgba(135, 206, 235, 0.2);
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="clock-container">
         <div class="digital-time" id="digitalTime">00:00:00</div>
-        <div class="date-display" id="dateDisplay">2026年06月02日 星期二</div>
-        <div class="clock-container">
-            <div class="clock-face" id="clockFace">
-                <div class="hand hour-hand" id="hourHand"></div>
-                <div class="hand minute-hand" id="minuteHand"></div>
-                <div class="hand second-hand" id="secondHand"></div>
-                <div class="center-circle"></div>
-            </div>
+        <div class="clock-face" id="clockFace">
+            <div class="hand hour-hand" id="hourHand"></div>
+            <div class="hand minute-hand" id="minuteHand"></div>
+            <div class="hand second-hand" id="secondHand"></div>
+            <div class="center-circle"></div>
+            <div class="glow"></div>
         </div>
-        <div class="daytime-indicator" id="daytimeIndicator">白天模式</div>
     </div>
 
     <script>
@@ -139,15 +129,7 @@
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('digitalTime').textContent = `${hours}:${minutes}:${seconds}`;
-
-            // 更新日期
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const date = String(now.getDate()).padStart(2, '0');
-            const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-            const weekday = weekdays[now.getDay()];
-            document.getElementById('dateDisplay').textContent = `${year}年${month}月${date}日 ${weekday}`;
+            document.getElementById('digitalTime').textContent = `${hours}:${minutes}`;
 
             // 获取时间角度
             const hour = now.getHours() % 12;
@@ -164,21 +146,38 @@
             document.getElementById('secondHand').style.transform = `rotate(${secondDeg}deg)`;
 
             // 昼夜模式切换
-            const isDaytime = hour >= 6 && hour < 18;
+            const hourFloat = now.getHours() + now.getMinutes()/60;
             const body = document.body;
-            const indicator = document.getElementById('daytimeIndicator');
 
-            if (isDaytime) {
+            // 计算天空颜色 - 模拟一天中的光线变化
+            if (hourFloat >= 6 && hourFloat < 8) {
+                // 日出
+                const progress = (hourFloat - 6) / 2;
+                const r = Math.floor(255);
+                const g = Math.floor(150 + progress * 105);
+                const b = Math.floor(100 + progress * 155);
+                body.style.background = `linear-gradient(to bottom, rgb(${r},${g},${b}), #E0F6FF)`;
+            } else if (hourFloat >= 8 && hourFloat < 17) {
+                // 白天
                 body.style.background = 'linear-gradient(to bottom, #87CEEB, #E0F6FF)';
-                indicator.textContent = '白天模式';
+            } else if (hourFloat >= 17 && hourFloat < 19) {
+                // 日落
+                const progress = (hourFloat - 17) / 2;
+                const r = Math.floor(255 - progress * 100);
+                const g = Math.floor(150 - progress * 150);
+                const b = Math.floor(100 - progress * 100);
+                body.style.background = `linear-gradient(to bottom, #ff7700, rgb(${r},${g},${b}))`;
             } else {
-                body.style.background = 'linear-gradient(to bottom, #1a1a2e, #16213e)';
-                indicator.textContent = '夜间模式';
+                // 夜晚
+                const h = Math.floor(hourFloat) % 24;
+                if (h >= 19 || h < 6) {
+                    const nightProgress = (h >= 19) ? (h - 19) / 7 : (h + 5) / 7;
+                    const baseR = 25;
+                    const baseG = 25 + Math.floor(nightProgress * 20);
+                    const baseB = 50 + Math.floor(nightProgress * 30);
+                    body.style.background = `linear-gradient(to bottom, rgb(${baseR},${baseG},${baseB}), rgb(${baseR-10},${baseG-15},${baseB-20}))`;
+                }
             }
-
-            // 添加呼吸效果到秒针
-            const secondHand = document.getElementById('secondHand');
-            secondHand.style.opacity = Math.abs(Math.sin(Date.now() * 0.005)) * 0.5 + 0.5;
         }
 
         // 创建刻度标记
@@ -188,6 +187,14 @@
                 const tick = document.createElement('div');
                 tick.className = 'tick';
                 tick.style.transform = `rotate(${i * 30}deg)`;
+
+                // 每小时刻度更长更粗
+                if (i % 3 === 0) {
+                    tick.style.height = '18px';
+                    tick.style.width = '4px';
+                    tick.style.background = 'rgba(255, 255, 255, 0.9)';
+                }
+
                 clockFace.appendChild(tick);
             }
         }

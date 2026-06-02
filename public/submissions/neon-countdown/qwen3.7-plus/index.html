@@ -1,45 +1,40 @@
-<!-- 设计说明：
-     创建了一个霓虹风格的倒计时页面，包含大号数字、环形进度条，
-     每秒有节奏反馈，倒计时结束后有爆发式视觉反馈，支持重新开始 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>最炫倒计时</title>
+    <title>Neon Countdown</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Arial', sans-serif;
             background: #000;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             overflow: hidden;
-            color: #fff;
         }
 
         .countdown-container {
-            text-align: center;
             position: relative;
             z-index: 10;
+            text-align: center;
         }
 
         .neon-number {
-            font-size: 200px;
+            font-size: 220px;
             font-weight: bold;
             color: #fff;
             text-shadow:
-                0 0 5px #fff,
                 0 0 10px #fff,
-                0 0 20px #0ff,
+                0 0 20px #fff,
                 0 0 40px #0ff,
-                0 0 80px #0ff;
+                0 0 80px #0ff,
+                0 0 120px #0ff;
             margin: 0;
             line-height: 1;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
         .progress-container {
@@ -54,7 +49,7 @@
         }
 
         .progress-background {
-            stroke: #333;
+            stroke: rgba(0, 255, 255, 0.2);
             stroke-width: 8;
             fill: transparent;
         }
@@ -65,48 +60,7 @@
             fill: transparent;
             stroke-linecap: round;
             transition: stroke-dashoffset 0.5s linear;
-        }
-
-        .counter-text {
-            font-size: 24px;
-            color: #0ff;
-            text-shadow: 0 0 10px #0ff;
-            margin-top: 20px;
-        }
-
-        .restart-btn {
-            background: transparent;
-            color: #0ff;
-            border: 2px solid #0ff;
-            padding: 12px 30px;
-            font-size: 18px;
-            border-radius: 30px;
-            cursor: pointer;
-            margin-top: 30px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            transition: all 0.3s ease;
-            text-shadow: 0 0 10px #0ff;
-        }
-
-        .restart-btn:hover {
-            background: rgba(0, 255, 255, 0.2);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-        }
-
-        .completion-message {
-            font-size: 48px;
-            color: #f1c40f;
-            text-shadow: 0 0 20px #f1c40f;
-            margin-top: 30px;
-            opacity: 0;
-            transform: scale(0.5);
-            transition: all 0.5s ease;
-        }
-
-        .active {
-            opacity: 1;
-            transform: scale(1);
+            filter: drop-shadow(0 0 10px #0ff);
         }
 
         .pulse {
@@ -114,22 +68,22 @@
         }
 
         .flash {
-            animation: flash 0.2s;
+            animation: flash 0.15s;
         }
 
         @keyframes pulse {
             from { text-shadow:
-                0 0 5px #fff,
-                0 0 10px #fff,
-                0 0 20px #0ff,
-                0 0 40px #0ff,
-                0 0 80px #0ff; }
-            to { text-shadow:
                 0 0 10px #fff,
                 0 0 20px #fff,
                 0 0 40px #0ff,
                 0 0 80px #0ff,
-                0 0 160px #0ff; }
+                0 0 120px #0ff; }
+            to { text-shadow:
+                0 0 15px #fff,
+                0 0 30px #fff,
+                0 0 60px #0ff,
+                0 0 120px #0ff,
+                0 0 180px #0ff; }
         }
 
         @keyframes flash {
@@ -150,8 +104,8 @@
 
         .particle {
             position: absolute;
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             background: #0ff;
             border-radius: 50%;
             opacity: 0;
@@ -170,29 +124,20 @@
 
         .final-dot {
             position: absolute;
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             background: #f1c40f;
             border-radius: 50%;
             opacity: 0;
         }
 
-        .final-text {
-            font-size: 80px;
-            color: #f1c40f;
-            text-shadow: 0 0 30px #f1c40f;
-            margin-top: 30px;
-            opacity: 0;
-            transform: scale(0.5);
-        }
-
         .last-seconds {
             text-shadow:
-                0 0 5px #fff,
                 0 0 10px #fff,
-                0 0 20px #f39c12,
+                0 0 20px #fff,
                 0 0 40px #f39c12,
-                0 0 80px #f39c12 !important;
+                0 0 80px #f39c12,
+                0 0 120px #f39c12 !important;
         }
     </style>
 </head>
@@ -211,13 +156,6 @@
                 </circle>
             </svg>
         </div>
-
-        <div class="counter-text" id="counterText">倒计时进行中...</div>
-
-        <button class="restart-btn" id="restartBtn" style="display: none;">重新开始</button>
-
-        <div class="completion-message" id="completionMessage">完成！</div>
-        <div class="final-text" id="finalText">0</div>
     </div>
 
     <div class="final-explosion" id="finalExplosion"></div>
@@ -226,14 +164,8 @@
         let countdownValue = 10;
         let countdownInterval;
         let totalTime = 10; // 总共10秒
-        let startTime;
         const countdownElement = document.getElementById('countdown');
         const progressBar = document.querySelector('.progress-bar');
-        const counterText = document.getElementById('counterText');
-        const restartBtn = document.getElementById('restartBtn');
-        const completionMessage = document.getElementById('completionMessage');
-        const finalText = document.getElementById('finalText');
-        const finalExplosion = document.getElementById('finalExplosion');
         const glow = document.getElementById('glow');
 
         // 初始化倒计时
@@ -241,18 +173,10 @@
             countdownValue = 10;
             countdownElement.textContent = countdownValue;
             countdownElement.className = 'neon-number';
-            counterText.textContent = '倒计时进行中...';
-            restartBtn.style.display = 'none';
-            completionMessage.classList.remove('active');
-            finalText.style.opacity = '0';
-            finalText.textContent = '0';
 
             // 重置进度条
             const circumference = 2 * Math.PI * 140;
             progressBar.style.strokeDashoffset = circumference;
-
-            // 隐藏完成信息
-            document.querySelectorAll('.final-dot').forEach(dot => dot.remove());
         }
 
         // 更新倒计时
@@ -281,25 +205,13 @@
             const offset = circumference * (1 - progress);
             progressBar.style.strokeDashoffset = offset;
 
-            // 更新文本
-            counterText.textContent = `还剩 ${countdownValue} 秒`;
-
             countdownValue--;
         }
 
         // 完成倒计时
         function finishCountdown() {
-            // 显示完成信息
             countdownElement.textContent = '0';
-            finalText.textContent = '0';
-            counterText.textContent = '倒计时结束！';
-            completionMessage.textContent = '完成！';
-            completionMessage.classList.add('active');
-            finalText.classList.add('active');
-            finalText.style.opacity = '1';
-
-            // 显示重新开始按钮
-            restartBtn.style.display = 'inline-block';
+            countdownElement.classList.add('pulse');
 
             // 创建最终爆炸效果
             createFinalExplosion();
@@ -310,7 +222,7 @@
             countdownElement.classList.add('flash');
             setTimeout(() => {
                 countdownElement.classList.remove('flash');
-            }, 200);
+            }, 150);
 
             // 创建光晕效果
             createGlowEffect();
@@ -318,7 +230,7 @@
 
         // 创建光晕效果
         function createGlowEffect() {
-            const particleCount = 20;
+            const particleCount = 15;
 
             for (let i = 0; i < particleCount; i++) {
                 const particle = document.createElement('div');
@@ -326,7 +238,7 @@
 
                 // 随机位置
                 const angle = Math.random() * Math.PI * 2;
-                const distance = 50 + Math.random() * 100;
+                const distance = 30 + Math.random() * 80;
                 const x = 50 + Math.cos(angle) * distance;
                 const y = 50 + Math.sin(angle) * distance;
 
@@ -342,9 +254,9 @@
                 // 动画
                 particle.animate([
                     { opacity: 1, transform: 'scale(1)', top: y + '%', left: x + '%' },
-                    { opacity: 0, transform: 'scale(0.5)', top: (y - 10) + '%', left: (x - 10) + '%' }
+                    { opacity: 0, transform: 'scale(0.3)', top: (y - 8) + '%', left: (x - 8) + '%' }
                 ], {
-                    duration: 800,
+                    duration: 600,
                     easing: 'ease-out'
                 });
 
@@ -353,14 +265,15 @@
                     if (particle.parentNode) {
                         particle.parentNode.removeChild(particle);
                     }
-                }, 800);
+                }, 600);
             }
         }
 
         // 创建最终爆炸效果
         function createFinalExplosion() {
+            const finalExplosion = document.getElementById('finalExplosion');
             finalExplosion.style.opacity = '1';
-            const dotCount = 200;
+            const dotCount = 180;
 
             for (let i = 0; i < dotCount; i++) {
                 const dot = document.createElement('div');
@@ -376,17 +289,17 @@
                 dot.style.top = y + '%';
 
                 // 随机颜色
-                const colors = ['#f1c40f', '#e74c3c', '#3498db', '#9b59b6', '#1abc9c'];
+                const colors = ['#f1c40f', '#e74c3c', '#3498db', '#9b59b6', '#1abc9c', '#f39c12'];
                 dot.style.background = colors[Math.floor(Math.random() * colors.length)];
 
                 finalExplosion.appendChild(dot);
 
                 // 动画
                 dot.animate([
-                    { opacity: 1, transform: 'translate(0, 0) scale(1)', width: '10px', height: '10px' },
-                    { opacity: 0, transform: `translate(${Math.cos(angle)*200}px, ${Math.sin(angle)*200}px) scale(0.2)`, width: '2px', height: '2px' }
+                    { opacity: 1, transform: 'translate(0, 0) scale(1)', width: '8px', height: '8px' },
+                    { opacity: 0, transform: `translate(${Math.cos(angle)*250}px, ${Math.sin(angle)*250}px) scale(0.1)`, width: '2px', height: '2px' }
                 ], {
-                    duration: 2000,
+                    duration: 1800,
                     easing: 'ease-out'
                 });
 
@@ -395,13 +308,13 @@
                     if (dot.parentNode) {
                         dot.parentNode.removeChild(dot);
                     }
-                }, 2000);
+                }, 1800);
             }
 
             // 几秒后淡出爆炸效果
             setTimeout(() => {
                 finalExplosion.style.opacity = '0';
-            }, 2000);
+            }, 1800);
         }
 
         // 开始倒计时
@@ -409,9 +322,6 @@
             initCountdown();
             countdownInterval = setInterval(updateCountdown, 1000);
         }
-
-        // 重新开始事件
-        restartBtn.addEventListener('click', startCountdown);
 
         // 初始化
         startCountdown();

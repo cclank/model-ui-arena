@@ -1,23 +1,20 @@
-<!-- 设计说明：
-     创建了一个可切换城市的天气卡片，包含当前天气和5天预报，
-     具备动态天气效果，如雨滴动画、阳光粒子等，支持移动端适配 -->
 <!DOCTYPE html>
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>天气卡片</title>
+    <title>Weather</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #74b9ff, #0984e3);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             transition: background 0.5s ease;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
         }
 
         .weather-container {
@@ -27,59 +24,58 @@
         }
 
         .weather-card {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
-            transition: transform 0.3s ease;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 30px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
         }
 
         .city-selector {
-            text-align: center;
-            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
         }
 
         .city-btn {
-            background: transparent;
-            border: 2px solid #74b9ff;
-            color: #74b9ff;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
             padding: 8px 16px;
-            margin: 0 5px;
             border-radius: 20px;
             cursor: pointer;
-            font-weight: bold;
             transition: all 0.3s ease;
+            font-size: 14px;
         }
 
         .city-btn.active {
-            background: #74b9ff;
-            color: white;
-        }
-
-        .current-weather {
-            text-align: center;
-            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
         }
 
         .temperature {
-            font-size: 72px;
-            font-weight: bold;
-            color: #2d3436;
-            margin: 10px 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 80px;
+            font-weight: 300;
+            color: white;
+            margin: 15px 0;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            line-height: 1;
         }
 
         .weather-desc {
-            font-size: 24px;
-            color: #636e72;
-            margin-bottom: 15px;
+            font-size: 22px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 25px;
+            letter-spacing: 1px;
         }
 
         .weather-details {
             display: flex;
             justify-content: space-around;
-            margin-top: 15px;
+            margin-top: 20px;
         }
 
         .detail-item {
@@ -87,29 +83,26 @@
         }
 
         .detail-value {
+            font-size: 18px;
             font-weight: bold;
-            color: #2d3436;
+            color: white;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
         }
 
         .detail-label {
             font-size: 12px;
-            color: #636e72;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 5px;
         }
 
         .forecast {
             margin-top: 30px;
         }
 
-        .forecast-title {
-            text-align: center;
-            margin-bottom: 15px;
-            font-size: 18px;
-            color: #2d3436;
-        }
-
         .forecast-container {
             display: flex;
             justify-content: space-between;
+            gap: 5px;
         }
 
         .forecast-day {
@@ -118,59 +111,69 @@
         }
 
         .forecast-date {
-            font-size: 14px;
-            color: #636e72;
-            margin-bottom: 5px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 8px;
         }
 
         .forecast-icon {
-            font-size: 24px;
-            margin: 10px 0;
+            font-size: 20px;
+            margin: 8px 0;
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
         }
 
         .forecast-temp {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
-            color: #2d3436;
+            color: white;
         }
 
         .temp-graph {
-            height: 60px;
-            margin: 20px 0;
+            height: 50px;
+            margin: 25px 0 15px;
             position: relative;
         }
 
         .temp-line {
             position: absolute;
             width: 100%;
-            height: 3px;
-            background: #74b9ff;
-            bottom: 30px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.3);
+            bottom: 20px;
+        }
+
+        .temp-path {
+            position: absolute;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.7);
+            bottom: 20px;
+            transition: width 0.5s ease;
         }
 
         .temp-point {
             position: absolute;
-            width: 8px;
-            height: 8px;
-            background: #74b9ff;
+            width: 6px;
+            height: 6px;
+            background: white;
             border-radius: 50%;
             transform: translateX(-50%);
-            bottom: 28px;
+            bottom: 18px;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
         }
 
         .raindrop {
             position: absolute;
-            width: 2px;
-            height: 10px;
-            background: #74b9ff;
+            width: 1px;
+            height: 8px;
+            background: rgba(116, 185, 255, 0.7);
             opacity: 0;
         }
 
         .sun-particle {
             position: absolute;
-            width: 6px;
-            height: 6px;
-            background: #fdcb6e;
+            width: 4px;
+            height: 4px;
+            background: #fdd835;
             border-radius: 50%;
             opacity: 0;
         }
@@ -183,8 +186,8 @@
         }
 
         @keyframes sunPulse {
-            0%, 100% { transform: scale(1); opacity: 0.7; }
-            50% { transform: scale(1.2); opacity: 0.9; }
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.3); opacity: 0.9; }
         }
     </style>
 </head>
@@ -197,30 +200,26 @@
                 <button class="city-btn" data-city="guangzhou">广州</button>
             </div>
 
-            <div class="current-weather">
-                <h2 id="cityName">北京</h2>
-                <div class="temperature" id="currentTemp">22°</div>
-                <div class="weather-desc" id="currentDesc">多云</div>
-                <div class="weather-details">
-                    <div class="detail-item">
-                        <div class="detail-value" id="windSpeed">12 km/h</div>
-                        <div class="detail-label">风速</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-value" id="humidity">65%</div>
-                        <div class="detail-label">湿度</div>
-                    </div>
+            <h2 id="cityName" style="color: white; margin: 0 0 10px; font-size: 24px;"></h2>
+            <div class="temperature" id="currentTemp">22°</div>
+            <div class="weather-desc" id="currentDesc">多云</div>
+
+            <div class="weather-details">
+                <div class="detail-item">
+                    <div class="detail-value" id="windSpeed">12</div>
+                    <div class="detail-label">风速</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-value" id="humidity">65</div>
+                    <div class="detail-label">湿度</div>
                 </div>
             </div>
 
             <div class="temp-graph" id="tempGraph">
-                <!-- Temperature graph will be drawn here -->
             </div>
 
             <div class="forecast">
-                <h3 class="forecast-title">5天预报</h3>
                 <div class="forecast-container" id="forecastContainer">
-                    <!-- Forecast items will be added here -->
                 </div>
             </div>
         </div>
@@ -230,35 +229,35 @@
         // 天气数据
         const weatherData = {
             beijing: {
-                current: { temp: 22, desc: "多云", wind: "12 km/h", humidity: "65%" },
+                current: { temp: 22, desc: "⛅", wind: 12, humidity: 65 },
                 forecast: [
-                    { day: "今天", date: "6/2", high: 24, low: 18, icon: "⛅" },
-                    { day: "明天", date: "6/3", high: 26, low: 19, icon: "☀️" },
-                    { day: "周四", date: "6/4", high: 23, low: 17, icon: "🌧️" },
-                    { day: "周五", date: "6/5", high: 25, low: 20, icon: "🌤️" },
-                    { day: "周六", date: "6/6", high: 27, low: 21, icon: "☀️" }
+                    { date: "6/2", high: 24, low: 18, icon: "⛅" },
+                    { date: "6/3", high: 26, low: 19, icon: "☀️" },
+                    { date: "6/4", high: 23, low: 17, icon: "🌧️" },
+                    { date: "6/5", high: 25, low: 20, icon: "🌤️" },
+                    { date: "6/6", high: 27, low: 21, icon: "☀️" }
                 ],
                 weatherType: "cloudy"
             },
             shanghai: {
-                current: { temp: 25, desc: "晴", wind: "8 km/h", humidity: "70%" },
+                current: { temp: 25, desc: "☀️", wind: 8, humidity: 70 },
                 forecast: [
-                    { day: "今天", date: "6/2", high: 27, low: 22, icon: "☀️" },
-                    { day: "明天", date: "6/3", high: 28, low: 23, icon: "🌤️" },
-                    { day: "周四", date: "6/4", high: 26, low: 21, icon: "⛅" },
-                    { day: "周五", date: "6/5", high: 24, low: 19, icon: "🌦️" },
-                    { day: "周六", date: "6/6", high: 25, low: 20, icon: "🌧️" }
+                    { date: "6/2", high: 27, low: 22, icon: "☀️" },
+                    { date: "6/3", high: 28, low: 23, icon: "🌤️" },
+                    { date: "6/4", high: 26, low: 21, icon: "⛅" },
+                    { date: "6/5", high: 24, low: 19, icon: "🌦️" },
+                    { date: "6/6", high: 25, low: 20, icon: "🌧️" }
                 ],
                 weatherType: "sunny"
             },
             guangzhou: {
-                current: { temp: 30, desc: "雨", wind: "15 km/h", humidity: "85%" },
+                current: { temp: 30, desc: "🌧️", wind: 15, humidity: 85 },
                 forecast: [
-                    { day: "今天", date: "6/2", high: 31, low: 26, icon: "🌧️" },
-                    { day: "明天", date: "6/3", high: 29, low: 25, icon: "🌦️" },
-                    { day: "周四", date: "6/4", high: 28, low: 24, icon: "🌧️" },
-                    { day: "周五", date: "6/5", high: 27, low: 23, icon: "⛅" },
-                    { day: "周六", date: "6/6", high: 28, low: 24, icon: "🌤️" }
+                    { date: "6/2", high: 31, low: 26, icon: "🌧️" },
+                    { date: "6/3", high: 29, low: 25, icon: "🌦️" },
+                    { date: "6/4", high: 28, low: 24, icon: "🌧️" },
+                    { date: "6/5", high: 27, low: 23, icon: "⛅" },
+                    { date: "6/6", high: 28, low: 24, icon: "🌤️" }
                 ],
                 weatherType: "rainy"
             }
@@ -295,9 +294,9 @@
                 const forecastItem = document.createElement('div');
                 forecastItem.className = 'forecast-day';
                 forecastItem.innerHTML = `
-                    <div class="forecast-date">${day.day}<br>${day.date}</div>
+                    <div class="forecast-date">${day.date}</div>
                     <div class="forecast-icon">${day.icon}</div>
-                    <div class="forecast-temp">${day.high}°/${day.low}°</div>
+                    <div class="forecast-temp">${day.high}°</div>
                 `;
                 forecastContainer.appendChild(forecastItem);
             });
@@ -324,32 +323,33 @@
 
             const maxValue = Math.max(...forecast.map(d => d.high));
             const minValue = Math.min(...forecast.map(d => d.low));
-            const range = maxValue - minValue;
+            const range = maxValue - minValue || 1;
 
-            const padding = 10;
             const graphWidth = tempGraph.clientWidth;
-            const graphHeight = 50;
+            const graphHeight = 40;
 
+            // 创建路径
+            const path = document.createElement('div');
+            path.className = 'temp-path';
+            tempGraph.appendChild(path);
+
+            // 添加点
             forecast.forEach((day, index) => {
-                const x = (graphWidth - padding * 2) / (forecast.length - 1) * index + padding;
+                const x = (graphWidth / (forecast.length - 1)) * index;
 
                 // 高温点
                 const highY = graphHeight - ((day.high - minValue) / range) * graphHeight;
                 const highPoint = document.createElement('div');
                 highPoint.className = 'temp-point';
                 highPoint.style.left = x + 'px';
-                highPoint.style.bottom = highY + 'px';
+                highPoint.style.bottom = (highY + 10) + 'px';
                 tempGraph.appendChild(highPoint);
-
-                // 低温点
-                const lowY = graphHeight - ((day.low - minValue) / range) * graphHeight;
-                const lowPoint = document.createElement('div');
-                lowPoint.className = 'temp-point';
-                lowPoint.style.left = x + 'px';
-                lowPoint.style.bottom = lowY + 'px';
-                lowPoint.style.backgroundColor = '#636e72';
-                tempGraph.appendChild(lowPoint);
             });
+
+            // 动画效果
+            setTimeout(() => {
+                path.style.width = '100%';
+            }, 10);
         }
 
         // 更新背景和动画效果
@@ -357,15 +357,15 @@
             const body = document.body;
 
             if (weatherType === 'sunny') {
-                body.style.background = 'linear-gradient(135deg, #fdcb6e, #ffeaa7)';
+                body.style.background = 'linear-gradient(135deg, #ff9a9e, #fad0c4)';
                 createSunParticles();
                 clearRain();
             } else if (weatherType === 'cloudy') {
-                body.style.background = 'linear-gradient(135deg, #74b9ff, #a29bfe)';
+                body.style.background = 'linear-gradient(135deg, #a1c4fd, #c2e9fb)';
                 clearSunParticles();
                 clearRain();
             } else if (weatherType === 'rainy') {
-                body.style.background = 'linear-gradient(135deg, #2d3436, #636e72)';
+                body.style.background = 'linear-gradient(135deg, #434343, #1a1a1a)';
                 createRain();
                 clearSunParticles();
             }
@@ -376,7 +376,7 @@
             clearAnimations();
             const body = document.body;
 
-            for (let i = 0; i < 20; i++) {
+            for (let i = 0; i < 15; i++) {
                 setTimeout(() => {
                     const particle = document.createElement('div');
                     particle.className = 'sun-particle';
@@ -386,14 +386,14 @@
                     particle.style.top = Math.random() * 100 + '%';
 
                     // 动画
-                    particle.style.animation = `sunPulse ${2 + Math.random() * 3}s infinite`;
+                    particle.style.animation = `sunPulse ${2 + Math.random() * 2}s infinite`;
                     particle.style.opacity = '0';
 
                     body.appendChild(particle);
 
                     // 渐显
                     setTimeout(() => {
-                        particle.style.opacity = '0.7';
+                        particle.style.opacity = '0.6';
                     }, 10);
 
                     // 移除元素
@@ -401,8 +401,8 @@
                         if (particle.parentNode) {
                             particle.parentNode.removeChild(particle);
                         }
-                    }, 5000);
-                }, i * 300);
+                    }, 4000);
+                }, i * 200);
             }
         }
 
@@ -411,18 +411,18 @@
             clearAnimations();
             const body = document.body;
 
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < 40; i++) {
                 setTimeout(() => {
                     const raindrop = document.createElement('div');
                     raindrop.className = 'raindrop';
 
                     // 随机位置和大小
                     raindrop.style.left = Math.random() * 100 + '%';
-                    raindrop.style.height = 10 + Math.random() * 15 + 'px';
+                    raindrop.style.height = 8 + Math.random() * 8 + 'px';
                     raindrop.style.opacity = '0';
 
                     // 动画
-                    const duration = 0.5 + Math.random() * 1;
+                    const duration = 0.3 + Math.random() * 0.4;
                     raindrop.style.animation = `rainFall ${duration}s linear forwards`;
 
                     body.appendChild(raindrop);
@@ -438,7 +438,7 @@
                             raindrop.parentNode.removeChild(raindrop);
                         }
                     }, duration * 1000 + 100);
-                }, i * 100);
+                }, i * 70);
             }
         }
 
