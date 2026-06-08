@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gravity • grok-4.3</title>
+<style>
+  :root{--bg:#05070f}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:#cbd5e1;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden}
+  canvas{display:block}
+  .hud{position:absolute;top:14px;left:14px;font-size:11px;background:rgba(15,23,42,.55);padding:5px 11px;border-radius:8px;pointer-events:none}
+  .hud b{color:#67e8f9}
+  .tip{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-size:10px;opacity:.5;letter-spacing:1px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud">粒子 <b id="count">128</b> · 能量 <b id="energy">100</b> · <span id="mode">引力井</span></div>
+<div class="tip">点击 / 拖动改变引力 · 双击切换排斥</div>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+let W, H;
+function resize(){ W=c.width=window.innerWidth; H=c.height=window.innerHeight; }
+window.addEventListener('resize', resize); resize();
+
+let particles = [], attractors = [], mode = 'attract'; // attract | repel
+let mouse = {x:W/2, y:H/2, down:false};
+let frame = 0, fps = 60, lastF = Date.now();
+
+class Particle {
+  constructor(x,y) {
+    this.x = x; this.y = y;
+    this.vx = (Math.random()-0.5)*1.1;
+    this.vy = (Math.random()-0.5)*1.1;
+    this.life = 140 + Math.random()*90;
+    this.r = 1.6 + Math.random()*1.1;
+  }
+  step() {
+    // attractors
+    for (const a of attractors) {
+      const dx = a.x - this.x, dy = a.y - this.y;
+      const d2 = dx*dx + dy*dy + 0.0001;
+      const d = Math.sqrt(d2);
+      const f = (mode === 'attract' ? 1 : -1) * (a.strength || 0.9) * 38 / d2;
+      this.vx += (dx / d) * f;
+      this.vy += (dy / d) * f;
+    }
+    // damping + limits
+    this.vx *= 0.988; this.vy *= 0.988;
+    const sp = Math.hypot(this.vx,this.vy);
+    if (sp > 5.8) { this.vx *= 5.8/sp; this.vy *= 5.8/sp; }
+    this.x += this.vx; this.y += this.vy;
+    // soft bounds
+    if (this.x < 20) {this.x=20; this.vx *= -0.6;}
+    if (this.x > W-20){this.x=W-20; this.vx *= -0.6;}
+    if (this.y < 20) {this.y=20; this.vy *= -0.6;}
+    if (this.y > H-20){this.y=H-20; this.vy *= -0.6;}
+    this.life -= 1;
+  }
+  draw() {
+    const a = Math.min(1, this.life / 70);
+    ctx.fillStyle = `rgba(103,232,249,${0.65*a})`;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+    ctx.fill();
+    if (a > 0.6) {
+      ctx.fillStyle = `rgba(224,242,254,${0.25*a})`;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r*2.6, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+}
+
+function spawn(n=12, cx=W/2, cy=H/2) {
+  for (let i=0;i<n;i++) {
+    particles.push(new Particle(cx + (Math.random()-0.5)*70, cy + (Math.random()-0.5)*70));
+  }
+}
+
+function reset() {
+  particles = [];
+  attractors = [{x:W*0.5, y:H*0.42, strength:1.0}];
+  for (let i=0;i<128;i++) {
+    particles.push(new Particle(Math.random()*W, Math.random()*H));
+  }
+}
+
+function step() {
+  ctx.fillStyle = 'rgba(5,7,15,0.72)';
+  ctx.fillRect(0,0,W,H);
+
+  // core glow
+  const core = attractors[0];
+  ctx.fillStyle = 'rgba(103,232,249,0.08)';
+  ctx.beginPath();
+  ctx.arc(core.x, core.y, 68, 0, Math.PI*2);
+  ctx.fill();
+
+  for (let i=particles.length-1;i>=0;i--) {
+    const p = particles[i];
+    p.step();
+    if (p.life <= 0) { particles.splice(i,1); continue; }
+    p.draw();
+  }
+
+  // attractors visual
+  for (const a of attractors) {
+    ctx.strokeStyle = mode==='attract' ? '#67e8f9' : '#f472b6';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(a.x, a.y, 7, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(a.x, a.y, 3, 0, Math.PI*2);
+    ctx.fillStyle = mode==='attract' ? '#67e8f9' : '#f472b6';
+    ctx.fill();
+  }
+
+  // HUD
+  document.getElementById('count').textContent = particles.length;
+  document.getElementById('energy').textContent = Math.floor(82 + Math.sin(frame/19)*11);
+  document.getElementById('mode').textContent = mode==='attract' ? '引力井' : '排斥场';
+
+  // keep particle count
+  if (particles.length < 82) spawn(5, core.x, core.y);
+  if (particles.length > 210) particles.splice(0, particles.length-210);
+
+  frame++;
+  const now=Date.now();
+  if (now - lastF > 420) { fps = Math.round(frame*1000/(now-lastF)); lastF=now; frame=0; }
+
+  requestAnimationFrame(step);
+}
+
+function setPointer(e) {
+  const rect = c.getBoundingClientRect();
+  mouse.x = (e.clientX ?? e.touches?.[0]?.clientX ?? W/2) - rect.left;
+  mouse.y = (e.clientY ?? e.touches?.[0]?.clientY ?? H/2) - rect.top;
+}
+
+c.addEventListener('mousemove', e => { setPointer(e); if (mouse.down) { attractors[0].x = mouse.x; attractors[0].y=mouse.y; } });
+c.addEventListener('mousedown', e => { mouse.down=true; setPointer(e); attractors[0].x=mouse.x; attractors[0].y=mouse.y; spawn(6, mouse.x, mouse.y); });
+c.addEventListener('mouseup', ()=> mouse.down=false);
+c.addEventListener('touchmove', e=>{ e.preventDefault(); setPointer(e); attractors[0].x=mouse.x; attractors[0].y=mouse.y; }, {passive:false});
+c.addEventListener('touchstart', e=>{ e.preventDefault(); setPointer(e); attractors[0].x=mouse.x; attractors[0].y=mouse.y; spawn(8, mouse.x, mouse.y); }, {passive:false});
+
+c.addEventListener('dblclick', () => {
+  mode = mode==='attract' ? 'repel' : 'attract';
+  attractors[0].strength = mode==='attract' ? 1.0 : 1.35;
+});
+
+window.addEventListener('keydown', e=>{
+  if (e.key==='r' || e.key==='R') reset();
+  if (e.key===' ') { mode = mode==='attract'?'repel':'attract'; }
+});
+
+reset();
+step();
+
+// occasional natural bursts
+setInterval(()=>{ if (Math.random()<0.4) spawn(3); }, 2100);
+</script>
+</body>
+</html>

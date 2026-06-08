@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather • grok-4.3</title>
+<style>
+  :root{--bg:#0a0c10;--panel:#14171f;--accent:#60a5fa;--text:#e2e8f0;--muted:#64748b}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+  .card{width:100%;max-width:390px;background:linear-gradient(145deg,#14171f,#0f1219);border-radius:22px;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,.65);border:1px solid #1f2430}
+  .header{padding:18px 20px 8px;display:flex;justify-content:space-between;align-items:flex-start}
+  .city{font-size:21px;font-weight:700;letter-spacing:-0.3px}
+  .meta{font-size:12px;color:#64748b}
+  .main{padding:8px 20px 22px;display:flex;align-items:center;justify-content:space-between}
+  .temp{font-size:68px;font-weight:300;line-height:1;font-variant-numeric:tabular-nums}
+  .unit{font-size:22px;font-weight:400;margin-left:2px;vertical-align:top;color:#94a3b8}
+  .desc{font-size:15px;color:#cbd5e1;margin-top:-4px}
+  .meta-right{text-align:right}
+  .icon{font-size:56px;line-height:1;filter:drop-shadow(0 4px 6px rgba(0,0,0,.3))}
+  .divider{height:1px;background:#1f2430;margin:0 20px}
+  .forecast{padding:14px 18px 18px}
+  .label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#475569;margin:0 2px 8px}
+  .days{display:flex;gap:6px;justify-content:space-between}
+  .day{flex:1;text-align:center;background:#0f1219;border-radius:12px;padding:8px 4px;border:1px solid #1f2430}
+  .dow{font-size:11px;color:#64748b;margin-bottom:2px}
+  .daytemp{font-size:13px;font-weight:600}
+  .range{font-size:10px;color:#475569}
+  .chart{height:42px;margin-top:6px;position:relative}
+  .chart svg{width:100%;height:100%;overflow:visible}
+  .actions{padding:0 20px 18px;display:flex;gap:8px}
+  .chip{padding:6px 12px;border-radius:999px;font-size:12px;background:#1f2430;color:#94a3b8;border:none;cursor:pointer}
+  .chip.active{background:#1e3a8a;color:#bae6fd}
+  .rain{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:22px}
+  .drop{position:absolute;width:2px;height:11px;background:linear-gradient(transparent,#67e8f9);animation:fall linear infinite;opacity:.6}
+  @keyframes fall{to{transform:translateY(110px)}}
+  .sun{position:absolute;width:38px;height:38px;background:#fde047;border-radius:50%;box-shadow:0 0 22px #fde047,0 0 42px #facc15;top:38px;right:38px;opacity:0.95}
+  .ray{position:absolute;left:50%;top:50%;width:3px;height:18px;background:#fde047;transform-origin:50% 0;opacity:.6}
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="header">
+    <div>
+      <div class="city" id="city">上海</div>
+      <div class="meta" id="update">刚刚更新 · 本地模拟</div>
+    </div>
+    <div style="text-align:right">
+      <div id="nightBadge" style="font-size:10px;padding:1px 7px;border-radius:99px;background:#1f2430;color:#64748b;display:inline-block">DAY</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div>
+      <div style="display:flex;align-items:flex-start">
+        <div id="temp" class="temp">24</div><span class="unit">°C</span>
+      </div>
+      <div id="desc" class="desc">多云转晴</div>
+    </div>
+    <div class="meta-right">
+      <div id="icon" class="icon">⛅</div>
+      <div style="font-size:11px;color:#64748b;margin-top:2px">湿度 <span id="hum">64</span>%</div>
+      <div style="font-size:11px;color:#64748b">风速 <span id="wind">12</span> km/h</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="forecast">
+    <div class="label">5 天预报</div>
+    <div class="days" id="days"></div>
+    <div class="chart"><svg id="chart" viewBox="0 0 320 42" preserveAspectRatio="none"></svg></div>
+  </div>
+
+  <div class="actions">
+    <button class="chip active" data-city="上海">上海</button>
+    <button class="chip" data-city="北京">北京</button>
+    <button class="chip" data-city="深圳">深圳</button>
+    <button class="chip" data-city="成都">成都</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const cities = {
+    '上海': {temp:24, desc:'多云转晴', hum:64, wind:12, icon:'⛅', type:'cloudy', forecast:[25,27,23,22,20], low:[18,19,17,15,14]},
+    '北京': {temp:18, desc:'晴朗', hum:32, wind:19, icon:'☀️', type:'sunny', forecast:[19,22,24,21,17], low:[6,8,10,9,5]},
+    '深圳': {temp:29, desc:'小雨', hum:88, wind:8, icon:'🌧️', type:'rain', forecast:[28,27,30,31,29], low:[24,23,25,26,24]},
+    '成都': {temp:21, desc:'阴有雷阵雨', hum:71, wind:6, icon:'⛈️', type:'storm', forecast:[23,20,19,22,25], low:[15,14,13,15,17]}
+  };
+
+  let current = '上海';
+
+  function setNight() {
+    const h = new Date().getHours();
+    const isNight = h < 6 || h > 19;
+    document.getElementById('nightBadge').textContent = isNight ? 'NIGHT' : 'DAY';
+    document.getElementById('nightBadge').style.background = isNight ? '#1e1135' : '#1f2430';
+    document.getElementById('nightBadge').style.color = isNight ? '#a5b4fc' : '#64748b';
+    return isNight;
+  }
+
+  function render(city) {
+    const d = cities[city];
+    current = city;
+
+    document.getElementById('city').textContent = city;
+    document.getElementById('temp').textContent = d.temp;
+    document.getElementById('desc').textContent = d.desc;
+    document.getElementById('hum').textContent = d.hum;
+    document.getElementById('wind').textContent = d.wind;
+    document.getElementById('icon').textContent = d.icon;
+
+    // chips
+    document.querySelectorAll('.chip').forEach(el => {
+      el.classList.toggle('active', el.dataset.city === city);
+    });
+
+    // forecast
+    const daysWrap = document.getElementById('days');
+    daysWrap.innerHTML = '';
+    const names = ['今天','明天','周三','周四','周五'];
+    for (let i=0; i<5; i++) {
+      const el = document.createElement('div');
+      el.className = 'day';
+      el.innerHTML = `<div class="dow">${names[i]}</div><div style="font-size:18px;margin:3px 0 1px">${d.forecast[i]}°</div><div class="range">${d.low[i]}°</div>`;
+      daysWrap.appendChild(el);
+    }
+
+    // temperature line chart
+    drawChart(d.forecast, d.low);
+
+    // dynamic weather
+    updateWeatherFX(d.type);
+    setNight();
+  }
+
+  function drawChart(highs, lows) {
+    const svg = document.getElementById('chart');
+    svg.innerHTML = '';
+    const w = 320, h=42, pad=8;
+    const max = Math.max(...highs)+2, min = Math.min(...lows)-2;
+    const ptsH = highs.map((v,i) => {
+      const x = pad + (w-2*pad) * (i/4);
+      const y = h - pad - (h-2*pad) * ((v-min)/(max-min));
+      return [x,y];
+    });
+    const ptsL = lows.map((v,i) => {
+      const x = pad + (w-2*pad) * (i/4);
+      const y = h - pad - (h-2*pad) * ((v-min)/(max-min));
+      return [x,y];
+    });
+
+    // high line
+    let pathH = `M ${ptsH[0][0]},${ptsH[0][1]}`;
+    ptsH.slice(1).forEach(p => pathH += ` L ${p[0]},${p[1]}`);
+    const path1 = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path1.setAttribute('d', pathH);
+    path1.setAttribute('fill','none');
+    path1.setAttribute('stroke','#60a5fa');
+    path1.setAttribute('stroke-width','2.5');
+    path1.setAttribute('stroke-linecap','round');
+    svg.appendChild(path1);
+
+    // low line
+    let pathL = `M ${ptsL[0][0]},${ptsL[0][1]}`;
+    ptsL.slice(1).forEach(p => pathL += ` L ${p[0]},${p[1]}`);
+    const path2 = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path2.setAttribute('d', pathL);
+    path2.setAttribute('fill','none');
+    path2.setAttribute('stroke','#64748b');
+    path2.setAttribute('stroke-width','1.5');
+    path2.setAttribute('stroke-dasharray','3 2');
+    svg.appendChild(path2);
+
+    // dots
+    ptsH.forEach((p,i) => {
+      const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      c.setAttribute('cx',p[0]); c.setAttribute('cy',p[1]); c.setAttribute('r','2.5');
+      c.setAttribute('fill','#bae6fd');
+      svg.appendChild(c);
+    });
+  }
+
+  let fxTimer = null;
+  function updateWeatherFX(type) {
+    const card = document.getElementById('card');
+    card.querySelectorAll('.rain,.sun').forEach(e => e.remove());
+
+    if (fxTimer) clearInterval(fxTimer);
+
+    if (type === 'rain' || type === 'storm') {
+      const rain = document.createElement('div');
+      rain.className = 'rain';
+      card.appendChild(rain);
+      for (let i=0;i<26;i++) {
+        const drop = document.createElement('div');
+        drop.className = 'drop';
+        drop.style.left = (Math.random()*100)+'%';
+        drop.style.top = (-10 - Math.random()*50) + 'px';
+        drop.style.animationDuration = (280 + Math.random()*180) + 'ms';
+        drop.style.animationDelay = (-Math.random()*800) + 'ms';
+        drop.style.opacity = 0.35 + Math.random()*0.4;
+        rain.appendChild(drop);
+      }
+    }
+
+    if (type === 'sunny') {
+      const sun = document.createElement('div');
+      sun.className = 'sun';
+      for (let i=0;i<8;i++) {
+        const r = document.createElement('div');
+        r.className = 'ray';
+        r.style.transform = `rotate(${i*45}deg) translateY(-23px)`;
+        sun.appendChild(r);
+      }
+      card.appendChild(sun);
+    }
+  }
+
+  // city switch with transition
+  document.querySelectorAll('.chip').forEach(btn => {
+    btn.onclick = () => {
+      const next = btn.dataset.city;
+      if (next === current) return;
+      const c = document.getElementById('card');
+      c.style.transition = 'transform .18s ease, opacity .18s';
+      c.style.opacity = '0.6';
+      c.style.transform = 'translateY(3px)';
+      setTimeout(() => {
+        render(next);
+        c.style.opacity = '1';
+        c.style.transform = 'none';
+      }, 110);
+    };
+  });
+
+  // init
+  render('上海');
+  setInterval(() => {
+    if (Math.random() > 0.7) {
+      const badge = document.getElementById('nightBadge');
+      badge.style.transition = 'all .4s';
+    }
+  }, 14000);
+})();
+</script>
+</body>
+</html>

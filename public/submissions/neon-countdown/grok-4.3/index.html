@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Countdown • grok-4.3</title>
+<style>
+  :root{--bg:#05070c}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,monospace;background:var(--bg);color:#e0f2fe;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .stage{width:100%;max-width:390px}
+  .label{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#64748b;margin-bottom:6px;text-align:center}
+  .num{font-size:96px;font-weight:800;line-height:1;letter-spacing:-4px;text-align:center;font-variant-numeric:tabular-nums;transition:transform .06s}
+  .num.tiny{font-size:52px}
+  .ring{position:relative;width:248px;height:248px;margin:12px auto 24px}
+  .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+  .ring circle{fill:none;stroke-width:11;stroke-linecap:round}
+  .bg{stroke:#0f172a}
+  .prog{stroke:#67e8f9;stroke-dasharray:720;stroke-dashoffset:0;transition:stroke-dashoffset .08s linear}
+  .prog.warn{stroke:#f472b6}
+  .prog.done{stroke:#a5b4fc}
+  .status{text-align:center;font-size:13px;margin-top:-6px;min-height:20px;color:#64748b}
+  .btns{display:flex;justify-content:center;gap:12px;margin-top:22px}
+  .btn{border:0;border-radius:999px;padding:11px 26px;font-size:14px;font-weight:600;cursor:pointer;background:#0f172a;color:#bae6fd}
+  .btn:active{transform:scale(.96)}
+  .flash{position:fixed;inset:0;background:#67e8f9;opacity:0;pointer-events:none;transition:opacity .08s}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="label">grok-4.3 — 视觉倒计时</div>
+  <div class="ring">
+    <svg viewBox="0 0 240 240">
+      <circle class="bg" cx="120" cy="120" r="114"/>
+      <circle id="prog" class="prog" cx="120" cy="120" r="114"/>
+    </svg>
+    <div id="num" class="num" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-54%)">10</div>
+  </div>
+  <div id="status" class="status">准备开始</div>
+  <div class="btns">
+    <button id="restart" class="btn">重新开始</button>
+  </div>
+</div>
+<div id="flash" class="flash"></div>
+<script>
+(function(){
+  const num = document.getElementById('num');
+  const prog = document.getElementById('prog');
+  const status = document.getElementById('status');
+  const flash = document.getElementById('flash');
+  const restart = document.getElementById('restart');
+
+  let total = 10, remain = 10, timer = null, startTs = 0;
+
+  const CIRC = 2 * Math.PI * 114; // ~715.5
+  prog.style.strokeDasharray = CIRC;
+
+  function setProgress(r) {
+    const frac = Math.max(0, Math.min(1, r / total));
+    const off = CIRC * (1 - frac);
+    prog.style.strokeDashoffset = off;
+    prog.classList.toggle('warn', r <= 3 && r > 0);
+    prog.classList.toggle('done', r <= 0);
+  }
+
+  function update(n, force=false) {
+    num.textContent = n;
+    num.classList.toggle('tiny', n < 4);
+    setProgress(n);
+    if (n <= 3 && n > 0) {
+      status.textContent = '即将结束…';
+      num.style.color = '#f472b6';
+    } else if (n <= 0) {
+      num.style.color = '#a5b4fc';
+      status.textContent = '完成 · 绝佳表现';
+    } else {
+      num.style.color = '#e0f2fe';
+      status.textContent = '倒计时进行中';
+    }
+  }
+
+  function tick() {
+    const elapsed = (Date.now() - startTs) / 1000;
+    let left = Math.max(0, Math.ceil(total - elapsed));
+    if (left !== remain) {
+      remain = left;
+      update(remain);
+      if (remain <= 3 && remain > 0) pulse();
+      if (remain === 0) finish();
+    }
+    if (remain > 0) requestAnimationFrame(tick);
+  }
+
+  function pulse() {
+    num.style.transform = 'translate(-50%,-54%) scale(1.06)';
+    setTimeout(()=>{ num.style.transform = 'translate(-50%,-54%)'; }, 90);
+  }
+
+  function doFlash(intense=false) {
+    flash.style.transition = 'none';
+    flash.style.opacity = intense ? '0.65' : '0.35';
+    flash.offsetHeight;
+    flash.style.transition = 'opacity .28s ease';
+    flash.style.opacity = '0';
+  }
+
+  function finish() {
+    clearTimeout(timer);
+    doFlash(true);
+    status.textContent = '0 — 倒计时结束';
+    // celebration burst
+    for (let i=0;i<3;i++) setTimeout(()=>doFlash(i===1), 90 + i*120);
+    num.style.transition = 'transform .4s cubic-bezier(.2,0,.1,1)';
+  }
+
+  function start() {
+    clearTimeout(timer);
+    remain = total;
+    startTs = Date.now();
+    num.style.transition = 'transform .06s';
+    update(total);
+    prog.classList.remove('done','warn');
+    status.textContent = '倒计时进行中';
+    requestAnimationFrame(tick);
+  }
+
+  restart.onclick = () => {
+    start();
+  };
+
+  // keyboard
+  document.addEventListener('keydown', e => {
+    if (e.key.toLowerCase()==='r' || e.key===' ') { e.preventDefault(); start(); }
+  });
+
+  // auto start on load
+  setTimeout(start, 180);
+})();
+</script>
+</body>
+</html>

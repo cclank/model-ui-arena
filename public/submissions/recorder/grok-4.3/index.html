@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recorder • grok-4.3</title>
+<style>
+  :root {
+    --bg:#0a0c10; --panel:#14171f; --accent:#f43f5e; --green:#22c55e;
+    --text:#e2e8f0; --muted:#64748b; --wave:#fb7185;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+  }
+  .wrap{width:100%;max-width:390px;background:var(--panel);border-radius:24px;padding:26px 22px 30px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.6)}
+  .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+  .model{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#fb7185;font-weight:600}
+  .title{font-size:13px;color:var(--muted)}
+  .display{background:#0f1219;border-radius:16px;padding:22px 18px;margin-bottom:22px;border:1px solid #1f2430}
+  .timer{font-size:52px;font-weight:700;letter-spacing:2px;font-family:ui-monospace,monospace;text-align:center;line-height:1}
+  .timer.paused{opacity:0.7}
+  .status-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px}
+  .rec-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(244,63,94,0.6);animation:none}
+  .rec-dot.active{animation:rec 1.2s infinite}
+  @keyframes rec{0%{box-shadow:0 0 0 0 rgba(244,63,94,0.6)}70%{box-shadow:0 0 0 10px rgba(244,63,94,0)}100%{box-shadow:0 0 0 0 rgba(244,63,94,0)}}
+  .wave-wrap{height:68px;margin:18px 0 10px;position:relative;background:#0a0c10;border-radius:10px;overflow:hidden;border:1px solid #1f2430}
+  .wave{display:flex;align-items:center;justify-content:space-between;height:100%;padding:0 12px;gap:3px}
+  .bar{width:4px;background:linear-gradient(#fb7185,#fda4af);border-radius:999px;transition:height .06s linear}
+  .controls{display:flex;gap:12px;justify-content:center}
+  .btn{border:none;border-radius:999px;padding:14px 26px;font-size:15px;font-weight:600;cursor:pointer;transition:all .1s ease;display:flex;align-items:center;gap:8px}
+  .btn-primary{background:#f43f5e;color:white}
+  .btn-primary:active{transform:scale(0.96)}
+  .btn-ghost{background:#1f2430;color:#cbd5e1}
+  .btn:disabled{opacity:.45;pointer-events:none}
+  .summary{margin-top:18px;background:#0f1219;border-radius:14px;padding:16px;border:1px solid #1f2430;font-size:13px}
+  .summary-row{display:flex;justify-content:space-between;padding:4px 0;color:#94a3b8}
+  .summary-row span:last-child{color:#e2e8f0;font-family:monospace}
+  .label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#475569;margin-bottom:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div><div class="model">grok-4.3</div><div class="title">录音机原型</div></div>
+    <div style="font-size:11px;color:#475569">SIM</div>
+  </div>
+
+  <div class="display">
+    <div id="timer" class="timer">00:00</div>
+    <div class="status-row">
+      <div id="dot" class="rec-dot"></div>
+      <span id="status" style="font-size:13px;color:#64748b">就绪</span>
+    </div>
+    <div class="wave-wrap">
+      <div id="wave" class="wave"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="start" class="btn btn-primary">▶ 开始</button>
+    <button id="pause" class="btn btn-ghost" disabled>⏸ 暂停</button>
+    <button id="stop" class="btn btn-ghost" disabled>■ 停止</button>
+  </div>
+
+  <div id="summary" class="summary" style="display:none">
+    <div class="label">本次录音摘要</div>
+    <div class="summary-row"><span>时长</span><span id="sum-duration"></span></div>
+    <div class="summary-row"><span>峰值电平</span><span id="sum-peak"></span></div>
+    <div class="summary-row"><span>状态</span><span id="sum-status"></span></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const timerEl = document.getElementById('timer');
+  const statusEl = document.getElementById('status');
+  const dot = document.getElementById('dot');
+  const wave = document.getElementById('wave');
+  const startBtn = document.getElementById('start');
+  const pauseBtn = document.getElementById('pause');
+  const stopBtn = document.getElementById('stop');
+  const summary = document.getElementById('summary');
+
+  let startTime = 0, elapsed = 0, raf = null, bars = [], recording = false, paused = false;
+  const BAR_COUNT = 18;
+
+  // create bars
+  function createWave() {
+    wave.innerHTML = '';
+    bars = [];
+    for (let i=0; i<BAR_COUNT; i++) {
+      const b = document.createElement('div');
+      b.className = 'bar';
+      b.style.height = '6px';
+      wave.appendChild(b);
+      bars.push(b);
+    }
+  }
+  createWave();
+
+  function format(ms) {
+    const total = Math.floor(ms / 1000);
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+  }
+
+  function animateWave(active) {
+    if (!active) {
+      bars.forEach(b => b.style.height = '6px');
+      return;
+    }
+    let t = 0;
+    const step = () => {
+      if (!recording || paused) return;
+      t += 0.12;
+      bars.forEach((bar, i) => {
+        const n = Math.sin(t * 1.6 + i * 0.7) * 0.5 + 0.5;
+        const h = Math.max(5, 8 + n * 52 * (0.6 + Math.random()*0.4));
+        bar.style.height = h + 'px';
+      });
+      raf = requestAnimationFrame(step);
+    };
+    if (raf) cancelAnimationFrame(raf);
+    step();
+  }
+
+  function updateTimer() {
+    if (!recording || paused) return;
+    const now = Date.now();
+    const current = elapsed + (now - startTime);
+    timerEl.textContent = format(current);
+    requestAnimationFrame(updateTimer);
+  }
+
+  function setState(s) {
+    if (s === 'recording') {
+      statusEl.textContent = '录音中';
+      statusEl.style.color = '#f43f5e';
+      dot.classList.add('active');
+    } else if (s === 'paused') {
+      statusEl.textContent = '已暂停';
+      statusEl.style.color = '#eab308';
+      dot.classList.remove('active');
+    } else {
+      statusEl.textContent = '就绪';
+      statusEl.style.color = '#64748b';
+      dot.classList.remove('active');
+    }
+  }
+
+  function start() {
+    if (recording && !paused) return;
+    recording = true;
+    paused = false;
+    startTime = Date.now();
+    timerEl.classList.remove('paused');
+    setState('recording');
+    startBtn.disabled = true;
+    pauseBtn.disabled = false;
+    stopBtn.disabled = false;
+    animateWave(true);
+    updateTimer();
+    summary.style.display = 'none';
+  }
+
+  function pauseResume() {
+    if (!recording) return;
+    paused = !paused;
+    if (paused) {
+      elapsed += Date.now() - startTime;
+      timerEl.classList.add('paused');
+      setState('paused');
+      animateWave(false);
+      pauseBtn.textContent = '▶ 继续';
+    } else {
+      startTime = Date.now();
+      timerEl.classList.remove('paused');
+      setState('recording');
+      animateWave(true);
+      updateTimer();
+      pauseBtn.textContent = '⏸ 暂停';
+    }
+  }
+
+  function stop() {
+    if (!recording) return;
+    recording = false;
+    paused = false;
+    if (raf) cancelAnimationFrame(raf);
+    const final = elapsed + (Date.now() - startTime);
+    timerEl.textContent = format(final);
+    timerEl.classList.add('paused');
+    setState('idle');
+    animateWave(false);
+
+    startBtn.disabled = false;
+    pauseBtn.disabled = true;
+    stopBtn.disabled = true;
+    pauseBtn.textContent = '⏸ 暂停';
+
+    // summary
+    const peak = Math.floor(68 + Math.random() * 19);
+    document.getElementById('sum-duration').textContent = format(final);
+    document.getElementById('sum-peak').textContent = peak + ' dB';
+    document.getElementById('sum-status').textContent = '已保存（模拟）';
+    summary.style.display = 'block';
+
+    // reset for next
+    elapsed = 0;
+    createWave();
+  }
+
+  // events
+  startBtn.onclick = start;
+  pauseBtn.onclick = pauseResume;
+  stopBtn.onclick = stop;
+
+  // keyboard support
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') { e.preventDefault(); if (!recording) start(); else pauseResume(); }
+    if (e.code === 'Escape' && recording) stop();
+  });
+
+  // initial
+  timerEl.textContent = '00:00';
+})();
+</script>
+</body>
+</html>

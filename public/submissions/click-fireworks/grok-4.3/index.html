@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fireworks • grok-4.3</title>
+<style>
+  :root{--bg:#05070f}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{background:var(--bg);overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#cbd5e1}
+  canvas{display:block}
+  .overlay{position:absolute;left:0;right:0;bottom:18px;text-align:center;font-size:11px;pointer-events:none;opacity:.55}
+  .hint{position:absolute;top:18px;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:1.5px;background:rgba(15,23,42,.6);padding:2px 10px;border-radius:99px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hint">grok-4.3 · 点击任意位置燃放烟花</div>
+<div class="overlay">连击不衰减 · 粒子自动清理</div>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d', {alpha:true});
+let W, H, particles = [];
+
+function resize() {
+  W = c.width = window.innerWidth;
+  H = c.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+function rand(min, max){ return Math.random()*(max-min)+min; }
+
+class P {
+  constructor(x,y,vx,vy,color,life, size=2.2) {
+    this.x=x; this.y=y; this.vx=vx; this.vy=vy; this.color=color;
+    this.life=life; this.maxLife=life; this.size=size; this.drag=0.985;
+  }
+  step() {
+    this.vx *= this.drag; this.vy *= this.drag;
+    this.vy += 0.028; // gravity
+    this.x += this.vx; this.y += this.vy;
+    this.life -= 1;
+  }
+  draw() {
+    const a = Math.max(0, this.life / this.maxLife);
+    ctx.fillStyle = this.color;
+    ctx.globalAlpha = a * 0.95;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size * (0.6 + a*0.5), 0, Math.PI*2);
+    ctx.fill();
+    // faint glow
+    if (a > 0.6) {
+      ctx.fillStyle = '#fff';
+      ctx.globalAlpha = a * 0.18;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size*2.2, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+}
+
+function explode(x, y, count=62) {
+  const hue = rand(0,360);
+  for (let i=0; i<count; i++) {
+    const ang = (i / count) * Math.PI * 2 + rand(-0.3,0.3);
+    const spd = rand(1.6, 4.8);
+    const vx = Math.cos(ang) * spd;
+    const vy = Math.sin(ang) * spd - rand(0.4, 1.6);
+    const life = rand(42, 74);
+    const color = `hsl(${hue + rand(-26,26)}, 95%, ${rand(78,94)}%)`;
+    particles.push(new P(x, y, vx, vy, color, life, rand(1.6,2.9)));
+  }
+  // bright core flash
+  for (let i=0;i<9;i++) {
+    particles.push(new P(x+rand(-1.5,1.5), y+rand(-1.5,1.5), rand(-0.6,0.6), rand(-0.9,0.2),
+      '#fff', rand(11,19), 1.1));
+  }
+}
+
+function loop() {
+  ctx.fillStyle = 'rgba(5,7,15,0.62)';
+  ctx.fillRect(0,0,W,H);
+
+  for (let i=particles.length-1; i>=0; i--) {
+    const p = particles[i];
+    p.step();
+    if (p.life <= 0 || p.y > H+40) {
+      particles.splice(i,1);
+      continue;
+    }
+    p.draw();
+  }
+  ctx.globalAlpha = 1;
+  requestAnimationFrame(loop);
+}
+
+function onClick(e) {
+  const x = e.clientX ?? (e.touches && e.touches[0].clientX);
+  const y = e.clientY ?? (e.touches && e.touches[0].clientY);
+  if (x==null || y==null) return;
+  const n = 48 + Math.floor(Math.random()*28);
+  explode(x, y, n);
+  // secondary smaller burst
+  setTimeout(() => {
+    if (Math.random() < 0.7) explode(x + rand(-38,38), y + rand(-18,18), 24);
+  }, 110);
+}
+
+c.addEventListener('mousedown', onClick);
+c.addEventListener('touchstart', (e)=>{ e.preventDefault(); onClick(e); }, {passive:false});
+
+// seed a few nice bursts
+setTimeout(()=>{ explode(W*0.28, H*0.38, 55); }, 260);
+setTimeout(()=>{ explode(W*0.72, H*0.29, 48); }, 780);
+
+loop();
+
+// gentle auto fireworks in background (low intensity)
+setInterval(() => {
+  if (particles.length < 110 && Math.random()<0.55) {
+    explode(rand(W*0.15, W*0.85), rand(H*0.18, H*0.52), 19);
+  }
+}, 1250);
+</script>
+</body>
+</html>

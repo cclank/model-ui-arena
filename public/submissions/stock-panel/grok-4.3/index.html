@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stocks • grok-4.3</title>
+<style>
+  :root{--bg:#0a0c10;--panel:#14171f;--up:#22c55e;--down:#f43f5e;--text:#e2e8f0;--muted:#64748b}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+  .panel{width:100%;max-width:390px;background:#14171f;border-radius:20px;padding:18px;box-shadow:0 20px 45px -15px rgba(0,0,0,0.6);border:1px solid #1f2430}
+  .hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .model{font-size:10px;letter-spacing:2px;color:#64748b;font-weight:600}
+  .title{font-size:15px;font-weight:700}
+  .stock{margin:10px 0;background:#0f1219;border-radius:14px;padding:13px 15px;border:1px solid #1f2430}
+  .row1{display:flex;justify-content:space-between;align-items:center}
+  .sym{font-size:15px;font-weight:700;letter-spacing:0.5px}
+  .price{font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
+  .row2{display:flex;justify-content:space-between;align-items:flex-end;margin-top:2px}
+  .chg{font-size:12px;font-weight:600}
+  .chg.up{color:#22c55e}
+  .chg.down{color:#f43f5e}
+  .mini{width:78px;height:28px}
+  .mini svg{width:100%;height:100%}
+  .footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding:0 4px;font-size:10px;color:#475569}
+  .live{display:flex;align-items:center;gap:5px}
+  .pulse{width:5px;height:5px;background:#22c55e;border-radius:50%;animation:p 1.6s infinite}
+  @keyframes p{50%{opacity:.3}}
+  .spark{stroke:#64748b;stroke-width:1.5;fill:none;stroke-linecap:round}
+</style>
+</head>
+<body>
+<div class="panel">
+  <div class="hdr">
+    <div><span class="model">grok-4.3</span><div class="title">市场快照</div></div>
+    <div style="font-size:10px;color:#475569;text-align:right">模拟数据<br>每 1.8s 更新</div>
+  </div>
+
+  <div id="list"></div>
+
+  <div class="footer">
+    <div class="live"><div class="pulse"></div><span>实时模拟</span></div>
+    <div>沪深 · 美股</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const stocks = [
+    {sym:'NVDA', name:'NVIDIA', price:138.72, chg:2.34, pct:1.72, hist:[131,133,130,135,137,134,138.7]},
+    {sym:'TSLA', name:'Tesla', price:248.9, chg:-4.15, pct:-1.64, hist:[259,255,261,253,250,249,248.9]},
+    {sym:'AAPL', name:'Apple', price:226.4, chg:1.05, pct:0.47, hist:[222,224,221,225,223,226,226.4]},
+    {sym:'SMCI', name:'Super Micro', price:42.8, chg:-1.9, pct:-4.25, hist:[47,45,48,44,43,42.5,42.8]}
+  ];
+
+  function drawSpark(hist, up) {
+    const w=78, h=28, pad=2;
+    const min=Math.min(...hist), max=Math.max(...hist);
+    const pts = hist.map((v,i) => {
+      const x = pad + (w-2*pad) * (i/(hist.length-1));
+      const y = h-pad - (h-2*pad)*((v-min)/(max-min||1));
+      return `${x},${y}`;
+    }).join(' ');
+    const color = up ? '#22c55e' : '#f43f5e';
+    return `<svg viewBox="0 0 ${w} ${h}"><polyline points="${pts}" class="spark" stroke="${color}" stroke-width="1.8"/></svg>`;
+  }
+
+  function render() {
+    const wrap = document.getElementById('list');
+    wrap.innerHTML = '';
+    stocks.forEach((s,i) => {
+      const up = s.chg >= 0;
+      const el = document.createElement('div');
+      el.className = 'stock';
+      el.innerHTML = `
+        <div class="row1">
+          <div>
+            <span class="sym">${s.sym}</span>
+            <span style="font-size:11px;color:#475569;margin-left:5px">${s.name}</span>
+          </div>
+          <div class="price">${s.price.toFixed(2)}</div>
+        </div>
+        <div class="row2">
+          <div class="mini">${drawSpark(s.hist, up)}</div>
+          <div class="chg ${up?'up':'down'}">${up?'+':''}${s.chg.toFixed(2)} (${up?'+':''}${s.pct.toFixed(2)}%)</div>
+        </div>`;
+      wrap.appendChild(el);
+    });
+  }
+
+  function tick() {
+    stocks.forEach(s => {
+      const delta = (Math.random()-0.48) * (s.sym==='SMCI'?0.9:0.45);
+      s.price = Math.max(5, +(s.price + delta).toFixed(2));
+      const newPct = +((delta / s.price) * 100).toFixed(2);
+      s.chg = +(delta).toFixed(2);
+      s.pct = newPct;
+      // push hist
+      s.hist.shift();
+      s.hist.push(s.price);
+    });
+    render();
+  }
+
+  render();
+  setInterval(tick, 1800);
+
+  // subtle flash on big moves occasionally
+  setInterval(() => {
+    if (Math.random()<0.3) {
+      const nodes = document.querySelectorAll('.stock');
+      if (nodes[1]) nodes[1].style.transition = 'background .2s';
+      // no heavy effects to stay light
+    }
+  }, 6500);
+})();
+</script>
+</body>
+</html>
