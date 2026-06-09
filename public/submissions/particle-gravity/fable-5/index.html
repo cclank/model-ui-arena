@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gravity Well · 粒子引力场</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:#020208;
+    font-family:"Avenir Next","PingFang SC",Menlo,monospace}
+  canvas{position:fixed;inset:0;display:block;cursor:crosshair}
+  .hud{position:fixed;left:14px;top:14px;color:#9fb4e6;font-size:11px;letter-spacing:.14em;
+    line-height:1.9;pointer-events:none;text-shadow:0 0 8px rgba(80,120,255,.5);
+    font-variant-numeric:tabular-nums}
+  .hud b{color:#e8f0ff;font-weight:600}
+  .hud .mode{color:#5eead4}
+  .tip{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);white-space:nowrap;
+    color:#67759c;font-size:11px;letter-spacing:.2em;pointer-events:none;animation:tw 2.4s infinite}
+  @keyframes tw{50%{opacity:.35}}
+  .title{position:fixed;right:16px;top:14px;text-align:right;color:#8b9cc9;font-size:11px;
+    letter-spacing:.3em;pointer-events:none}
+  .title b{display:block;color:#dfe9ff;font-size:13px;letter-spacing:.4em;
+    text-shadow:0 0 14px rgba(94,234,212,.7)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="hud" id="hud"></div>
+<div class="title"><b>GRAVITY WELL</b>singularity field · 引力奇点</div>
+<p class="tip">移动指针牵引粒子 · 点击释放冲击波</p>
+<script>
+  const cv=document.getElementById("cv"),ctx=cv.getContext("2d");
+  let W,H,CX,CY,DPR=Math.min(devicePixelRatio||1,2);
+  function size(){W=innerWidth;H=innerHeight;CX=W/2;CY=H/2;
+    cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
+  size();addEventListener("resize",size);
+  const N=innerWidth<480?240:340,P=[];
+  const rand=(a,b)=>a+Math.random()*(b-a);
+  function spawn(p){
+    const a=Math.random()*Math.PI*2,r=rand(40,Math.min(W,H)*.46);
+    p.x=CX+Math.cos(a)*r;p.y=CY+Math.sin(a)*r;
+    const v=Math.sqrt(900/r)*rand(.8,1.15);
+    p.vx=-Math.sin(a)*v;p.vy=Math.cos(a)*v;
+    p.life=rand(400,1400);p.sz=rand(.7,1.9);
+    return p;
+  }
+  for(let i=0;i<N;i++)P.push(spawn({}));
+  let mouse=null,mode="ORBIT",shocks=[];
+  addEventListener("pointermove",e=>{mouse={x:e.clientX,y:e.clientY};mode="ATTRACT";});
+  addEventListener("pointerleave",()=>{mouse=null;mode="ORBIT";});
+  addEventListener("pointerdown",e=>{
+    shocks.push({x:e.clientX,y:e.clientY,r:0,max:Math.min(W,H)*.5,power:9});
+    mode="SHOCKWAVE";
+    for(const p of P){
+      const dx=p.x-e.clientX,dy=p.y-e.clientY,d2=dx*dx+dy*dy,d=Math.sqrt(d2)||1;
+      const f=Math.min(2200/d2,2.2)*9;
+      p.vx+=dx/d*f;p.vy+=dy/d*f;
+    }
+    setTimeout(()=>mode=mouse?"ATTRACT":"ORBIT",600);
+  });
+  let frames=0,fps=0,fpsT=performance.now(),core=0;
+  function step(){
+    core+=.03;
+    ctx.globalCompositeOperation="source-over";
+    ctx.fillStyle="rgba(2,2,8,.18)";ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation="lighter";
+    const cr=14+Math.sin(core)*3;
+    const g=ctx.createRadialGradient(CX,CY,0,CX,CY,cr*7);
+    g.addColorStop(0,"rgba(170,220,255,.9)");g.addColorStop(.18,"rgba(110,140,255,.45)");
+    g.addColorStop(1,"rgba(60,40,180,0)");
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(CX,CY,cr*7,0,7);ctx.fill();
+    ctx.fillStyle="rgba(235,245,255,.95)";ctx.beginPath();ctx.arc(CX,CY,cr*.42,0,7);ctx.fill();
+    for(const p of P){
+      let dx=CX-p.x,dy=CY-p.y,d2=dx*dx+dy*dy+600,d=Math.sqrt(d2);
+      let f=1300/d2;
+      p.vx+=dx/d*f;p.vy+=dy/d*f;
+      if(mouse){
+        dx=mouse.x-p.x;dy=mouse.y-p.y;d2=dx*dx+dy*dy+900;d=Math.sqrt(d2);
+        f=2400/d2;
+        p.vx+=dx/d*f;p.vy+=dy/d*f;
+      }
+      p.vx*=.996;p.vy*=.996;
+      p.x+=p.vx;p.y+=p.vy;
+      if(--p.life<0||p.x<-60||p.x>W+60||p.y<-60||p.y>H+60)spawn(p);
+      const sp=Math.min(Math.hypot(p.vx,p.vy),8);
+      ctx.strokeStyle=`hsla(${235-sp*16},90%,${52+sp*5}%,${.5+sp*.06})`;
+      ctx.lineWidth=p.sz;
+      ctx.beginPath();ctx.moveTo(p.x-p.vx*2.4,p.y-p.vy*2.4);ctx.lineTo(p.x,p.y);ctx.stroke();
+    }
+    for(let i=shocks.length-1;i>=0;i--){
+      const s=shocks[i];s.r+=18;
+      ctx.strokeStyle=`rgba(120,230,255,${1-s.r/s.max})`;
+      ctx.lineWidth=2.4;
+      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.stroke();
+      if(s.r>=s.max)shocks.splice(i,1);
+    }
+    frames++;
+    const now=performance.now();
+    if(now-fpsT>500){fps=Math.round(frames*1000/(now-fpsT));frames=0;fpsT=now;}
+    document.getElementById("hud").innerHTML=
+      `PARTICLES <b>${N}</b><br>FPS <b>${fps}</b><br>MODE <b class="mode">${mode}</b><br>SHOCK <b>${shocks.length}</b>`;
+    requestAnimationFrame(step);
+  }
+  step();
+</script>
+</body>
+</html>

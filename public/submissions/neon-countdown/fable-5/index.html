@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ignition · 最炫倒计时</title>
+<style>
+  :root{--c:#22d3ee;--c2:#a78bfa;--danger:#ff3b5c;--ink:#eaf6ff}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{overflow:hidden;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(900px 700px at 50% 120%,#1b1040 0%,#070313 55%,#02010a 100%);
+    color:var(--ink);font-family:"Avenir Next","PingFang SC",sans-serif}
+  .grid{position:fixed;inset:auto 0 0;height:38vh;pointer-events:none;opacity:.5;
+    background:linear-gradient(transparent,rgba(34,211,238,.06)),
+      repeating-linear-gradient(90deg,rgba(34,211,238,.25) 0 1px,transparent 1px 56px),
+      repeating-linear-gradient(0deg,rgba(167,139,250,.22) 0 1px,transparent 1px 34px);
+    transform:perspective(380px) rotateX(58deg) scale(1.6);transform-origin:50% 100%}
+  .stage{position:relative;text-align:center;z-index:2}
+  .ringbox{position:relative;width:min(74vw,320px);margin:0 auto}
+  svg{width:100%;display:block;transform:rotate(-90deg)}
+  .track{stroke:rgba(140,160,220,.16)}
+  #arc{stroke:url(#g);filter:drop-shadow(0 0 9px var(--c));transition:stroke-dashoffset 1s linear}
+  .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:clamp(88px,26vw,128px);font-weight:700;font-variant-numeric:tabular-nums;
+    color:var(--ink);text-shadow:0 0 14px var(--c),0 0 48px var(--c),0 0 90px var(--c2)}
+  .num.tick{animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+  @keyframes pop{0%{transform:scale(1.32);filter:brightness(2)}100%{transform:scale(1)}}
+  .label{margin-top:22px;font-size:12px;letter-spacing:.5em;color:#7f93c9;text-transform:uppercase}
+  .msg{margin-top:8px;font-size:clamp(20px,6vw,30px);font-weight:700;letter-spacing:.22em;
+    min-height:1.3em;color:var(--c);text-shadow:0 0 20px var(--c)}
+  button{margin-top:26px;padding:13px 44px;font-size:14px;letter-spacing:.3em;color:var(--ink);
+    background:transparent;border:1px solid rgba(120,200,255,.5);border-radius:999px;cursor:pointer;
+    text-transform:uppercase;transition:.25s;backdrop-filter:blur(4px)}
+  button:hover{background:rgba(34,211,238,.12);box-shadow:0 0 24px rgba(34,211,238,.35)}
+  body.hot{--c:#ff3b5c;--c2:#ffb13b}
+  body.hot .stage{animation:shake .5s infinite}
+  @keyframes shake{0%,100%{transform:translate(0,0)}25%{transform:translate(2px,-2px)}
+    50%{transform:translate(-2px,2px)}75%{transform:translate(1px,2px)}}
+  .flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:5}
+  body.boom .flash{animation:fl .8s ease-out}
+  @keyframes fl{0%{opacity:.95}100%{opacity:0}}
+  .pieces{position:fixed;left:50%;top:50%;z-index:4;pointer-events:none}
+  .pieces i{position:absolute;width:8px;height:8px;border-radius:2px;opacity:0}
+  body.boom .pieces i{animation:fly 1.3s cubic-bezier(.15,.8,.3,1) forwards}
+  @keyframes fly{0%{opacity:1;transform:translate(0,0) rotate(0)}
+    100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(720deg)}}
+  .beat{position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 46%,var(--c) 0%,transparent 46%);opacity:0}
+  .beat.on{animation:beat 1s ease-out}
+  @keyframes beat{0%{opacity:.18}100%{opacity:0}}
+</style>
+</head>
+<body>
+<div class="grid"></div>
+<div class="beat" id="beat"></div>
+<div class="flash"></div>
+<div class="pieces" id="pieces"></div>
+<main class="stage">
+  <div class="ringbox">
+    <svg viewBox="0 0 200 200">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="var(--c)"/><stop offset="1" stop-color="var(--c2)"/>
+      </linearGradient></defs>
+      <circle class="track" cx="100" cy="100" r="88" fill="none" stroke-width="6"/>
+      <circle id="arc" cx="100" cy="100" r="88" fill="none" stroke-width="7" stroke-linecap="round"/>
+      <g id="marks"></g>
+    </svg>
+    <div class="num" id="num">10</div>
+  </div>
+  <p class="label">Ignition Sequence · 点火倒计时</p>
+  <p class="msg" id="msg"></p>
+  <button id="restart">Restart</button>
+</main>
+<script>
+  const $=id=>document.getElementById(id);
+  const TOTAL=10,R=88,CIRC=2*Math.PI*R;
+  const arc=$("arc"),num=$("num"),msg=$("msg"),beat=$("beat");
+  const marks=$("marks");
+  for(let i=0;i<TOTAL;i++){
+    const a=i/TOTAL*2*Math.PI,m=document.createElementNS("http://www.w3.org/2000/svg","line");
+    m.setAttribute("x1",100+96*Math.cos(a));m.setAttribute("y1",100+96*Math.sin(a));
+    m.setAttribute("x2",100+101*Math.cos(a));m.setAttribute("y2",100+101*Math.sin(a));
+    m.setAttribute("stroke","rgba(150,170,230,.4)");m.setAttribute("stroke-width","2");
+    marks.appendChild(m);
+  }
+  const pieces=$("pieces");
+  for(let i=0;i<42;i++){
+    const p=document.createElement("i"),a=Math.random()*Math.PI*2,d=90+Math.random()*240;
+    p.style.setProperty("--dx",Math.cos(a)*d+"px");
+    p.style.setProperty("--dy",Math.sin(a)*d+"px");
+    p.style.background=`hsl(${Math.random()*360},95%,65%)`;
+    p.style.animationDelay=Math.random()*.12+"s";
+    pieces.appendChild(p);
+  }
+  arc.style.strokeDasharray=CIRC;
+  let left,timer;
+  function show(n){
+    num.textContent=n;
+    num.classList.remove("tick");void num.offsetWidth;num.classList.add("tick");
+    arc.style.strokeDashoffset=CIRC*(1-n/TOTAL);
+    beat.classList.remove("on");void beat.offsetWidth;beat.classList.add("on");
+    document.body.classList.toggle("hot",n<=3&&n>0);
+  }
+  function finish(){
+    clearInterval(timer);
+    document.body.classList.remove("hot");
+    document.body.classList.add("boom");
+    num.textContent="0";
+    arc.style.strokeDashoffset=CIRC;
+    msg.textContent="LIFT OFF · 完成";
+  }
+  function start(){
+    clearInterval(timer);
+    document.body.classList.remove("boom","hot");
+    msg.textContent="";
+    left=TOTAL;
+    arc.style.transition="none";arc.style.strokeDashoffset=0;
+    void arc.offsetWidth;arc.style.transition="stroke-dashoffset 1s linear";
+    show(left);
+    timer=setInterval(()=>{
+      left--;
+      if(left<=0){finish();return;}
+      show(left);
+    },1000);
+  }
+  $("restart").onclick=start;
+  start();
+</script>
+</body>
+</html>

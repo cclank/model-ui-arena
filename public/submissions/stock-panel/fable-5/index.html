@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tickerline · 股票面板</title>
+<style>
+  :root{--bg:#070a12;--panel:#0e1322;--edge:#1d2740;--ink:#e8eefc;--sub:#75839f;
+    --up:#ff5d6c;--down:#2dd4a7;--flash-up:rgba(255,93,108,.16);--flash-down:rgba(45,212,167,.16)}
+  *{margin:0;padding:0;box-sizing:border-box;font-family:"Avenir Next","PingFang SC",sans-serif}
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(1000px 700px at 80% -20%,#131c36,var(--bg) 55%);color:var(--ink);padding:14px}
+  .panel{width:min(94vw,420px);background:var(--panel);border:1px solid var(--edge);
+    border-radius:22px;padding:20px 18px 14px;box-shadow:0 26px 70px rgba(0,0,0,.55)}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  h1{font-size:15px;letter-spacing:.18em}
+  .live{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--sub);letter-spacing:.14em}
+  .live i{width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 10px #4ade80;animation:bl 1.4s infinite}
+  @keyframes bl{50%{opacity:.25}}
+  .index{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+  .idx{background:#0a0f1d;border:1px solid var(--edge);border-radius:12px;padding:9px 10px}
+  .idx span{font-size:10px;color:var(--sub);letter-spacing:.1em}
+  .idx b{display:block;font-size:14px;margin-top:2px;font-variant-numeric:tabular-nums}
+  .idx small{font-size:10px;font-variant-numeric:tabular-nums}
+  ul{list-style:none}
+  li{display:grid;grid-template-columns:1fr 86px 92px;gap:8px;align-items:center;
+    padding:12px 10px;border-radius:14px;border:1px solid transparent;transition:background .5s,border .5s}
+  li+li{margin-top:6px}
+  li.up-flash{background:var(--flash-up);border-color:rgba(255,93,108,.35)}
+  li.down-flash{background:var(--flash-down);border-color:rgba(45,212,167,.35)}
+  .name b{font-size:14px;display:flex;align-items:center;gap:6px}
+  .name span{font-size:10px;color:var(--sub);letter-spacing:.08em}
+  .vol{font-size:9px;padding:2px 6px;border-radius:6px;background:rgba(251,191,36,.14);
+    color:#fbbf24;border:1px solid rgba(251,191,36,.4);letter-spacing:.06em}
+  svg{display:block;width:86px;height:30px}
+  .quote{text-align:right}
+  .quote b{display:block;font-size:16px;font-variant-numeric:tabular-nums;transition:color .3s}
+  .quote span{display:inline-block;margin-top:2px;font-size:11px;font-variant-numeric:tabular-nums;
+    padding:2px 8px;border-radius:7px;font-weight:600}
+  .quote .pos{color:var(--up);background:rgba(255,93,108,.12)}
+  .quote .neg{color:var(--down);background:rgba(45,212,167,.12)}
+  footer{margin-top:12px;border-top:1px dashed var(--edge);padding-top:10px;display:flex;
+    justify-content:space-between;font-size:10px;color:var(--sub);letter-spacing:.1em}
+</style>
+</head>
+<body>
+<main class="panel">
+  <header>
+    <h1>TICKERLINE · 自选股</h1>
+    <span class="live"><i></i>模拟行情 LIVE</span>
+  </header>
+  <div class="index" id="index"></div>
+  <ul id="list"></ul>
+  <footer><span>红涨绿跌 · ▲ 涨 ▼ 跌</span><span id="stamp">—</span></footer>
+</main>
+<script>
+  const $=id=>document.getElementById(id);
+  const STOCKS=[
+    {code:"NEB·688207",name:"星云算力",base:182.40,p:182.40,prev:182.40,hist:[]},
+    {code:"QLN·301512",name:"麒麟新材",base:46.18,p:46.18,prev:46.18,hist:[]},
+    {code:"HYD·600983",name:"海岳电氢",base:12.73,p:12.73,prev:12.73,hist:[]},
+    {code:"PHX·002468",name:"凤翎半导",base:88.05,p:88.05,prev:88.05,hist:[]}
+  ];
+  const IDX=[{n:"竞技综指",v:3216.44},{n:"创新 50",v:1888.12},{n:"算力 ETF",v:96.30}];
+  STOCKS.forEach(s=>{for(let i=0;i<28;i++){s.p=+(s.p*(1+(Math.random()-.5)*.012)).toFixed(2);s.hist.push(s.p);}s.prev=s.base;});
+  function spark(s){
+    const h=s.hist,min=Math.min(...h),max=Math.max(...h);
+    const pts=h.map((v,i)=>`${i*(86/(h.length-1))},${26-(v-min)/(max-min||1)*22+2}`).join(" ");
+    const up=h[h.length-1]>=s.base,c=up?"var(--up)":"var(--down)";
+    const last=pts.split(" ").pop().split(",");
+    return `<polyline points="${pts}" fill="none" stroke="${c}" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>
+      <circle cx="${last[0]}" cy="${last[1]}" r="2.2" fill="${c}"/>`;
+  }
+  function rowHtml(s){
+    const diff=s.p-s.base,pct=diff/s.base*100,up=diff>=0;
+    const vol=Math.abs(pct)>2.5?`<i class="vol">波动剧烈</i>`:"";
+    return `<div class="name"><b>${s.name}${vol}</b><span>${s.code}</span></div>
+      <svg viewBox="0 0 86 30" preserveAspectRatio="none">${spark(s)}</svg>
+      <div class="quote"><b style="color:${up?"var(--up)":"var(--down)"}">¥${s.p.toFixed(2)}</b>
+      <span class="${up?"pos":"neg"}">${up?"▲":"▼"} ${up?"+":""}${pct.toFixed(2)}%</span></div>`;
+  }
+  const list=$("list");
+  STOCKS.forEach((s,i)=>{const li=document.createElement("li");li.id="row"+i;li.innerHTML=rowHtml(s);list.appendChild(li);});
+  function renderIdx(){
+    $("index").innerHTML=IDX.map(x=>{
+      const d=(Math.random()-.48)*.6;x.v=+(x.v*(1+d/100)).toFixed(2);
+      const up=d>=0;
+      return `<div class="idx"><span>${x.n}</span><b>${x.v.toFixed(2)}</b>
+        <small style="color:${up?"var(--up)":"var(--down)"}">${up?"▲ +":"▼ "}${d.toFixed(2)}%</small></div>`;
+    }).join("");
+  }
+  renderIdx();
+  setInterval(()=>{
+    const i=Math.floor(Math.random()*STOCKS.length),s=STOCKS[i];
+    s.prev=s.p;
+    s.p=+(s.p*(1+(Math.random()-.5)*.014)).toFixed(2);
+    s.hist.push(s.p);if(s.hist.length>28)s.hist.shift();
+    const li=$("row"+i);li.innerHTML=rowHtml(s);
+    li.classList.remove("up-flash","down-flash");void li.offsetWidth;
+    li.classList.add(s.p>=s.prev?"up-flash":"down-flash");
+    $("stamp").textContent="更新 "+new Date().toLocaleTimeString("zh-CN",{hour12:false});
+    if(Math.random()<.3)renderIdx();
+  },1200);
+  $("stamp").textContent="更新 "+new Date().toLocaleTimeString("zh-CN",{hour12:false});
+</script>
+</body>
+</html>

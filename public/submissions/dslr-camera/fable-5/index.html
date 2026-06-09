@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>拟物复刻 · FABLE F-5 单反相机</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(1200px 800px at 50% 18%,#3c424c,#1c1f25 58%,#0d0e12);
+    padding:16px;font-family:"Avenir Next","Helvetica Neue",sans-serif}
+  figure{width:min(96vw,860px)}
+  svg{display:block;width:100%;height:auto}
+  figcaption{text-align:center;color:#5d6470;font-size:11px;letter-spacing:.34em;margin-top:14px}
+  /* 镜片反光缓慢流动(不破坏静态首帧) */
+  .glass-sweep{animation:sweep 5.2s ease-in-out infinite}
+  @keyframes sweep{0%,100%{transform:translate(-26px,20px);opacity:.0}
+    40%{opacity:.55}55%{opacity:.55}80%{transform:translate(30px,-24px);opacity:0}}
+  .af-glow{animation:af 3.8s ease-in-out infinite}
+  @keyframes af{0%,86%,100%{opacity:.25}90%,94%{opacity:.95}}
+  #modeDial{cursor:pointer;transition:transform .45s cubic-bezier(.2,1.3,.4,1)}
+</style>
+</head>
+<body>
+<figure>
+<svg viewBox="0 0 1000 780" role="img" aria-label="一台 3/4 视角的黑色单反相机,FABLE F-5,带 24-70mm 红圈变焦镜头">
+  <defs>
+    <!-- ======== 材质渐变 ======== -->
+    <linearGradient id="bodyFront" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4b5058"/><stop offset=".12" stop-color="#3a3e45"/>
+      <stop offset=".6" stop-color="#2b2e33"/><stop offset="1" stop-color="#1a1c20"/>
+    </linearGradient>
+    <linearGradient id="bodySide" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#23262b"/><stop offset="1" stop-color="#101216"/>
+    </linearGradient>
+    <linearGradient id="bodyTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#53575e"/><stop offset="1" stop-color="#2a2d32"/>
+    </linearGradient>
+    <linearGradient id="prism" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#484c53"/><stop offset=".5" stop-color="#2c2f34"/>
+      <stop offset="1" stop-color="#1a1c20"/>
+    </linearGradient>
+    <linearGradient id="gripG" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#26282d"/><stop offset=".55" stop-color="#1b1d21"/>
+      <stop offset="1" stop-color="#101114"/>
+    </linearGradient>
+    <linearGradient id="barrel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4a4e55"/><stop offset=".2" stop-color="#303338"/>
+      <stop offset=".55" stop-color="#1d1f23"/><stop offset=".85" stop-color="#0e0f12"/>
+      <stop offset="1" stop-color="#070809"/>
+    </linearGradient>
+    <linearGradient id="metalRing" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e8eaee"/><stop offset=".3" stop-color="#9aa0a8"/>
+      <stop offset=".62" stop-color="#5d636c"/><stop offset="1" stop-color="#2f343b"/>
+    </linearGradient>
+    <linearGradient id="redRing" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff6a5e"/><stop offset=".5" stop-color="#d92b1f"/>
+      <stop offset="1" stop-color="#8f140d"/>
+    </linearGradient>
+    <radialGradient id="glassDeep" cx=".42" cy=".38" r=".75">
+      <stop offset="0" stop-color="#5a7fae"/><stop offset=".35" stop-color="#2c4a74"/>
+      <stop offset=".62" stop-color="#1b2c52"/><stop offset=".84" stop-color="#3a2a55"/>
+      <stop offset="1" stop-color="#120d23"/>
+    </radialGradient>
+    <radialGradient id="glassCore" cx=".45" cy=".42" r=".6">
+      <stop offset="0" stop-color="#8fd2c0" stop-opacity=".85"/>
+      <stop offset=".4" stop-color="#3f7f8f" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#0a1430" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="dialTop" cx=".4" cy=".35" r=".9">
+      <stop offset="0" stop-color="#3b3e44"/><stop offset="1" stop-color="#191b1f"/>
+    </radialGradient>
+    <radialGradient id="shutterBtn" cx=".4" cy=".32" r=".9">
+      <stop offset="0" stop-color="#f2f4f7"/><stop offset=".5" stop-color="#b9bec6"/>
+      <stop offset="1" stop-color="#6e747d"/>
+    </radialGradient>
+    <radialGradient id="tableGlow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#000" stop-opacity=".62"/>
+      <stop offset=".7" stop-color="#000" stop-opacity=".26"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <!-- 磨砂塑料噪点 -->
+    <filter id="matte">
+      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .06 0" result="na"/>
+      <feComposite in="na" in2="SourceGraphic" operator="in" result="grain"/>
+      <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="grain"/></feMerge>
+    </filter>
+    <!-- 橡胶握把颗粒 -->
+    <filter id="rubber">
+      <feTurbulence type="turbulence" baseFrequency=".55" numOctaves="3" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .16 0" result="na"/>
+      <feComposite in="na" in2="SourceGraphic" operator="in" result="grain"/>
+      <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="grain"/></feMerge>
+    </filter>
+    <filter id="blurS"><feGaussianBlur stdDeviation="3"/></filter>
+    <filter id="blurM"><feGaussianBlur stdDeviation="9"/></filter>
+    <!-- 变焦环肋条(竖纹胶圈) -->
+    <pattern id="ribs" width="13" height="40" patternUnits="userSpaceOnUse">
+      <rect width="13" height="40" fill="#15161a"/>
+      <rect x="2.5" width="7" height="40" rx="3.4" fill="#2a2d33"/>
+      <rect x="4.2" width="2.2" height="40" fill="#3c4047"/>
+    </pattern>
+    <pattern id="ribsFine" width="8" height="30" patternUnits="userSpaceOnUse">
+      <rect width="8" height="30" fill="#16171b"/>
+      <rect x="1.8" width="4" height="30" rx="2" fill="#26282e"/>
+    </pattern>
+    <!-- 圆柱体光影叠层(上亮-中灰-下黑) -->
+    <linearGradient id="cylShade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".22"/>
+      <stop offset=".22" stop-color="#fff" stop-opacity=".05"/>
+      <stop offset=".55" stop-color="#000" stop-opacity="0"/>
+      <stop offset=".85" stop-color="#000" stop-opacity=".42"/>
+      <stop offset="1" stop-color="#000" stop-opacity=".6"/>
+    </linearGradient>
+    <path id="lensTextArc" d="M333 332 A150 158 0 0 1 545 318" fill="none"/>
+  </defs>
+
+  <!-- ======== 环境:台面与投影 ======== -->
+  <rect x="0" y="586" width="1000" height="194" fill="#101216"/>
+  <rect x="0" y="586" width="1000" height="3" fill="#33373e" opacity=".5"/>
+  <ellipse cx="470" cy="648" rx="368" ry="40" fill="url(#tableGlow)"/>
+  <ellipse cx="470" cy="636" rx="300" ry="18" fill="#000" opacity=".55" filter="url(#blurM)"/>
+
+  <!-- ======== 机身右侧面(透视厚度) ======== -->
+  <path d="M742 250 L818 274 Q830 280 830 296 L826 540 Q826 556 814 562 L742 588 Z"
+    fill="url(#bodySide)" filter="url(#matte)"/>
+  <!-- 侧面细节:背带环与接口盖 -->
+  <path d="M806 300 q14 4 14 20 q0 16 -13 18 q-7 1 -8 -8 q8 -2 8 -10 q0 -8 -8 -11 q0 -8 7 -9 Z" fill="#43474e"/>
+  <rect x="772" y="384" width="34" height="78" rx="10" fill="#16181c" stroke="#2c2f35" stroke-width="2"/>
+  <rect x="780" y="396" width="18" height="22" rx="4" fill="#23262b"/>
+  <rect x="780" y="428" width="18" height="22" rx="4" fill="#23262b"/>
+
+  <!-- ======== 机身顶面 ======== -->
+  <path d="M196 250 L742 250 L818 274 L274 274 Z" fill="url(#bodyTop)" filter="url(#matte)"/>
+
+  <!-- ======== 机身正面主体 ======== -->
+  <path d="M196 250 L742 250 L742 588 Q742 600 728 602 L216 602 Q196 600 196 580 Z"
+    fill="url(#bodyFront)" filter="url(#matte)"/>
+  <!-- 正面上沿高光 -->
+  <path d="M200 252 L740 252 L740 262 L200 262 Z" fill="#fff" opacity=".08"/>
+
+  <!-- ======== 手柄握把(左,凸出弧形) ======== -->
+  <path d="M232 252 Q150 268 142 360 Q136 452 158 530 Q172 588 226 600 L298 600 Q258 520 252 420 Q246 322 290 252 Z"
+    fill="url(#gripG)" filter="url(#rubber)"/>
+  <!-- 握把内缘暗部 + 边缘高光 -->
+  <path d="M290 252 Q246 322 252 420 Q258 520 298 600 L312 600 Q272 516 268 418 Q264 320 304 252 Z"
+    fill="#000" opacity=".35"/>
+  <path d="M232 252 Q152 268 144 358" stroke="#5a5f66" stroke-width="3" fill="none" opacity=".6"/>
+  <!-- 握把防滑横纹 -->
+  <g stroke="#0b0c0e" stroke-width="5" opacity=".75" stroke-linecap="round">
+    <path d="M168 330 Q210 322 248 330" fill="none"/>
+    <path d="M162 376 Q208 368 250 376" fill="none"/>
+    <path d="M160 422 Q208 414 252 422" fill="none"/>
+    <path d="M162 468 Q210 460 256 468" fill="none"/>
+    <path d="M170 514 Q214 508 264 516" fill="none"/>
+  </g>
+  <g stroke="#3a3e45" stroke-width="2" opacity=".7" stroke-linecap="round">
+    <path d="M168 336 Q210 328 248 336" fill="none"/>
+    <path d="M162 382 Q208 374 250 382" fill="none"/>
+    <path d="M160 428 Q208 420 252 428" fill="none"/>
+    <path d="M162 474 Q210 466 256 474" fill="none"/>
+    <path d="M170 520 Q214 514 264 522" fill="none"/>
+  </g>
+
+  <!-- ======== 军舰头(五棱镜取景器凸起) ======== -->
+  <path d="M380 250 L398 196 Q402 184 416 184 L568 184 Q582 184 586 196 L604 250 Z"
+    fill="url(#prism)" filter="url(#matte)"/>
+  <path d="M604 250 L586 196 Q584 190 578 187 L640 208 Q648 212 650 222 L660 250 Z"
+    fill="#1a1c20" filter="url(#matte)"/>
+  <path d="M398 196 Q402 184 416 184 L568 184 Q582 184 586 196 L588 202 L396 202 Z" fill="#5b6068" opacity=".55"/>
+  <!-- 热靴(金属滑槽) -->
+  <g>
+    <rect x="448" y="158" width="96" height="22" rx="4" fill="url(#metalRing)"/>
+    <rect x="456" y="150" width="80" height="12" rx="3" fill="#23262b"/>
+    <rect x="460" y="164" width="72" height="10" rx="2" fill="#15171a"/>
+    <rect x="486" y="166" width="20" height="6" rx="2" fill="#3c4046"/>
+  </g>
+  <!-- 品牌字标(自创) -->
+  <text x="492" y="232" text-anchor="middle" font-family="'Avenir Next',sans-serif"
+    font-size="27" font-weight="800" letter-spacing="6" fill="#e9ecf2">FABLE</text>
+  <text x="492" y="246" text-anchor="middle" font-size="10" letter-spacing="4" fill="#aab1bb">F-5 · DIGITAL SLR</text>
+
+  <!-- ======== 模式转盘(右上,带滚花与刻字) ======== -->
+  <g>
+    <ellipse cx="688" cy="252" rx="56" ry="20" fill="#08090b"/>
+    <path d="M632 220 L744 220 L744 252 Q744 270 688 272 Q632 270 632 252 Z" fill="#101216"/>
+    <!-- 侧面滚花齿 -->
+    <g stroke="#34383f" stroke-width="3.4">
+      <line x1="638" y1="222" x2="638" y2="252"/><line x1="648" y1="224" x2="648" y2="256"/>
+      <line x1="658" y1="226" x2="658" y2="258"/><line x1="668" y1="227" x2="668" y2="260"/>
+      <line x1="678" y1="228" x2="678" y2="261"/><line x1="688" y1="228" x2="688" y2="262"/>
+      <line x1="698" y1="228" x2="698" y2="261"/><line x1="708" y1="227" x2="708" y2="260"/>
+      <line x1="718" y1="226" x2="718" y2="258"/><line x1="728" y1="224" x2="728" y2="256"/>
+      <line x1="738" y1="222" x2="738" y2="252"/>
+    </g>
+    <g id="modeDial" transform-origin="688px 220px">
+      <ellipse cx="688" cy="220" rx="56" ry="20" fill="url(#dialTop)" stroke="#43474e" stroke-width="1.5"/>
+      <ellipse cx="688" cy="220" rx="40" ry="13.6" fill="none" stroke="#000" stroke-width="1" opacity=".5"/>
+      <text x="688" y="216" text-anchor="middle" font-size="12.5" font-weight="700" fill="#f2f4f8" font-family="Menlo,monospace">M</text>
+      <text x="652" y="222" text-anchor="middle" font-size="9" fill="#aab0b9" font-family="Menlo,monospace">Av</text>
+      <text x="724" y="222" text-anchor="middle" font-size="9" fill="#aab0b9" font-family="Menlo,monospace">Tv</text>
+      <text x="668" y="231" text-anchor="middle" font-size="8.6" fill="#888e98" font-family="Menlo,monospace">P</text>
+      <text x="710" y="231" text-anchor="middle" font-size="7.6" fill="#3fae62" font-family="Menlo,monospace">A+</text>
+    </g>
+    <path d="M688 196 l4 7 h-8 Z" fill="#ff5346"/>
+  </g>
+
+  <!-- ======== 快门按钮 + 前指令拨轮(握把顶部) ======== -->
+  <g>
+    <path d="M214 250 Q206 236 226 230 L296 218 Q318 215 322 230 L324 250 Z" fill="#26292e" filter="url(#matte)"/>
+    <ellipse cx="266" cy="232" rx="30" ry="11" fill="#0c0d0f"/>
+    <ellipse cx="266" cy="228" rx="24" ry="8.6" fill="url(#shutterBtn)"/>
+    <ellipse cx="262" cy="226" rx="11" ry="3.6" fill="#fff" opacity=".75"/>
+    <!-- 前指令拨轮 -->
+    <path d="M318 236 a16 12 0 0 1 16 12 l-6 2 a 12 9 0 0 0 -12 -9 Z" fill="#101114"/>
+    <g stroke="#3a3e45" stroke-width="1.6">
+      <line x1="320" y1="238" x2="318" y2="244"/><line x1="326" y1="239" x2="324" y2="246"/>
+      <line x1="331" y1="242" x2="328" y2="248"/>
+    </g>
+  </g>
+
+  <!-- ======== 正面部件 ======== -->
+  <!-- AF 辅助灯 -->
+  <circle cx="346" cy="296" r="9" fill="#1a0e08"/>
+  <circle class="af-glow" cx="346" cy="296" r="6.4" fill="#c2452a"/>
+  <circle cx="343" cy="293" r="2.2" fill="#ffb39a" opacity=".9"/>
+  <!-- 麦克风孔阵 -->
+  <g fill="#0a0b0d">
+    <circle cx="664" cy="300" r="2.6"/><circle cx="676" cy="300" r="2.6"/><circle cx="688" cy="300" r="2.6"/>
+    <circle cx="670" cy="310" r="2.6"/><circle cx="682" cy="310" r="2.6"/>
+    <circle cx="664" cy="320" r="2.6"/><circle cx="676" cy="320" r="2.6"/><circle cx="688" cy="320" r="2.6"/>
+  </g>
+  <!-- 镜头释放按钮(卡口右侧) -->
+  <ellipse cx="640" cy="438" rx="13" ry="17" fill="#0d0e11"/>
+  <ellipse cx="640" cy="436" rx="10" ry="14" fill="#2e3137"/>
+  <ellipse cx="637" cy="430" rx="4" ry="6" fill="#4d525a" opacity=".8"/>
+  <!-- 对焦模式拨杆 -->
+  <rect x="624" y="490" width="34" height="46" rx="9" fill="#0e0f12"/>
+  <rect x="630" y="498" width="22" height="14" rx="5" fill="#2c2f35"/>
+  <text x="641" y="528" text-anchor="middle" font-size="8" fill="#878d96" font-family="Menlo,monospace">AF</text>
+  <!-- 型号牌 -->
+  <rect x="668" y="538" width="58" height="26" rx="5" fill="#1c1e23" stroke="#34383f" stroke-width="1.4"/>
+  <text x="697" y="556" text-anchor="middle" font-size="14" font-weight="700" letter-spacing="1" fill="#dfe3ea">F-5</text>
+
+  <!-- ======== 镜头(3/4 轻透视:同心结构 + 横向压缩) ======== -->
+  <!-- 卡口法兰(机身衔接,右缘露出) -->
+  <ellipse cx="482" cy="424" rx="62" ry="156" fill="#08090b"/>
+  <ellipse cx="486" cy="424" rx="57" ry="149" fill="none" stroke="url(#metalRing)" stroke-width="5" opacity=".8"/>
+  <g transform="translate(434 424) scale(.93 1)">
+    <!-- 外筒 -->
+    <circle r="152" fill="#060708"/>
+    <circle r="148" fill="url(#barrel)"/>
+    <!-- 变焦环:放射状橡胶肋条 -->
+    <g stroke="#0e0f12" stroke-width="12" stroke-linecap="round">
+      <line y1="-122" y2="-145"/><line y1="-122" y2="-145" transform="rotate(30)"/>
+      <line y1="-122" y2="-145" transform="rotate(60)"/><line y1="-122" y2="-145" transform="rotate(90)"/>
+      <line y1="-122" y2="-145" transform="rotate(120)"/><line y1="-122" y2="-145" transform="rotate(150)"/>
+      <line y1="-122" y2="-145" transform="rotate(180)"/><line y1="-122" y2="-145" transform="rotate(210)"/>
+      <line y1="-122" y2="-145" transform="rotate(240)"/><line y1="-122" y2="-145" transform="rotate(270)"/>
+      <line y1="-122" y2="-145" transform="rotate(300)"/><line y1="-122" y2="-145" transform="rotate(330)"/>
+    </g>
+    <g stroke="#33373e" stroke-width="4" stroke-linecap="round">
+      <line y1="-122" y2="-144" transform="rotate(15)"/><line y1="-122" y2="-144" transform="rotate(45)"/>
+      <line y1="-122" y2="-144" transform="rotate(75)"/><line y1="-122" y2="-144" transform="rotate(105)"/>
+      <line y1="-122" y2="-144" transform="rotate(135)"/><line y1="-122" y2="-144" transform="rotate(165)"/>
+      <line y1="-122" y2="-144" transform="rotate(195)"/><line y1="-122" y2="-144" transform="rotate(225)"/>
+      <line y1="-122" y2="-144" transform="rotate(255)"/><line y1="-122" y2="-144" transform="rotate(285)"/>
+      <line y1="-122" y2="-144" transform="rotate(315)"/><line y1="-122" y2="-144" transform="rotate(345)"/>
+    </g>
+    <!-- 红色装饰环(标志性红圈) -->
+    <circle r="113" fill="none" stroke="url(#redRing)" stroke-width="10"/>
+    <!-- 平筒身 + 参数文字 -->
+    <circle r="108" fill="#16171b"/>
+    <path id="ltArc" d="M -90 -32 A 95.5 95.5 0 0 1 90 -32" fill="none"/>
+    <text font-size="12" font-weight="600" letter-spacing="2" fill="#dfe3ea" font-family="Menlo,monospace">
+      <textPath href="#ltArc">FABLE LENS FL 24-70 1:2.8</textPath>
+    </text>
+    <circle r="91" fill="none" stroke="#26282e" stroke-width="2"/>
+    <!-- 对焦环:细密肋纹 -->
+    <circle r="89" fill="#101115"/>
+    <g stroke="#2b2e34" stroke-width="3.4" stroke-linecap="round">
+      <line y1="-72" y2="-87"/><line y1="-72" y2="-87" transform="rotate(20)"/>
+      <line y1="-72" y2="-87" transform="rotate(40)"/><line y1="-72" y2="-87" transform="rotate(60)"/>
+      <line y1="-72" y2="-87" transform="rotate(80)"/><line y1="-72" y2="-87" transform="rotate(100)"/>
+      <line y1="-72" y2="-87" transform="rotate(120)"/><line y1="-72" y2="-87" transform="rotate(140)"/>
+      <line y1="-72" y2="-87" transform="rotate(160)"/><line y1="-72" y2="-87" transform="rotate(180)"/>
+      <line y1="-72" y2="-87" transform="rotate(200)"/><line y1="-72" y2="-87" transform="rotate(220)"/>
+      <line y1="-72" y2="-87" transform="rotate(240)"/><line y1="-72" y2="-87" transform="rotate(260)"/>
+      <line y1="-72" y2="-87" transform="rotate(280)"/><line y1="-72" y2="-87" transform="rotate(300)"/>
+      <line y1="-72" y2="-87" transform="rotate(320)"/><line y1="-72" y2="-87" transform="rotate(340)"/>
+    </g>
+    <!-- 前圈(滤镜螺纹金属口) -->
+    <circle r="70" fill="#0a0b0d"/>
+    <circle r="67" fill="none" stroke="url(#metalRing)" stroke-width="5" opacity=".9"/>
+    <circle r="62" fill="#0c0d10"/>
+    <circle r="59" fill="none" stroke="#26282e" stroke-width="2"/>
+    <!-- 玻璃前组:同心镜片 + 镀膜反射 -->
+    <circle r="56" fill="url(#glassDeep)"/>
+    <circle r="56" fill="none" stroke="#0a1124" stroke-width="2"/>
+    <circle r="41" fill="none" stroke="#6f9bd1" stroke-width="1.6" opacity=".4"/>
+    <circle r="28" fill="none" stroke="#88b4e0" stroke-width="1.4" opacity=".35"/>
+    <circle r="19" fill="url(#glassCore)"/>
+    <circle r="10" fill="#0b1638"/>
+    <ellipse cx="-3" cy="-4" rx="4" ry="5.4" fill="#cfe6ff" opacity=".85"/>
+    <ellipse cx="18" cy="38" rx="20" ry="15" fill="#7a4f9e" opacity=".32" filter="url(#blurS)"/>
+    <ellipse cx="-20" cy="-40" rx="17" ry="13" fill="#3f9e8a" opacity=".32" filter="url(#blurS)"/>
+    <!-- 月牙高光(主光源左上) -->
+    <path d="M -42 -30 A 56 56 0 0 1 -6 -55 A 66 66 0 0 0 -48 -18 Z" fill="#e9f3ff" opacity=".5" filter="url(#blurS)"/>
+    <g clip-path="url(#glassClip)">
+      <clipPath id="glassClip"><circle r="56"/></clipPath>
+      <ellipse class="glass-sweep" rx="13" ry="58" fill="#dff0ff" transform="rotate(24)"/>
+    </g>
+    <!-- 筒缘左上整体反光 -->
+    <path d="M -104 -104 A 148 148 0 0 1 8 -148 A 132 132 0 0 0 -94 -92 Z" fill="#fff" opacity=".10"/>
+    <!-- 对焦距离刻度窗(筒顶) -->
+    <g transform="translate(0 -134)">
+      <rect x="-36" y="-13" width="72" height="28" rx="5" fill="#07080a" stroke="#3a3e45" stroke-width="2"/>
+      <text x="-28" y="6" font-size="10" fill="#dfe3ea" font-family="Menlo,monospace">0.45</text>
+      <text x="2" y="6" font-size="10" fill="#dfe3ea" font-family="Menlo,monospace">1m</text>
+      <text x="22" y="7" font-size="11" fill="#dfe3ea" font-family="Menlo,monospace">∞</text>
+      <line x1="0" y1="8" x2="0" y2="14" stroke="#ff5346" stroke-width="2.4"/>
+    </g>
+  </g>
+
+  <!-- ======== 落影(镜头与机身在台面的接触暗部) ======== -->
+  <ellipse cx="430" cy="612" rx="130" ry="14" fill="#000" opacity=".5" filter="url(#blurM)"/>
+  <path d="M196 580 Q200 600 216 602 L728 602 Q742 600 742 588 L742 568 Q500 596 196 580 Z"
+    fill="#000" opacity=".35"/>
+</svg>
+<figcaption>FABLE F-5 · HAND-DRAWN WITH SVG ONLY · NO BITMAP</figcaption>
+</figure>
+<script>
+  // 模式转盘点击可旋转(轻微动效,不破坏静态首帧)
+  const dial=document.getElementById("modeDial");
+  let ang=0;
+  dial.addEventListener("click",()=>{ang=(ang+30)%360;dial.style.transform=`rotate(${ang}deg)`;});
+</script>
+</body>
+</html>

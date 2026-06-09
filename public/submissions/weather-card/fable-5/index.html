@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skylens · 天气卡片</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;font-family:"Avenir Next","PingFang SC",sans-serif}
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:#0a0e1a;color:#fff;padding:14px}
+  .card{position:relative;width:min(94vw,400px);min-height:640px;border-radius:28px;overflow:hidden;
+    box-shadow:0 30px 80px rgba(0,0,0,.55);transition:background 1.2s ease;display:flex;flex-direction:column}
+  .card.sunny{background:linear-gradient(168deg,#2563eb,#38bdf8 46%,#fcd34d 130%)}
+  .card.rain{background:linear-gradient(168deg,#1e293b,#334e68 55%,#475569)}
+  .card.snow{background:linear-gradient(168deg,#475d86,#7d9bc4 55%,#cfe0f4)}
+  .card.night{filter:brightness(.82) saturate(.9)}
+  #fx{position:absolute;inset:0;pointer-events:none}
+  .inner{position:relative;z-index:2;display:flex;flex-direction:column;flex:1;padding:22px 20px 18px;
+    transition:opacity .35s ease,transform .35s ease}
+  .inner.fade{opacity:0;transform:translateY(14px)}
+  .tabs{display:flex;gap:8px}
+  .tabs button{flex:1;padding:9px 0;border-radius:999px;border:1px solid rgba(255,255,255,.28);
+    background:rgba(255,255,255,.12);color:#fff;font-size:13px;letter-spacing:.08em;cursor:pointer;
+    backdrop-filter:blur(6px);transition:.25s}
+  .tabs button.on{background:rgba(255,255,255,.92);color:#15233f;font-weight:600}
+  .meta{display:flex;justify-content:space-between;align-items:center;margin-top:18px;
+    font-size:12px;opacity:.85;letter-spacing:.1em}
+  #unit{border:1px solid rgba(255,255,255,.4);background:transparent;color:#fff;border-radius:999px;
+    padding:4px 12px;font-size:12px;cursor:pointer}
+  .now{margin-top:10px}
+  .temp{font-size:96px;font-weight:200;line-height:1;letter-spacing:-.02em;
+    text-shadow:0 8px 30px rgba(0,0,0,.25);font-variant-numeric:tabular-nums}
+  .temp sup{font-size:30px;font-weight:400;vertical-align:1.6em}
+  .desc{font-size:19px;font-weight:600;margin-top:4px;letter-spacing:.06em}
+  .stats{display:flex;gap:10px;margin-top:16px}
+  .chip{flex:1;background:rgba(8,14,30,.28);border:1px solid rgba(255,255,255,.18);
+    border-radius:14px;padding:10px 12px;backdrop-filter:blur(8px)}
+  .chip span{font-size:11px;opacity:.75;letter-spacing:.14em}
+  .chip b{display:block;font-size:17px;margin-top:3px;font-variant-numeric:tabular-nums}
+  .fore{margin-top:auto;background:rgba(8,14,30,.34);border:1px solid rgba(255,255,255,.16);
+    border-radius:18px;padding:14px 12px 10px;backdrop-filter:blur(10px)}
+  .fore h3{font-size:11px;letter-spacing:.26em;opacity:.8;margin:0 4px 8px}
+  svg{display:block;width:100%}
+  .days{display:grid;grid-template-columns:repeat(5,1fr);text-align:center;margin-top:6px}
+  .day span{display:block;font-size:11px;opacity:.8}
+  .day b{font-size:13px;font-variant-numeric:tabular-nums}
+  .day i{font-style:normal;font-size:15px;display:block;margin:2px 0}
+  .day small{font-size:10px;opacity:.6;font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<main class="card sunny" id="card">
+  <canvas id="fx"></canvas>
+  <div class="inner" id="inner">
+    <nav class="tabs" id="tabs"></nav>
+    <div class="meta"><span id="clock">—</span><button id="unit">°C / °F</button></div>
+    <section class="now">
+      <div class="temp"><span id="tval">28</span><sup id="tsym">°C</sup></div>
+      <p class="desc" id="desc">晴 · 万里无云</p>
+    </section>
+    <div class="stats">
+      <div class="chip"><span>风速 WIND</span><b id="wind">—</b></div>
+      <div class="chip"><span>湿度 HUM</span><b id="hum">—</b></div>
+      <div class="chip"><span>体感 FEEL</span><b id="feel">—</b></div>
+    </div>
+    <section class="fore">
+      <h3>未来 5 天 · FORECAST</h3>
+      <svg id="line" viewBox="0 0 330 64" preserveAspectRatio="none"></svg>
+      <div class="days" id="days"></div>
+    </section>
+  </div>
+</main>
+<script>
+  const CITIES=[
+    {name:"上海",kind:"sunny",temp:28,desc:"晴 · 万里无云",wind:"12 km/h",hum:"46%",feel:29,
+     days:[["周三","☀",30,22],["周四","☀",31,23],["周五","⛅",29,22],["周六","☀",32,24],["周日","⛅",28,21]]},
+    {name:"伦敦",kind:"rain",temp:16,desc:"中雨 · 持续降水",wind:"24 km/h",hum:"88%",feel:14,
+     days:[["周三","🌧",15,10],["周四","🌧",14,9],["周五","⛅",17,11],["周六","🌧",13,9],["周日","⛅",16,10]]},
+    {name:"札幌",kind:"snow",temp:-2,desc:"小雪 · 轻风飘絮",wind:"9 km/h",hum:"71%",feel:-6,
+     days:[["周三","❄",-1,-7],["周四","❄",0,-6],["周五","⛅",2,-4],["周六","❄",-2,-8],["周日","❄",-1,-7]]}
+  ];
+  const $=id=>document.getElementById(id);
+  let cur=0,unitF=false,shown=CITIES[0].temp;
+  const card=$("card"),cv=$("fx"),ctx=cv.getContext("2d");
+  const cToShow=c=>unitF?Math.round(c*9/5+32):c;
+  CITIES.forEach((c,i)=>{
+    const b=document.createElement("button");b.textContent=c.name;
+    b.onclick=()=>switchCity(i);$("tabs").appendChild(b);
+  });
+  function render(animTemp){
+    const c=CITIES[cur];
+    [...$("tabs").children].forEach((b,i)=>b.classList.toggle("on",i===cur));
+    card.className=`card ${c.kind}`;
+    const h=new Date().getHours();
+    if(h<6||h>=18)card.classList.add("night");
+    $("desc").textContent=c.desc;$("wind").textContent=c.wind;$("hum").textContent=c.hum;
+    $("feel").textContent=cToShow(c.feel)+"°";$("tsym").textContent=unitF?"°F":"°C";
+    const hi=c.days.map(d=>d[2]),lo=c.days.map(d=>d[3]);
+    const min=Math.min(...lo),max=Math.max(...hi),sc=v=>54-(v-min)/(max-min||1)*44;
+    const pts=hi.map((v,i)=>`${33+i*66},${sc(v)}`).join(" ");
+    $("line").innerHTML=`<polyline points="${pts}" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="2.5" stroke-linecap="round"/>`+
+      hi.map((v,i)=>`<circle cx="${33+i*66}" cy="${sc(v)}" r="3.4" fill="#fff"/>`).join("");
+    $("days").innerHTML=c.days.map(d=>
+      `<div class="day"><span>${d[0]}</span><i>${d[1]}</i><b>${cToShow(d[2])}°</b><small>${cToShow(d[3])}°</small></div>`).join("");
+    if(animTemp!==false)countTo(cToShow(c.temp));
+  }
+  function countTo(target){
+    const from=shown,t0=performance.now();
+    (function step(t){
+      const k=Math.min(1,(t-t0)/600),e=1-Math.pow(1-k,3);
+      shown=Math.round(from+(target-from)*e);$("tval").textContent=shown;
+      if(k<1)requestAnimationFrame(step);
+    })(t0);
+  }
+  function switchCity(i){
+    if(i===cur)return;
+    $("inner").classList.add("fade");
+    setTimeout(()=>{cur=i;render();initFx();$("inner").classList.remove("fade");},330);
+  }
+  $("unit").onclick=()=>{unitF=!unitF;render();};
+  setInterval(()=>$("clock").textContent=new Date().toLocaleString("zh-CN",{hour12:false}),1000);
+  let drops=[];
+  function initFx(){
+    cv.width=card.clientWidth;cv.height=card.clientHeight;
+    const kind=CITIES[cur].kind,n=kind==="rain"?110:kind==="snow"?70:26;
+    drops=Array.from({length:n},()=>({
+      x:Math.random()*cv.width,y:Math.random()*cv.height,
+      v:kind==="rain"?7+Math.random()*7:kind==="snow"?.6+Math.random()*1:.15+Math.random()*.3,
+      r:kind==="sunny"?14+Math.random()*30:1+Math.random()*2.4,
+      a:Math.random()*Math.PI*2
+    }));
+  }
+  function fxLoop(){
+    const kind=CITIES[cur].kind;
+    ctx.clearRect(0,0,cv.width,cv.height);
+    for(const d of drops){
+      if(kind==="rain"){
+        ctx.strokeStyle="rgba(200,225,255,.55)";ctx.lineWidth=1.1;
+        ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(d.x-2,d.y+12);ctx.stroke();
+        d.y+=d.v;d.x-=d.v*.16;
+        if(d.y>cv.height){d.y=-14;d.x=Math.random()*cv.width;}
+      }else if(kind==="snow"){
+        d.a+=.012;
+        ctx.fillStyle="rgba(255,255,255,.9)";
+        ctx.beginPath();ctx.arc(d.x+Math.sin(d.a)*14,d.y,d.r,0,7);ctx.fill();
+        d.y+=d.v;if(d.y>cv.height){d.y=-6;d.x=Math.random()*cv.width;}
+      }else{
+        d.a+=.008;d.y-=d.v;if(d.y<-40)d.y=cv.height+30;
+        const g=ctx.createRadialGradient(d.x,d.y,0,d.x,d.y,d.r);
+        g.addColorStop(0,"rgba(255,236,170,.5)");g.addColorStop(1,"rgba(255,236,170,0)");
+        ctx.fillStyle=g;ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,7);ctx.fill();
+      }
+    }
+    requestAnimationFrame(fxLoop);
+  }
+  render(false);initFx();fxLoop();
+  addEventListener("resize",initFx);
+</script>
+</body>
+</html>

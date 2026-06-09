@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurora Chrono · 时钟</title>
+<style>
+  :root{
+    --bg1:#05070f; --bg2:#0c1230; --ink:#eaf2ff; --sub:#8fa3c8;
+    --accent:#5eead4; --accent2:#818cf8; --hand-h:#dbe6ff; --hand-m:#9fb4e8;
+    --ring:rgba(126,150,210,.22); --card:rgba(13,19,42,.72);
+  }
+  body.day{
+    --bg1:#dfeaff; --bg2:#f6ebd9; --ink:#1c2440; --sub:#5b6a8c;
+    --accent:#0ea5a0; --accent2:#6366f1; --hand-h:#243056; --hand-m:#41538a;
+    --ring:rgba(40,60,120,.18); --card:rgba(255,255,255,.66);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    font-family:"Avenir Next","PingFang SC","Microsoft YaHei",sans-serif;
+    background:radial-gradient(1200px 800px at 70% -10%,var(--bg2),var(--bg1) 60%);
+    color:var(--ink);overflow:hidden;transition:background 1s;
+  }
+  .halo{position:fixed;width:62vmin;height:62vmin;border-radius:50%;pointer-events:none;
+    background:radial-gradient(circle,var(--accent) 0%,transparent 62%);
+    opacity:.13;filter:blur(30px);animation:breathe 6s ease-in-out infinite}
+  @keyframes breathe{50%{transform:scale(1.18);opacity:.22}}
+  .card{
+    position:relative;width:min(92vw,420px);padding:34px 26px 28px;border-radius:28px;
+    background:var(--card);backdrop-filter:blur(14px);
+    border:1px solid var(--ring);box-shadow:0 30px 70px rgba(0,0,0,.35);
+    text-align:center;
+  }
+  .brand{font-size:11px;letter-spacing:.42em;color:var(--sub);text-transform:uppercase}
+  svg{display:block;width:min(72vw,300px);margin:18px auto 8px}
+  .digital{font-variant-numeric:tabular-nums;font-size:clamp(34px,9vw,44px);
+    font-weight:600;letter-spacing:.06em;line-height:1.1;
+    text-shadow:0 0 24px color-mix(in srgb,var(--accent) 45%,transparent)}
+  .digital small{font-size:.45em;color:var(--accent);vertical-align:.55em;margin-left:4px}
+  .date{margin-top:6px;color:var(--sub);font-size:14px;letter-spacing:.12em}
+  .phase{display:inline-flex;align-items:center;gap:7px;margin-top:14px;
+    padding:6px 16px;border-radius:999px;font-size:12px;letter-spacing:.2em;
+    color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);
+    background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  .phase i{width:7px;height:7px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 10px var(--accent);animation:blink 2s infinite}
+  @keyframes blink{50%{opacity:.35}}
+  .sec-glow{filter:drop-shadow(0 0 6px var(--accent))}
+</style>
+</head>
+<body>
+<div class="halo"></div>
+<main class="card">
+  <p class="brand">Aurora Chrono</p>
+  <svg id="dial" viewBox="0 0 300 300" role="img" aria-label="模拟时钟">
+    <defs>
+      <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent2)"/>
+      </linearGradient>
+    </defs>
+    <circle cx="150" cy="150" r="140" fill="none" stroke="url(#rim)" stroke-width="2" opacity=".9"/>
+    <circle cx="150" cy="150" r="132" fill="none" stroke="var(--ring)" stroke-width="1"/>
+    <g id="ticks"></g>
+    <g id="nums" font-size="17" font-weight="600" fill="var(--sub)" text-anchor="middle"></g>
+    <circle id="pulse" cx="150" cy="150" r="118" fill="none" stroke="var(--accent)" stroke-width="1" opacity=".15"/>
+    <line id="hourHand" x1="150" y1="150" x2="150" y2="86" stroke="var(--hand-h)" stroke-width="7" stroke-linecap="round"/>
+    <line id="minHand" x1="150" y1="150" x2="150" y2="58" stroke="var(--hand-m)" stroke-width="4.5" stroke-linecap="round"/>
+    <g id="secG" class="sec-glow">
+      <line id="secHand" x1="150" y1="168" x2="150" y2="42" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="150" cy="150" r="6.5" fill="var(--accent)"/>
+    </g>
+    <circle cx="150" cy="150" r="3" fill="var(--bg1)"/>
+  </svg>
+  <div class="digital"><span id="digits">00:00:00</span><small id="ampm"></small></div>
+  <p class="date" id="date">—</p>
+  <span class="phase"><i></i><span id="phaseText">SYNC</span></span>
+</main>
+<script>
+  const $=id=>document.getElementById(id);
+  const ticks=$("ticks"),nums=$("nums");
+  for(let i=0;i<60;i++){
+    const a=i*6*Math.PI/180,big=i%5===0,r1=big?122:127,r2=132;
+    const l=document.createElementNS("http://www.w3.org/2000/svg","line");
+    l.setAttribute("x1",150+r1*Math.sin(a));l.setAttribute("y1",150-r1*Math.cos(a));
+    l.setAttribute("x2",150+r2*Math.sin(a));l.setAttribute("y2",150-r2*Math.cos(a));
+    l.setAttribute("stroke",big?"var(--ink)":"var(--ring)");
+    l.setAttribute("stroke-width",big?2.4:1);l.setAttribute("stroke-linecap","round");
+    ticks.appendChild(l);
+  }
+  for(let h=1;h<=12;h++){
+    const a=h*30*Math.PI/180,t=document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x",150+103*Math.sin(a));t.setAttribute("y",150-103*Math.cos(a)+6);
+    t.textContent=h;nums.appendChild(t);
+  }
+  const rot=(el,deg)=>el.setAttribute("transform",`rotate(${deg} 150 150)`);
+  const pad=n=>String(n).padStart(2,"0");
+  const week=["周日","周一","周二","周三","周四","周五","周六"];
+  let lastSec=-1;
+  function frame(){
+    const n=new Date(),ms=n.getMilliseconds(),s=n.getSeconds(),m=n.getMinutes(),h=n.getHours();
+    const sf=s+ms/1000;
+    rot($("secHand"),sf*6);
+    rot($("minHand"),(m+sf/60)*6);
+    rot($("hourHand"),((h%12)+m/60)*30);
+    if(s!==lastSec){
+      lastSec=s;
+      $("digits").textContent=`${pad(h)}:${pad(m)}:${pad(s)}`;
+      $("date").textContent=`${n.getFullYear()} 年 ${n.getMonth()+1} 月 ${n.getDate()} 日 · ${week[n.getDay()]}`;
+      $("ampm").textContent=h<12?"AM":"PM";
+      const day=h>=6&&h<18;
+      document.body.classList.toggle("day",day);
+      $("phaseText").textContent=day?"DAYLIGHT · 白昼":"MIDNIGHT · 夜航";
+      const p=$("pulse");
+      p.animate([{opacity:.4,r:118},{opacity:0,r:130}],{duration:900,easing:"ease-out"});
+    }
+    requestAnimationFrame(frame);
+  }
+  frame();
+</script>
+</body>
+</html>

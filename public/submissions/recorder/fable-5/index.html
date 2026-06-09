@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tape One · 录音机</title>
+<style>
+  :root{--bg:#0b0e16;--panel:#141a28;--edge:#232c42;--ink:#e9eefb;--sub:#7e8aa8;
+    --rec:#ff4d5e;--ok:#34d399;--warn:#fbbf24;--bar:#3d4f78}
+  *{margin:0;padding:0;box-sizing:border-box;font-family:"Avenir Next","PingFang SC",sans-serif}
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(900px 600px at 20% -10%,#1a2340,var(--bg) 60%);color:var(--ink)}
+  .deck{width:min(92vw,400px);background:linear-gradient(180deg,#171e30,var(--panel));
+    border:1px solid var(--edge);border-radius:24px;padding:24px 22px 20px;
+    box-shadow:0 24px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06)}
+  .top{display:flex;justify-content:space-between;align-items:center}
+  .brand{font-size:11px;letter-spacing:.34em;color:var(--sub)}
+  .status{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.16em;
+    padding:5px 12px;border-radius:999px;border:1px solid var(--edge);color:var(--sub)}
+  .dot{width:8px;height:8px;border-radius:50%;background:#56627f;transition:.3s}
+  .deck.rec .dot{background:var(--rec);box-shadow:0 0 12px var(--rec);animation:pulse 1.1s infinite}
+  .deck.pause .dot{background:var(--warn);box-shadow:0 0 10px var(--warn)}
+  .deck.done .dot{background:var(--ok);box-shadow:0 0 10px var(--ok)}
+  @keyframes pulse{50%{opacity:.3}}
+  .wave{display:flex;align-items:center;gap:3px;height:96px;margin:22px 2px 8px;
+    padding:0 10px;border-radius:14px;background:#0c1020;border:1px solid var(--edge);overflow:hidden}
+  .wave i{flex:1;border-radius:2px;background:var(--bar);height:8%;
+    transition:height .14s ease,background .3s}
+  .deck.rec .wave i{background:linear-gradient(180deg,#ff7d8a,var(--rec))}
+  .time{font-variant-numeric:tabular-nums;text-align:center;font-size:54px;font-weight:600;
+    letter-spacing:.04em;margin:10px 0 2px;text-shadow:0 0 26px rgba(255,77,94,.25)}
+  .hint{text-align:center;font-size:12px;color:var(--sub);letter-spacing:.1em;min-height:16px}
+  .controls{display:flex;justify-content:center;gap:18px;margin:20px 0 6px}
+  button{cursor:pointer;border:none;border-radius:50%;width:72px;height:72px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    color:var(--ink);background:#1b2336;border:1px solid var(--edge);font-size:11px;
+    letter-spacing:.08em;transition:transform .15s,box-shadow .15s,opacity .2s}
+  button:active{transform:scale(.93)}
+  button:disabled{opacity:.35;cursor:not-allowed}
+  button .ic{width:20px;height:20px;border-radius:4px}
+  #btnRec .ic{border-radius:50%;background:var(--rec);box-shadow:0 0 14px rgba(255,77,94,.7)}
+  #btnRec.primary{background:linear-gradient(180deg,#2a1820,#241019);border-color:#5b2730}
+  #btnPause .ic{background:linear-gradient(90deg,var(--warn) 38%,transparent 38%,transparent 62%,var(--warn) 62%)}
+  #btnStop .ic{background:var(--sub)}
+  #btnStop.confirm{border-color:var(--rec);color:var(--rec)}
+  #btnStop.confirm .ic{background:var(--rec)}
+  .summary{margin-top:14px;border-top:1px dashed var(--edge);padding-top:14px;display:none}
+  .deck.done .summary{display:block;animation:rise .4s ease}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}}
+  .summary h3{font-size:12px;letter-spacing:.24em;color:var(--ok);margin-bottom:10px}
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .cell{background:#0c1020;border:1px solid var(--edge);border-radius:10px;padding:10px 8px;text-align:center}
+  .cell b{display:block;font-size:16px;font-variant-numeric:tabular-nums}
+  .cell span{font-size:10px;color:var(--sub);letter-spacing:.12em}
+  .log{margin-top:12px;max-height:96px;overflow:auto;font-size:12px;color:var(--sub)}
+  .log p{display:flex;justify-content:space-between;padding:6px 4px;border-bottom:1px solid #1a2236}
+  .log b{color:var(--ink);font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<main class="deck" id="deck">
+  <div class="top">
+    <span class="brand">TAPE ONE</span>
+    <span class="status"><i class="dot"></i><span id="stText">待命 IDLE</span></span>
+  </div>
+  <div class="wave" id="wave" aria-hidden="true"></div>
+  <div class="time" id="time">00:00</div>
+  <p class="hint" id="hint">点击红色按钮开始录音（模拟，无需麦克风权限）</p>
+  <div class="controls">
+    <button id="btnRec" class="primary"><span class="ic"></span>录音</button>
+    <button id="btnPause" disabled><span class="ic"></span>暂停</button>
+    <button id="btnStop" disabled><span class="ic"></span>停止</button>
+  </div>
+  <section class="summary" aria-live="polite">
+    <h3>本次录音摘要 · SAVED</h3>
+    <div class="grid">
+      <div class="cell"><b id="sumDur">00:00</b><span>总时长</span></div>
+      <div class="cell"><b id="sumPause">0</b><span>暂停次数</span></div>
+      <div class="cell"><b id="sumPeak">0%</b><span>峰值电平</span></div>
+    </div>
+    <div class="log" id="log"></div>
+  </section>
+</main>
+<script>
+  const $=id=>document.getElementById(id);
+  const deck=$("deck"),wave=$("wave"),bars=[];
+  for(let i=0;i<36;i++){const b=document.createElement("i");wave.appendChild(b);bars.push(b);}
+  let state="idle",elapsed=0,tick=null,anim=null,pauses=0,peak=0,take=0,stopArmed=false;
+  const pad=n=>String(n).padStart(2,"0");
+  const fmt=s=>`${pad(Math.floor(s/60))}:${pad(s%60)}`;
+  function setState(next){
+    state=next;stopArmed=false;
+    deck.className="deck "+({recording:"rec",paused:"pause",done:"done"}[next]||"");
+    $("stText").textContent={idle:"待命 IDLE",recording:"录音中 REC",paused:"已暂停 PAUSE",done:"已保存 DONE"}[next];
+    $("btnRec").disabled=next==="recording";
+    $("btnPause").disabled=next!=="recording";
+    $("btnStop").disabled=next==="idle"||next==="done";
+    $("btnStop").classList.remove("confirm");
+    $("btnStop").lastChild.textContent="停止";
+    $("hint").textContent={idle:"点击红色按钮开始录音（模拟，无需麦克风权限）",
+      recording:"正在拾音… 再次点暂停可挂起",paused:"已挂起，点击录音继续，或停止以保存",
+      done:"已生成摘要，可直接开始新录音"}[next];
+  }
+  function drawWave(){
+    bars.forEach((b,i)=>{
+      const live=state==="recording";
+      const h=live?12+Math.abs(Math.sin(Date.now()/130+i*.6))*78*(.5+Math.random()*.5):8;
+      if(live)peak=Math.max(peak,h);
+      b.style.height=h+"%";
+    });
+    anim=requestAnimationFrame(drawWave);
+  }
+  drawWave();
+  function startTick(){tick=setInterval(()=>{elapsed++;$("time").textContent=fmt(elapsed);},1000);}
+  $("btnRec").onclick=()=>{
+    if(state==="recording")return;
+    if(state!=="paused"){elapsed=0;pauses=0;peak=0;$("time").textContent="00:00";}
+    startTick();setState("recording");
+  };
+  $("btnPause").onclick=()=>{clearInterval(tick);pauses++;setState("paused");};
+  $("btnStop").onclick=()=>{
+    if(!stopArmed){stopArmed=true;$("btnStop").classList.add("confirm");
+      $("btnStop").lastChild.textContent="确认?";$("hint").textContent="再点一次「确认」结束并保存本次录音";return;}
+    clearInterval(tick);take++;
+    $("sumDur").textContent=fmt(elapsed);$("sumPause").textContent=pauses;
+    $("sumPeak").textContent=Math.round(peak)+"%";
+    const p=document.createElement("p");
+    p.innerHTML=`<span>Take ${pad(take)} · ${new Date().toLocaleTimeString("zh-CN",{hour12:false})}</span><b>${fmt(elapsed)}</b>`;
+    $("log").prepend(p);
+    setState("done");
+  };
+</script>
+</body>
+</html>

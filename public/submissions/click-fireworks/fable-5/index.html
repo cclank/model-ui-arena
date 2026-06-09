@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>夜空烟花 · Click Fireworks</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:#02030a;
+    font-family:"Avenir Next","PingFang SC",sans-serif}
+  #sky{position:fixed;inset:0;display:block;cursor:crosshair;
+    background:linear-gradient(180deg,#020413 0%,#071032 55%,#10204d 82%,#1b1530 100%)}
+  .moon{position:fixed;top:9%;right:12%;width:64px;height:64px;border-radius:50%;
+    background:radial-gradient(circle at 38% 36%,#fff7df,#f3e3ae 60%,#d9c386);
+    box-shadow:0 0 50px 18px rgba(255,243,200,.22);pointer-events:none}
+  .moon::after{content:"";position:absolute;left:12px;top:18px;width:13px;height:13px;border-radius:50%;
+    background:rgba(190,168,116,.5);box-shadow:24px 12px 0 -3px rgba(190,168,116,.45),10px 28px 0 -5px rgba(190,168,116,.4)}
+  .city{position:fixed;left:0;right:0;bottom:0;height:18vh;pointer-events:none;
+    background:
+      linear-gradient(transparent 0,transparent 40%,#01020a 40%) 0 0/100% 100%,
+      repeating-linear-gradient(90deg,#030515 0 26px,#05081d 26px 27px,#030515 27px 58px,transparent 58px 74px);
+    -webkit-mask:linear-gradient(180deg,transparent,#000 38%);mask:linear-gradient(180deg,transparent,#000 38%)}
+  .hud{position:fixed;left:50%;top:26px;transform:translateX(-50%);color:#cdd9ff;text-align:center;
+    pointer-events:none;transition:opacity 1s}
+  .hud h1{font-size:clamp(17px,4.6vw,24px);font-weight:600;letter-spacing:.34em;
+    text-shadow:0 0 22px rgba(120,160,255,.6)}
+  .hud p{margin-top:8px;font-size:12px;letter-spacing:.22em;color:#7d8fc4;animation:hint 2.2s infinite}
+  @keyframes hint{50%{opacity:.35}}
+  .hud.dim{opacity:0}
+  .stat{position:fixed;right:14px;bottom:12px;color:#5e6f9e;font-size:11px;
+    font-variant-numeric:tabular-nums;letter-spacing:.12em;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="sky"></canvas>
+<div class="moon"></div>
+<div class="city"></div>
+<div class="hud" id="hud"><h1>FESTIVAL NIGHT</h1><p>点击夜空任意处 · 点亮烟花</p></div>
+<div class="stat" id="stat">particles 0</div>
+<script>
+  const cv=document.getElementById("sky"),ctx=cv.getContext("2d");
+  let W,H,DPR=Math.min(devicePixelRatio||1,2);
+  function size(){W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);}
+  size();addEventListener("resize",size);
+  const stars=Array.from({length:90},()=>({x:Math.random(),y:Math.random()*.72,
+    r:Math.random()*1.2+.3,tw:Math.random()*Math.PI*2}));
+  const MAXP=1600,rockets=[],parts=[];
+  const rand=(a,b)=>a+Math.random()*(b-a);
+  function launch(tx,ty){
+    rockets.push({x:tx+rand(-8,8),y:H+8,tx,ty,vy:-(H*.012+rand(2,5)),
+      hue:rand(0,360),trail:[]});
+    document.getElementById("hud").classList.add("dim");
+  }
+  function explode(x,y,hue,scale=1,gen=0){
+    const n=Math.floor(rand(72,112)*scale);
+    for(let i=0;i<n;i++){
+      if(parts.length>=MAXP)parts.shift();
+      const a=Math.PI*2*i/n+rand(-.06,.06),sp=rand(1.4,6.4)*scale;
+      parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,
+        life:1,decay:rand(.007,.016),size:rand(1.8,3.4),
+        hue:hue+rand(-26,26),spark:Math.random()<.25,gen});
+    }
+  }
+  function pointer(e){
+    const t=e.touches?e.touches[0]:e;
+    launch(t.clientX,t.clientY);
+  }
+  addEventListener("pointerdown",pointer);
+  let last=performance.now();
+  function loop(now){
+    const dt=Math.min((now-last)/16.7,2);last=now;
+    ctx.globalCompositeOperation="destination-out";
+    ctx.fillStyle="rgba(0,0,0,.34)";ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation="lighter";
+    ctx.fillStyle="rgba(255,255,255,.8)";
+    for(const s of stars){
+      s.tw+=.03*dt;
+      ctx.globalAlpha=.25+Math.abs(Math.sin(s.tw))*.5;
+      ctx.fillRect(s.x*W,s.y*H,s.r,s.r);
+    }
+    ctx.globalAlpha=1;
+    for(let i=rockets.length-1;i>=0;i--){
+      const r=rockets[i];
+      r.trail.push({x:r.x,y:r.y});if(r.trail.length>7)r.trail.shift();
+      r.x+=(r.tx-r.x)*.04*dt;r.y+=r.vy*dt;r.vy*=1.004;
+      ctx.strokeStyle=`hsla(${r.hue},90%,72%,.85)`;ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(r.trail[0].x,r.trail[0].y);
+      r.trail.forEach(p=>ctx.lineTo(p.x,p.y));ctx.stroke();
+      ctx.fillStyle=`hsla(${r.hue},100%,85%,1)`;
+      ctx.beginPath();ctx.arc(r.x,r.y,2.4,0,7);ctx.fill();
+      if(r.y<=r.ty){
+        rockets.splice(i,1);
+        const big=Math.random()<.5?rand(1,1.5):rand(.7,1);
+        explode(r.x,r.y,r.hue,big);
+      }
+    }
+    for(let i=parts.length-1;i>=0;i--){
+      const p=parts[i];
+      p.vy+=.045*dt;p.vx*=.985;p.vy*=.985;
+      p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=p.decay*dt;
+      if(p.life<=0){
+        if(p.gen===0&&Math.random()<.018)explode(p.x,p.y,p.hue+40,.36,1);
+        parts.splice(i,1);continue;
+      }
+      const fl=p.spark&&Math.random()<.3?.2:1,a=p.life*fl,r=p.size*(0.4+p.life*.8);
+      ctx.fillStyle=`hsla(${p.hue},95%,62%,${a*.28})`;
+      ctx.beginPath();ctx.arc(p.x,p.y,r*3.4,0,7);ctx.fill();
+      ctx.fillStyle=`hsla(${p.hue},100%,${60+p.life*32}%,${a})`;
+      ctx.beginPath();ctx.arc(p.x,p.y,r,0,7);ctx.fill();
+    }
+    document.getElementById("stat").textContent=`particles ${parts.length}`;
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+  setTimeout(()=>launch(W*.5,H*.34),700);
+  setTimeout(()=>launch(W*.3,H*.3),1500);
+  setTimeout(()=>launch(W*.72,H*.4),2300);
+</script>
+</body>
+</html>
