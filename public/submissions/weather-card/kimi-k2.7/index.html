@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather Card</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { min-height: 100vh; display: flex; justify-content: center; align-items: center; background: #0b1026; font-family: system-ui, sans-serif; }
+.card { width: min(360px, 92vw); border-radius: 28px; padding: 28px; color: #fff; background: linear-gradient(160deg, #3b82f6, #1e3a8a); box-shadow: 0 24px 60px rgba(0,0,0,.35); position: relative; overflow: hidden; transition: background .6s; }
+.card.rainy { background: linear-gradient(160deg, #475569, #1e293b); }
+.card.cloudy { background: linear-gradient(160deg, #94a3b8, #475569); }
+.tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.tab { border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.12); color: #fff; border-radius: 999px; padding: 6px 12px; font-size: .85rem; cursor: pointer; }
+.tab.active { background: rgba(255,255,255,.9); color: #1e3a8a; font-weight: 600; }
+.city { font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
+.desc { opacity: .85; font-size: .95rem; margin-bottom: 18px; }
+.main { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.temp { font-size: 4.2rem; font-weight: 800; line-height: 1; }
+.icon { width: 90px; height: 90px; position: relative; }
+.sun { width: 48px; height: 48px; border-radius: 50%; background: #fbbf24; box-shadow: 0 0 28px #fbbf24; position: absolute; top: 16px; right: 10px; animation: spin 12s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.cloud { width: 56px; height: 24px; background: #fff; border-radius: 20px; position: absolute; top: 32px; left: 12px; opacity: .95; }
+.cloud::after { content: ''; position: absolute; width: 28px; height: 28px; background: #fff; border-radius: 50%; top: -14px; left: 10px; }
+.rain { position: absolute; top: 54px; left: 18px; width: 50px; height: 30px; overflow: hidden; }
+.drop { position: absolute; width: 2px; height: 10px; background: #93c5fd; border-radius: 2px; animation: fall .7s linear infinite; }
+@keyframes fall { to { transform: translateY(28px); opacity: 0; } }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.2); }
+.cell { text-align: center; }
+.cell span { display: block; font-size: .75rem; opacity: .7; margin-bottom: 4px; }
+.cell strong { font-size: 1rem; }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="tabs" id="tabs"></div>
+  <div class="city" id="city">Beijing</div>
+  <div class="desc" id="desc">Sunny</div>
+  <div class="main">
+    <div class="temp" id="temp">28°</div>
+    <div class="icon" id="icon"></div>
+  </div>
+  <div class="grid">
+    <div class="cell"><span>Wind</span><strong id="wind">12 km/h</strong></div>
+    <div class="cell"><span>Humidity</span><strong id="hum">45%</strong></div>
+    <div class="cell"><span>UV</span><strong id="uv">High</strong></div>
+  </div>
+</div>
+<script>
+const data = [
+  { city: 'Beijing', weather: 'sunny', temp: 28, desc: 'Sunny', wind: '12 km/h', hum: '45%', uv: 'High' },
+  { city: 'Shanghai', weather: 'rainy', temp: 22, desc: 'Light Rain', wind: '18 km/h', hum: '82%', uv: 'Low' },
+  { city: 'Shenzhen', weather: 'cloudy', temp: 25, desc: 'Cloudy', wind: '10 km/h', hum: '68%', uv: 'Med' }
+];
+let idx = 0;
+const tabs = document.getElementById('tabs');
+data.forEach((d,i) => { const b = document.createElement('button'); b.className = 'tab' + (i===0?' active':''); b.textContent = d.city; b.onclick = () => set(i); tabs.appendChild(b); });
+const set = i => {
+  idx = i; const d = data[i];
+  document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('active', j===i));
+  document.getElementById('city').textContent = d.city;
+  document.getElementById('desc').textContent = d.desc;
+  document.getElementById('temp').textContent = d.temp + '°';
+  document.getElementById('wind').textContent = d.wind;
+  document.getElementById('hum').textContent = d.hum;
+  document.getElementById('uv').textContent = d.uv;
+  const card = document.getElementById('card'); card.className = 'card ' + d.weather;
+  const icon = document.getElementById('icon'); icon.innerHTML = '';
+  if (d.weather === 'sunny') icon.innerHTML = '<div class="sun"></div>';
+  else if (d.weather === 'cloudy') icon.innerHTML = '<div class="cloud"></div>';
+  else if (d.weather === 'rainy') {
+    icon.innerHTML = '<div class="cloud"></div><div class="rain"></div>';
+    const rain = icon.querySelector('.rain');
+    for (let k=0;k<5;k++){ const drop=document.createElement('div'); drop.className='drop'; drop.style.left=(k*10+4)+'px'; drop.style.animationDelay=(Math.random()*0.5)+'s'; rain.appendChild(drop); }
+  }
+};
+set(0);
+</script>
+</body>
+</html>

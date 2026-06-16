@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clock</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  transition: background 1s ease;
+}
+body.day { background: linear-gradient(135deg, #87ceeb 0%, #f0f8ff 100%); }
+.clock-wrap { text-align: center; color: #fff; }
+body.day .clock-wrap { color: #1a202c; }
+.face {
+  width: 260px; height: 260px;
+  border-radius: 50%;
+  margin: 0 auto 24px;
+  position: relative;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3), inset 0 0 30px rgba(0,0,0,0.2);
+}
+body.day .face { background: rgba(255,255,255,0.45); box-shadow: 0 20px 50px rgba(0,0,0,0.1), inset 0 0 30px rgba(255,255,255,0.6); }
+.tick {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 2px; height: 10px;
+  background: rgba(255,255,255,0.3);
+  transform-origin: 50% 0;
+  transform: translate(-50%, -50%) rotate(var(--r)) translateY(-118px);
+}
+.tick.major { width: 4px; height: 14px; background: currentColor; translateY(-116px); }
+.center { position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; border-radius: 50%; background: currentColor; transform: translate(-50%,-50%); z-index: 10; }
+.hand {
+  position: absolute; left: 50%; bottom: 50%;
+  background: currentColor;
+  transform-origin: 50% 100%;
+  border-radius: 4px;
+  transform: translateX(-50%) rotate(var(--a));
+}
+.hour { width: 6px; height: 70px; opacity: .9; }
+.min { width: 4px; height: 95px; opacity: .8; }
+.sec { width: 2px; height: 110px; background: #ff6b6b; }
+.digital {
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  font-variant-numeric: tabular-nums;
+}
+.date { margin-top: 8px; font-size: .95rem; opacity: .75; }
+</style>
+</head>
+<body>
+<div class="clock-wrap">
+  <div class="face" id="face"></div>
+  <div class="digital" id="digital">00:00:00</div>
+  <div class="date" id="date">-</div>
+</div>
+<script>
+const face = document.getElementById('face');
+for (let i = 0; i < 60; i++) {
+  const d = document.createElement('div');
+  d.className = i % 5 === 0 ? 'tick major' : 'tick';
+  d.style.setProperty('--r', i * 6 + 'deg');
+  face.appendChild(d);
+}
+const c = document.createElement('div'); c.className = 'center'; face.appendChild(c);
+['hour','min','sec'].forEach(k => {
+  const h = document.createElement('div'); h.className = 'hand ' + k; h.id = k;
+  h.style.setProperty('--a', '0deg'); face.appendChild(h);
+});
+function tick() {
+  const now = new Date();
+  const ms = now.getMilliseconds();
+  const s = now.getSeconds() + ms / 1000;
+  const m = now.getMinutes() + s / 60;
+  const h = now.getHours() % 12 + m / 60;
+  document.getElementById('hour').style.setProperty('--a', h * 30 + 'deg');
+  document.getElementById('min').style.setProperty('--a', m * 6 + 'deg');
+  document.getElementById('sec').style.setProperty('--a', s * 6 + 'deg');
+  document.getElementById('digital').textContent = now.toLocaleTimeString('zh-CN', { hour12: false });
+  document.getElementById('date').textContent = now.toLocaleDateString('zh-CN', { weekday: 'long', month: 'short', day: 'numeric' });
+  document.body.classList.toggle('day', now.getHours() >= 6 && now.getHours() < 18);
+  requestAnimationFrame(tick);
+}
+tick();
+</script>
+</body>
+</html>

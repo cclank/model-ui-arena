@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recorder</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  min-height: 100vh;
+  display: flex; justify-content: center; align-items: center;
+  background: #0f172a; color: #e2e8f0; font-family: system-ui, sans-serif;
+}
+.card { width: min(360px, 92vw); background: #1e293b; border-radius: 24px; padding: 28px; box-shadow: 0 24px 60px rgba(0,0,0,.4); }
+.title { text-align: center; font-size: 1.1rem; opacity: .7; margin-bottom: 18px; }
+.timer { text-align: center; font-size: 3.2rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-bottom: 20px; }
+.status { text-align: center; margin-bottom: 22px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: .95rem; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: #64748b; }
+.recording .dot { background: #ef4444; animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+.wave { display: flex; align-items: flex-end; justify-content: center; gap: 4px; height: 72px; margin-bottom: 24px; }
+.bar { width: 6px; background: #475569; border-radius: 4px; transition: height .12s ease; }
+.recording .bar { background: #38bdf8; }
+.controls { display: flex; gap: 12px; justify-content: center; }
+button { border: 0; border-radius: 12px; padding: 12px 18px; font-size: .95rem; font-weight: 600; cursor: pointer; background: #334155; color: #fff; }
+button.primary { background: #ef4444; }
+button:disabled { opacity: .4; cursor: not-allowed; }
+.summary { margin-top: 22px; padding-top: 18px; border-top: 1px solid #334155; font-size: .9rem; line-height: 1.6; display: none; }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="title">Voice Recorder</div>
+  <div class="timer" id="t">00:00</div>
+  <div class="status" id="st"><span class="dot"></span><span id="stt">Ready</span></div>
+  <div class="wave" id="wave"></div>
+  <div class="controls">
+    <button id="start" class="primary">Start</button>
+    <button id="pause" disabled>Pause</button>
+    <button id="stop" disabled>Stop</button>
+  </div>
+  <div class="summary" id="sum"></div>
+</div>
+<script>
+const wave = document.getElementById('wave');
+for (let i = 0; i < 24; i++) { const b = document.createElement('div'); b.className = 'bar'; b.style.height = '8px'; wave.appendChild(b); }
+let s = 0, st = 'ready', iv, wv;
+const card = document.getElementById('card');
+const fmt = n => String(n).padStart(2,'0');
+const upd = () => document.getElementById('t').textContent = `${fmt(Math.floor(s/60))}:${fmt(s%60)}`;
+const setStatus = (text, rec) => { document.getElementById('stt').textContent = text; card.classList.toggle('recording', rec); };
+const bars = [...wave.children];
+function animateWave() {
+  bars.forEach(b => b.style.height = (6 + Math.random() * 58) + 'px');
+}
+function clearWave() { bars.forEach(b => b.style.height = '8px'); }
+start.onclick = () => { if (st === 'recording') return; st = 'recording'; start.disabled = true; pause.disabled = false; stop.disabled = false; setStatus('Recording', true); iv = setInterval(() => { s++; upd(); }, 1000); wv = setInterval(animateWave, 120); };
+pause.onclick = () => { if (st !== 'recording') return; st = 'paused'; clearInterval(iv); clearInterval(wv); pause.textContent = 'Resume'; setStatus('Paused', false); };
+stop.onclick = () => {
+  if (!confirm('Stop and save this recording?')) return;
+  st = 'stopped'; clearInterval(iv); clearInterval(wv);
+  start.disabled = false; pause.disabled = true; stop.disabled = true; pause.textContent = 'Pause';
+  setStatus('Stopped', false); clearWave();
+  const sum = document.getElementById('sum'); sum.style.display = 'block';
+  sum.innerHTML = `<strong>Recording Summary</strong><br>Duration: ${fmt(Math.floor(s/60))}:${fmt(s%60)}<br>Status: ${s > 0 ? 'Saved' : 'Empty'}<br>Created: ${new Date().toLocaleString('zh-CN')}`;
+};
+</script>
+</body>
+</html>

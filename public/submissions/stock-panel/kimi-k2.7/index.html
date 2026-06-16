@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Panel</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { min-height: 100vh; display: flex; justify-content: center; align-items: center; background: #0f172a; font-family: system-ui, sans-serif; color: #e2e8f0; }
+.card { width: min(390px, 94vw); background: #111827; border-radius: 24px; padding: 24px; box-shadow: 0 24px 60px rgba(0,0,0,.4); }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.header h1 { font-size: 1.15rem; }
+.live { font-size: .75rem; color: #22c55e; display: flex; align-items: center; gap: 6px; }
+.live::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; animation: blink 1.2s infinite; }
+@keyframes blink { 50% { opacity: .2; } }
+.row { display: grid; grid-template-columns: 1.4fr .9fr .9fr; gap: 10px; align-items: center; padding: 14px 0; border-bottom: 1px solid #1f2937; }
+.name { font-weight: 700; }
+.ticker { font-size: .75rem; opacity: .55; margin-top: 2px; }
+.price { font-weight: 700; font-variant-numeric: tabular-nums; }
+.change { text-align: right; font-weight: 700; font-size: .95rem; }
+.up { color: #22c55e; } .down { color: #ef4444; }
+.chart { margin-top: 22px; background: #0b1220; border-radius: 16px; padding: 16px; }
+.chart h3 { font-size: .85rem; opacity: .7; margin-bottom: 12px; }
+svg { width: 100%; height: 110px; }
+.line { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.dotl { fill: #22c55e; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header"><h1>Market Watch</h1><div class="live">LIVE</div></div>
+  <div id="list"></div>
+  <div class="chart"><h3>NVDA Intraday Trend</h3><svg viewBox="0 0 300 110" preserveAspectRatio="none"><polyline id="pl" class="line" stroke="#22c55e" points=""/><g id="dots"></g></svg></div>
+</div>
+<script>
+const stocks = [
+  { n: 'Apple Inc.', t: 'AAPL', p: 187.45, c: 1.25 },
+  { n: 'NVIDIA', t: 'NVDA', p: 892.10, c: -4.32 },
+  { n: 'Tesla', t: 'TSLA', p: 245.60, c: 3.08 }
+];
+const fmt = n => (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+const list = document.getElementById('list');
+function render() {
+  list.innerHTML = '';
+  stocks.forEach(s => {
+    const ch = (Math.random() - .45) * 1.2 + s.c;
+    s.p += ch * .15;
+    const d = document.createElement('div'); d.className = 'row';
+    d.innerHTML = `<div><div class="name">${s.n}</div><div class="ticker">${s.t}</div></div><div class="price">$${s.p.toFixed(2)}</div><div class="change ${ch>=0?'up':'down'}">${fmt(ch)}</div>`;
+    list.appendChild(d);
+  });
+}
+const pts = [62,58,64,60,68,72,70,76,74,80,82,78,85,88,86,90,94,92,96,100];
+const pl = document.getElementById('pl'); const dots = document.getElementById('dots');
+function draw() {
+  pts.push(pts[pts.length-1] + (Math.random()-.48)*6); pts.shift();
+  const min = Math.min(...pts), max = Math.max(...pts);
+  const map = (v,i) => [i * (300/(pts.length-1)), 105 - (v-min)/(max-min || 1)*90].join(',');
+  pl.setAttribute('points', pts.map(map).join(' '));
+  dots.innerHTML = `<circle cx="300" cy="${105 - (pts[pts.length-1]-min)/(max-min || 1)*90}" r="4" class="dotl"/>`;
+}
+render(); draw();
+setInterval(() => { render(); draw(); }, 2200);
+</script>
+</body>
+</html>

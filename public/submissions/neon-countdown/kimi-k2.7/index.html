@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neon Countdown</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  min-height: 100vh; display: flex; justify-content: center; align-items: center;
+  background: #050510; color: #fff; font-family: system-ui, sans-serif; overflow: hidden;
+}
+.card { text-align: center; position: relative; }
+.ring-wrap { width: 260px; height: 260px; margin: 0 auto 28px; position: relative; }
+svg.ring { width: 100%; height: 100%; transform: rotate(-90deg); }
+.track { fill: none; stroke: rgba(255,255,255,.08); stroke-width: 10; }
+.bar { fill: none; stroke: url(#g); stroke-width: 12; stroke-linecap: round; transition: stroke-dashoffset .3s linear; filter: drop-shadow(0 0 10px #a855f7); }
+.num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 6.5rem; font-weight: 900; font-variant-numeric: tabular-nums; text-shadow: 0 0 30px rgba(168,85,247,.6); transition: transform .15s; }
+.label { font-size: 1rem; opacity: .65; margin-bottom: 16px; letter-spacing: .1em; text-transform: uppercase; }
+.card.done .num { font-size: 3.2rem; color: #fbbf24; text-shadow: 0 0 40px #fbbf24; }
+.flash { position: fixed; inset: 0; background: rgba(255,255,255,.12); opacity: 0; pointer-events: none; transition: opacity .05s; }
+.btn { border: 0; border-radius: 999px; padding: 12px 28px; font-size: 1rem; font-weight: 700; cursor: pointer; background: linear-gradient(90deg,#a855f7,#22d3ee); color: #fff; box-shadow: 0 0 24px rgba(168,85,247,.45); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="label" id="label">Countdown</div>
+  <div class="ring-wrap">
+    <svg class="ring" viewBox="0 0 260 260">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#a855f7"/><stop offset="100%" stop-color="#22d3ee"/></linearGradient></defs>
+      <circle class="track" cx="130" cy="130" r="118"/>
+      <circle class="bar" id="bar" cx="130" cy="130" r="118" stroke-dasharray="741" stroke-dashoffset="0"/>
+    </svg>
+    <div class="num" id="num">10</div>
+  </div>
+  <button class="btn" id="btn">Restart</button>
+</div>
+<div class="flash" id="flash"></div>
+<script>
+const total = 10; let left = total, iv, running = true;
+const bar = document.getElementById('bar');
+const num = document.getElementById('num');
+const card = document.getElementById('card');
+const label = document.getElementById('label');
+const flash = document.getElementById('flash');
+const len = 2 * Math.PI * 118;
+bar.setAttribute('stroke-dasharray', len);
+function pulse() { num.style.transform = 'scale(1.12)'; setTimeout(() => num.style.transform = 'scale(1)', 120); }
+function tick() {
+  left -= .1; if (left < 0) left = 0;
+  const n = Math.ceil(left);
+  num.textContent = n;
+  bar.setAttribute('stroke-dashoffset', len * (1 - left/total));
+  if (n <= 3 && n > 0) { flash.style.opacity = .25; setTimeout(() => flash.style.opacity = 0, 80); num.style.textShadow = '0 0 50px #ef4444'; }
+  else { num.style.textShadow = ''; }
+  if (Math.abs(n - left) < .12 || left === 0) pulse();
+  if (left <= 0) {
+    clearInterval(iv); running = false;
+    card.classList.add('done'); label.textContent = 'Completed'; num.textContent = 'GO';
+    flash.style.opacity = .5; setTimeout(() => flash.style.opacity = 0, 200);
+    document.getElementById('btn').disabled = false;
+  }
+}
+iv = setInterval(tick, 100);
+document.getElementById('btn').onclick = () => {
+  clearInterval(iv); left = total; running = true; card.classList.remove('done'); label.textContent = 'Countdown'; num.textContent = '10';
+  bar.setAttribute('stroke-dashoffset', 0); document.getElementById('btn').disabled = true; iv = setInterval(tick, 100);
+};
+document.getElementById('btn').disabled = true;
+</script>
+</body>
+</html>

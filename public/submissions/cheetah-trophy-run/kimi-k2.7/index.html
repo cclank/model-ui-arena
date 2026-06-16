@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cheetah Trophy Run</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { min-height: 100vh; display: flex; justify-content: center; align-items: center; background: #05030a; font-family: system-ui, sans-serif; }
+.poster { width: min(420px, 96vw); aspect-ratio: 3/4; background: linear-gradient(180deg, #0a0518 0%, #1a0f2e 55%, #0f3d1f 100%); border-radius: 18px; overflow: hidden; box-shadow: 0 28px 80px rgba(0,0,0,.65); }
+svg { display: block; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<div class="poster">
+<svg viewBox="0 0 420 560" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="spot" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(255,255,255,.18)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></linearGradient>
+    <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#14522d"/><stop offset="100%" stop-color="#0b331a"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fff7cc"/><stop offset="30%" stop-color="#fbbf24"/><stop offset="70%" stop-color="#b45309"/><stop offset="100%" stop-color="#78350f"/></linearGradient>
+    <linearGradient id="cheetah" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/></linearGradient>
+    <filter id="blur"><feGaussianBlur stdDeviation="2.2"/></filter>
+    <filter id="glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+
+  <!-- stadium stands -->
+  <rect x="0" y="0" width="420" height="560" fill="#0a0518"/>
+  <ellipse cx="210" cy="260" rx="260" ry="140" fill="url(#spot)" opacity=".7"/>
+  <path d="M0 180 Q210 120 420 180 L420 120 Q210 60 0 120 Z" fill="#120a22"/>
+  <path d="M20 160 Q210 110 400 160" fill="none" stroke="#312e81" stroke-width="2" opacity=".4"/>
+  <path d="M40 145 Q210 100 380 145" fill="none" stroke="#312e81" stroke-width="2" opacity=".3"/>
+  <g fill="#fbbf24" opacity=".25">
+    <circle cx="60" cy="110" r="1.5"/><circle cx="100" cy="100" r="1.2"/><circle cx="150" cy="95" r="1.4"/>
+    <circle cx="270" cy="95" r="1.4"/><circle cx="320" cy="100" r="1.2"/><circle cx="360" cy="110" r="1.5"/>
+  </g>
+
+  <!-- grass pitch -->
+  <rect x="0" y="340" width="420" height="220" fill="url(#grass)"/>
+  <path d="M0 360 Q210 335 420 360" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="2"/>
+  <path d="M0 390 Q210 365 420 390" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="2"/>
+  <path d="M0 420 Q210 395 420 420" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="2"/>
+
+  <!-- speed lines -->
+  <g stroke="#fff" stroke-width="1.5" opacity=".12" filter="url(#blur)">
+    <line x1="360" y1="220" x2="410" y2="215"/><line x1="350" y1="250" x2="405" y2="245"/>
+    <line x1="40" y1="280" x2="90" y2="275"/><line x1="30" y1="310" x2="80" y2="305"/>
+    <line x1="370" y1="300" x2="415" y2="295"/>
+  </g>
+
+  <!-- confetti -->
+  <g opacity=".7">
+    <rect x="50" y="140" width="6" height="3" fill="#fbbf24" transform="rotate(30 50 140)"/>
+    <rect x="360" y="150" width="5" height="3" fill="#f472b6" transform="rotate(-20 360 150)"/>
+    <rect x="300" y="120" width="5" height="3" fill="#22d3ee" transform="rotate(45 300 120)"/>
+    <rect x="80" y="175" width="4" height="3" fill="#a78bfa" transform="rotate(-40 80 175)"/>
+  </g>
+
+  <!-- rolling football -->
+  <g transform="translate(320, 415) rotate(20)">
+    <circle cx="0" cy="0" r="16" fill="#fff"/>
+    <path d="M-6 -5 L6 -5 L9 4 L0 10 L-9 4 Z" fill="#1e293b"/>
+    <path d="M6 -5 L13 -2" fill="none" stroke="#1e293b" stroke-width="1.5"/>
+    <path d="M9 4 L15 6" fill="none" stroke="#1e293b" stroke-width="1.5"/>
+    <path d="M-9 4 L-15 6" fill="none" stroke="#1e293b" stroke-width="1.5"/>
+    <path d="M-6 -5 L-13 -2" fill="none" stroke="#1e293b" stroke-width="1.5"/>
+    <path d="M0 10 L0 16" fill="none" stroke="#1e293b" stroke-width="1.5"/>
+    <path d="M-5 14 Q0 18 8 14" fill="none" stroke="#000" stroke-width="3" opacity=".25"/>
+  </g>
+
+  <!-- grass skid marks -->
+  <path d="M120 430 Q180 425 240 435" fill="none" stroke="#0f2918" stroke-width="4" opacity=".55" stroke-linecap="round"/>
+  <path d="M130 438 Q190 433 250 443" fill="none" stroke="#0f2918" stroke-width="3" opacity=".45" stroke-linecap="round"/>
+
+  <!-- cheetah body (running forward, body lean) -->
+  <g transform="translate(210, 300)">
+    <!-- body lean group -->
+    <g transform="rotate(-12)">
+      <!-- back leg pushing -->
+      <path d="M-35 55 Q-70 75 -95 110 L-85 120 Q-55 85 -20 70 Z" fill="#b45309"/>
+      <path d="M-95 110 L-108 118 L-100 125 L-88 117 Z" fill="#fbbf24"/>
+      <!-- front leg reaching -->
+      <path d="M40 45 Q85 35 115 20 L118 32 Q85 48 45 58 Z" fill="#d97706"/>
+      <path d="M115 20 L125 15 L122 28 Z" fill="#fbbf24"/>
+      <!-- other back leg -->
+      <path d="M-25 60 Q-5 90 10 120 L22 115 Q5 88 -10 60 Z" fill="#d97706"/>
+      <path d="M10 120 L12 132 L24 128 L20 116 Z" fill="#fbbf24"/>
+      <!-- torso -->
+      <ellipse cx="0" cy="35" rx="72" ry="28" fill="url(#cheetah)"/>
+      <ellipse cx="8" cy="34" rx="58" ry="20" fill="#f59e0b" opacity=".5"/>
+      <!-- spots -->
+      <g fill="#1f2937" opacity=".9">
+        <ellipse cx="-30" cy="28" rx="5" ry="3" transform="rotate(-20 -30 28)"/>
+        <ellipse cx="-8" cy="22" rx="6" ry="3.5" transform="rotate(10 -8 22)"/>
+        <ellipse cx="18" cy="26" rx="5" ry="3" transform="rotate(25 18 26)"/>
+        <ellipse cx="42" cy="36" rx="4" ry="2.5"/>
+        <ellipse cx="-45" cy="40" rx="5" ry="3" transform="rotate(-35 -45 40)"/>
+        <ellipse cx="-18" cy="42" rx="5" ry="3"/>
+        <ellipse cx="12" cy="42" rx="4" ry="2.5"/>
+      </g>
+      <!-- tail sweeping back -->
+      <path d="M-68 30 Q-120 10 -150 -25 Q-130 5 -85 45 Z" fill="#d97706"/>
+      <path d="M-150 -25 L-160 -35 L-148 -32 Z" fill="#fbbf24"/>
+      <g fill="#1f2937" opacity=".8">
+        <ellipse cx="-100" cy="18" rx="4" ry="2" transform="rotate(-30 -100 18)"/>
+        <ellipse cx="-125" cy="5" rx="4" ry="2" transform="rotate(-40 -125 5)"/>
+      </g>
+    </g>
+
+    <!-- head -->
+    <g transform="translate(95, -5) rotate(-8)">
+      <ellipse cx="0" cy="0" rx="34" ry="26" fill="url(#cheetah)"/>
+      <!-- ears -->
+      <path d="M-22 -14 L-28 -32 L-10 -22 Z" fill="#d97706"/>
+      <path d="M22 -14 L28 -32 L10 -22 Z" fill="#d97706"/>
+      <!-- snout -->
+      <ellipse cx="18" cy="8" rx="14" ry="11" fill="#fde68a"/>
+      <circle cx="24" cy="4" r="4" fill="#1f2937"/>
+      <!-- eyes -->
+      <ellipse cx="6" cy="-4" rx="6" ry="5" fill="#fff"/>
+      <circle cx="7" cy="-4" r="3" fill="#111"/>
+      <ellipse cx="-10" cy="-6" rx="6" ry="5" fill="#fff"/>
+      <circle cx="-9" cy="-6" r="3" fill="#111"/>
+      <!-- tear marks -->
+      <path d="M4 4 Q8 18 6 28" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M-12 2 Q-8 16 -10 26" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- nose/mouth -->
+      <path d="M22 10 L26 18 L18 18 Z" fill="#111"/>
+      <path d="M22 18 L22 26" fill="none" stroke="#111" stroke-width="2"/>
+      <!-- spots on head -->
+      <g fill="#1f2937"><circle cx="-18" cy="-14" r="3"/><circle cx="-8" cy="-18" r="2.5"/><circle cx="8" cy="-18" r="2.5"/></g>
+    </g>
+
+    <!-- arms holding trophy (front paws) -->
+    <g transform="translate(55, -35) rotate(-10)">
+      <path d="M0 0 Q20 -25 40 -45" fill="none" stroke="#d97706" stroke-width="14" stroke-linecap="round"/>
+      <path d="M28 0 Q48 -25 68 -45" fill="none" stroke="#f59e0b" stroke-width="13" stroke-linecap="round"/>
+      <ellipse cx="40" cy="-45" rx="10" ry="8" fill="#fbbf24"/>
+      <ellipse cx="68" cy="-45" rx="10" ry="8" fill="#fbbf24"/>
+
+      <!-- trophy -->
+      <g transform="translate(54, -78) scale(.85)">
+        <rect x="-22" y="68" width="44" height="14" rx="3" fill="#166534"/>
+        <rect x="-16" y="62" width="32" height="8" fill="#22c55e"/>
+        <path d="M-14 62 Q-26 40 -26 20 Q-26 0 0 -8 Q26 0 26 20 Q26 40 14 62 Z" fill="url(#gold)" filter="url(#glow)"/>
+        <circle cx="0" cy="22" r="16" fill="#0ea5e9" opacity=".35"/>
+        <path d="M-8 14 Q0 8 8 14" fill="none" stroke="#fff" stroke-width="1.5" opacity=".7"/>
+        <path d="M-6 26 Q0 22 6 26" fill="none" stroke="#fff" stroke-width="1.5" opacity=".7"/>
+        <!-- figures holding -->
+        <path d="M-18 56 Q-30 40 -34 18" fill="none" stroke="#fbbf24" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M18 56 Q30 40 34 18" fill="none" stroke="#fbbf24" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="-34" cy="18" r="4" fill="#fbbf24"/><circle cx="34" cy="18" r="4" fill="#fbbf24"/>
+        <path d="M-16 -2 L-30 -16" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M16 -2 L30 -16" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- scoreboard -->
+  <g transform="translate(280, 95)">
+    <rect x="0" y="0" width="100" height="58" rx="8" fill="#020617" stroke="#334155" stroke-width="2"/>
+    <rect x="6" y="6" width="88" height="20" rx="4" fill="#0f172a"/>
+    <text x="50" y="20" text-anchor="middle" fill="#e2e8f0" font-size="12" font-weight="700" font-family="system-ui, sans-serif">90+7'</text>
+    <text x="50" y="48" text-anchor="middle" fill="#fbbf24" font-size="22" font-weight="800" font-family="system-ui, sans-serif">3 : 2</text>
+  </g>
+
+  <!-- foreground title -->
+  <text x="210" y="510" text-anchor="middle" fill="#fff" font-size="22" font-weight="900" font-family="system-ui, sans-serif" letter-spacing=".12em" filter="url(#glow)">CHAMPIONS</text>
+  <text x="210" y="535" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700" font-family="system-ui, sans-serif" letter-spacing=".15em">FINAL WHISTLE · LAST GASP GLORY</text>
+</svg>
+</div>
+</body>
+</html>
