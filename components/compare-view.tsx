@@ -35,28 +35,39 @@ function Badge({ sub }: { sub: Submission }) {
 }
 
 const FIT_MIN = 460;
-const FIT_MAX = 1400;
+const FIT_MAX = 1600;
 
 function CompareColumn({ sub, model, theme }: { sub?: Submission; model: string; theme: string }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Auto-fit iframe height to its content's natural height so taller pages
-  // (weather card, stock panel, recorder, posters, ...) are fully visible
-  // instead of clipped at a fixed height. We only READ scrollHeight and never
-  // inject styles, so full-viewport / fixed-position canvas pages stay intact.
+  // (weather card, stock panel, posters, ...) are fully visible instead of
+  // clipped at a fixed height.
   const fit = () => {
     const f = iframeRef.current;
     if (!f) return;
     try {
       const doc = f.contentDocument;
-      const win = f.contentWindow;
-      if (!doc || !win || doc.readyState !== "complete") return;
+      if (!doc || doc.readyState !== "complete") return;
+      // Break the circular height dependency that traps full-viewport pages:
+      // `html,body{height:100%|100vh}` makes scrollHeight report the iframe's
+      // own height instead of real content, so we'd never grow. Setting
+      // height:auto (and a min-height:100vh to preserve backgrounds / vertical
+      // centering) lets the body expand to its true content while full-viewport
+      // canvas pages keep filling the frame. No runaway: vh tracks the iframe,
+      // so the height settles at the content height.
+      const override = doc.getElementById("__arena_fit");
+      if (!override) {
+        const st = doc.createElement("style");
+        st.id = "__arena_fit";
+        st.textContent =
+          "html,body{height:auto!important;min-height:100vh!important}";
+        (doc.head || doc.documentElement).appendChild(st);
+      }
       const h = Math.max(
         doc.body?.scrollHeight ?? 0,
         doc.documentElement?.scrollHeight ?? 0
       );
-      // full-viewport pages report height == their own client; fixed-canvas
-      // pages may report ~0. Clamp to a sensible band.
       const next = Math.min(Math.max(h, FIT_MIN), FIT_MAX);
       f.style.height = next + "px";
     } catch {
@@ -67,15 +78,11 @@ function CompareColumn({ sub, model, theme }: { sub?: Submission; model: string;
   // re-fit a few times so async layout / web fonts / animations settle.
   useEffect(() => {
     if (!sub || sub.renderKind !== "html") return;
-    const id1 = window.setTimeout(fit, 300);
-    const id2 = window.setTimeout(fit, 900);
-    const id3 = window.setTimeout(fit, 1800);
+    const timers = [200, 600, 1200, 2000, 3500].map((d) => window.setTimeout(fit, d));
     const onResize = () => fit();
     window.addEventListener("resize", onResize);
     return () => {
-      window.clearTimeout(id1);
-      window.clearTimeout(id2);
-      window.clearTimeout(id3);
+      timers.forEach((t) => window.clearTimeout(t));
       window.removeEventListener("resize", onResize);
     };
   }, [sub, theme, model]);
