@@ -6,94 +6,113 @@
 <title>glm-5.2 · 录音机</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-    min-height:100vh;display:flex;align-items:center;justify-content:center;
-    background:linear-gradient(160deg,#1b1f3a,#2d1b4e);padding:20px;color:#fff}
-  .card{width:360px;max-width:100%;background:rgba(255,255,255,.06);
-    backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.12);border-radius:28px;
-    padding:34px 28px;box-shadow:0 30px 60px rgba(0,0,0,.5)}
-  .title{text-align:center;font-size:13px;letter-spacing:4px;color:rgba(255,255,255,.6);text-transform:uppercase}
-  .indicator{display:flex;align-items:center;justify-content:center;gap:10px;margin:18px 0 8px}
-  .dot{width:12px;height:12px;border-radius:50%;background:#555;transition:.3s}
-  .dot.live{background:#ff3b30;box-shadow:0 0 14px #ff3b30;animation:pulse 1s infinite}
-  .dot.paused{background:#ffb340}
-  @keyframes pulse{50%{opacity:.4}}
-  .status{font-size:15px;font-weight:600;letter-spacing:1px}
-  .timer{font-size:62px;font-weight:200;text-align:center;margin:14px 0 6px;
-    font-variant-numeric:tabular-nums;text-shadow:0 2px 18px rgba(255,59,48,.3)}
-  .wave{display:flex;align-items:center;justify-content:center;gap:3px;height:70px;margin:18px 0 24px}
-  .wave span{width:4px;height:8px;background:linear-gradient(#ff5e62,#ff9966);border-radius:3px;
-    transition:height .12s ease}
-  .controls{display:flex;gap:14px;justify-content:center}
-  button{border:none;cursor:pointer;border-radius:50%;width:62px;height:62px;font-size:20px;
-    color:#fff;display:flex;align-items:center;justify-content:center;transition:transform .15s,filter .2s;
-    background:rgba(255,255,255,.1)}
-  button:hover{transform:translateY(-3px);filter:brightness(1.15)}
-  button:active{transform:scale(.94)}
-  .rec{background:linear-gradient(135deg,#ff3b30,#ff5e62)}
-  .pause{background:linear-gradient(135deg,#ffb340,#ffd86b);color:#3a2a00}
-  .stop{background:linear-gradient(135deg,#444,#666)}
-  button:disabled{opacity:.3;cursor:not-allowed;transform:none}
-  .summary{margin-top:22px;background:rgba(0,0,0,.25);border-radius:18px;padding:18px;
-    font-size:14px;line-height:1.9;opacity:0;transform:translateY(8px);transition:.4s}
-  .summary.show{opacity:1;transform:none}
-  .summary b{color:#ff9966}
-  .hint{text-align:center;font-size:11px;color:rgba(255,255,255,.35);margin-top:14px}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at 50% 0%,#241a3a,#0c0a16 60%,#060410);padding:20px;color:#fff;overflow:hidden}
+  body::before{content:"";position:fixed;inset:0;background:
+    radial-gradient(circle at 20% 80%,rgba(255,59,108,.15),transparent 40%),
+    radial-gradient(circle at 80% 20%,rgba(108,99,255,.15),transparent 40%);z-index:0}
+  .card{position:relative;z-index:1;width:360px;max-width:100%;
+    background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.03));
+    backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.14);border-radius:32px;
+    padding:36px 28px 28px;box-shadow:0 40px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.2)}
+  .title{text-align:center;font-size:11px;letter-spacing:5px;color:rgba(255,255,255,.5);
+    text-transform:uppercase;font-weight:700}
+  .viz{position:relative;width:200px;height:200px;margin:24px auto 8px}
+  .ring{position:absolute;inset:0;transform:rotate(-90deg)}
+  .center-info{position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center}
+  .timer{font-size:46px;font-weight:200;font-variant-numeric:tabular-nums;letter-spacing:2px;
+    text-shadow:0 2px 18px rgba(255,59,108,.4)}
+  .status{font-size:12px;letter-spacing:3px;color:rgba(255,255,255,.55);margin-top:6px;text-transform:uppercase}
+  .status.rec{color:#ff3b6c}.status.paused{color:#ffb340}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;
+    margin-right:6px;vertical-align:middle}
+  .status.rec .dot{animation:pulse 1s infinite;box-shadow:0 0 10px #ff3b6c}
+  @keyframes pulse{50%{opacity:.3}}
+  .level{display:flex;align-items:flex-end;justify-content:center;gap:2px;height:48px;margin:20px 0 26px}
+  .level span{width:3px;border-radius:2px;background:linear-gradient(#6c63ff,#ff3b6c);
+    height:6px;transition:height .08s ease-out;opacity:.85}
+  .controls{display:flex;gap:18px;justify-content:center;align-items:center}
+  button{border:none;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    transition:transform .15s,box-shadow .2s,filter .2s;color:#fff}
+  button:hover{transform:translateY(-3px)}
+  button:active{transform:scale(.92)}
+  .rec{width:74px;height:74px;font-size:26px;
+    background:linear-gradient(135deg,#ff3b6c,#ff6b4a);box-shadow:0 10px 30px rgba(255,59,108,.5)}
+  .rec:not(:disabled):hover{box-shadow:0 14px 40px rgba(255,59,108,.7)}
+  .pause{width:60px;height:60px;font-size:16px;
+    background:linear-gradient(135deg,#ffb340,#ffd86b);color:#3a2a00;box-shadow:0 8px 22px rgba(255,179,64,.4)}
+  .stop{width:60px;height:60px;font-size:15px;background:linear-gradient(135deg,#3a3f55,#5a6280);
+    box-shadow:0 8px 22px rgba(0,0,0,.4)}
+  button:disabled{opacity:.25;cursor:not-allowed;transform:none;box-shadow:none}
+  .summary{margin-top:22px;background:rgba(0,0,0,.28);border-radius:18px;padding:16px 18px;
+    font-size:14px;line-height:1.9;max-height:0;overflow:hidden;opacity:0;transition:.4s}
+  .summary.show{max-height:160px;opacity:1}
+  .summary b{color:#ff6b8a}
+  .hint{text-align:center;font-size:10px;color:rgba(255,255,255,.3);margin-top:16px;letter-spacing:1px}
 </style>
 </head>
 <body>
   <div class="card">
     <div class="title">Voice Recorder</div>
-    <div class="indicator"><span class="dot" id="dot"></span><span class="status" id="status">未开始</span></div>
-    <div class="timer" id="timer">00:00</div>
-    <div class="wave" id="wave"></div>
+    <div class="viz">
+      <svg class="ring" viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="92" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="4"/>
+        <circle id="prog" cx="100" cy="100" r="92" fill="none" stroke="url(#g)" stroke-width="4"
+          stroke-linecap="round" stroke-dasharray="578" stroke-dashoffset="578"
+          style="filter:drop-shadow(0 0 6px rgba(255,59,108,.7))"/>
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#6c63ff"/><stop offset="100%" stop-color="#ff3b6c"/></linearGradient></defs>
+        <g id="bars"></g>
+      </svg>
+      <div class="center-info">
+        <div class="timer" id="timer">00:00</div>
+        <div class="status" id="status"><span class="dot"></span>未开始</div>
+      </div>
+    </div>
+    <div class="level" id="level"></div>
     <div class="controls">
-      <button class="rec" id="recBtn" title="开始">●</button>
       <button class="pause" id="pauseBtn" title="暂停" disabled>❚❚</button>
+      <button class="rec" id="recBtn" title="开始">●</button>
       <button class="stop" id="stopBtn" title="停止" disabled>■</button>
     </div>
     <div class="summary" id="summary"></div>
-    <div class="hint">点击红圆开始 · 黄圆暂停 · 灰圆停止并回看摘要</div>
+    <div class="hint">红圆开始 · 黄圆暂停 · 灰圆停止并回看摘要</div>
   </div>
 <script>
   const $=id=>document.getElementById(id);
-  const timer=$('timer'),status=$('status'),dot=$('dot'),summary=$('summary'),
-    recBtn=$('recBtn'),pauseBtn=$('pauseBtn'),stopBtn=$('stopBtn'),wave=$('wave');
-  for(let i=0;i<32;i++)wave.appendChild(document.createElement('span'));
-  const bars=[...wave.children];
-  let state='idle',elapsed=0,startStamp=0,raf,ticking,confirmed=false;
+  const timer=$('timer'),status=$('status'),summary=$('summary'),
+    recBtn=$('recBtn'),pauseBtn=$('pauseBtn'),stopBtn=$('stopBtn'),
+    prog=$('prog'),level=$('level'),barsG=$('bars');
+  const C=2*Math.PI*92;prog.setAttribute('stroke-dasharray',C);prog.setAttribute('stroke-dashoffset',C);
+  // linear level bars
+  for(let i=0;i<28;i++)level.appendChild(document.createElement('span'));
+  const lvlEls=[...level.children];
+  let state='idle',elapsed=0,startStamp=0,tickInt,confirmed=false,total=0;
   const fmt=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
-  function setState(st){
-    state=st;
-    const map={idle:['未开始',false,false,false],recording:['录制中',true,false,true],
-      paused:['已暂停',false,true,true]};
-    const[m,dot_,pause_,stop_]=map[st];
-    status.textContent=m;
-    dot.className='dot'+(st==='recording'?' live':st==='paused'?' paused':'');
-    recBtn.disabled=st==='recording';
-    pauseBtn.disabled=!pause_;pauseBtn.textContent=st==='paused'?'▶':'❚❚';
-    stopBtn.disabled=!stop_;
-  }
-  function animateBars(){if(state==='recording'){bars.forEach(b=>{
-    b.style.height=(8+Math.random()*60)+'px'})}requestAnimationFrame(animateBars)}
-  function tick(){
-    if(state==='recording'){const s=Math.floor((Date.now()-startStamp)/1000)+elapsed;
-      timer.textContent=fmt(s)}
-  }
-  recBtn.onclick=()=>{setState('recording');startStamp=Date.now();summary.classList.remove('show');
-    confirmed=false;if(!ticking){ticking=true;setInterval(tick,250);animateBars()}};
-  pauseBtn.onclick=()=>{
-    if(state==='recording'){elapsed+=Math.floor((Date.now()-startStamp)/1000);startStamp=0;setState('paused')}
-    else if(state==='paused'){startStamp=Date.now();setState('recording')}
-  };
-  stopBtn.onclick=()=>{
-    if(!confirmed){summary.innerHTML='⚠ 再次点击「停止」确认结束本次录音';summary.classList.add('show');
-      confirmed=true;setTimeout(()=>{if(confirmed)confirmed=false},2500);return}
-    const total=state==='recording'?elapsed+Math.floor((Date.now()-startStamp)/1000):elapsed;
-    setState('idle');elapsed=0;timer.textContent='00:00';bars.forEach(b=>b.style.height='8px');
+  function setState(st){state=st;const map={idle:['未开始','s',false,false,false],recording:['录制中','rec',true,false,true],
+    paused:['已暂停','paused',false,true,true]};
+    const[m,cls,recEn,paEn,stEn]=map[st];const t=$('status').querySelector('.dot')?`${$('status').querySelector('.dot').outerHTML}`:'';
+    status.innerHTML=`<span class="dot"></span>${m}`;status.className='status '+cls;
+    recBtn.disabled=st==='recording';pauseBtn.disabled=!paEn;pauseBtn.textContent=st==='paused'?'▶':'❚❚';stopBtn.disabled=!stEn}
+  function liveSecs(){return state==='recording'?elapsed+Math.floor((Date.now()-startStamp)/1000):elapsed}
+  function animate(){if(state==='recording'){
+    const secs=liveSecs();timer.textContent=fmt(secs);
+    prog.setAttribute('stroke-dashoffset',C*(1-Math.min(secs/120,1)));
+    lvlEls.forEach(b=>{b.style.height=(6+Math.random()*40)+'px'})}
+    requestAnimationFrame(animate)}
+  recBtn.onclick=()=>{setState('recording');startStamp=Date.now();summary.classList.remove('show');confirmed=false;
+    if(!tickInt){tickInt=1;animate()}};
+  pauseBtn.onclick=()=>{if(state==='recording'){elapsed+=Math.floor((Date.now()-startStamp)/1000);startStamp=0;setState('paused')}
+    else if(state==='paused'){startStamp=Date.now();setState('recording')}};
+  stopBtn.onclick=()=>{if(!confirmed){summary.innerHTML='⚠ 再次点击「停止」确认结束本次录音';summary.classList.add('show');
+    confirmed=true;setTimeout(()=>{if(confirmed)confirmed=false},2500);return}
+    const total=liveSecs();setState('idle');elapsed=0;startStamp=0;timer.textContent='00:00';
+    prog.setAttribute('stroke-dashoffset',C);lvlEls.forEach(b=>b.style.height='6px');
     summary.innerHTML=total>0?`✅ 本次录音摘要<br>时长：<b>${fmt(total)}</b><br>状态：<b>已保存</b>`:'本次未录制到内容';
-    summary.classList.add('show');
-  };
+    summary.classList.add('show')};
+  setState('idle');
 </script>
 </body>
 </html>

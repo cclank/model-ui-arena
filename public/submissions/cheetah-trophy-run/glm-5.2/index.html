@@ -81,6 +81,28 @@
     <polygon points="330,60 270,270 390,270" fill="#fff8d6"/>
   </g>
 
+  <!-- championship glory burst behind trophy -->
+  <g opacity=".85">
+    <radialGradient id="glory" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff3b0" stop-opacity=".55"/>
+      <stop offset="45%" stop-color="#ffd400" stop-opacity=".18"/>
+      <stop offset="100%" stop-color="#ffd400" stop-opacity="0"/>
+    </radialGradient>
+    <circle cx="245" cy="190" r="150" fill="url(#glory)"/>
+    <!-- radiating rays -->
+    <g opacity=".22" stroke="#ffe98a" stroke-width="3" stroke-linecap="round">
+      <line x1="245" y1="190" x2="245" y2="30"/>
+      <line x1="245" y1="190" x2="385" y2="120"/>
+      <line x1="245" y1="190" x2="395" y2="230"/>
+      <line x1="245" y1="190" x2="105" y2="120"/>
+      <line x1="245" y1="190" x2="95" y2="230"/>
+      <line x1="245" y1="190" x2="245" y2="360"/>
+    </g>
+  </g>
+
+  <!-- atmospheric depth haze over crowd -->
+  <rect x="0" y="220" width="400" height="60" fill="url(#sky)" opacity=".55"/>
+
   <!-- gold confetti -->
   <g class="conf">
     <rect x="40" y="120" width="5" height="9" fill="#ffd400" transform="rotate(20 42 124)"/>
@@ -90,6 +112,19 @@
     <rect x="350" y="120" width="5" height="9" fill="#ffd400" transform="rotate(15 352 124)"/>
     <rect x="80" y="150" width="4" height="7" fill="#fff" transform="rotate(30 82 153)"/>
     <rect x="240" y="140" width="4" height="7" fill="#ff6ec7" transform="rotate(-40 242 143)"/>
+    <rect x="160" y="75" width="4" height="8" fill="#7af7ff" transform="rotate(10 162 79)"/>
+    <rect x="310" y="70" width="5" height="9" fill="#ffd400" transform="rotate(-30 312 74)"/>
+    <rect x="55" y="95" width="4" height="7" fill="#fff" transform="rotate(50 57 98)"/>
+    <rect x="365" y="150" width="4" height="7" fill="#ff6ec7" transform="rotate(25 367 153)"/>
+    <rect x="100" y="115" width="4" height="7" fill="#7af7ff" transform="rotate(-10 102 118)"/>
+  </g>
+
+  <!-- lens flare on spotlights -->
+  <g opacity=".5">
+    <circle cx="70" cy="70" r="2" fill="#fff"/>
+    <circle cx="70" cy="70" r="70" fill="#fff8d6" opacity=".06"/>
+    <circle cx="330" cy="60" r="2" fill="#fff"/>
+    <circle cx="330" cy="60" r="70" fill="#fff8d6" opacity=".06"/>
   </g>
 
   <!-- speed lines (behind cheetah) -->

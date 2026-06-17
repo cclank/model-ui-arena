@@ -5,91 +5,108 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>glm-5.2 · 钟表</title>
 <style>
-  :root{
-    --day-bg1:#2a5298;--day-bg2:#7eb8ff;--face:#fdfdfb;--ink:#1a1a1a;--accent:#ff5a3c;
-    --night-bg1:#0b1026;--night-bg2:#1d2b50;
-  }
   *{margin:0;padding:0;box-sizing:border-box}
-  html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-  body{display:flex;flex-direction:column;align-items:center;justify-content:center;
-    min-height:100vh;padding:24px;transition:background 1.2s ease, color 1.2s ease;overflow:hidden;
-    background:linear-gradient(135deg,var(--bg1),var(--bg2));}
-  .meta{color:rgba(255,255,255,.85);font-size:12px;letter-spacing:2px;margin-bottom:18px;
-    text-transform:uppercase;text-shadow:0 1px 4px rgba(0,0,0,.3)}
-  .clock{position:relative;width:300px;height:300px;border-radius:50%;
-    background:radial-gradient(circle at 32% 28%,#fff,var(--face) 60%,#e9e6df);
-    box-shadow:0 30px 60px rgba(0,0,0,.45),inset 0 0 0 8px rgba(255,255,255,.6),
-      inset 0 0 0 9px rgba(0,0,0,.08),inset 0 -14px 30px rgba(0,0,0,.08);}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    transition:background 1.4s ease;color:#fff;position:relative}
+  .sky{position:fixed;inset:0;z-index:0;transition:background 1.4s ease}
+  .stars{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity 1.4s}
+  body.night .stars{opacity:1}
+  .stars i{position:absolute;background:#fff;border-radius:50%;animation:tw 3s infinite ease-in-out}
+  @keyframes tw{0%,100%{opacity:.2}50%{opacity:1}}
+  .meta{position:relative;z-index:2;color:rgba(255,255,255,.9);font-size:11px;letter-spacing:5px;
+    margin-bottom:20px;text-transform:uppercase;backdrop-filter:blur(6px)}
+  .clock{position:relative;z-index:2;width:300px;height:300px;border-radius:50%;
+    background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.95),rgba(245,245,242,.96) 55%,#e6e2d8);
+    box-shadow:0 30px 70px rgba(0,0,0,.5),
+      0 0 0 2px rgba(255,255,255,.4),
+      0 0 0 14px rgba(20,24,40,.12),
+      inset 0 0 60px rgba(0,0,0,.06),
+      inset 0 -16px 40px rgba(0,0,0,.1)}
+  .glass{position:absolute;inset:0;border-radius:50%;
+    background:radial-gradient(circle at 30% 22%,rgba(255,255,255,.6),transparent 40%);
+    mix-blend-mode:screen;pointer-events:none}
+  .bezel-nums{position:absolute;inset:0}
+  .n{position:absolute;left:50%;top:50%;font-size:15px;font-weight:700;color:#1a1a1a;
+    transform-origin:0 0;transform:translate(-50%,-50%)}
   .tick{position:absolute;left:50%;top:50%;width:2px;height:140px;
     transform-origin:50% 100%;transform:translate(-50%,-100%);pointer-events:none}
-  .tick::before{content:"";display:block;width:2px;height:12px;margin:0 auto;background:var(--ink);border-radius:2px}
-  .tick.major::before{height:18px;width:3px;background:var(--accent)}
-  .hand{position:absolute;left:50%;top:50%;transform-origin:50% 100%;border-radius:6px}
-  .h-hour{width:7px;height:80px;background:var(--ink);transform:translate(-50%,-100%) rotate(0deg)}
-  .h-min{width:5px;height:110px;background:#333;transform:translate(-50%,-100%) rotate(0deg)}
-  .h-sec{width:2px;height:124px;background:var(--accent);transform:translate(-50%,-85%) rotate(0deg);transition:transform .12s cubic-bezier(.4,2.6,.6,1)}
-  .h-sec::after{content:"";position:absolute;left:50%;bottom:-16px;transform:translateX(-50%);
-    width:8px;height:24px;background:var(--accent);border-radius:4px}
-  .pin{position:absolute;left:50%;top:50%;width:16px;height:16px;border-radius:50%;
-    background:radial-gradient(circle at 35% 35%,#fff,var(--accent));transform:translate(-50%,-50%);
-    box-shadow:0 2px 4px rgba(0,0,0,.4)}
-  .digital{margin-top:26px;color:#fff;font-size:40px;font-weight:300;letter-spacing:3px;
-    text-shadow:0 2px 10px rgba(0,0,0,.4);font-variant-numeric:tabular-nums}
-  .date{color:rgba(255,255,255,.75);font-size:13px;margin-top:6px;letter-spacing:1px}
-  body.night{--bg1:var(--night-bg1);--bg2:var(--night-bg2)}
-  .star{position:absolute;background:#fff;border-radius:50%;opacity:.6;animation:tw 3s infinite ease-in-out}
-  @keyframes tw{0%,100%{opacity:.2}50%{opacity:.9}}
+  .tick::before{content:"";display:block;width:2px;height:7px;margin:0 auto;background:#9a9a9a;border-radius:2px}
+  .tick.major::before{height:13px;width:3px;background:#1a1a1a}
+  .hand{position:absolute;left:50%;top:50%;transform-origin:50% 100%;border-radius:6px;will-change:transform}
+  .h-hour{width:6px;height:78px;background:linear-gradient(#333,#111);
+    transform:translate(-50%,-100%) rotate(0deg);
+    box-shadow:1px 1px 2px rgba(0,0,0,.3)}
+  .h-min{width:4px;height:108px;background:linear-gradient(#444,#222);
+    transform:translate(-50%,-100%) rotate(0deg);box-shadow:1px 1px 2px rgba(0,0,0,.25)}
+  .h-sec{width:2px;height:120px;background:linear-gradient(#ff6b4a,#ff3b1f);
+    transform:translate(-50%,-83%) rotate(0deg);
+    transition:transform .14s cubic-bezier(.4,2.4,.55,1)}
+  .h-sec::after{content:"";position:absolute;left:50%;bottom:-22px;transform:translateX(-50%);
+    width:9px;height:28px;background:linear-gradient(#ff6b4a,#ff3b1f);border-radius:4px}
+  .center{position:absolute;left:50%;top:50%;width:42px;height:42px;border-radius:50%;
+    transform:translate(-50%,-50%);
+    background:radial-gradient(circle at 35% 30%,#fff 0%,#ffd6cd 18%,#1a1a1a 22%,#0a0a0a 100%);
+    box-shadow:0 2px 6px rgba(0,0,0,.4),inset 0 0 0 1px rgba(255,255,255,.2)}
+  .digital{position:relative;z-index:2;margin-top:26px;display:flex;align-items:baseline;gap:12px}
+  .time{font-size:42px;font-weight:200;letter-spacing:3px;font-variant-numeric:tabular-nums;
+    text-shadow:0 2px 14px rgba(0,0,0,.4)}
+  .sec{font-size:22px;font-weight:400;color:#ff6b4a;font-variant-numeric:tabular-nums}
+  .date{position:relative;z-index:2;color:rgba(255,255,255,.7);font-size:12px;
+    margin-top:6px;letter-spacing:2px}
 </style>
 </head>
-<body class="day">
+<body>
+  <div class="sky" id="sky"></div>
+  <div class="stars" id="stars"></div>
   <div class="meta" id="phase">白天 · DAY</div>
   <div class="clock">
+    <div class="bezel-nums" id="nums"></div>
     <div id="ticks"></div>
     <div class="hand h-hour" id="hour"></div>
     <div class="hand h-min" id="min"></div>
     <div class="hand h-sec" id="sec"></div>
-    <div class="pin"></div>
+    <div class="center"></div>
+    <div class="glass"></div>
   </div>
-  <div class="digital" id="time">00:00:00</div>
+  <div class="digital"><span class="time" id="time">00:00</span><span class="sec" id="secs">00</span></div>
   <div class="date" id="date">—</div>
 <script>
-  const ticks=document.getElementById('ticks');
-  for(let i=0;i<60;i++){
-    const t=document.createElement('div');
+  const ticks=document.getElementById('ticks'),nums=document.getElementById('nums');
+  for(let i=0;i<60;i++){const t=document.createElement('div');
     t.className='tick'+(i%5===0?' major':'');
-    t.style.transform=`translate(-50%,-100%) rotate(${i*6}deg)`;
-    ticks.appendChild(t);
-  }
-  const elH=document.getElementById('hour'),elM=document.getElementById('min'),
-    elS=document.getElementById('sec'),elT=document.getElementById('time'),
-    elD=document.getElementById('date'),elP=document.getElementById('phase'),body=document.body;
-  function pad(n){return String(n).padStart(2,'0')}
-  const wdays=['周日','周一','周二','周三','周四','周五','周六'];
-  function tick(){
-    const d=new Date(),h=d.getHours(),m=d.getMinutes(),s=d.getSeconds(),ms=d.getMilliseconds();
+    t.style.transform=`translate(-50%,-100%) rotate(${i*6}deg)`;ticks.appendChild(t)}
+  // hour numerals
+  for(let h=1;h<=12;h++){const n=document.createElement('div');n.className='n';n.textContent=h;
+    const ang=(h/12)*Math.PI*2-Math.PI/2,r=116;
+    n.style.left=`calc(50% + ${Math.cos(ang)*r}px)`;n.style.top=`calc(50% + ${Math.sin(ang)*r}px)`;
+    n.style.transform='translate(-50%,-50%)';nums.appendChild(n)}
+  // stars
+  const starsEl=document.getElementById('stars');
+  for(let i=0;i<60;i++){const s=document.createElement('i');const sz=Math.random()*2+.5;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*65}%;animation-delay:${Math.random()*3}s`;
+    starsEl.appendChild(s)}
+  const elH=document.getElementById('hour'),elM=document.getElementById('min'),elS=document.getElementById('sec'),
+    elT=document.getElementById('time'),elSs=document.getElementById('secs'),elD=document.getElementById('date'),
+    elP=document.getElementById('phase'),sky=document.getElementById('sky'),body=document.body;
+  const pad=n=>String(n).padStart(2,'0');const wdays=['周日','周一','周二','周三','周四','周五','周六'];
+  function skyFor(h){if(h>=6&&h<9)return'linear-gradient(160deg,#f6b26b,#7eb8ff)'; // sunrise
+    if(h>=9&&h<17)return'linear-gradient(160deg,#3a8fd4,#7ec8ff)'; // day
+    if(h>=17&&h<19)return'linear-gradient(160deg,#ff7e5f,#5a3a8a)'; // sunset
+    return'linear-gradient(160deg,#0b1026,#1d2b50)'} // night
+  function tick(){const d=new Date(),h=d.getHours(),m=d.getMinutes(),s=d.getSeconds(),ms=d.getMilliseconds();
     const sa=(s+ms/1000)*6,ma=(m+s/60)*6,ha=((h%12)+m/60)*30;
-    elS.style.transform=`translate(-50%,-85%) rotate(${sa}deg)`;
+    elS.style.transform=`translate(-50%,-83%) rotate(${sa}deg)`;
     elM.style.transform=`translate(-50%,-100%) rotate(${ma}deg)`;
     elH.style.transform=`translate(-50%,-100%) rotate(${ha}deg)`;
-    elT.textContent=`${pad(h)}:${pad(m)}:${pad(s)}`;
-    elD.textContent=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} · ${wdays[d.getDay()]}`;
-    const night=h<6||h>=18;
+    elT.textContent=`${pad(h)}:${pad(m)}`;elSs.textContent=pad(s);
+    elD.textContent=`${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())} · ${wdays[d.getDay()]}`;
+    const night=h<6||h>=19;
     if(night!==body.classList.contains('night')){
-      body.classList.toggle('night',night);
-      body.classList.toggle('day',!night);
-      elP.textContent=night?'夜晚 · NIGHT':'白天 · DAY';
-    }
-  }
-  function stars(){
-    const night=true;
-    for(let i=0;i<40;i++){
-      const st=document.createElement('div');st.className='star';
-      st.style.left=Math.random()*100+'vw';st.style.top=Math.random()*60+'vh';
-      const sz=Math.random()*2+1;st.style.width=sz+'px';st.style.height=sz+'px';
-      st.style.animationDelay=Math.random()*3+'s';document.body.appendChild(st);
-    }
-  }
-  stars();tick();setInterval(tick,50);
+      body.classList.toggle('night',night);elP.textContent=night?'夜晚 · NIGHT':'白天 · DAY'}
+    sky.style.background=skyFor(h)}
+  tick();setInterval(tick,60);
 </script>
 </body>
 </html>

@@ -163,6 +163,9 @@
 
   <!-- knurled zoom ring (texture) -->
   <ellipse cx="340" cy="225" rx="74" ry="85" fill="url(#lensG)"/>
+  <!-- metallic specular band (top sheen + bottom shadow for cylindrical feel) -->
+  <path d="M266,225 a74,85 0 0 1 148,0" fill="none" stroke="url(#steel)" stroke-width="5" opacity=".4"/>
+  <ellipse cx="340" cy="180" rx="60" ry="20" fill="#fff" opacity=".08"/>
   <g stroke="#000" stroke-width="2" opacity=".7">
     <ellipse cx="340" cy="225" rx="74" ry="85" fill="none"/>
   </g>
@@ -192,17 +195,25 @@
   <!-- glass element -->
   <ellipse cx="340" cy="225" rx="48" ry="56" fill="url(#glassG)"/>
   <ellipse cx="340" cy="225" rx="48" ry="56" fill="url(#innerGlass)"/>
+  <!-- anti-reflective coating color flare (green/violet bloom) -->
+  <ellipse cx="352" cy="245" rx="26" ry="20" fill="#6bff9e" opacity=".14"/>
+  <ellipse cx="328" cy="210" rx="20" ry="16" fill="#b07bff" opacity=".16"/>
+  <ellipse cx="345" cy="200" rx="14" ry="10" fill="#7fb8ff" opacity=".18"/>
   <!-- concentric ring reflections -->
   <ellipse cx="340" cy="225" rx="40" ry="47" fill="none" stroke="#7fc7ff" stroke-width="1" opacity=".25"/>
   <ellipse cx="340" cy="225" rx="30" ry="35" fill="none" stroke="#7fc7ff" stroke-width="1" opacity=".2"/>
   <ellipse cx="340" cy="225" rx="20" ry="23" fill="none" stroke="#aef" stroke-width="1" opacity=".15"/>
-  <!-- aperture blades hint (dark center) -->
+  <!-- aperture blades (hexagonal dark center with blade hints) -->
   <ellipse cx="340" cy="225" rx="14" ry="16" fill="#020406"/>
+  <ellipse cx="340" cy="225" rx="13" ry="15" fill="none" stroke="#0a1418" stroke-width="1" opacity=".8"/>
+  <ellipse cx="340" cy="225" rx="9" ry="10" fill="#010203"/>
   <!-- main highlight reflections (flowing shine) -->
   <ellipse class="shine" cx="318" cy="198" rx="22" ry="13" fill="url(#hi)" transform="rotate(-30 318 198)"/>
   <ellipse cx="360" cy="255" rx="14" ry="7" fill="#fff" opacity=".18" transform="rotate(30 360 255)"/>
   <!-- small bright spec -->
   <ellipse cx="325" cy="205" rx="5" ry="3" fill="#fff" opacity=".85" transform="rotate(-30 325 205)"/>
+  <!-- curved window-shaped reflection across glass -->
+  <path d="M300,205 Q340,188 382,208" fill="none" stroke="#fff" stroke-width="2.5" opacity=".22" stroke-linecap="round"/>
 
   <!-- lens label ring text (curved-ish, custom brand) -->
   <text x="340" y="160" text-anchor="middle" fill="#d8dde3" font-size="8" font-family="Georgia,serif" letter-spacing="3">LUMARON · ZOOM</text>

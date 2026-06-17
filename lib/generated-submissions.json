@@ -650,14 +650,14 @@
     "filename": "index.html",
     "publicPath": "/submissions/cheetah-trophy-run/glm-5.2/index.html",
     "renderKind": "html",
-    "linesTotal": 263,
+    "linesTotal": 298,
     "linesCss": 13,
     "linesJs": 0,
-    "sizeBytes": 13246,
+    "sizeBytes": 14960,
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T03:14:45.246Z"
+    "updatedAt": "2026-06-17T04:11:37.349Z"
   },
   {
     "id": "cheetah-trophy-run:gpt-5.5",
@@ -1466,14 +1466,14 @@
     "filename": "index.html",
     "publicPath": "/submissions/clock/glm-5.2/index.html",
     "renderKind": "html",
-    "linesTotal": 96,
-    "linesCss": 34,
-    "linesJs": 37,
-    "sizeBytes": 5082,
+    "linesTotal": 113,
+    "linesCss": 50,
+    "linesJs": 34,
+    "sizeBytes": 6738,
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T03:10:58.991Z"
+    "updatedAt": "2026-06-17T04:08:17.700Z"
   },
   {
     "id": "clock:gpt-5.3-codex",
@@ -1866,14 +1866,14 @@
     "filename": "index.html",
     "publicPath": "/submissions/dslr-camera/glm-5.2/index.html",
     "renderKind": "html",
-    "linesTotal": 234,
+    "linesTotal": 245,
     "linesCss": 13,
     "linesJs": 9,
-    "sizeBytes": 11940,
+    "sizeBytes": 12864,
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T03:15:40.004Z"
+    "updatedAt": "2026-06-17T04:12:04.985Z"
   },
   {
     "id": "dslr-camera:gpt-5.5",
@@ -2090,14 +2090,14 @@
     "filename": "index.html",
     "publicPath": "/submissions/particle-gravity/glm-5.2/index.html",
     "renderKind": "html",
-    "linesTotal": 102,
-    "linesCss": 14,
-    "linesJs": 61,
-    "sizeBytes": 5632,
+    "linesTotal": 124,
+    "linesCss": 20,
+    "linesJs": 76,
+    "sizeBytes": 6968,
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T03:13:47.500Z"
+    "updatedAt": "2026-06-17T04:07:32.369Z"
   },
   {
     "id": "particle-gravity:gpt-5.5",
@@ -2362,14 +2362,14 @@
     "filename": "index.html",
     "publicPath": "/submissions/recorder/glm-5.2/index.html",
     "renderKind": "html",
-    "linesTotal": 100,
-    "linesCss": 34,
-    "linesJs": 38,
-    "sizeBytes": 5544,
+    "linesTotal": 119,
+    "linesCss": 46,
+    "linesJs": 32,
+    "sizeBytes": 7481,
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T03:11:25.534Z"
+    "updatedAt": "2026-06-17T04:09:15.118Z"
   },
   {
     "id": "recorder:gpt-5.3-codex",
@@ -2906,14 +2906,14 @@
     "filename": "index.html",
     "publicPath": "/submissions/stock-panel/glm-5.2/index.html",
     "renderKind": "html",
-    "linesTotal": 86,
-    "linesCss": 28,
-    "linesJs": 38,
-    "sizeBytes": 5548,
+    "linesTotal": 104,
+    "linesCss": 34,
+    "linesJs": 50,
+    "sizeBytes": 7105,
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T03:12:38.617Z"
+    "updatedAt": "2026-06-17T04:10:25.759Z"
   },
   {
     "id": "stock-panel:gpt-5.3-codex",
@@ -3450,14 +3450,14 @@
     "filename": "index.html",
     "publicPath": "/submissions/weather-card/glm-5.2/index.html",
     "renderKind": "html",
-    "linesTotal": 110,
-    "linesCss": 25,
-    "linesJs": 53,
-    "sizeBytes": 7569,
+    "linesTotal": 128,
+    "linesCss": 33,
+    "linesJs": 59,
+    "sizeBytes": 8873,
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T03:12:12.776Z"
+    "updatedAt": "2026-06-17T04:09:50.914Z"
   },
   {
     "id": "weather-card:gpt-5.3-codex",

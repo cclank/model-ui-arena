@@ -7,27 +7,34 @@
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%;overflow:hidden}
-  body{font-family:-apple-system,sans-serif;background:radial-gradient(ellipse at 50% 50%,#0d1130,#03040d);
-    color:#9fd9ff}
+  body{font-family:-apple-system,sans-serif;background:#03040d;color:#9fd9ff}
   canvas{display:block;position:fixed;inset:0;cursor:crosshair}
-  .hud{position:fixed;top:16px;left:16px;background:rgba(10,15,35,.6);backdrop-filter:blur(8px);
-    border:1px solid rgba(120,200,255,.2);border-radius:14px;padding:12px 16px;font-size:12px;
-    line-height:1.9;z-index:10;min-width:150px}
-  .hud b{color:#7fffd4}.hud .k{color:#6a8}
-  .tip{position:fixed;bottom:16px;left:0;right:0;text-align:center;font-size:12px;color:rgba(159,217,255,.5)}
+  .hud{position:fixed;top:16px;left:16px;background:rgba(8,12,30,.55);backdrop-filter:blur(10px);
+    border:1px solid rgba(127,255,212,.22);border-radius:16px;padding:13px 18px;font-size:12px;
+    line-height:2;z-index:10;min-width:148px;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+  .hud .row{display:flex;justify-content:space-between;gap:14px}
+  .hud b{color:#7fffd4;font-variant-numeric:tabular-nums}.hud .k{color:#5e7a92}
+  .hud .title{color:rgba(255,255,255,.85);font-weight:700;letter-spacing:2px;font-size:11px;
+    margin-bottom:4px;border-bottom:1px solid rgba(127,255,212,.15);padding-bottom:6px}
   .modes{position:fixed;top:16px;right:16px;display:flex;gap:8px;z-index:10}
-  .modes button{background:rgba(10,15,35,.6);border:1px solid rgba(120,200,255,.2);color:#9fd9ff;
-    border-radius:10px;padding:8px 12px;font-size:12px;cursor:pointer;backdrop-filter:blur(8px);transition:.2s}
-  .modes button.on{background:#7fffd4;color:#03040d;font-weight:700}
+  .modes button{background:rgba(8,12,30,.55);border:1px solid rgba(127,255,212,.22);color:#9fd9ff;
+    border-radius:11px;padding:9px 14px;font-size:12px;cursor:pointer;backdrop-filter:blur(10px);
+    transition:.2s;font-weight:600}
+  .modes button:hover{border-color:rgba(127,255,212,.5)}
+  .modes button.on{background:linear-gradient(135deg,#7fffd4,#5ec6ff);color:#03040d;font-weight:700;
+    box-shadow:0 0 18px rgba(127,255,212,.5)}
+  .tip{position:fixed;bottom:16px;left:0;right:0;text-align:center;font-size:11px;
+    color:rgba(159,217,255,.45);letter-spacing:1px}
 </style>
 </head>
 <body>
   <canvas id="c"></canvas>
   <div class="hud">
-    <div><span class="k">粒子</span> <b id="np">0</b></div>
-    <div><span class="k">能量</span> <b id="en">0</b></div>
-    <div><span class="k">FPS</span> <b id="fps">0</b></div>
-    <div><span class="k">模式</span> <b id="md">吸引</b></div>
+    <div class="title">GRAVITY FIELD</div>
+    <div class="row"><span class="k">粒子</span><b id="np">0</b></div>
+    <div class="row"><span class="k">能量</span><b id="en">0</b></div>
+    <div class="row"><span class="k">FPS</span><b id="fps">0</b></div>
+    <div class="row"><span class="k">模式</span><b id="md">吸引</b></div>
   </div>
   <div class="modes">
     <button data-m="attract" class="on">吸引</button>
@@ -36,60 +43,75 @@
   <div class="tip">移动鼠标改变引力场 · 点击爆发冲击波 · 右键切换模式</div>
 <script>
   const cv=document.getElementById('c'),ctx=cv.getContext('2d');
-  let W,H;function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight}resize();addEventListener('resize',resize);
-  let mode='attract';let mouse={x:-9999,y:-9999,active:false};
-  const cx=W/2,cy=H/2;const core={x:W/2,y:H/2,r:18,pulse:0};
+  const $=id=>document.getElementById(id);
+  const DPR=Math.min(devicePixelRatio||1,2);
+  let W,H;function resize(){W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;
+    cv.style.width=W+'px';cv.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0)}resize();
+  addEventListener('resize',resize);
+  let mode='attract';const mouse={x:-9999,y:-9999,active:false};
   const shocks=[];
-  const COL=['#7fffd4','#7ad7ff','#9fd9ff','#a0ffff'];
+  // velocity -> color (cool blue -> hot white/cyan)
+  function vcolor(v){const t=Math.min(1,v/6);
+    // interpolate hue 210->170, lightness 55->80
+    const h=210-t*40,l=55+t*25;return `hsl(${h} 90% ${l}%)`}
   let parts=[];
-  function spawn(n){for(let i=0;i<n;i++){const a=Math.random()*7,r=Math.random()*W*.3+40;
-    parts.push({x:W/2+Math.cos(a)*r,y:H/2+Math.sin(a)*r,vx:0,vy:0,
-      life:1,decay:.0015+Math.random()*.002,c:COL[Math.floor(Math.random()*COL.length)],
-      sz:Math.random()*1.8+.6,trail:[]})}}
-  spawn(180);
-  let last=performance.now(),frames=0,fpsT=last,fpsV=0;
-  function apply(p){
-    // central gravity well
-    let dx=core.x-p.x,dy=core.y-p.y,d2=dx*dx+dy*dy+800,d=Math.sqrt(d2);
-    let f=900/d2*(mode==='attract'?1:-1.4);
-    p.vx+=dx/d*f;p.vy+=dy/d*f;
-    // mouse interaction
-    if(mouse.active){let mx=mouse.x-p.x,my=mouse.y-p.y,md=mx*mx+my*my+400;
-      if(md<90000){let mf=1200/md*(mode==='attract'?1:-1.5);p.vx+=mx/Math.sqrt(md)*mf;p.vy+=my/Math.sqrt(md)*mf}}
-    // shocks
-    for(const s of shocks){let sx=s.x-p.x,sy=s.y-p.y,sd=sx*sx+sy*sy+200,dist=Math.sqrt(sd);
-      if(dist<s.r+80&&dist>s.r-20){p.vx+=sx/dist*4;p.vy+=sy/dist*4}}
-  }
+  function spawn(n){for(let i=0;i<n;i++){const a=Math.random()*7,r=Math.random()*Math.min(W,H)*.32+50;
+    // tangential velocity for orbital motion
+    const sp=2.4+Math.random()*.8;
+    parts.push({x:W/2+Math.cos(a)*r,y:H/2+Math.sin(a)*r,
+      vx:-Math.sin(a)*sp,vy:Math.cos(a)*sp,life:1})}}
+  spawn(220);
+  let frames=0,fpsT=performance.now(),fpsV=0;
+  function apply(p){const dx=W/2-p.x,dy=H/2-p.y,d2=dx*dx+dy*dy+900,d=Math.sqrt(d2);
+    const f=1400/d2*(mode==='attract'?1:-1.4);p.vx+=dx/d*f;p.vy+=dy/d*f;
+    if(mouse.active){const mx=mouse.x-p.x,my=mouse.y-p.y,md=mx*mx+my*my+500;
+      if(md<110000){const mf=1800/md*(mode==='attract'?1:-1.6);
+        const dm=Math.sqrt(md);p.vx+=mx/dm*mf;p.vy+=my/dm*mf}}
+    for(const s of shocks){const sx=s.x-p.x,sy=s.y-p.y,sd=sx*sx+sy*sy+300,dm=Math.sqrt(sd);
+      if(dm<s.r+70&&dm>s.r-25){p.vx+=sx/dm*3.5;p.vy+=sy/dm*3.5}}}
+  let corePulse=0;
   function loop(now){frames++;if(now-fpsT>500){fpsV=Math.round(frames*1000/(now-fpsT));frames=0;fpsT=now}
-    ctx.fillStyle='rgba(3,4,13,.22)';ctx.globalCompositeOperation='source-over';ctx.fillRect(0,0,W,H);
+    // soft fade for trailing glow
+    ctx.globalCompositeOperation='source-over';ctx.fillStyle='rgba(3,4,13,.18)';ctx.fillRect(0,0,W,H);
     ctx.globalCompositeOperation='lighter';
-    core.pulse+=.05;const cr=core.r+Math.sin(core.pulse)*3;
-    // draw core
-    const g=ctx.createRadialGradient(core.x,core.y,0,core.x,core.y,cr*4);
-    g.addColorStop(0,'rgba(255,255,255,0.9)');g.addColorStop(.3,'rgba(127,255,212,0.6)');g.addColorStop(1,'rgba(127,255,212,0)');
-    ctx.fillStyle=g;ctx.beginPath();ctx.arc(core.x,core.y,cr*4,0,7);ctx.fill();
-    let energy=0;core.x=W/2;core.y=H/2;
+    corePulse+=.04;const cx=W/2,cy=H/2;
+    // accretion disk rings
+    for(let k=0;k<3;k++){const rr=44+k*22+Math.sin(corePulse+k)*4;
+      ctx.globalAlpha=.12-k*.03;ctx.strokeStyle='#7fffd4';ctx.lineWidth=1;
+      ctx.beginPath();ctx.arc(cx,cy,rr,0,7);ctx.stroke()}
+    // dramatic core glow
+    const cr=20+Math.sin(corePulse)*3;
+    let g=ctx.createRadialGradient(cx,cy,0,cx,cy,cr*5);
+    g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.18,'rgba(190,255,240,.85)');
+    g.addColorStop(.45,'rgba(127,255,212,.4)');g.addColorStop(1,'rgba(127,255,212,0)');
+    ctx.globalAlpha=1;ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,cr*5,0,7);ctx.fill();
+    // bright nucleus
+    g=ctx.createRadialGradient(cx,cy,0,cx,cy,cr);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(1,'rgba(190,255,240,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,cr,0,7);ctx.fill();
+    let energy=0;
     for(let i=parts.length-1;i>=0;i--){const p=parts[i];apply(p);
-      p.vx*=.985;p.vy*=.985;const sp=Math.sqrt(p.vx*p.vx+p.vy*p.vy);
-      energy+=sp;p.x+=p.vx;p.y+=p.vy;p.life-=p.decay;
-      p.trail.push(p.x,p.y);if(p.trail.length>10)p.trail.shift();
-      // wrap
-      if(p.x<0)p.x+=W;if(p.x>W)p.x-=W;if(p.y<0)p.y+=H;if(p.y>H)p.y-=H;
-      ctx.globalAlpha=p.life;
-      ctx.strokeStyle=p.c;ctx.globalAlpha=p.life*.3;ctx.beginPath();ctx.moveTo(p.trail[0],p.trail[1]);
-      for(let j=2;j<p.trail.length;j+=2)ctx.lineTo(p.trail[j],p.trail[j+1]);ctx.stroke();
-      ctx.globalAlpha=p.life;ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,7);ctx.fill();
+      p.vx*=.996;p.vy*=.996;const sp=Math.hypot(p.vx,p.vy);energy+=sp;
+      p.x+=p.vx;p.y+=p.vy;p.life-=.0008;
+      // wrap toroidally
+      if(p.x<-20)p.x+=W+40;if(p.x>W+20)p.x-=W+40;if(p.y<-20)p.y+=H+40;if(p.y>H+20)p.y-=H+40;
+      const col=vcolor(sp);
+      ctx.globalAlpha=Math.min(1,p.life);
+      // additive glow head
+      ctx.fillStyle=col;ctx.beginPath();ctx.arc(p.x,p.y,1.4+sp*.25,0,7);ctx.fill();
+      ctx.globalAlpha=Math.min(.5,p.life);ctx.beginPath();ctx.arc(p.x,p.y,3+sp,0,7);ctx.fill();
       if(p.life<=0)parts.splice(i,1)}
-    // shocks
-    for(let i=shocks.length-1;i>=0;i--){const s=shocks[i];s.r+=6;s.life-=.02;
-      ctx.globalAlpha=s.life;ctx.strokeStyle='#7fffd4';ctx.lineWidth=2;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.stroke();
+    // shockwaves
+    for(let i=shocks.length-1;i>=0;i--){const s=shocks[i];s.r+=7;s.life-=.018;
+      ctx.globalAlpha=s.life*.8;ctx.lineWidth=2.5;ctx.strokeStyle='#bfffec';
+      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.stroke();
+      ctx.globalAlpha=s.life*.3;ctx.lineWidth=10;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.stroke();
       if(s.life<=0)shocks.splice(i,1)}
     ctx.globalAlpha=1;
-    if(parts.length<180)spawn(2);
+    if(parts.length<220)spawn(2);
     $('np').textContent=parts.length;$('en').textContent=Math.round(energy);$('fps').textContent=fpsV;
     requestAnimationFrame(loop)}
-  function $(id){return document.getElementById(id)}
   addEventListener('pointermove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.active=true});
+  addEventListener('pointerleave',()=>mouse.active=false);
   addEventListener('pointerdown',e=>{if(e.button===2)return;shocks.push({x:e.clientX,y:e.clientY,r:10,life:1})});
   addEventListener('contextmenu',e=>{e.preventDefault();setMode(mode==='attract'?'repel':'attract')});
   document.querySelectorAll('.modes button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
