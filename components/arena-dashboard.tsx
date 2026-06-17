@@ -115,19 +115,12 @@ export function ArenaDashboard() {
       return [];
     }
 
-    const latestByModel = new Map<string, number>();
-    for (const item of payload.submissions) {
-      const time = new Date(item.updatedAt).getTime();
-      const prev = latestByModel.get(item.model) ?? 0;
-      if (time > prev) {
-        latestByModel.set(item.model, time);
-      }
-    }
-
-    return [...latestByModel.keys()].sort((a, b) => {
-      const diff = (latestByModel.get(b) ?? 0) - (latestByModel.get(a) ?? 0);
-      return diff !== 0 ? diff : a.localeCompare(b);
-    });
+    // Use a stable, deterministic order (alphabetical by model name). Sorting by
+    // file mtime was fragile — git checkout / pull / cross-machine mtimes shift,
+    // making the card order jump around.
+    return [...new Set(payload.submissions.map((item) => item.model))].sort((a, b) =>
+      a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" })
+    );
   }, [payload]);
 
   const filtered = useMemo(() => {
@@ -137,7 +130,9 @@ export function ArenaDashboard() {
 
     return payload.submissions
       .filter((item) => item.theme === activeTheme && selectedModels.includes(item.model))
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+      .sort((a, b) =>
+        a.model.localeCompare(b.model, undefined, { numeric: true, sensitivity: "base" })
+      );
   }, [activeTheme, payload, selectedModels]);
 
   const selectedModelSet = useMemo(() => new Set(selectedModels), [selectedModels]);
