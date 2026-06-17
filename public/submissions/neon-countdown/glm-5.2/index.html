@@ -28,7 +28,8 @@
   .scan{position:fixed;inset:0;pointer-events:none;background:
     repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,255,255,.02) 4px);z-index:5}
   .flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:20}
-  #bursts{position:fixed;inset:0;pointer-events:none;z-index:10}
+  #bursts{position:fixed;inset:0;pointer-events:none;z-index:2}
+  #wrap{position:relative;z-index:15}
 </style>
 </head>
 <body>
@@ -74,12 +75,14 @@
   function fireworks(){const cx=BW/2,cy=BH/2;const pals=[['#0ff','#6ff5'],['#ff5af0','#ff8aff'],['#fff','#ffe55a']];
     for(let k=0;k<3;k++)setTimeout(()=>{const pal=pals[k];for(let i=0;i<60;i++){const a=Math.random()*7,r=Math.random()*7+1;
       parts.push({x:cx,y:cy,vx:Math.cos(a)*r,vy:Math.sin(a)*r,life:1,c:pal[i%2],sz:Math.random()*3+1})}},k*200)}
-  function bloop(){bx.globalCompositeOperation='source-over';bx.fillStyle='rgba(7,3,24,.15)';bx.fillRect(0,0,BW,BH);
-    bx.globalCompositeOperation='lighter';
-    for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.vx*=.98;p.vy*=.98;p.vy+=.04;p.x+=p.vx;p.y+=p.vy;p.life-=.012;
-      bx.globalAlpha=p.life;bx.fillStyle=p.c;bx.beginPath();bx.arc(p.x,p.y,p.sz,0,7);bx.fill();
-      if(p.life<=0)parts.splice(i,1)}
-    bx.globalAlpha=1;requestAnimationFrame(bloop)}bloop();
+  function bloop(){
+    if(parts.length>0){bx.globalCompositeOperation='source-over';bx.fillStyle='rgba(7,3,24,.15)';bx.fillRect(0,0,BW,BH);
+      bx.globalCompositeOperation='lighter';
+      for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.vx*=.98;p.vy*=.98;p.vy+=.04;p.x+=p.vx;p.y+=p.vy;p.life-=.012;
+        bx.globalAlpha=p.life;bx.fillStyle=p.c;bx.beginPath();bx.arc(p.x,p.y,p.sz,0,7);bx.fill();
+        if(p.life<=0)parts.splice(i,1)}
+      bx.globalAlpha=1}
+    requestAnimationFrame(bloop)}bloop();
   $('restart').onclick=start;start();
 </script>
 </body>
