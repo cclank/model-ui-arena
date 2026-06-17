@@ -37,13 +37,27 @@ function Badge({ sub }: { sub: Submission }) {
 const FIT_MIN = 460;
 const FIT_MAX = 1600;
 
-function CompareColumn({ sub, model, theme }: { sub?: Submission; model: string; theme: string }) {
+function CompareColumn({
+  sub,
+  model,
+  theme,
+  slot,
+  onMeasure,
+  targetHeight,
+}: {
+  sub?: Submission;
+  model: string;
+  theme: string;
+  slot: "a" | "b";
+  onMeasure: (slot: "a" | "b", h: number) => void;
+  targetHeight?: number;
+}) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Auto-fit iframe height to its content's natural height so taller pages
-  // (weather card, stock panel, posters, ...) are fully visible instead of
-  // clipped at a fixed height.
-  const fit = () => {
+  // Measure the content's natural height so we can (a) reveal pages that
+  // would be clipped at a fixed height and (b) equalize the two columns to
+  // the taller one for balanced side-by-side comparison.
+  const measure = () => {
     const f = iframeRef.current;
     if (!f) return;
     try {
@@ -51,11 +65,8 @@ function CompareColumn({ sub, model, theme }: { sub?: Submission; model: string;
       if (!doc || doc.readyState !== "complete") return;
       // Break the circular height dependency that traps full-viewport pages:
       // `html,body{height:100%|100vh}` makes scrollHeight report the iframe's
-      // own height instead of real content, so we'd never grow. Setting
-      // height:auto (and a min-height:100vh to preserve backgrounds / vertical
-      // centering) lets the body expand to its true content while full-viewport
-      // canvas pages keep filling the frame. No runaway: vh tracks the iframe,
-      // so the height settles at the content height.
+      // own height instead of real content, so we'd never grow. height:auto
+      // lets the body expand; min-height:100vh preserves backgrounds / centering.
       const override = doc.getElementById("__arena_fit");
       if (!override) {
         const st = doc.createElement("style");
@@ -68,24 +79,36 @@ function CompareColumn({ sub, model, theme }: { sub?: Submission; model: string;
         doc.body?.scrollHeight ?? 0,
         doc.documentElement?.scrollHeight ?? 0
       );
-      const next = Math.min(Math.max(h, FIT_MIN), FIT_MAX);
-      f.style.height = next + "px";
+      onMeasure(slot, Math.min(Math.max(h, FIT_MIN), FIT_MAX));
     } catch {
       /* cross-origin (should not happen for same-origin submissions) */
     }
   };
 
-  // re-fit a few times so async layout / web fonts / animations settle.
+  const applyHeight = (h?: number) => {
+    const f = iframeRef.current;
+    if (f && h) f.style.height = h + "px";
+  };
+
+  // measure on load + a few retries for async layout; re-measure on resize.
   useEffect(() => {
     if (!sub || sub.renderKind !== "html") return;
-    const timers = [200, 600, 1200, 2000, 3500].map((d) => window.setTimeout(fit, d));
-    const onResize = () => fit();
+    const timers = [200, 600, 1200, 2000, 3500].map((d) =>
+      window.setTimeout(measure, d)
+    );
+    const onResize = () => measure();
     window.addEventListener("resize", onResize);
     return () => {
       timers.forEach((t) => window.clearTimeout(t));
       window.removeEventListener("resize", onResize);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sub, theme, model]);
+
+  // whenever the (equalized) target height changes, apply it.
+  useEffect(() => {
+    applyHeight(targetHeight);
+  }, [targetHeight]);
 
   return (
     <article className="panel card compare-col">
@@ -113,7 +136,7 @@ function CompareColumn({ sub, model, theme }: { sub?: Submission; model: string;
               title={`${theme}-${model}`}
               sandbox="allow-scripts allow-same-origin"
               loading="lazy"
-              onLoad={fit}
+              onLoad={measure}
               scrolling="auto"
             />
           ) : (
@@ -135,6 +158,16 @@ export function CompareView() {
   const sp = useSearchParams();
   const [payload, setPayload] = useState<ApiPayload | null>(null);
   const [copied, setCopied] = useState(false);
+  // measured natural height per column, equalized to the taller one so the
+  // two cards line up and full-viewport canvas pages fill the row.
+  const heightsRef = useRef<{ a?: number; b?: number }>({});
+  const [targetHeight, setTargetHeight] = useState<number | undefined>(undefined);
+  const handleMeasure = (slot: "a" | "b", h: number) => {
+    const next = { ...heightsRef.current, [slot]: h };
+    heightsRef.current = next;
+    const max = Math.max(next.a ?? FIT_MIN, next.b ?? FIT_MIN);
+    if (max !== targetHeight) setTargetHeight(max);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -187,6 +220,13 @@ export function CompareView() {
   const lineDiff = subA && subB ? subA.linesTotal - subB.linesTotal : 0;
   const kbA = subA ? Math.round(subA.sizeBytes / 1024) : 0;
   const kbB = subB ? Math.round(subB.sizeBytes / 1024) : 0;
+
+  // reset equalized height when the selection changes so stale measurements
+  // from a different submission don't persist.
+  useEffect(() => {
+    heightsRef.current = {};
+    setTargetHeight(undefined);
+  }, [theme, a, b]);
 
   return (
     <main className="arena-shell">
@@ -242,8 +282,8 @@ export function CompareView() {
       ) : null}
 
       <div className="compare-pair">
-        <CompareColumn sub={subA} model={a} theme={theme} />
-        <CompareColumn sub={subB} model={b} theme={theme} />
+        <CompareColumn sub={subA} model={a} theme={theme} slot="a" onMeasure={handleMeasure} targetHeight={targetHeight} />
+        <CompareColumn sub={subB} model={b} theme={theme} slot="b" onMeasure={handleMeasure} targetHeight={targetHeight} />
       </div>
     </main>
   );
