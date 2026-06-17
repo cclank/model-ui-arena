@@ -216,6 +216,24 @@
     "answerText": "结论：走过去\n\n理由1：距离仅 50 米，步行不到 1 分钟即可到达，开车反而需要启动、倒车、找停车位，总耗时远超步行。\n\n理由2：50 米路程开车几乎无法达到经济时速，冷启动状态下发动机燃烧不充分，既费油又伤车，属于典型短途伤车场景。\n\n理由3：洗车后车是干净的，开去洗车店再开回来，车身可能在路上沾上灰尘或泥水，等于白洗一趟。走过去取车开回来，至少能保证洗完后直接到家。\n\n理由4：步行 50 米顺带活动身体，久坐后起来走走对健康有益，零碳排放，环保且不堵路。\n\n建议：穿双方便的鞋走过去，洗完直接把车开回家，省时省油又护车。"
   },
   {
+    "id": "carwash-decision:glm-5.2",
+    "theme": "carwash-decision",
+    "model": "glm-5.2",
+    "filename": "response.md",
+    "publicPath": "/submissions/carwash-decision/glm-5.2/response.md",
+    "renderKind": "text",
+    "linesTotal": 7,
+    "linesCss": 0,
+    "linesJs": 0,
+    "sizeBytes": 726,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-17T03:15:44.042Z",
+    "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
+    "answerText": "结论：走过去。\n理由1：距离只有 50 米，步行不到 1 分钟即可到达，开车反而更费事——点火、挪车、找车位，时间比走路还长。\n理由2：洗车店就在家门口范围内，车本来就停在小区或门口，没必要专门「开去」再原路折返，徒增行驶里程。\n理由3：短距离频繁启停最伤车也最费油，冷车状态下油耗和排放都偏高，为 50 米发动一次不划算。\n理由4：走路顺带活动身体、不用纠结停车，省心也省钱。\n建议：带上车钥匙和洗车卡，直接步行过去；如果是把车留在店里清洗、人先回家，那就更不该「开到店门口」——直接走过去确认取车时间即可。"
+  },
+  {
     "id": "carwash-decision:gpt-5.3-codex",
     "theme": "carwash-decision",
     "model": "gpt-5.3-codex",
@@ -626,6 +644,22 @@
     "updatedAt": "2026-06-16T02:23:52.807Z"
   },
   {
+    "id": "cheetah-trophy-run:glm-5.2",
+    "theme": "cheetah-trophy-run",
+    "model": "glm-5.2",
+    "filename": "index.html",
+    "publicPath": "/submissions/cheetah-trophy-run/glm-5.2/index.html",
+    "renderKind": "html",
+    "linesTotal": 263,
+    "linesCss": 13,
+    "linesJs": 0,
+    "sizeBytes": 13246,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-17T03:14:45.246Z"
+  },
+  {
     "id": "cheetah-trophy-run:gpt-5.5",
     "theme": "cheetah-trophy-run",
     "model": "gpt-5.5",
@@ -880,6 +914,22 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-05-20T00:00:26.620Z"
+  },
+  {
+    "id": "click-fireworks:glm-5.2",
+    "theme": "click-fireworks",
+    "model": "glm-5.2",
+    "filename": "index.html",
+    "publicPath": "/submissions/click-fireworks/glm-5.2/index.html",
+    "renderKind": "html",
+    "linesTotal": 73,
+    "linesCss": 14,
+    "linesJs": 40,
+    "sizeBytes": 4339,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-17T03:13:01.152Z"
   },
   {
     "id": "click-fireworks:gpt-5.3-codex",
@@ -1410,6 +1460,22 @@
     "updatedAt": "2026-05-20T00:00:26.623Z"
   },
   {
+    "id": "clock:glm-5.2",
+    "theme": "clock",
+    "model": "glm-5.2",
+    "filename": "index.html",
+    "publicPath": "/submissions/clock/glm-5.2/index.html",
+    "renderKind": "html",
+    "linesTotal": 96,
+    "linesCss": 34,
+    "linesJs": 37,
+    "sizeBytes": 5082,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-17T03:10:58.991Z"
+  },
+  {
     "id": "clock:gpt-5.3-codex",
     "theme": "clock",
     "model": "gpt-5.3-codex",
@@ -1794,6 +1860,22 @@
     "updatedAt": "2026-06-16T02:23:52.808Z"
   },
   {
+    "id": "dslr-camera:glm-5.2",
+    "theme": "dslr-camera",
+    "model": "glm-5.2",
+    "filename": "index.html",
+    "publicPath": "/submissions/dslr-camera/glm-5.2/index.html",
+    "renderKind": "html",
+    "linesTotal": 234,
+    "linesCss": 13,
+    "linesJs": 9,
+    "sizeBytes": 11940,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-17T03:15:40.004Z"
+  },
+  {
     "id": "dslr-camera:gpt-5.5",
     "theme": "dslr-camera",
     "model": "gpt-5.5",
@@ -1890,6 +1972,22 @@
     "updatedAt": "2026-06-16T02:23:52.808Z"
   },
   {
+    "id": "neon-countdown:glm-5.2",
+    "theme": "neon-countdown",
+    "model": "glm-5.2",
+    "filename": "index.html",
+    "publicPath": "/submissions/neon-countdown/glm-5.2/index.html",
+    "renderKind": "html",
+    "linesTotal": 87,
+    "linesCss": 24,
+    "linesJs": 31,
+    "sizeBytes": 5226,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-17T03:13:22.133Z"
+  },
+  {
     "id": "neon-countdown:gpt-5.5",
     "theme": "neon-countdown",
     "model": "gpt-5.5",
@@ -1984,6 +2082,22 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-06-16T02:23:52.808Z"
+  },
+  {
+    "id": "particle-gravity:glm-5.2",
+    "theme": "particle-gravity",
+    "model": "glm-5.2",
+    "filename": "index.html",
+    "publicPath": "/submissions/particle-gravity/glm-5.2/index.html",
+    "renderKind": "html",
+    "linesTotal": 102,
+    "linesCss": 14,
+    "linesJs": 61,
+    "sizeBytes": 5632,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-17T03:13:47.500Z"
   },
   {
     "id": "particle-gravity:gpt-5.5",
@@ -2240,6 +2354,22 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-05-20T00:00:26.626Z"
+  },
+  {
+    "id": "recorder:glm-5.2",
+    "theme": "recorder",
+    "model": "glm-5.2",
+    "filename": "index.html",
+    "publicPath": "/submissions/recorder/glm-5.2/index.html",
+    "renderKind": "html",
+    "linesTotal": 100,
+    "linesCss": 34,
+    "linesJs": 38,
+    "sizeBytes": 5544,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-17T03:11:25.534Z"
   },
   {
     "id": "recorder:gpt-5.3-codex",
@@ -2770,6 +2900,22 @@
     "updatedAt": "2026-05-20T00:00:26.628Z"
   },
   {
+    "id": "stock-panel:glm-5.2",
+    "theme": "stock-panel",
+    "model": "glm-5.2",
+    "filename": "index.html",
+    "publicPath": "/submissions/stock-panel/glm-5.2/index.html",
+    "renderKind": "html",
+    "linesTotal": 86,
+    "linesCss": 28,
+    "linesJs": 38,
+    "sizeBytes": 5548,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-17T03:12:38.617Z"
+  },
+  {
     "id": "stock-panel:gpt-5.3-codex",
     "theme": "stock-panel",
     "model": "gpt-5.3-codex",
@@ -3296,6 +3442,22 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-05-20T00:00:26.631Z"
+  },
+  {
+    "id": "weather-card:glm-5.2",
+    "theme": "weather-card",
+    "model": "glm-5.2",
+    "filename": "index.html",
+    "publicPath": "/submissions/weather-card/glm-5.2/index.html",
+    "renderKind": "html",
+    "linesTotal": 110,
+    "linesCss": 25,
+    "linesJs": 53,
+    "sizeBytes": 7569,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-06-17T03:12:12.776Z"
   },
   {
     "id": "weather-card:gpt-5.3-codex",

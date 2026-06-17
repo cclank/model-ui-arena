@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>glm-5.2 · 拟物复刻：单反相机</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at 50% 35%,#5a6068,#2a2e34 70%,#15171b);
+    font-family:-apple-system,sans-serif;padding:16px}
+  .stage{width:100%;max-width:560px;position:relative}
+  svg{width:100%;height:auto;display:block;filter:drop-shadow(0 40px 50px rgba(0,0,0,.55))}
+  .cap{color:#bbb;font-size:12px;letter-spacing:3px;margin-top:6px;opacity:.7}
+  @keyframes shine{0%,100%{opacity:.35}50%{opacity:.9}}
+  .shine{animation:shine 4s ease-in-out infinite}
+  @keyframes turn{0%{transform:rotate(0)}100%{transform:rotate(36deg)}}
+  .dial{transform-origin:center;transform-box:fill-box;animation:turn 6s linear infinite}
+  .hint{position:fixed;bottom:12px;color:rgba(255,255,255,.3);font-size:11px}
+</style>
+</head>
+<body>
+<div class="stage">
+<svg viewBox="0 0 560 440" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- body matte plastic -->
+    <linearGradient id="bodyG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a3f47"/>
+      <stop offset="45%" stop-color="#262a30"/>
+      <stop offset="100%" stop-color="#121418"/>
+    </linearGradient>
+    <linearGradient id="bodyTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#42474f"/>
+      <stop offset="100%" stop-color="#2c3036"/>
+    </linearGradient>
+    <linearGradient id="bodySide" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#15171b"/>
+      <stop offset="60%" stop-color="#2a2e34"/>
+      <stop offset="100%" stop-color="#0d0f12"/>
+    </linearGradient>
+    <!-- grip -->
+    <linearGradient id="gripG" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2b2f36"/><stop offset="100%" stop-color="#0c0e11"/>
+    </linearGradient>
+    <!-- lens barrel metal -->
+    <linearGradient id="lensG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6a6a6a"/><stop offset="40%" stop-color="#2a2a2a"/><stop offset="100%" stop-color="#0e0e0e"/>
+    </linearGradient>
+    <linearGradient id="ringG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d8b24a"/><stop offset="50%" stop-color="#8a6418"/><stop offset="100%" stop-color="#3a2a08"/>
+    </linearGradient>
+    <!-- red ring -->
+    <linearGradient id="redG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ff6a5a"/><stop offset="100%" stop-color="#a01a10"/>
+    </linearGradient>
+    <!-- glass -->
+    <radialGradient id="glassG" cx="38%" cy="32%" r="75%">
+      <stop offset="0%" stop-color="#cfeaff"/>
+      <stop offset="18%" stop-color="#3a7ad0"/>
+      <stop offset="55%" stop-color="#0a2240"/>
+      <stop offset="100%" stop-color="#02060c"/>
+    </radialGradient>
+    <radialGradient id="innerGlass" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1a4a8a" stop-opacity=".9"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="hi" cx="35%" cy="28%" r="40%">
+      <stop offset="0%" stop-color="#fff" stop-opacity=".9"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="floor" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000" stop-opacity=".5"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="tex" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="4" fill="#1c1f24"/>
+      <circle cx="2" cy="2" r="1" fill="#0a0b0d"/>
+    </pattern>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#d8dde3"/><stop offset="50%" stop-color="#9aa0a8"/><stop offset="100%" stop-color="#5a5f66"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ground shadow -->
+  <ellipse cx="300" cy="408" rx="230" ry="26" fill="url(#floor)"/>
+
+  <!-- ===== SIDE OF BODY (right, visible due to 3/4) ===== -->
+  <path d="M360,150 L420,170 L425,300 L360,295 Z" fill="url(#bodySide)"/>
+  <path d="M420,170 L425,300 L432,295 L430,172 Z" fill="#0a0b0d"/>
+
+  <!-- ===== CAMERA BODY (top prism + main slab) ===== -->
+  <!-- prism / pentaprism housing (top viewfinder hump) -->
+  <path d="M250,90 L320,90 L335,150 L240,150 Z" fill="url(#bodyTop)"/>
+  <path d="M240,150 L335,150 L332,156 L243,156 Z" fill="#15171b"/>
+  <path d="M250,90 L320,90 L316,96 L254,96 Z" fill="#4a4f57"/>
+  <!-- hot shoe -->
+  <rect x="262" y="80" width="46" height="12" rx="2" fill="#1a1c20"/>
+  <rect x="266" y="83" width="38" height="6" fill="#3a3f47"/>
+  <rect x="270" y="84" width="30" height="4" fill="#0c0d10"/>
+
+  <!-- main body slab -->
+  <path d="M150,150 L360,150 L365,300 L150,300 Z" fill="url(#bodyG)"/>
+  <!-- top edge highlight -->
+  <path d="M150,150 L360,150 L358,156 L152,156 Z" fill="#4a4f57"/>
+
+  <!-- grip (left, with rubber texture) -->
+  <path d="M150,150 L195,150 L195,300 L150,300 Z" fill="url(#gripG)"/>
+  <rect x="152" y="158" width="40" height="135" fill="url(#tex)" opacity=".9"/>
+  <path d="M195,150 L200,156 L200,296 L195,300 Z" fill="#0a0b0d"/>
+
+  <!-- shutter button -->
+  <circle cx="178" cy="138" r="13" fill="url(#steel)"/>
+  <circle cx="178" cy="138" r="9" fill="#1a1c20"/>
+  <circle cx="178" cy="138" r="6" fill="#3a3f47"/>
+  <ellipse cx="175" cy="135" rx="3" ry="2" fill="#fff" opacity=".5"/>
+  <!-- shutter collar ring -->
+  <ellipse cx="178" cy="138" rx="14" ry="6" fill="none" stroke="#7fc7ff" stroke-width="1.5" opacity=".6"/>
+
+  <!-- mode dial -->
+  <g class="dial">
+    <circle cx="300" cy="120" r="26" fill="url(#bodyTop)"/>
+    <circle cx="300" cy="120" r="22" fill="url(#steel)"/>
+    <circle cx="300" cy="120" r="17" fill="#2a2e34"/>
+    <!-- tick marks -->
+    <g stroke="#cfd4da" stroke-width="1.6">
+      <line x1="300" y1="105" x2="300" y2="100"/><line x1="315" y1="120" x2="320" y2="120"/>
+      <line x1="300" y1="135" x2="300" y2="140"/><line x1="285" y1="120" x2="280" y2="120"/>
+      <line x1="311" y1="109" x2="314" y2="106"/><line x1="311" y1="131" x2="314" y2="134"/>
+      <line x1="289" y1="131" x2="286" y2="134"/><line x1="289" y1="109" x2="286" y2="106"/>
+    </g>
+    <circle cx="300" cy="100" r="2.5" fill="#ff5a3c"/>
+  </g>
+  <!-- mode label letters -->
+  <g fill="#aab0b8" font-size="6" font-family="monospace" text-anchor="middle">
+    <text x="300" y="111">P</text><text x="312" y="124">A</text><text x="300" y="137">S</text><text x="288" y="124">M</text>
+  </g>
+
+  <!-- front command dial -->
+  <circle cx="330" cy="120" r="10" fill="#2c3036"/>
+  <circle cx="330" cy="120" r="7" fill="none" stroke="#5a5f66" stroke-width="2"/>
+
+  <!-- body brand plate (custom, non-real) -->
+  <rect x="210" y="200" width="70" height="20" rx="3" fill="#1a1c20"/>
+  <text x="245" y="214" text-anchor="middle" fill="#d8b24a" font-size="13" font-weight="bold" font-family="Georgia,serif" letter-spacing="2">LUMA</text>
+  <text x="245" y="235" text-anchor="middle" fill="#7a8088" font-size="7" font-family="monospace" letter-spacing="1">DSLR-X7 · 24.2MP</text>
+
+  <!-- red accent stripe on body -->
+  <rect x="210" y="180" width="70" height="3" fill="url(#redG)" opacity=".8"/>
+
+  <!-- small buttons / dots -->
+  <circle cx="330" cy="200" r="4" fill="#1a1c20"/><circle cx="330" cy="200" r="2" fill="#3a3f47"/>
+  <circle cx="330" cy="215" r="4" fill="#1a1c20"/><circle cx="330" cy="215" r="2" fill="#3a3f47"/>
+  <circle cx="330" cy="230" r="4" fill="#1a1c20"/><circle cx="330" cy="230" r="2" fill="#3a3f47"/>
+
+  <!-- ===== LENS (front group, elliptical due to 3/4 view) ===== -->
+  <!-- lens mount shadow on body -->
+  <ellipse cx="340" cy="225" rx="86" ry="100" fill="#0a0b0d" opacity=".5"/>
+
+  <!-- outer barrel ring (gold) -->
+  <ellipse cx="340" cy="225" rx="80" ry="92" fill="url(#ringG)"/>
+  <ellipse cx="340" cy="225" rx="80" ry="92" fill="none" stroke="#3a2a08" stroke-width="2"/>
+
+  <!-- knurled zoom ring (texture) -->
+  <ellipse cx="340" cy="225" rx="74" ry="85" fill="url(#lensG)"/>
+  <g stroke="#000" stroke-width="2" opacity=".7">
+    <ellipse cx="340" cy="225" rx="74" ry="85" fill="none"/>
+  </g>
+  <!-- knurling ticks -->
+  <g stroke="#0a0a0a" stroke-width="1.5">
+    <!-- generate radial tick ring -->
+    <g id="knurl"></g>
+  </g>
+  <!-- focus distance numbers on zoom ring -->
+  <g fill="#d8b24a" font-size="6" font-family="monospace" text-anchor="middle">
+    <text x="340" y="146">24</text><text x="420" y="225" transform="rotate(90 420 225)">70</text>
+    <text x="340" y="308">105</text><text x="262" y="225" transform="rotate(-90 262 225)">35</text>
+  </g>
+  <!-- f-number text on ring -->
+  <text x="340" y="325" text-anchor="middle" fill="#e8c95a" font-size="7" font-family="monospace">f/2.8-4.5</text>
+
+  <!-- gold/red decorative ring -->
+  <ellipse cx="340" cy="225" rx="68" ry="78" fill="url(#lensG)"/>
+  <ellipse cx="340" cy="225" rx="68" ry="78" fill="none" stroke="#3a2a08" stroke-width="1.5"/>
+  <ellipse cx="340" cy="225" rx="64" ry="73" fill="none" stroke="url(#redG)" stroke-width="3"/>
+
+  <!-- front element bezel -->
+  <ellipse cx="340" cy="225" rx="58" ry="66" fill="#0a0c10"/>
+  <ellipse cx="340" cy="225" rx="56" ry="64" fill="url(#lensG)"/>
+  <ellipse cx="340" cy="225" rx="52" ry="60" fill="#05070a"/>
+
+  <!-- glass element -->
+  <ellipse cx="340" cy="225" rx="48" ry="56" fill="url(#glassG)"/>
+  <ellipse cx="340" cy="225" rx="48" ry="56" fill="url(#innerGlass)"/>
+  <!-- concentric ring reflections -->
+  <ellipse cx="340" cy="225" rx="40" ry="47" fill="none" stroke="#7fc7ff" stroke-width="1" opacity=".25"/>
+  <ellipse cx="340" cy="225" rx="30" ry="35" fill="none" stroke="#7fc7ff" stroke-width="1" opacity=".2"/>
+  <ellipse cx="340" cy="225" rx="20" ry="23" fill="none" stroke="#aef" stroke-width="1" opacity=".15"/>
+  <!-- aperture blades hint (dark center) -->
+  <ellipse cx="340" cy="225" rx="14" ry="16" fill="#020406"/>
+  <!-- main highlight reflections (flowing shine) -->
+  <ellipse class="shine" cx="318" cy="198" rx="22" ry="13" fill="url(#hi)" transform="rotate(-30 318 198)"/>
+  <ellipse cx="360" cy="255" rx="14" ry="7" fill="#fff" opacity=".18" transform="rotate(30 360 255)"/>
+  <!-- small bright spec -->
+  <ellipse cx="325" cy="205" rx="5" ry="3" fill="#fff" opacity=".85" transform="rotate(-30 325 205)"/>
+
+  <!-- lens label ring text (curved-ish, custom brand) -->
+  <text x="340" y="160" text-anchor="middle" fill="#d8dde3" font-size="8" font-family="Georgia,serif" letter-spacing="3">LUMARON · ZOOM</text>
+
+  <!-- strap lugs -->
+  <circle cx="150" cy="155" r="5" fill="#15171b"/><circle cx="150" cy="155" r="2.5" fill="#0a0b0d"/>
+  <circle cx="360" cy="155" r="5" fill="#15171b"/><circle cx="360" cy="155" r="2.5" fill="#0a0b0d"/>
+
+  <!-- subtle ambient occlusion seams -->
+  <path d="M150,300 L195,300 L200,296 L150,296 Z" fill="#000" opacity=".4"/>
+  <path d="M150,150 L195,150 L195,156 L150,156 Z" fill="#000" opacity=".25"/>
+</svg>
+</div>
+<div class="cap">GLM-5.2 · HAND-DRAWN REPLICA · 纯 SVG/CSS 绘制</div>
+<script>
+  // generate knurling tick marks around the zoom ring
+  const knurl=document.getElementById('knurl');if(knurl){
+    const cx=340,cy=225,rx=74,ry=85,N=48;const NS='http://www.w3.org/2000/svg';
+    for(let i=0;i<N;i++){const a=(Math.PI*2*i)/N;
+      const x1=cx+Math.cos(a)*rx,y1=cy+Math.sin(a)*ry;
+      const x2=cx+Math.cos(a)*(rx+4),y2=cy+Math.sin(a)*(ry+4);
+      const l=document.createElementNS(NS,'line');l.setAttribute('x1',x1);l.setAttribute('y1',y1);
+        l.setAttribute('x2',x2);l.setAttribute('y2',y2);l.setAttribute('stroke','#000');
+        l.setAttribute('stroke-width','1.4');l.setAttribute('opacity','.6');knurl.appendChild(l)}}
+</script>
+<div class="hint">无 img / base64 / canvas / emoji · 全部为内联 SVG 与 CSS 形状</div>
+</body>
+</html>

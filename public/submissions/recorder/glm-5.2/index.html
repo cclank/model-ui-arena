@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>glm-5.2 · 录音机</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(160deg,#1b1f3a,#2d1b4e);padding:20px;color:#fff}
+  .card{width:360px;max-width:100%;background:rgba(255,255,255,.06);
+    backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.12);border-radius:28px;
+    padding:34px 28px;box-shadow:0 30px 60px rgba(0,0,0,.5)}
+  .title{text-align:center;font-size:13px;letter-spacing:4px;color:rgba(255,255,255,.6);text-transform:uppercase}
+  .indicator{display:flex;align-items:center;justify-content:center;gap:10px;margin:18px 0 8px}
+  .dot{width:12px;height:12px;border-radius:50%;background:#555;transition:.3s}
+  .dot.live{background:#ff3b30;box-shadow:0 0 14px #ff3b30;animation:pulse 1s infinite}
+  .dot.paused{background:#ffb340}
+  @keyframes pulse{50%{opacity:.4}}
+  .status{font-size:15px;font-weight:600;letter-spacing:1px}
+  .timer{font-size:62px;font-weight:200;text-align:center;margin:14px 0 6px;
+    font-variant-numeric:tabular-nums;text-shadow:0 2px 18px rgba(255,59,48,.3)}
+  .wave{display:flex;align-items:center;justify-content:center;gap:3px;height:70px;margin:18px 0 24px}
+  .wave span{width:4px;height:8px;background:linear-gradient(#ff5e62,#ff9966);border-radius:3px;
+    transition:height .12s ease}
+  .controls{display:flex;gap:14px;justify-content:center}
+  button{border:none;cursor:pointer;border-radius:50%;width:62px;height:62px;font-size:20px;
+    color:#fff;display:flex;align-items:center;justify-content:center;transition:transform .15s,filter .2s;
+    background:rgba(255,255,255,.1)}
+  button:hover{transform:translateY(-3px);filter:brightness(1.15)}
+  button:active{transform:scale(.94)}
+  .rec{background:linear-gradient(135deg,#ff3b30,#ff5e62)}
+  .pause{background:linear-gradient(135deg,#ffb340,#ffd86b);color:#3a2a00}
+  .stop{background:linear-gradient(135deg,#444,#666)}
+  button:disabled{opacity:.3;cursor:not-allowed;transform:none}
+  .summary{margin-top:22px;background:rgba(0,0,0,.25);border-radius:18px;padding:18px;
+    font-size:14px;line-height:1.9;opacity:0;transform:translateY(8px);transition:.4s}
+  .summary.show{opacity:1;transform:none}
+  .summary b{color:#ff9966}
+  .hint{text-align:center;font-size:11px;color:rgba(255,255,255,.35);margin-top:14px}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="title">Voice Recorder</div>
+    <div class="indicator"><span class="dot" id="dot"></span><span class="status" id="status">未开始</span></div>
+    <div class="timer" id="timer">00:00</div>
+    <div class="wave" id="wave"></div>
+    <div class="controls">
+      <button class="rec" id="recBtn" title="开始">●</button>
+      <button class="pause" id="pauseBtn" title="暂停" disabled>❚❚</button>
+      <button class="stop" id="stopBtn" title="停止" disabled>■</button>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div class="hint">点击红圆开始 · 黄圆暂停 · 灰圆停止并回看摘要</div>
+  </div>
+<script>
+  const $=id=>document.getElementById(id);
+  const timer=$('timer'),status=$('status'),dot=$('dot'),summary=$('summary'),
+    recBtn=$('recBtn'),pauseBtn=$('pauseBtn'),stopBtn=$('stopBtn'),wave=$('wave');
+  for(let i=0;i<32;i++)wave.appendChild(document.createElement('span'));
+  const bars=[...wave.children];
+  let state='idle',elapsed=0,startStamp=0,raf,ticking,confirmed=false;
+  const fmt=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  function setState(st){
+    state=st;
+    const map={idle:['未开始',false,false,false],recording:['录制中',true,false,true],
+      paused:['已暂停',false,true,true]};
+    const[m,dot_,pause_,stop_]=map[st];
+    status.textContent=m;
+    dot.className='dot'+(st==='recording'?' live':st==='paused'?' paused':'');
+    recBtn.disabled=st==='recording';
+    pauseBtn.disabled=!pause_;pauseBtn.textContent=st==='paused'?'▶':'❚❚';
+    stopBtn.disabled=!stop_;
+  }
+  function animateBars(){if(state==='recording'){bars.forEach(b=>{
+    b.style.height=(8+Math.random()*60)+'px'})}requestAnimationFrame(animateBars)}
+  function tick(){
+    if(state==='recording'){const s=Math.floor((Date.now()-startStamp)/1000)+elapsed;
+      timer.textContent=fmt(s)}
+  }
+  recBtn.onclick=()=>{setState('recording');startStamp=Date.now();summary.classList.remove('show');
+    confirmed=false;if(!ticking){ticking=true;setInterval(tick,250);animateBars()}};
+  pauseBtn.onclick=()=>{
+    if(state==='recording'){elapsed+=Math.floor((Date.now()-startStamp)/1000);startStamp=0;setState('paused')}
+    else if(state==='paused'){startStamp=Date.now();setState('recording')}
+  };
+  stopBtn.onclick=()=>{
+    if(!confirmed){summary.innerHTML='⚠ 再次点击「停止」确认结束本次录音';summary.classList.add('show');
+      confirmed=true;setTimeout(()=>{if(confirmed)confirmed=false},2500);return}
+    const total=state==='recording'?elapsed+Math.floor((Date.now()-startStamp)/1000):elapsed;
+    setState('idle');elapsed=0;timer.textContent='00:00';bars.forEach(b=>b.style.height='8px');
+    summary.innerHTML=total>0?`✅ 本次录音摘要<br>时长：<b>${fmt(total)}</b><br>状态：<b>已保存</b>`:'本次未录制到内容';
+    summary.classList.add('show');
+  };
+</script>
+</body>
+</html>

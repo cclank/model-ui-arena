@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>glm-5.2 · 点击放烟花</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;cursor:crosshair}
+  body{font-family:-apple-system,sans-serif;
+    background:radial-gradient(ellipse at 50% 120%,#1a2456,#070a1f 60%,#03040d)}
+  canvas{display:block;position:fixed;inset:0}
+  .hint{position:fixed;top:24px;left:0;right:0;text-align:center;color:rgba(255,255,255,.7);
+    font-size:14px;letter-spacing:2px;pointer-events:none;z-index:10;
+    text-shadow:0 2px 8px rgba(0,0,0,.6);animation:fadefade 5s forwards}
+  @keyframes fadefade{0%,60%{opacity:1}100%{opacity:0}}
+  .count{position:fixed;bottom:20px;left:0;right:0;text-align:center;color:rgba(255,255,255,.45);
+    font-size:12px;pointer-events:none;z-index:10}
+  .stars{position:fixed;inset:0;pointer-events:none;z-index:1}
+  .stars i{position:absolute;background:#fff;border-radius:50%;opacity:.5;animation:twinkle 3s infinite}
+  @keyframes twinkle{50%{opacity:.15}}
+</style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+  <canvas id="c"></canvas>
+  <div class="hint">🎆 点击 / 触摸任意位置 · 放烟花</div>
+  <div class="count" id="count">已绽放 0 朵</div>
+<script>
+  const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+  let W,H;function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight}resize();addEventListener('resize',resize);
+  const stars=document.getElementById('stars');
+  for(let i=0;i<80;i++){const s=document.createElement('i');const sz=Math.random()*2+.5;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*70}%;animation-delay:${Math.random()*3}s`;
+    stars.appendChild(s)}
+  const palettes=[['#ff5e62','#ff9966','#ffd86b'],['#7af7ff','#5ec6ff','#a37bff'],['#ff6ec7','#ff99e6','#ffc6ff'],
+    ['#7bff8a','#caff8a','#fff58a'],['#ffba5e','#ff7e5f','#feb47b']];
+  let parts=[],total=0;const countEl=document.getElementById('count');
+  function burst(x,y){const pal=palettes[Math.floor(Math.random()*palettes.length)];
+    const n=70+Math.floor(Math.random()*40);total++;countEl.textContent='已绽放 '+total+' 朵';
+    for(let i=0;i<n;i++){const a=(Math.PI*2*i)/n+Math.random()*.1;const sp=Math.random()*5+2;
+      parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1,decay:.008+Math.random()*.01,
+        color:pal[i%pal.length],r:Math.random()*2+1.2,trail:[]})}
+    // ring flash
+    parts.push({ring:true,x,y,life:1,decay:.05,color:pal[0]});
+  }
+  function emit(x,y){const targetY=y;const startX=x,startY=H;const steps=18;let s=0;
+    const asc=setInterval(()=>{s++;if(s>=steps){clearInterval(asc);burst(x,targetY);return}
+      parts.push({x:startX+(x-startX)*(s/steps),y:startY+(targetY-startY)*(s/steps),vx:0,vy:0,
+        life:.6,decay:.05,color:'#ffd86b',r:1.5,rising:true})},22)}
+  function loop(){ctx.globalCompositeOperation='source-over';ctx.fillStyle='rgba(3,4,13,.22)';
+    ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='lighter';
+    for(let i=parts.length-1;i>=0;i--){const p=parts[i];
+      if(p.ring){p.life-=p.decay;const rad=(1-p.life)*90;ctx.beginPath();ctx.strokeStyle=p.color;
+        ctx.globalAlpha=p.life;ctx.lineWidth=2;ctx.arc(p.x,p.y,rad,0,7);ctx.stroke();
+        if(p.life<=0){parts.splice(i,1)}continue}
+      p.trail.push({x:p.x,y:p.y});if(p.trail.length>6)p.trail.shift();
+      p.vx*=.98;p.vy*=.98;p.vy+=.045;p.x+=p.vx;p.y+=p.vy;p.life-=p.decay;
+      if(p.trail.length>1){ctx.beginPath();ctx.strokeStyle=p.color;ctx.globalAlpha=p.life*.5;ctx.lineWidth=p.r*.6;
+        ctx.moveTo(p.trail[0].x,p.trail[0].y);for(const t of p.trail)ctx.lineTo(t.x,t.y);ctx.stroke()}
+      ctx.globalAlpha=p.life;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();
+      ctx.globalAlpha=p.life*.4;ctx.beginPath();ctx.arc(p.x,p.y,p.r*2.5,0,7);ctx.fill();
+      if(p.life<=0)parts.splice(i,1)}
+    ctx.globalAlpha=1;requestAnimationFrame(loop)}
+  function fire(x,y){const ty=Math.min(y, H-40);const rise=Math.random()<.6;if(rise)emit(x,ty);else burst(x,ty)}
+  addEventListener('pointerdown',e=>{fire(e.clientX,e.clientY)});
+  // auto kickoff after hint
+  setTimeout(()=>{if(total===0){fire(W/2,H*.4)}},900);
+  loop();
+</script>
+</body>
+</html>

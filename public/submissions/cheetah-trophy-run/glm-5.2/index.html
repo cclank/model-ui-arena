@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>glm-5.2 · 猎豹托举大力神杯冲刺</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{display:flex;align-items:center;justify-content:center;
+    background:#0a0a12;padding:10px}
+  .poster{width:100%;max-width:760px;aspect-ratio:4/5;position:relative;border-radius:18px;overflow:hidden;
+    box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  svg{width:100%;height:100%;display:block}
+  @keyframes confetti{0%{transform:translateY(-20px) rotate(0)}100%{transform:translateY(20px) rotate(360deg)}}
+  .conf{animation:confetti 3s linear infinite alternate}
+  @keyframes speedline{0%{opacity:.2}50%{opacity:.9}100%{opacity:.2}}
+  .spd{animation:speedline .6s ease-in-out infinite}
+  @keyframes glow{0%,100%{filter:drop-shadow(0 0 6px #ffd700)}50%{filter:drop-shadow(0 0 18px #ffe85a)}}
+  .trophy{animation:glow 2s ease-in-out infinite}
+</style>
+</head>
+<body>
+<div class="poster">
+<svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="sky" cx="50%" cy="38%" r="75%">
+      <stop offset="0%" stop-color="#1c3b6e"/>
+      <stop offset="50%" stop-color="#0f2247"/>
+      <stop offset="100%" stop-color="#070d1f"/>
+    </radialGradient>
+    <radialGradient id="spot" cx="50%" cy="20%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity=".9"/>
+      <stop offset="40%" stop-color="#ffd966" stop-opacity=".5"/>
+      <stop offset="100%" stop-color="#ffd966" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2e6b2f"/><stop offset="100%" stop-color="#143814"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff2a8"/><stop offset="40%" stop-color="#ffd400"/><stop offset="100%" stop-color="#b8860b"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f3c878"/><stop offset="60%" stop-color="#d99a3f"/><stop offset="100%" stop-color="#9c6320"/>
+    </linearGradient>
+    <linearGradient id="belly" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fbe7c0"/><stop offset="100%" stop-color="#e6c084"/>
+    </linearGradient>
+    <radialGradient id="crowd" cx="50%" cy="0%" r="80%">
+      <stop offset="0%" stop-color="#3a4a7a"/><stop offset="100%" stop-color="#0a1024"/>
+    </radialGradient>
+    <filter id="blur"><feGaussianBlur stdDeviation="3"/></filter>
+  </defs>
+
+  <!-- sky -->
+  <rect width="400" height="500" fill="url(#sky)"/>
+  <rect width="400" height="500" fill="url(#spot)"/>
+
+  <!-- stadium lights -->
+  <g opacity=".95">
+    <circle cx="70" cy="70" r="14" fill="#fff8d6"/>
+    <circle cx="70" cy="70" r="40" fill="#fff8d6" opacity=".15" filter="url(#blur)"/>
+    <circle cx="330" cy="60" r="14" fill="#fff8d6"/>
+    <circle cx="330" cy="60" r="40" fill="#fff8d6" opacity=".15" filter="url(#blur)"/>
+  </g>
+
+  <!-- crowd -->
+  <rect x="0" y="150" width="400" height="120" fill="url(#crowd)"/>
+  <g opacity=".5" fill="#5a6b9a">
+    <circle cx="20" cy="180" r="6"/><circle cx="48" cy="172" r="6"/><circle cx="78" cy="185" r="6"/>
+    <circle cx="110" cy="170" r="6"/><circle cx="140" cy="182" r="6"/><circle cx="172" cy="168" r="6"/>
+    <circle cx="200" cy="178" r="6"/><circle cx="232" cy="170" r="6"/><circle cx="264" cy="183" r="6"/>
+    <circle cx="296" cy="172" r="6"/><circle cx="328" cy="180" r="6"/><circle cx="360" cy="170" r="6"/><circle cx="388" cy="182" r="6"/>
+    <circle cx="35" cy="200" r="6"/><circle cx="92" cy="205" r="6"/><circle cx="155" cy="200" r="6"/>
+    <circle cx="215" cy="205" r="6"/><circle cx="280" cy="200" r="6"/><circle cx="345" cy="205" r="6"/>
+  </g>
+
+  <!-- light beams -->
+  <g opacity=".18">
+    <polygon points="70,70 10,270 130,270" fill="#fff8d6"/>
+    <polygon points="330,60 270,270 390,270" fill="#fff8d6"/>
+  </g>
+
+  <!-- gold confetti -->
+  <g class="conf">
+    <rect x="40" y="120" width="5" height="9" fill="#ffd400" transform="rotate(20 42 124)"/>
+    <rect x="120" y="90" width="4" height="8" fill="#ff6ec7" transform="rotate(-15 122 94)"/>
+    <rect x="200" y="110" width="5" height="9" fill="#ffd400" transform="rotate(40 202 114)"/>
+    <rect x="280" y="95" width="4" height="8" fill="#7af7ff" transform="rotate(-25 282 99)"/>
+    <rect x="350" y="120" width="5" height="9" fill="#ffd400" transform="rotate(15 352 124)"/>
+    <rect x="80" y="150" width="4" height="7" fill="#fff" transform="rotate(30 82 153)"/>
+    <rect x="240" y="140" width="4" height="7" fill="#ff6ec7" transform="rotate(-40 242 143)"/>
+  </g>
+
+  <!-- speed lines (behind cheetah) -->
+  <g class="spd" stroke="#ffffff" stroke-width="2" opacity=".5" stroke-linecap="round">
+    <line x1="30" y1="300" x2="90" y2="300"/>
+    <line x1="20" y1="330" x2="100" y2="330"/>
+    <line x1="40" y1="360" x2="95" y2="360"/>
+    <line x1="25" y1="390" x2="85" y2="390"/>
+    <line x1="45" y1="420" x2="90" y2="420"/>
+  </g>
+
+  <!-- score board -->
+  <g>
+    <rect x="260" y="295" width="125" height="60" rx="8" fill="#0a0f24" stroke="#ffd400" stroke-width="2"/>
+    <rect x="260" y="295" width="125" height="20" fill="#0d4d12"/>
+    <text x="322" y="310" text-anchor="middle" fill="#7fff8a" font-family="monospace" font-size="12" font-weight="bold">FINAL</text>
+    <text x="322" y="330" text-anchor="middle" fill="#fff" font-family="monospace" font-size="22" font-weight="bold">3 : 2</text>
+    <text x="322" y="348" text-anchor="middle" fill="#ffd400" font-family="monospace" font-size="13" font-weight="bold">90+7'</text>
+  </g>
+
+  <!-- grass -->
+  <path d="M0,360 Q200,330 400,360 L400,500 L0,500 Z" fill="url(#grass)"/>
+  <!-- mow stripes -->
+  <g opacity=".15">
+    <path d="M0,380 L400,360 L400,375 L0,395 Z" fill="#000"/>
+    <path d="M0,415 L400,395 L400,410 L0,430 Z" fill="#000"/>
+    <path d="M0,450 L400,430 L400,445 L0,465 Z" fill="#000"/>
+  </g>
+
+  <!-- speed shadow / motion blur body -->
+  <g opacity=".25" filter="url(#blur)">
+    <ellipse cx="175" cy="395" rx="95" ry="34" fill="#d99a3f"/>
+  </g>
+
+  <!-- ============ CHEETAH ============ -->
+  <g>
+    <!-- back legs (far, kicking) -->
+    <g>
+      <!-- far rear leg pushing off -->
+      <path d="M120,410 Q95,395 80,415 Q74,430 90,432 Q110,440 135,425 Z" fill="url(#body)"/>
+      <ellipse cx="82" cy="430" rx="16" ry="8" fill="#9c6320" transform="rotate(-10 82 430)"/>
+      <g fill="#222"><circle cx="76" cy="430" r="3"/><circle cx="84" cy="428" r="3"/><circle cx="92" cy="429" r="3"/></g>
+    </g>
+
+    <!-- tail sweeping back -->
+    <path d="M110,385 Q70,360 40,370 Q35,380 50,388 Q80,395 115,400 Z" fill="url(#body)"/>
+    <ellipse cx="42" cy="375" rx="9" ry="6" fill="#f3c878" transform="rotate(-30 42 375)"/>
+    <!-- tail spots -->
+    <g fill="#3a2410"><circle cx="80" cy="380" r="3"/><circle cx="62" cy="376" r="2.5"/><circle cx="48" cy="374" r="2"/></g>
+
+    <!-- main body (streamlined, leaning forward) -->
+    <path d="M120,400 Q150,355 230,355 Q300,360 320,395 Q300,425 230,430 Q150,432 120,410 Z" fill="url(#body)"/>
+
+    <!-- belly -->
+    <path d="M150,420 Q210,432 300,420 Q310,430 280,438 Q210,445 150,432 Z" fill="url(#belly)"/>
+
+    <!-- spots on body -->
+    <g fill="#3a2410">
+      <circle cx="160" cy="385" r="6"/><circle cx="185" cy="375" r="5.5"/><circle cx="212" cy="380" r="6"/>
+      <circle cx="240" cy="375" r="5.5"/><circle cx="268" cy="382" r="6"/><circle cx="295" cy="390" r="5"/>
+      <circle cx="175" cy="405" r="5"/><circle cx="205" cy="400" r="5.5"/><circle cx="235" cy="402" r="5"/>
+      <circle cx="262" cy="405" r="5"/><circle cx="285" cy="402" r="4.5"/>
+      <circle cx="150" cy="398" r="4.5"/><circle cx="225" cy="392" r="4"/><circle cx="250" cy="388" r="4"/>
+    </g>
+
+    <!-- front leg (near, lifted up holding trophy) -->
+    <g>
+      <path d="M250,360 Q262,300 272,250 Q280,245 290,252 Q285,300 272,358 Z" fill="url(#body)"/>
+      <path d="M270,258 Q282,245 295,255" fill="none" stroke="#9c6320" stroke-width="2"/>
+      <ellipse cx="290" cy="252" rx="14" ry="9" fill="#d99a3f" transform="rotate(20 290 252)"/>
+      <g fill="#222"><circle cx="284" cy="248" r="3"/><circle cx="292" cy="247" r="3"/><circle cx="300" cy="250" r="3"/></g>
+    </g>
+    <!-- other front leg also raised -->
+    <g>
+      <path d="M225,358 Q220,305 210,255 Q200,250 192,258 Q200,305 208,358 Z" fill="#c98a30"/>
+      <ellipse cx="200" cy="255" rx="13" ry="8" fill="#9c6320" transform="rotate(-20 200 255)"/>
+      <g fill="#222"><circle cx="194" cy="252" r="2.5"/><circle cx="201" cy="250" r="2.5"/><circle cx="208" cy="253" r="2.5"/></g>
+    </g>
+
+    <!-- neck + head (forward, leaning) -->
+    <path d="M300,380 Q335,360 345,335 Q355,330 365,345 Q360,375 330,395 Z" fill="url(#body)"/>
+
+    <!-- head -->
+    <g>
+      <ellipse cx="362" cy="330" rx="32" ry="26" fill="url(#body)"/>
+      <!-- ears -->
+      <path d="M345,308 Q340,292 352,296 Q358,304 354,316 Z" fill="#9c6320"/>
+      <path d="M375,308 Q382,294 372,300 Q366,306 370,316 Z" fill="#9c6320"/>
+      <path d="M348,305 Q346,298 350,300 Z" fill="#3a2410"/>
+      <!-- face: smaller head features -->
+      <!-- tear marks (black) -->
+      <path d="M358,322 Q354,340 350,348" stroke="#1a1a1a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <path d="M372,322 Q376,340 380,348" stroke="#1a1a1a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <!-- snout -->
+      <ellipse cx="385" cy="340" rx="14" ry="11" fill="#f3c878"/>
+      <!-- nose -->
+      <ellipse cx="394" cy="336" rx="4.5" ry="3.5" fill="#1a1a1a"/>
+      <!-- mouth -->
+      <path d="M384,345 Q390,348 394,346" stroke="#5a2410" stroke-width="1.5" fill="none"/>
+      <!-- eyes -->
+      <circle cx="370" cy="322" r="3.5" fill="#1a1a1a"/>
+      <circle cx="357" cy="322" r="3.5" fill="#1a1a1a"/>
+      <circle cx="371" cy="321" r="1" fill="#fff"/><circle cx="358" cy="321" r="1" fill="#fff"/>
+      <!-- face spots -->
+      <g fill="#3a2410"><circle cx="350" cy="335" r="2"/><circle cx="365" cy="312" r="2"/><circle cx="378" cy="318" r="2"/></g>
+    </g>
+
+    <!-- near rear leg (driving, grounded) -->
+    <g>
+      <path d="M150,425 Q175,450 195,455 Q205,452 200,440 Q180,425 160,408 Z" fill="url(#body)"/>
+      <ellipse cx="200" cy="450" rx="16" ry="8" fill="#9c6320" transform="rotate(15 200 450)"/>
+      <g fill="#222"><circle cx="194" cy="450" r="3"/><circle cx="202" cy="449" r="3"/><circle cx="210" cy="451" r="3"/></g>
+    </g>
+  </g>
+
+  <!-- ============ TROPHY (held high) ============ -->
+  <g class="trophy">
+    <!-- green base -->
+    <rect x="215" y="225" width="50" height="10" rx="3" fill="#1f7a3a"/>
+    <rect x="220" y="235" width="40" height="8" rx="2" fill="#2b9d4f"/>
+    <!-- stem -->
+    <path d="M232,200 L248,200 L250,235 L230,235 Z" fill="url(#gold)"/>
+    <rect x="228" y="196" width="24" height="8" rx="2" fill="#b8860b"/>
+    <!-- the two-figure silhouette holders (silver) -->
+    <g fill="#dfe6ee">
+      <path d="M236,200 Q236,182 240,176 Q238,168 242,162 L248,162 Q252,168 250,176 Q254,182 254,200 Z"/>
+      <ellipse cx="242" cy="160" r="4"/>
+      <ellipse cx="250" cy="160" r="4"/>
+    </g>
+    <!-- earth globe on top -->
+    <circle cx="245" cy="150" r="16" fill="#2e6fb0"/>
+    <path d="M236,148 Q245,140 254,148 Q245,154 236,152 Z" fill="#3a8a4a"/>
+    <path d="M236,150 Q240,158 244,156" fill="none" stroke="#3a8a4a" stroke-width="1.5"/>
+    <ellipse cx="245" cy="150" rx="16" ry="5" fill="none" stroke="#fff" stroke-width=".8" opacity=".6"/>
+    <!-- cup body (the golden bowl, curved) -->
+    <path d="M205,200 Q200,170 215,162 L275,162 Q290,170 285,200 Q280,210 245,210 Q210,210 205,200 Z" fill="url(#gold)"/>
+    <!-- handles -->
+    <path d="M205,175 Q188,180 192,200 Q198,212 212,205" fill="none" stroke="url(#gold)" stroke-width="7" stroke-linecap="round"/>
+    <path d="M285,175 Q302,180 298,200 Q292,212 278,205" fill="none" stroke="url(#gold)" stroke-width="7" stroke-linecap="round"/>
+    <!-- highlight on cup -->
+    <path d="M218,170 Q215,190 222,202" fill="none" stroke="#fff7d6" stroke-width="2.5" opacity=".8"/>
+    <!-- engraving line -->
+    <line x1="225" y1="190" x2="265" y2="190" stroke="#9c7a10" stroke-width="1" opacity=".6"/>
+  </g>
+
+  <!-- rolling football on grass -->
+  <g>
+    <ellipse cx="60" cy="455" rx="16" ry="16" fill="#fff"/>
+    <ellipse cx="60" cy="455" rx="16" ry="16" fill="none" stroke="#ccc" stroke-width="1"/>
+    <g fill="#1a1a1a"><polygon points="60,443 66,449 64,457 56,457 54,449"/>
+      <path d="M60,439 L60,443 M44,455 L48,455 M72,455 L76,455 M60,469 L60,471"/></g>
+    <ellipse cx="58" cy="465" rx="14" ry="3" fill="#000" opacity=".25"/>
+  </g>
+
+  <!-- grass tufts -->
+  <g stroke="#2e6b2f" stroke-width="2" opacity=".7">
+    <path d="M150,475 L148,465 M155,475 L157,467"/>
+    <path d="M300,478 L298,468 M306,478 L308,470"/>
+  </g>
+
+  <!-- foreground grass blade accents -->
+  <g stroke="#3a8a4a" stroke-width="2" opacity=".9">
+    <path d="M10,485 L14,470 M25,488 L21,470" fill="none"/>
+    <path d="M380,485 L376,470 M392,488 L388,472" fill="none"/>
+  </g>
+
+</svg>
+</div>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>glm-5.2 · 霓虹倒计时</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:-apple-system,sans-serif;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;background:#070318;color:#fff}
+  .stage{position:relative;width:320px;height:320px;display:flex;align-items:center;justify-content:center}
+  .ring{position:absolute;inset:0;transform:rotate(-90deg)}
+  .num{font-size:140px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;
+    text-shadow:0 0 12px #0ff,0 0 28px #0ff8,0 0 60px #6ff5;transition:transform .2s,filter .2s}
+  .label{margin-top:24px;letter-spacing:8px;font-size:13px;color:rgba(255,255,255,.55);text-transform:uppercase}
+  .done{font-size:42px;font-weight:800;letter-spacing:2px;
+    text-shadow:0 0 12px #ff5af0,0 0 40px #ff5af0;animation:pop .6s;display:none}
+  @keyframes pop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+  .pulse{animation:beat 1s infinite}
+  @keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+  .danger .num{animation:shake .5s infinite;text-shadow:0 0 12px #ff2d55,0 0 30px #ff2d55,0 0 70px #ff2d55}
+  @keyframes shake{0%,100%{margin-left:0}25%{margin-left:-6px}75%{margin-left:6px}}
+  .btn{margin-top:36px;padding:14px 40px;border:none;border-radius:40px;font-size:15px;font-weight:700;
+    cursor:pointer;letter-spacing:2px;background:linear-gradient(135deg,#0ff,#ff5af0);color:#070318;
+    box-shadow:0 0 24px #0ff8,0 8px 20px rgba(0,0,0,.5);transition:transform .15s}
+  .btn:hover{transform:translateY(-3px) scale(1.04)}
+  .scan{position:fixed;inset:0;pointer-events:none;background:
+    repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,255,255,.02) 4px);z-index:5}
+  .flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:20}
+  #bursts{position:fixed;inset:0;pointer-events:none;z-index:10}
+</style>
+</head>
+<body>
+  <div class="flash" id="flash"></div>
+  <canvas id="bursts"></canvas>
+  <div class="scan"></div>
+  <div id="wrap">
+    <div class="stage" id="stage">
+      <svg class="ring" viewBox="0 0 320 320">
+        <circle cx="160" cy="160" r="148" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="6"/>
+        <circle id="prog" cx="160" cy="160" r="148" fill="none" stroke="#0ff" stroke-width="6"
+          stroke-linecap="round" stroke-dasharray="930" stroke-dashoffset="0"
+          style="filter:drop-shadow(0 0 8px #0ff)"/>
+      </svg>
+      <div class="num" id="num">10</div>
+      <div class="done" id="done">DONE ✦</div>
+    </div>
+    <div class="label" id="label">COUNTDOWN</div>
+    <button class="btn" id="restart">RESTART</button>
+  </div>
+<script>
+  const $=id=>document.getElementById(id);const TOTAL=10,C=2*Math.PI*148;
+  let count=TOTAL,running=false,timer;
+  $('prog').setAttribute('stroke-dasharray',C);
+  function setNum(n){$('num').textContent=n;$('num').classList.toggle('pulse',n<=3&&!running)}
+  function setProgress(frac){$('prog').setAttribute('stroke-dashoffset',C*(1-frac))}
+  function step(){count--;$('stage').classList.toggle('danger',count<=3);
+    if(count<0){finish();return}setNum(count);setProgress(count/TOTAL);
+    flashScreen(.12)}
+  function flashScreen(intensity){const f=$('flash');f.style.transition='none';f.style.opacity=intensity;
+    requestAnimationFrame(()=>{f.style.transition='opacity .3s';f.style.opacity=0})}
+  function finish(){clearInterval(timer);running=true;
+    $('num').style.display='none';$('done').style.display='block';$('label').textContent='圆满完成';
+    setProgress(0);$('stage').classList.remove('danger');
+    flashScreen(.9);fireworks()}
+  function start(){running=false;count=TOTAL;$('num').style.display='block';
+    $('done').style.display='none';$('label').textContent='COUNTDOWN';
+    $('stage').classList.remove('danger');setNum(TOTAL);setProgress(1);
+    clearInterval(timer);timer=setInterval(step,1000)}
+  // fireworks on finish
+  const bcv=$('bursts'),bx=bcv.getContext('2d');let BW,BH,parts=[];
+  function bresize(){BW=bcv.width=innerWidth;BH=bcv.height=innerHeight}bresize();addEventListener('resize',bresize);
+  function fireworks(){const cx=BW/2,cy=BH/2;const pals=[['#0ff','#6ff5'],['#ff5af0','#ff8aff'],['#fff','#ffe55a']];
+    for(let k=0;k<3;k++)setTimeout(()=>{const pal=pals[k];for(let i=0;i<60;i++){const a=Math.random()*7,r=Math.random()*7+1;
+      parts.push({x:cx,y:cy,vx:Math.cos(a)*r,vy:Math.sin(a)*r,life:1,c:pal[i%2],sz:Math.random()*3+1})}},k*200)}
+  function bloop(){bx.globalCompositeOperation='source-over';bx.fillStyle='rgba(7,3,24,.15)';bx.fillRect(0,0,BW,BH);
+    bx.globalCompositeOperation='lighter';
+    for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.vx*=.98;p.vy*=.98;p.vy+=.04;p.x+=p.vx;p.y+=p.vy;p.life-=.012;
+      bx.globalAlpha=p.life;bx.fillStyle=p.c;bx.beginPath();bx.arc(p.x,p.y,p.sz,0,7);bx.fill();
+      if(p.life<=0)parts.splice(i,1)}
+    bx.globalAlpha=1;requestAnimationFrame(bloop)}bloop();
+  $('restart').onclick=start;start();
+</script>
+</body>
+</html>

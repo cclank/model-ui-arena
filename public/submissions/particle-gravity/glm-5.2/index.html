@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>glm-5.2 · 粒子引力场</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:-apple-system,sans-serif;background:radial-gradient(ellipse at 50% 50%,#0d1130,#03040d);
+    color:#9fd9ff}
+  canvas{display:block;position:fixed;inset:0;cursor:crosshair}
+  .hud{position:fixed;top:16px;left:16px;background:rgba(10,15,35,.6);backdrop-filter:blur(8px);
+    border:1px solid rgba(120,200,255,.2);border-radius:14px;padding:12px 16px;font-size:12px;
+    line-height:1.9;z-index:10;min-width:150px}
+  .hud b{color:#7fffd4}.hud .k{color:#6a8}
+  .tip{position:fixed;bottom:16px;left:0;right:0;text-align:center;font-size:12px;color:rgba(159,217,255,.5)}
+  .modes{position:fixed;top:16px;right:16px;display:flex;gap:8px;z-index:10}
+  .modes button{background:rgba(10,15,35,.6);border:1px solid rgba(120,200,255,.2);color:#9fd9ff;
+    border-radius:10px;padding:8px 12px;font-size:12px;cursor:pointer;backdrop-filter:blur(8px);transition:.2s}
+  .modes button.on{background:#7fffd4;color:#03040d;font-weight:700}
+</style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div class="hud">
+    <div><span class="k">粒子</span> <b id="np">0</b></div>
+    <div><span class="k">能量</span> <b id="en">0</b></div>
+    <div><span class="k">FPS</span> <b id="fps">0</b></div>
+    <div><span class="k">模式</span> <b id="md">吸引</b></div>
+  </div>
+  <div class="modes">
+    <button data-m="attract" class="on">吸引</button>
+    <button data-m="repel">排斥</button>
+  </div>
+  <div class="tip">移动鼠标改变引力场 · 点击爆发冲击波 · 右键切换模式</div>
+<script>
+  const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+  let W,H;function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight}resize();addEventListener('resize',resize);
+  let mode='attract';let mouse={x:-9999,y:-9999,active:false};
+  const cx=W/2,cy=H/2;const core={x:W/2,y:H/2,r:18,pulse:0};
+  const shocks=[];
+  const COL=['#7fffd4','#7ad7ff','#9fd9ff','#a0ffff'];
+  let parts=[];
+  function spawn(n){for(let i=0;i<n;i++){const a=Math.random()*7,r=Math.random()*W*.3+40;
+    parts.push({x:W/2+Math.cos(a)*r,y:H/2+Math.sin(a)*r,vx:0,vy:0,
+      life:1,decay:.0015+Math.random()*.002,c:COL[Math.floor(Math.random()*COL.length)],
+      sz:Math.random()*1.8+.6,trail:[]})}}
+  spawn(180);
+  let last=performance.now(),frames=0,fpsT=last,fpsV=0;
+  function apply(p){
+    // central gravity well
+    let dx=core.x-p.x,dy=core.y-p.y,d2=dx*dx+dy*dy+800,d=Math.sqrt(d2);
+    let f=900/d2*(mode==='attract'?1:-1.4);
+    p.vx+=dx/d*f;p.vy+=dy/d*f;
+    // mouse interaction
+    if(mouse.active){let mx=mouse.x-p.x,my=mouse.y-p.y,md=mx*mx+my*my+400;
+      if(md<90000){let mf=1200/md*(mode==='attract'?1:-1.5);p.vx+=mx/Math.sqrt(md)*mf;p.vy+=my/Math.sqrt(md)*mf}}
+    // shocks
+    for(const s of shocks){let sx=s.x-p.x,sy=s.y-p.y,sd=sx*sx+sy*sy+200,dist=Math.sqrt(sd);
+      if(dist<s.r+80&&dist>s.r-20){p.vx+=sx/dist*4;p.vy+=sy/dist*4}}
+  }
+  function loop(now){frames++;if(now-fpsT>500){fpsV=Math.round(frames*1000/(now-fpsT));frames=0;fpsT=now}
+    ctx.fillStyle='rgba(3,4,13,.22)';ctx.globalCompositeOperation='source-over';ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation='lighter';
+    core.pulse+=.05;const cr=core.r+Math.sin(core.pulse)*3;
+    // draw core
+    const g=ctx.createRadialGradient(core.x,core.y,0,core.x,core.y,cr*4);
+    g.addColorStop(0,'rgba(255,255,255,0.9)');g.addColorStop(.3,'rgba(127,255,212,0.6)');g.addColorStop(1,'rgba(127,255,212,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(core.x,core.y,cr*4,0,7);ctx.fill();
+    let energy=0;core.x=W/2;core.y=H/2;
+    for(let i=parts.length-1;i>=0;i--){const p=parts[i];apply(p);
+      p.vx*=.985;p.vy*=.985;const sp=Math.sqrt(p.vx*p.vx+p.vy*p.vy);
+      energy+=sp;p.x+=p.vx;p.y+=p.vy;p.life-=p.decay;
+      p.trail.push(p.x,p.y);if(p.trail.length>10)p.trail.shift();
+      // wrap
+      if(p.x<0)p.x+=W;if(p.x>W)p.x-=W;if(p.y<0)p.y+=H;if(p.y>H)p.y-=H;
+      ctx.globalAlpha=p.life;
+      ctx.strokeStyle=p.c;ctx.globalAlpha=p.life*.3;ctx.beginPath();ctx.moveTo(p.trail[0],p.trail[1]);
+      for(let j=2;j<p.trail.length;j+=2)ctx.lineTo(p.trail[j],p.trail[j+1]);ctx.stroke();
+      ctx.globalAlpha=p.life;ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,7);ctx.fill();
+      if(p.life<=0)parts.splice(i,1)}
+    // shocks
+    for(let i=shocks.length-1;i>=0;i--){const s=shocks[i];s.r+=6;s.life-=.02;
+      ctx.globalAlpha=s.life;ctx.strokeStyle='#7fffd4';ctx.lineWidth=2;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.stroke();
+      if(s.life<=0)shocks.splice(i,1)}
+    ctx.globalAlpha=1;
+    if(parts.length<180)spawn(2);
+    $('np').textContent=parts.length;$('en').textContent=Math.round(energy);$('fps').textContent=fpsV;
+    requestAnimationFrame(loop)}
+  function $(id){return document.getElementById(id)}
+  addEventListener('pointermove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;mouse.active=true});
+  addEventListener('pointerdown',e=>{if(e.button===2)return;shocks.push({x:e.clientX,y:e.clientY,r:10,life:1})});
+  addEventListener('contextmenu',e=>{e.preventDefault();setMode(mode==='attract'?'repel':'attract')});
+  document.querySelectorAll('.modes button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+  function setMode(m){mode=m;document.querySelectorAll('.modes button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+    $('md').textContent=m==='attract'?'吸引':'排斥'}
+  requestAnimationFrame(loop);
+</script>
+</body>
+</html>

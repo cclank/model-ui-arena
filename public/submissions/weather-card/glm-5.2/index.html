@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>glm-5.2 · 天气卡片</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh;
+    display:flex;align-items:center;justify-content:center;padding:20px;transition:background 1s ease}
+  .wrap{width:390px;max-width:100%;position:relative;border-radius:30px;overflow:hidden;
+    box-shadow:0 30px 70px rgba(0,0,0,.4);color:#fff}
+  .scene{position:absolute;inset:0;transition:background 1s ease;z-index:0}
+  .fx{position:absolute;inset:0;pointer-events:none;z-index:1}
+  .content{position:relative;z-index:2;padding:28px 26px;background:rgba(0,0,0,.12)}
+  .tabs{display:flex;gap:8px;margin-bottom:20px}
+  .tab{flex:1;padding:9px 0;text-align:center;border-radius:20px;font-size:13px;cursor:pointer;
+    background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);transition:.3s}
+  .tab.on{background:rgba(255,255,255,.92);color:#222;font-weight:700}
+  .cur{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+  .temp{font-size:74px;font-weight:200;line-height:1;font-variant-numeric:tabular-nums}
+  .info .desc{font-size:22px;font-weight:600}
+  .info .sub{font-size:13px;opacity:.85;margin-top:4px}
+  .meta{display:flex;gap:16px;margin-top:10px;font-size:13px;opacity:.9}
+  .meta span{display:flex;align-items:center;gap:4px}
+  .forecast{background:rgba(0,0,0,.2);border-radius:18px;padding:14px 12px}
+  .chart{height:70px;width:100%;display:block;margin-bottom:8px}
+  .days{display:flex;justify-content:space-between;font-size:12px}
+  .days div{text-align:center;flex:1;opacity:.9}
+  .days .dn{font-weight:600;margin-bottom:4px}
+  .toggle{margin-top:14px;text-align:center;font-size:13px;opacity:.85;cursor:pointer;
+    background:rgba(255,255,255,.15);padding:6px;border-radius:14px;display:inline-block;width:100%}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="scene" id="scene"></div>
+    <canvas class="fx" id="fx"></canvas>
+    <div class="content">
+      <div class="tabs" id="tabs"></div>
+      <div class="cur"><div class="temp" id="temp">--°</div>
+        <div class="info"><div class="desc" id="desc">--</div>
+        <div class="sub" id="sub"></div>
+        <div class="meta"><span id="wind">风 --</span><span id="hum">湿度 --</span></div></div>
+      </div>
+      <div class="forecast">
+        <svg class="chart" id="chart" viewBox="0 0 300 70" preserveAspectRatio="none"></svg>
+        <div class="days" id="days"></div>
+      </div>
+      <div class="toggle" id="unit">切换单位 °C / °F</div>
+    </div>
+  </div>
+<script>
+  const cities=[{n:'北京',t:14,w:'sunny',ws:'东南 3级',h:38,d:[{t:14,w:'sunny'},{t:16,w:'sunny'},{t:12,w:'cloud'},{t:9,w:'rain'},{t:11,w:'cloud'}]},
+    {n:'上海',t:21,w:'rain',ws:'东风 4级',h:82,d:[{t:21,w:'rain'},{t:19,w:'rain'},{t:22,w:'cloud'},{t:24,w:'sunny'},{t:23,w:'cloud'}]},
+    {n:'哈尔滨',t:-3,w:'snow',ws:'北风 5级',h:67,d:[{t:-3,w:'snow'},{t:-1,w:'cloud'},{t:2,w:'cloud'},{t:0,w:'snow'},{t:-4,w:'snow'}]}];
+  const W={sunny:{c1:'#2a7ad4',c2:'#7ec8ff',icon:'☀',label:'晴'},cloud:{c1:'#5a6b8a',c2:'#8295b8',icon:'☁',label:'多云'},
+    rain:{c1:'#3a4a66',c2:'#5a6b8a',icon:'🌧',label:'小雨'},snow:{c1:'#6a7a9a',c2:'#a9c4e8',icon:'❄',label:'小雪'}};
+  let cur=0,unit='C',particles=[],cv,ctx,W_=0,H_=0;
+  const $=id=>document.getElementById(id);
+  function buildTabs(){const t=$('tabs');t.innerHTML='';cities.forEach((c,i)=>{
+    const e=document.createElement('div');e.className='tab'+(i===cur?' on':'');e.textContent=c.n;e.onclick=()=>switchTo(i);t.appendChild(e)})}
+  function cv_(n){return unit==='C'?n:Math.round(n*9/5+32)}
+  function switchTo(i){cur=i;render(true)}
+  function render(anim){
+    const c=cities[cur];const W_=W[c.w];
+    $('scene').style.background=`linear-gradient(160deg,${W_.c1},${W_.c2})`;
+    const target=cv_(c.t);countUp($('temp'),target,anim);
+    $('desc').textContent=W_.label;$('sub').textContent=`${c.n} · ${unit==='C'?'今日体感':''}`;
+    $('wind').textContent=`🌬 ${c.ws}`;$('hum').textContent=`💧 ${c.h}%`;
+    buildTabs();drawChart(c.d);buildDays(c.d);initParticles(c.w);$('unit').textContent=`切换单位 °${unit}`}
+  function countUp(el,to,doAnim){const from=parseFloat(el.textContent)||0;
+    if(!doAnim){el.textContent=to+'°';return}
+    const st=Date.now(),dur=500;
+    function f(){let p=(Date.now()-st)/dur;if(p>1)p=1;const v=Math.round(from+(to-from)*p);
+      el.textContent=v+'°';if(p<1)requestAnimationFrame(f)}f()}
+  function drawChart(d){const svg=$('chart');svg.innerHTML='';
+    const pts=d.map((day,i)=>[10+i*72,60-((day.t+10)/40)*55]);
+    pts.forEach((p,i)=>{if(i){const l=document.createElementNS('http://www.w3.org/2000/svg','polyline');
+      l.setAttribute('points',`${pts[i-1][0]},${pts[i-1][1]} ${p[0]},${p[1]}`);
+      l.setAttribute('stroke','rgba(255,255,255,.6)');l.setAttribute('fill','none');l.setAttribute('stroke-width',2);
+      svg.appendChild(l)}const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      c.setAttribute('cx',p[0]);c.setAttribute('cy',p[1]);c.setAttribute('r',3.5);c.setAttribute('fill','#fff');svg.appendChild(c)})}
+  function buildDays(d){const el=$('days');el.innerHTML='';const wk=['今','明','后','四','五'];
+    d.forEach((day,i)=>{const div=document.createElement('div');div.innerHTML=`<div class="dn">${wk[i]}</div>${W[day.w].icon}<br>${cv_(day.t)}°`;el.appendChild(div)})}
+  function initParticles(w){cv=$('fx');ctx=cv.getContext('2d');resize();particles=[];
+    if(w==='rain'||w==='snow'){const n=w==='snow'?70:120;for(let i=0;i<n;i++)particles.push(make(w))}
+    else if(w==='sunny'){for(let i=0;i<25;i++)particles.push({type:'sun',x:Math.random()*W_,y:Math.random()*H_,r:Math.random()*3+1,sp:Math.random()*.4+.1})}
+    else{for(let i=0;i<8;i++)particles.push({type:'cloud',x:Math.random()*W_,y:Math.random()*40+20,r:Math.random()*40+40,sp:Math.random()*.3+.1})}}
+  function make(w){return w==='rain'?{type:'rain',x:Math.random()*W_,y:Math.random()*H_,l:Math.random()*14+10,sp:Math.random()*4+6}
+    :{type:'snow',x:Math.random()*W_,y:Math.random()*H_,r:Math.random()*2.5+1,sp:Math.random()*1.2+.5,d:Math.random()*6}}
+  function resize(){cv.width=W_=innerWidth;cv.height=H_=Math.max(420,$('.wrap').offsetHeight)}
+  function loop(){ctx.clearRect(0,0,W_,H_);particles.forEach(p=>{
+    if(p.type==='rain'){ctx.strokeStyle='rgba(180,210,255,.6)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x,p.y+p.l);ctx.stroke();p.y+=p.sp;p.x-=1;
+      if(p.y>H_){p.y=-p.l;p.x=Math.random()*W_}}
+    else if(p.type==='snow'){ctx.fillStyle='rgba(255,255,255,.85)';ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();p.y+=p.sp;p.x+=Math.sin(p.y*.03+p.d)*.5;if(p.y>H_){p.y=-5;p.x=Math.random()*W_}}
+    else if(p.type==='sun'){ctx.fillStyle=`rgba(255,240,180,${p.r/8})`;ctx.beginPath();ctx.arc(p.x,p.y,p.r*3,0,7);ctx.fill();
+      p.y-=p.sp;p.x+=p.sp;if(p.y<0){p.y=H_;p.x=Math.random()*W_}}
+    else if(p.type==='cloud'){ctx.fillStyle='rgba(255,255,255,.3)';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();
+      p.x+=p.sp;if(p.x-p.r>W_)p.x=-p.r}});requestAnimationFrame(loop)}
+  $('unit').onclick=()=>{unit=unit==='C'?'F':'C';render(false)};
+  addEventListener('resize',resize);render(false);loop();
+  // night auto switch
+  const hr=new Date().getHours();if(hr<6||hr>=18)$('scene').style.filter='brightness(.7) saturate(1.1)';
+</script>
+</body>
+</html>

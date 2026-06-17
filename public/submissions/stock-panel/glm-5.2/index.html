@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>glm-5.2 · 股票面板</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh;
+    background:#0e1117;color:#e6e6e6;padding:20px;display:flex;justify-content:center}
+  .app{width:420px;max-width:100%}
+  .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px}
+  .head h1{font-size:18px;letter-spacing:1px}.head .live{font-size:12px;color:#5cdb5c}
+  .live::before{content:"●";animation:blink 1.2s infinite;margin-right:5px}
+  @keyframes blink{50%{opacity:.3}}
+  .list{display:flex;flex-direction:column;gap:12px}
+  .stock{background:#161b22;border:1px solid #21262d;border-radius:16px;padding:16px;
+    cursor:pointer;transition:border-color .25s,transform .15s}
+  .stock:hover{transform:translateY(-2px)}
+  .stock.sel{border-color:#58a6ff;box-shadow:0 0 0 1px #58a6ff55}
+  .top{display:flex;justify-content:space-between;align-items:center}
+  .name{font-weight:600;font-size:15px}.code{color:#7d8590;font-size:11px;margin-left:6px}
+  .price{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+  .row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:8px}
+  .chg{font-size:13px;font-weight:600;padding:2px 8px;border-radius:8px}
+  .up{color:#ff5252;background:#ff525222}.down{color:#26a69a;background:#26a69a22}
+  .up .arr::before{content:"▲ "}.down .arr::before{content:"▼ "}
+  svg.spark{width:120px;height:36px}
+  .panel{margin-top:18px;background:#161b22;border:1px solid #21262d;border-radius:16px;padding:18px}
+  .ptitle{font-size:14px;margin-bottom:4px}
+  .pcode{color:#7d8590;font-size:12px;margin-bottom:14px}
+  .pchart{height:130px;width:100%}
+  .risk{margin-top:12px;font-size:12px;color:#f0b429;background:#f0b42915;padding:8px 12px;border-radius:10px}
+  .flash{animation:flash .6s}
+  @keyframes flash{0%{background:#1f2a3a}100%{background:#161b22}}
+</style>
+</head>
+<body>
+  <div class="app">
+    <div class="head"><h1>📊 实时行情</h1><span class="live">流式更新中</span></div>
+    <div class="list" id="list"></div>
+    <div class="panel" id="panel"></div>
+  </div>
+<script>
+  const stocks=[
+    {name:'智云科技',code:'ZYKJ',price:128.50,prev:128.50,up:true,data:gen(128.50)},
+    {name:'芯原半导体',code:'XYBD',price:42.30,prev:42.30,up:false,data:gen(42.30)},
+    {name:'北辰能源',code:'BCNY',price:87.65,prev:87.65,up:true,data:gen(87.65)},
+    {name:'星海物流',code:'XHWL',price:15.82,prev:15.82,up:false,data:gen(15.82)}
+  ];
+  function gen(base){const a=[base];for(let i=0;i<29;i++)a.push(Math.max(1,a[i]+(Math.random()-.5)*base*.03));return a}
+  const $=id=>document.getElementById(id);let sel=0;const SVG='http://www.w3.org/2000/svg';
+  function spark(d,up){const min=Math.min(...d),max=Math.max(...d),rng=(max-min)||1;
+    const pts=d.map((v,i)=>[i/(d.length-1)*120,36-((v-min)/rng)*32]);
+    let p=pts.map(x=>x.join(',')).join(' ');
+    const svg=document.createElementNS(SVG,'svg');svg.setAttribute('class','spark');svg.setAttribute('viewBox','0 0 120 36');
+    const pl=document.createElementNS(SVG,'polyline');pl.setAttribute('points',p);pl.setAttribute('fill','none');
+    pl.setAttribute('stroke',up?'#ff5252':'#26a69a');pl.setAttribute('stroke-width',1.8);svg.appendChild(pl);return svg}
+  function fmt(n){return n.toFixed(2)}
+  function render(){const l=$('list');l.innerHTML='';
+    stocks.forEach((s,i)=>{const diff=s.price-s.prev,pct=diff/s.prev*100;const u=diff>=0;
+      const el=document.createElement('div');el.className='stock'+(i===sel?' sel':'');
+      el.innerHTML=`<div class="top"><div><span class="name">${s.name}</span><span class="code">${s.code}</span></div>
+        <div class="price">${fmt(s.price)}</div></div>
+        <div class="row"><div class="chg ${u?'up':'down'}"><span class="arr"></span>${u?'+':''}${fmt(diff)} (${u?'+':''}${pct.toFixed(2)}%)</div></div>`;
+      const top=el.querySelector('.row');top.appendChild(spark(s.data.slice(-15),u));
+      el.onclick=()=>{sel=i;render();renderPanel()};l.appendChild(el)})}
+  function renderPanel(){const s=stocks[sel];const diff=s.price-s.prev,pct=diff/s.prev*100;const u=diff>=0;
+    const min=Math.min(...s.data),max=Math.max(...s.data),rng=(max-min)||1;
+    const pts=s.data.map((v,i)=>[i/(s.data.length-1)*380,130-((v-min)/rng)*120]);
+    let p=pts.map(x=>x.join(',')).join(' ');
+    const sd=Math.round(s.data.slice(-10).reduce((a,b,c,arr)=>a+(b-(arr.reduce((x,y)=>x+y,0)/10))**2,0)/10);
+    const vol=(sd/s.price*100).toFixed(1);
+    $('panel').innerHTML=`<div class="ptitle">${s.name} 走势</div><div class="pcode">${s.code} · 近 30 周期</div>
+      <svg class="pchart" viewBox="0 0 380 130" preserveAspectRatio="none">
+        <polyline points="${p}" fill="none" stroke="${u?'#ff5252':'#26a69a'}" stroke-width="2"/></svg>
+      <div class="risk">⚠ 波动率 ${vol}% · ${vol>2?'短期波动较大，注意风险':'走势相对平稳'}</div>`}
+  function tick(){stocks.forEach(s=>{const n=s.price+ (Math.random()-.5)*s.price*.006;s.prev=s.price;
+    s.price=Math.max(.01,n);s.data.push(s.price);if(s.data.length>30)s.data.shift();
+    s.up=s.price>=s.prev});render();renderPanel();
+    document.querySelectorAll('.price').forEach(e=>{e.classList.add('flash');setTimeout(()=>e.classList.remove('flash'),600)})}
+  render();renderPanel();setInterval(tick,2000);
+</script>
+</body>
+</html>
