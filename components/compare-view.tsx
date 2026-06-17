@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
@@ -34,7 +34,52 @@ function Badge({ sub }: { sub: Submission }) {
   );
 }
 
+const FIT_MIN = 460;
+const FIT_MAX = 1400;
+
 function CompareColumn({ sub, model, theme }: { sub?: Submission; model: string; theme: string }) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Auto-fit iframe height to its content's natural height so taller pages
+  // (weather card, stock panel, recorder, posters, ...) are fully visible
+  // instead of clipped at a fixed height. We only READ scrollHeight and never
+  // inject styles, so full-viewport / fixed-position canvas pages stay intact.
+  const fit = () => {
+    const f = iframeRef.current;
+    if (!f) return;
+    try {
+      const doc = f.contentDocument;
+      const win = f.contentWindow;
+      if (!doc || !win || doc.readyState !== "complete") return;
+      const h = Math.max(
+        doc.body?.scrollHeight ?? 0,
+        doc.documentElement?.scrollHeight ?? 0
+      );
+      // full-viewport pages report height == their own client; fixed-canvas
+      // pages may report ~0. Clamp to a sensible band.
+      const next = Math.min(Math.max(h, FIT_MIN), FIT_MAX);
+      f.style.height = next + "px";
+    } catch {
+      /* cross-origin (should not happen for same-origin submissions) */
+    }
+  };
+
+  // re-fit a few times so async layout / web fonts / animations settle.
+  useEffect(() => {
+    if (!sub || sub.renderKind !== "html") return;
+    const id1 = window.setTimeout(fit, 300);
+    const id2 = window.setTimeout(fit, 900);
+    const id3 = window.setTimeout(fit, 1800);
+    const onResize = () => fit();
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.clearTimeout(id1);
+      window.clearTimeout(id2);
+      window.clearTimeout(id3);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [sub, theme, model]);
+
   return (
     <article className="panel card compare-col">
       <div className="card-top">
@@ -55,11 +100,14 @@ function CompareColumn({ sub, model, theme }: { sub?: Submission; model: string;
           </div>
           {sub.renderKind === "html" ? (
             <iframe
-              className="preview"
+              ref={iframeRef}
+              className="preview preview-autofit"
               src={sub.publicPath}
               title={`${theme}-${model}`}
               sandbox="allow-scripts allow-same-origin"
               loading="lazy"
+              onLoad={fit}
+              scrolling="auto"
             />
           ) : (
             <pre className="qa-answer">{sub.answerText || "(empty answer)"}</pre>

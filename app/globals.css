@@ -458,6 +458,16 @@ body {
   height: 520px;
 }
 
+/* auto-fit preview: start at a sensible height, JS measures content and grows it */
+.preview-autofit {
+  height: 520px;
+  min-height: 460px;
+}
+
+.compare-pair {
+  align-items: start;
+}
+
 /* ===== Prompt 抽屉 ===== */
 button.task-link {
   font: inherit;
