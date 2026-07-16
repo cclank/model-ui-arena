@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { buildThemePath, parseModelSelection } from "@/lib/arena-navigation";
 import { getReferenceModels, compareModels, sortModels } from "@/lib/model-order";
 import { PreviewFrame } from "@/components/preview-frame";
 import { PromptDrawer } from "@/components/prompt-drawer";
@@ -92,7 +93,12 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
 
         const models = sortModels([...new Set(data.submissions.map((item) => item.model))]);
         const defaultModels = getReferenceModels(models);
-        setSelectedModels(defaultModels.length ? defaultModels : models);
+        const requestedModels = parseModelSelection(window.location.search);
+        const availableModelSet = new Set(models);
+        const nextModels = requestedModels === null
+          ? defaultModels.length ? defaultModels : models
+          : sortModels(requestedModels.filter((model) => availableModelSet.has(model)));
+        setSelectedModels(nextModels);
       })
       .catch((err: unknown) => {
         const message = err instanceof Error ? err.message : "加载失败";
@@ -195,30 +201,43 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
   }, [activeTheme, payload]);
   const activeThemeHasUnlimitedLines = UNLIMITED_LINE_THEMES.has(activeTheme);
   const effectivePanesPerRow = Math.min(panesPerRow, maxPanesPerRow);
+  const currentThemePath = buildThemePath(activeTheme, selectedModels);
+
+  const commitSelectedModels = (models: string[]) => {
+    const availableModelSet = new Set(availableModels);
+    const nextModels = sortModels(
+      [...new Set(models)].filter((model) => availableModelSet.has(model))
+    );
+    setSelectedModels(nextModels);
+    window.history.replaceState(
+      window.history.state,
+      "",
+      buildThemePath(activeTheme, nextModels)
+    );
+  };
 
   const toggleModel = (model: string) => {
-    setSelectedModels((prev) => {
-      if (prev.includes(model)) {
-        return prev.filter((m) => m !== model);
-      }
-      return sortModels([...prev, model]);
-    });
+    commitSelectedModels(
+      selectedModels.includes(model)
+        ? selectedModels.filter((selectedModel) => selectedModel !== model)
+        : [...selectedModels, model]
+    );
   };
 
   const addVisibleModels = () => {
-    setSelectedModels((prev) => sortModels([...new Set([...prev, ...visibleModels])]));
+    commitSelectedModels([...selectedModels, ...visibleModels]);
   };
 
   const removeVisibleModels = () => {
-    setSelectedModels((prev) => prev.filter((model) => !visibleModels.includes(model)));
+    commitSelectedModels(selectedModels.filter((model) => !visibleModels.includes(model)));
   };
 
   const selectThemeModels = () => {
-    setSelectedModels(sortModels([...modelsForActiveTheme]));
+    commitSelectedModels([...modelsForActiveTheme]);
   };
 
   const selectReferenceModels = () => {
-    setSelectedModels(referenceModels);
+    commitSelectedModels(referenceModels);
   };
 
   return (
@@ -274,7 +293,7 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
             {payload?.themes.map((theme) => (
               <Link
                 key={theme.id}
-                href={`/themes/${theme.id}`}
+                href={buildThemePath(theme.id, selectedModels)}
                 prefetch={false}
                 className={theme.id === activeTheme ? "chip active" : "chip"}
               >
@@ -363,7 +382,7 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
                     <button
                       type="button"
                       className="action-button ghost"
-                      onClick={() => setSelectedModels([])}
+                      onClick={() => commitSelectedModels([])}
                     >
                       清空
                     </button>
@@ -513,7 +532,7 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
             <SharePath
               theme={item.theme}
               model={item.model}
-              returnPath={`/themes/${activeTheme}`}
+              returnPath={currentThemePath}
             />
           </article>
         ))}
