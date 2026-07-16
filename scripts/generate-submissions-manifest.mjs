@@ -6,10 +6,46 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(__dirname, "..");
 const submissionsRoot = path.join(projectRoot, "public", "submissions");
 const outputFile = path.join(projectRoot, "lib", "generated-submissions.json");
+const modelOrderFile = path.join(projectRoot, "lib", "model-order-data.json");
 const lineLimit = 220;
 const unlimitedLineThemes = new Set(["cheetah-trophy-run", "dslr-camera"]);
+const themeOrder = [
+  "clock",
+  "recorder",
+  "weather-card",
+  "stock-panel",
+  "click-fireworks",
+  "neon-countdown",
+  "particle-gravity",
+  "cheetah-trophy-run",
+  "dslr-camera",
+  "carwash-decision"
+];
+const themeRank = new Map(themeOrder.map((theme, index) => [theme, index]));
 const carwashQuestion =
   "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？";
+
+const modelOrderData = JSON.parse(await fs.readFile(modelOrderFile, "utf8"));
+const modelOrderPatterns = modelOrderData.modelOrder.map((pattern) => new RegExp(pattern, "i"));
+
+function modelRank(model) {
+  const rank = modelOrderPatterns.findIndex((pattern) => pattern.test(model));
+  return rank === -1 ? Number.MAX_SAFE_INTEGER : rank;
+}
+
+function compareModels(a, b) {
+  const rankDelta = modelRank(a) - modelRank(b);
+  if (rankDelta !== 0) {
+    return rankDelta;
+  }
+
+  return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+}
+
+function sharePathForSubmission(themeId, model, filename) {
+  const base = `/submissions/${themeId}/${model}`;
+  return filename.toLowerCase() === "index.html" ? `${base}/` : `${base}/${filename}`;
+}
 
 function countInlineTagLines(html, tagName) {
   const pattern = new RegExp(`<${tagName}[^>]*>([\\s\\S]*?)<\\/${tagName}>`, "gi");
@@ -81,6 +117,10 @@ async function generateManifest() {
     }
 
     const themeId = themeDir.name;
+    if (!themeRank.has(themeId)) {
+      continue;
+    }
+
     const themePath = path.join(submissionsRoot, themeId);
     const modelDirs = await fs.readdir(themePath, { withFileTypes: true });
 
@@ -117,6 +157,7 @@ async function generateManifest() {
         theme: themeId,
         model,
         filename,
+        path: sharePathForSubmission(themeId, model, filename),
         publicPath: `/submissions/${themeId}/${model}/${filename}`,
         renderKind: isHtml ? "html" : "text",
         linesTotal,
@@ -134,10 +175,13 @@ async function generateManifest() {
   }
 
   output.sort((a, b) => {
-    if (a.theme !== b.theme) {
-      return a.theme.localeCompare(b.theme);
+    const themeDelta =
+      (themeRank.get(a.theme) ?? Number.MAX_SAFE_INTEGER) -
+      (themeRank.get(b.theme) ?? Number.MAX_SAFE_INTEGER);
+    if (themeDelta !== 0) {
+      return themeDelta;
     }
-    return a.model.localeCompare(b.model);
+    return compareModels(a.model, b.model);
   });
 
   await fs.writeFile(outputFile, `${JSON.stringify(output, null, 2)}\n`);

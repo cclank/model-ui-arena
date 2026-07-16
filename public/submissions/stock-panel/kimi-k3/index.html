@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>股票监控面板</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#0b0e17;color:#e8eaf0;font-family:-apple-system,"PingFang SC","Segoe UI",sans-serif;display:flex;justify-content:center;padding:18px 12px}
+.app{width:100%;max-width:430px}
+header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+h1{font-size:17px;font-weight:600;flex:1}
+.dot{width:8px;height:8px;border-radius:50%;background:#16c784;animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.25}}
+.clock{font-size:12px;color:#8a90a5;font-variant-numeric:tabular-nums}
+.alert{display:none;margin-bottom:10px;padding:9px 12px;border-radius:12px;background:rgba(255,77,79,.12);border:1px solid rgba(255,77,79,.4);color:#ff8a8e;font-size:12px;animation:slide .3s}
+.alert.show{display:block}
+@keyframes slide{from{opacity:0;transform:translateY(-6px)}}
+.card{background:#151a29;border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:16px;margin-bottom:12px}
+.mtop{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.mname{font-size:14px;color:#c8cddb}
+.msym{font-size:11px;color:#5c6378;margin-top:2px}
+.mprice{font-size:32px;font-weight:600;font-variant-numeric:tabular-nums;transition:color .3s}
+.chg{font-size:12px;padding:4px 10px;border-radius:999px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.up{color:#ff4d4f}.down{color:#16c784}.flat{color:#9aa0b4}
+.chg.up{background:rgba(255,77,79,.14)}.chg.down{background:rgba(22,199,132,.14)}.chg.flat{background:rgba(255,255,255,.08)}
+#mc2{display:block;width:100%;height:auto;margin-top:6px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.stat{background:#0f1320;border-radius:10px;padding:7px 9px}
+.stat span{display:block;font-size:10px;color:#5c6378}
+.stat b{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.row{display:grid;grid-template-columns:1.25fr .9fr 1fr;align-items:center;gap:6px;padding:8px 12px;border-radius:14px;cursor:pointer;transition:background .2s;border:1px solid transparent}
+.row:hover{background:#1a2033}
+.row.on{background:#1a2033;border-color:rgba(88,130,255,.35)}
+.rn{font-size:13px}
+.rn small{display:block;font-size:10px;color:#5c6378;margin-top:2px}
+.badge{display:none;font-size:9px;color:#ffb020;border:1px solid rgba(255,176,32,.5);border-radius:4px;padding:0 3px;margin-left:5px;vertical-align:1px}
+.badge.show{display:inline-block}
+.row svg{justify-self:center}
+.rp{text-align:right;border-radius:10px;padding:4px 6px}
+.rp b{font-size:14px;font-variant-numeric:tabular-nums}
+.rp small{display:block;font-size:11px;margin-top:1px}
+.fu{animation:fu .7s}.fd{animation:fd .7s}
+@keyframes fu{30%{background:rgba(255,77,79,.22)}}
+@keyframes fd{30%{background:rgba(22,199,132,.22)}}
+footer{text-align:center;font-size:10px;color:#454b5e;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="app">
+<header><span class="dot"></span><h1>股票监控面板</h1><span class="clock" id="clock"></span></header>
+<div class="alert" id="alert"></div>
+<div class="card">
+<div class="mtop"><div><div class="mname" id="mn"></div><div class="msym" id="ms"></div></div><div class="chg" id="mc"></div></div>
+<div class="mprice" id="mp"></div>
+<svg id="mc2" viewBox="0 0 400 130" preserveAspectRatio="none"></svg>
+<div class="stats" id="st"></div>
+</div>
+<div id="list"></div>
+<footer>本地模拟行情 · 每 1.5 秒自动刷新 · 红涨绿跌 · 仅供演示</footer>
+</div>
+<script>
+const $=i=>document.getElementById(i),S=[
+{sym:"SH600519",n:"贵州茅台",p:1688.00,prev:1672.50,vol:2.8},
+{sym:"AAPL",n:"苹果",p:189.30,prev:191.24,vol:52.1},
+{sym:"HK00700",n:"腾讯控股",p:378.40,prev:371.00,vol:18.6},
+{sym:"NVDA",n:"英伟达",p:822.15,prev:798.40,vol:61.3},
+{sym:"SZ300750",n:"宁德时代",p:192.35,prev:196.10,vol:9.4}];
+let sel=0;
+S.forEach(s=>{s.h=[s.prev];let v=s.prev;for(let i=0;i<39;i++){v*=1+(Math.random()-.5)*.006;s.h.push(v)}s.h[39]=s.p;s.open=s.prev});
+const pct=s=>(s.p-s.prev)/s.prev*100,cls=c=>c>.005?"up":c<-.005?"down":"flat",arw=c=>c>.005?"▲":c<-.005?"▼":"–";
+const col=k=>k==="up"?"#ff4d4f":k==="down"?"#16c784":"#9aa0b4";
+function spark(s){const d=s.h.slice(-24),mn=Math.min(...d),sp=(Math.max(...d)-mn)||1;
+ return d.map((v,j)=>`${(j*60/23).toFixed(1)},${(22-(v-mn)/sp*20).toFixed(1)}`).join(" ")}
+function build(){$("list").innerHTML=S.map((s,i)=>`<div class="row${i===sel?" on":""}" onclick="pick(${i})"><div class="rn">${s.n}<span class="badge" id="v${i}">高波动</span><small>${s.sym}</small></div><svg viewBox="0 0 60 24" width="60" height="24"><polyline id="s${i}" fill="none" stroke-width="1.6"/></svg><div class="rp"><b id="p${i}"></b><small id="c${i}"></small></div></div>`).join("")}
+function pick(i){sel=i;document.querySelectorAll(".row").forEach((r,j)=>r.classList.toggle("on",j===i));main()}
+function main(){const s=S[sel],c=pct(s),k=cls(c),d=s.h,mn=Math.min(...d),sp=(Math.max(...d)-mn)||1,W=400,H=130,
+ Y=v=>(H-12-(v-mn)/sp*(H-30)).toFixed(1),pts=d.map((v,j)=>`${(j*W/(d.length-1)).toFixed(1)},${Y(v)}`).join(" ");
+ $("mn").textContent=s.n;$("ms").textContent=s.sym+" · 模拟行情";
+ $("mp").textContent=s.p.toFixed(2);$("mp").className="mprice "+k;
+ $("mc").textContent=`${arw(c)} ${c>=0?"+":""}${(s.p-s.prev).toFixed(2)} (${c>=0?"+":""}${c.toFixed(2)}%)`;$("mc").className="chg "+k;
+ $("mc2").innerHTML=`<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col(k)}" stop-opacity=".3"/><stop offset="1" stop-color="${col(k)}" stop-opacity="0"/></linearGradient></defs><polygon points="0,${H} ${pts} ${W},${H}" fill="url(#g)"/><polyline points="${pts}" fill="none" stroke="${col(k)}" stroke-width="2" stroke-linejoin="round"/><line x1="0" y1="${Y(s.prev)}" x2="${W}" y2="${Y(s.prev)}" stroke="rgba(255,255,255,.25)" stroke-dasharray="4 4"/><circle cx="${W}" cy="${Y(s.p)}" r="3.5" fill="${col(k)}"><animate attributeName="r" values="3.5;6;3.5" dur="1.5s" repeatCount="indefinite"/></circle>`;
+ $("st").innerHTML=[["今开",s.open.toFixed(2)],["最高",Math.max(...d).toFixed(2)],["最低",Math.min(...d).toFixed(2)],["成交量",s.vol.toFixed(1)+" 万手"]].map(x=>`<div class="stat"><span>${x[0]}</span><b>${x[1]}</b></div>`).join("")}
+function list(){S.forEach((s,i)=>{const c=pct(s),k=cls(c),pe=$("p"+i),ce=$("c"+i),nv=s.p.toFixed(2);
+ if(pe.textContent!==nv){const rp=pe.parentElement;rp.classList.remove("fu","fd");void rp.offsetWidth;rp.classList.add(c>=0?"fu":"fd")}
+ pe.textContent=nv;pe.className=k;ce.textContent=`${arw(c)} ${c>=0?"+":""}${c.toFixed(2)}%`;ce.className=k;
+ const pl=$("s"+i);pl.setAttribute("points",spark(s));pl.setAttribute("stroke",col(k));
+ $("v"+i).classList.toggle("show",vol10(s)>.35)})}
+function vol10(s){const d=s.h.slice(-11),q=[];for(let i=1;i<d.length;i++)q.push((d[i]-d[i-1])/d[i-1]*100);const a=q.reduce((x,y)=>x+y,0)/q.length;return Math.sqrt(q.reduce((x,y)=>x+(y-a)**2,0)/q.length)}
+function checkAlert(){const w=S.map(s=>({n:s.n,c:pct(s)})).filter(x=>Math.abs(x.c)>3).sort((a,b)=>Math.abs(b.c)-Math.abs(a.c));
+ if(w.length){$("alert").textContent=`⚠ 波动提示：${w[0].n} 当前涨跌幅 ${w[0].c>=0?"+":""}${w[0].c.toFixed(2)}%，超出 ±3% 阈值，请注意风险`;$("alert").classList.add("show")}else $("alert").classList.remove("show")}
+function clock(){const d=new Date();$("clock").textContent=d.toTimeString().slice(0,8)}
+function tick(){S.forEach(s=>{s.p*=1+(Math.random()-.5)*.004;s.h.push(s.p);if(s.h.length>60)s.h.shift();s.vol+=Math.random()*.15});list();main();checkAlert()}
+build();list();main();clock();
+setInterval(tick,1500);setInterval(clock,1000);
+</script>
+</body>
+</html>

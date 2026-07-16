@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PreviewFrame } from "@/components/preview-frame";
+import { SharePath } from "@/components/share-path";
 import { LINE_LIMIT, THEMES, UNLIMITED_LINE_THEMES, scanSubmissions } from "@/lib/submissions";
+import { sortSubmissionsByModel } from "@/lib/model-order";
 
 type TaskPageProps = {
   params: Promise<{
@@ -32,13 +35,15 @@ export default async function TaskPage({ params }: TaskPageProps) {
     notFound();
   }
 
-  const submissions = (await scanSubmissions()).filter((item) => item.theme === theme.id);
+  const submissions = sortSubmissionsByModel(
+    (await scanSubmissions()).filter((item) => item.theme === theme.id)
+  );
   const passCount = submissions.filter((item) => item.withinLineLimit).length;
 
   return (
     <main className="task-shell">
       <header className="task-hero">
-        <Link href="/" className="task-back">
+        <Link href={`/themes/${theme.id}`} className="task-back">
           返回 Arena
         </Link>
         <p className="hero-kicker">Task Page</p>
@@ -79,11 +84,11 @@ export default async function TaskPage({ params }: TaskPageProps) {
             </div>
 
             {item.renderKind === "html" ? (
-              <iframe
+              <PreviewFrame
                 className="task-preview"
                 src={item.publicPath}
                 title={`${item.theme}-${item.model}`}
-                sandbox="allow-scripts allow-same-origin"
+                loading="lazy"
               />
             ) : (
               <div className="qa-preview">
@@ -94,9 +99,11 @@ export default async function TaskPage({ params }: TaskPageProps) {
               </div>
             )}
 
-            <a className="source-link" href={item.publicPath} target="_blank" rel="noreferrer">
-              查看原始页面
-            </a>
+            <SharePath
+              theme={item.theme}
+              model={item.model}
+              returnPath={`/tasks/${theme.id}`}
+            />
           </article>
         ))}
       </section>

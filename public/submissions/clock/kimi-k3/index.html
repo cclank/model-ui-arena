@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HALO · 昼夜时钟</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--accent:#ffb454;--ink:#f5efe4;--dim:rgba(245,239,228,.45)}
+body.day{--accent:#ff8a3d;--ink:#2b2118;--dim:rgba(43,33,24,.45)}
+html,body{height:100%}
+body{display:flex;align-items:center;justify-content:center;font-family:"Helvetica Neue",Arial,sans-serif;
+  color:var(--ink);overflow:hidden;transition:background 2s;
+  background:radial-gradient(120% 120% at 50% 110%,#141a33 0%,#070a18 60%)}
+body.day{background:radial-gradient(120% 120% at 50% -10%,#ffe9c9 0%,#f7cf9a 55%,#eeb877 100%)}
+#stars{position:fixed;inset:0;pointer-events:none;transition:opacity 2s}
+body.day #stars{opacity:0}
+.star{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:tw 3s infinite}
+@keyframes tw{50%{opacity:.15}}
+.wrap{position:relative;text-align:center;padding:24px}
+.dial{position:relative;width:min(78vw,320px);height:min(78vw,320px);margin:0 auto;border-radius:50%;
+  border:1px solid var(--dim);
+  box-shadow:0 0 60px -18px var(--accent),inset 0 0 40px -20px var(--accent);
+  background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.06),transparent 60%)}
+.tick{position:absolute;left:50%;top:50%;width:2px;height:8px;background:var(--dim);border-radius:2px;
+  transform-origin:50% 0}
+.tick.big{height:14px;width:3px;background:var(--ink)}
+.tick.on{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.num{position:absolute;font-size:12px;letter-spacing:.1em;color:var(--dim)}
+.hand{position:absolute;left:50%;bottom:50%;transform-origin:50% 100%;border-radius:99px}
+.hh{width:6px;height:23%;margin-left:-3px;background:var(--ink)}
+.mh{width:4px;height:34%;margin-left:-2px;background:var(--ink);opacity:.85}
+.sh{width:2px;height:42%;margin-left:-1px;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+.sh::after{content:"";position:absolute;top:100%;left:50%;width:2px;height:16px;transform:translateX(-50%);background:var(--accent)}
+.cap{position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px;border-radius:50%;
+  background:var(--accent);box-shadow:0 0 14px var(--accent);animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:scale(1.35)}}
+#digi{margin-top:34px;font-size:clamp(38px,11vw,52px);font-weight:200;letter-spacing:.06em;
+  font-variant-numeric:tabular-nums;display:flex;justify-content:center;align-items:baseline;gap:2px}
+#digi .sec{font-size:.42em;color:var(--accent);width:1.6em;text-align:left}
+#digi .colon{animation:blink 1s infinite;color:var(--dim)}
+@keyframes blink{50%{opacity:.2}}
+.meta{margin-top:10px;font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--dim)}
+.tag{display:inline-block;margin-top:14px;padding:5px 14px;font-size:11px;letter-spacing:.2em;
+  border:1px solid var(--dim);border-radius:99px;color:var(--ink)}
+.bar{margin:18px auto 0;width:180px;height:3px;border-radius:3px;background:var(--dim);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;box-shadow:0 0 8px var(--accent)}
+</style>
+</head>
+<body>
+<div id="stars"></div>
+<div class="wrap">
+  <div class="dial" id="dial">
+    <div class="hand hh" id="hh"></div>
+    <div class="hand mh" id="mh"></div>
+    <div class="hand sh" id="sh"></div>
+    <div class="cap"></div>
+  </div>
+  <div id="digi"><span id="t"></span><span class="sec" id="s"></span></div>
+  <div class="meta" id="date"></div>
+  <div class="tag" id="phase"></div>
+  <div class="bar"><i id="daybar"></i></div>
+</div>
+<script>
+var dial=document.getElementById('dial'),stars=document.getElementById('stars');
+var ticks=[],i,st;
+for(i=0;i<60;i++){ // 60 刻度，整点加粗，当前秒刻度发光
+  var t=document.createElement('div');t.className='tick'+(i%5===0?' big':'');
+  t.style.transform='rotate('+(i*6)+'deg) translateY(calc(-1 * min(39vw,160px) + 12px))';
+  dial.appendChild(t);ticks.push(t);
+}
+['12','3','6','9'].forEach(function(n,k){
+  var el=document.createElement('div');el.className='num';el.textContent=n;
+  var a=k*Math.PI/2-Math.PI/2,r='calc(min(39vw,160px) - 30px)';
+  el.style.left='calc(50% + '+Math.cos(a).toFixed(3)+' * '+r+' - 8px)';
+  el.style.top='calc(50% + '+Math.sin(a).toFixed(3)+' * '+r+' - 8px)';
+  dial.appendChild(el);
+});
+for(i=0;i<70;i++){ // 星空（夜晚可见）
+  st=document.createElement('div');st.className='star';
+  st.style.left=Math.random()*100+'vw';st.style.top=Math.random()*100+'vh';
+  st.style.animationDelay=(Math.random()*3)+'s';stars.appendChild(st);
+}
+var hh=document.getElementById('hh'),mh=document.getElementById('mh'),sh=document.getElementById('sh'),
+    T=document.getElementById('t'),S=document.getElementById('s'),D=document.getElementById('date'),
+    P=document.getElementById('phase'),B=document.getElementById('daybar'),lastSec=-1,lastDay='';
+var WD=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+function pad(n){return (n<10?'0':'')+n}
+function frame(){ // rAF 驱动：秒针丝滑扫动，数字秒级更新
+  var now=new Date(),ms=now.getMilliseconds(),s=now.getSeconds(),m=now.getMinutes(),h=now.getHours();
+  var sf=s+ms/1000;
+  sh.style.transform='rotate('+(sf*6)+'deg)';
+  mh.style.transform='rotate('+((m+sf/60)*6)+'deg)';
+  hh.style.transform='rotate('+(((h%12)+m/60)*30)+'deg)';
+  if(s!==lastSec){ // 数字与刻度状态每秒只写一次
+    lastSec=s;
+    T.innerHTML=pad(h)+'<span class="colon">:</span>'+pad(m)+'<span class="colon">:</span>';
+    S.textContent=pad(s);
+    ticks.forEach(function(el,k){el.classList.toggle('on',k===s)});
+    var day=h>=6&&h<18;
+    var key=day+''+now.getDate();
+    if(key!==lastDay){
+      lastDay=key;
+      document.body.classList.toggle('day',day);
+      P.textContent=day?'DAYTIME · 白昼模式':'NIGHT · 夜晚模式';
+      D.textContent=now.getFullYear()+'.'+pad(now.getMonth()+1)+'.'+pad(now.getDate())+' · '+WD[now.getDay()];
+    }
+    B.style.width=(((h*3600+m*60+s)/86400)*100).toFixed(2)+'%';
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

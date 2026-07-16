@@ -1,5 +1,5 @@
-import { ArenaDashboard } from "@/components/arena-dashboard";
+import { redirect } from "next/navigation";
 
 export default function HomePage() {
-  return <ArenaDashboard />;
+  redirect("/themes/clock");
 }

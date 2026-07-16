@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>粒子引力场</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#05060f}
+canvas{display:block;width:100vw;height:100vh;touch-action:none}
+#hud{position:fixed;top:12px;left:12px;color:#9fd8ff;font:12px/1.7 monospace;
+ background:rgba(8,14,30,.55);border:1px solid rgba(110,190,255,.25);border-radius:10px;
+ padding:10px 14px;pointer-events:none;backdrop-filter:blur(4px);z-index:2}
+#hud b{color:#fff;font-size:13px;letter-spacing:1px}
+#hud .v{color:#ffd479}
+#tip{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);color:rgba(160,210,255,.75);
+ font:12px/1.5 monospace;text-align:center;pointer-events:none;white-space:nowrap;z-index:2;
+ background:rgba(8,14,30,.4);padding:6px 14px;border-radius:20px}
+@media(max-width:420px){#hud{font-size:11px;padding:8px 10px}#tip{font-size:11px;white-space:normal;width:88vw}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud"><b>◉ GRAVITY FIELD</b><br>
+粒子 <span class="v" id="n">0</span> · FPS <span class="v" id="f">0</span><br>
+能量 <span class="v" id="e">0</span>% · 模式 <span class="v" id="m">自由环绕</span></div>
+<div id="tip">移动指针搅动星尘 · 按住产生排斥冲击波</div>
+<script>
+"use strict";
+const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+let W,H,DPR=Math.min(devicePixelRatio||1,2);
+function rs(){W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
+addEventListener("resize",rs);rs();
+const TAU=Math.PI*2,rnd=(a,b)=>a+Math.random()*(b-a);
+const MAX=W<500?220:340,parts=[],shocks=[];
+const ptr={x:W/2,y:H/2,active:false,down:false};
+const well={x:W/2,y:H/2,r:26,ph:0};
+let energy=100,mode="自由环绕",spawnT=0;
+function spawn(x,y,burst){
+ const a=rnd(0,TAU),cx=x??well.x,cy=y??well.y;
+ const d=burst?rnd(10,40):rnd(Math.min(W,H)*.25,Math.min(W,H)*.55);
+ const px=cx+Math.cos(a)*d,py=cy+Math.sin(a)*d;
+ const sp=burst?rnd(2,7):rnd(.3,.9);
+ parts.push({x:px,y:py,vx:-Math.sin(a)*sp+(burst?Math.cos(a)*sp:0),
+  vy:Math.cos(a)*sp+(burst?Math.sin(a)*sp:0),
+  m:rnd(.6,2.2),life:rnd(240,600),age:0,hue:rnd(180,220)});
+}
+for(let i=0;i<MAX*.7;i++)spawn();
+function pointer(e){const t=e.touches?e.touches[0]:e;
+ ptr.x=t.clientX;ptr.y=t.clientY;ptr.active=true;}
+addEventListener("pointermove",pointer);
+addEventListener("pointerdown",e=>{pointer(e);ptr.down=true;
+ shocks.push({x:ptr.x,y:ptr.y,r:8,max:180,a:.8});
+ for(let i=0;i<14;i++)spawn(ptr.x,ptr.y,true);
+ energy=Math.max(0,energy-6);});
+addEventListener("pointerup",()=>ptr.down=false);
+addEventListener("pointerleave",()=>{ptr.active=false;ptr.down=false;});
+let last=performance.now(),fps=60,frames=0,ft=0;
+function step(dt){
+ well.ph+=dt*.0012;
+ well.x+=((W/2+Math.cos(well.ph*.7)*W*.06)-well.x)*.02;
+ well.y+=((H/2+Math.sin(well.ph)*H*.06)-well.y)*.02;
+ if(parts.length<MAX&&(spawnT+=dt)>40){spawnT=0;spawn();}
+ energy=Math.min(100,energy+dt*.004);
+ if(ptr.down){ // 持续排斥场
+  if(shocks.length<3&&(frames%6===0))shocks.push({x:ptr.x,y:ptr.y,r:10,max:150,a:.6});
+ }
+ for(let i=shocks.length-1;i>=0;i--){const s=shocks[i];
+  s.r+=dt*.25;s.a-=dt*.0009;
+  if(s.r>s.max||s.a<=0)shocks.splice(i,1);}
+ for(let i=parts.length-1;i>=0;i--){const p=parts[i];
+  p.age++;
+  // 引力井:F ~ 1/d,产生环绕
+  let dx=well.x-p.x,dy=well.y-p.y,d2=dx*dx+dy*dy,d=Math.sqrt(d2)||1;
+  let g=(900*p.m)/(d+60);
+  p.vx+=dx/d*g*dt*.06;p.vy+=dy/d*g*dt*.06;
+  if(d<well.r+14){ // 核心附近切向偏转,防止坠入
+   p.vx+=-dy/d*dt*.9;p.vy+=dx/d*dt*.9;}
+  // 指针轻微吸引
+  if(ptr.active&&!ptr.down){dx=ptr.x-p.x;dy=ptr.y-p.y;d=Math.sqrt(dx*dx+dy*dy)||1;
+   if(d<160){const f=(1-d/160)*dt*.5;p.vx+=dx/d*f;p.vy+=dy/d*f;}}
+  // 冲击波排斥
+  for(const s of shocks){dx=p.x-s.x;dy=p.y-s.y;d=Math.sqrt(dx*dx+dy*dy)||1;
+   const band=Math.abs(d-s.r);
+   if(band<26){const f=(1-band/26)*dt*3.2*s.a;p.vx+=dx/d*f;p.vy+=dy/d*f;}}
+  p.vx*=.985;p.vy*=.985; // 阻尼保证连续平滑
+  const sp2=p.vx*p.vx+p.vy*p.vy;
+  if(sp2>64){const k=8/Math.sqrt(sp2);p.vx*=k;p.vy*=k;}
+  p.x+=p.vx*dt*.06;p.y+=p.vy*dt*.06;
+  if(p.age>p.life||p.x<-80||p.x>W+80||p.y<-80||p.y>H+80)parts.splice(i,1);}
+ mode=ptr.down?"排斥冲击":(ptr.active?"指针扰动":"自由环绕");
+}
+function draw(){
+ ctx.globalCompositeOperation="source-over";
+ ctx.fillStyle="rgba(5,6,15,.28)"; // 尾迹:低透明度覆盖
+ ctx.fillRect(0,0,W,H);
+ ctx.globalCompositeOperation="lighter";
+ // 引力核心:多层辉光
+ const pr=well.r+Math.sin(well.ph*3)*3;
+ let grd=ctx.createRadialGradient(well.x,well.y,0,well.x,well.y,pr*4);
+ grd.addColorStop(0,"rgba(255,240,200,.95)");
+ grd.addColorStop(.25,"rgba(255,190,90,.55)");
+ grd.addColorStop(.6,"rgba(255,120,60,.16)");
+ grd.addColorStop(1,"rgba(255,120,60,0)");
+ ctx.fillStyle=grd;ctx.beginPath();ctx.arc(well.x,well.y,pr*4,0,TAU);ctx.fill();
+ ctx.fillStyle="#fff8e6";ctx.beginPath();ctx.arc(well.x,well.y,pr*.42,0,TAU);ctx.fill();
+ // 粒子:近大远小 + 发光尾迹
+ for(const p of parts){
+  const t=1-p.age/p.life,dx=p.x-well.x,dy=p.y-well.y;
+  const depth=Math.min(1,Math.sqrt(dx*dx+dy*dy)/(Math.min(W,H)*.5));
+  const r=p.m*(0.6+depth*1.4)*(.4+t*.6);
+  const sp=Math.sqrt(p.vx*p.vx+p.vy*p.vy);
+  ctx.strokeStyle=`hsla(${p.hue+sp*8},90%,${60+t*20}%,${.5*t})`;
+  ctx.lineWidth=r;
+  ctx.beginPath();ctx.moveTo(p.x-p.vx*3,p.y-p.vy*3);ctx.lineTo(p.x,p.y);ctx.stroke();
+  ctx.fillStyle=`hsla(${p.hue},100%,${70+depth*15}%,${.9*t})`;
+  ctx.beginPath();ctx.arc(p.x,p.y,r*.7,0,TAU);ctx.fill();}
+ // 冲击波环
+ for(const s of shocks){
+  ctx.strokeStyle=`rgba(140,220,255,${s.a})`;ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,TAU);ctx.stroke();
+  ctx.strokeStyle=`rgba(255,255,255,${s.a*.5})`;ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(s.x,s.y,s.r*.8,0,TAU);ctx.stroke();}
+}
+function loop(now){
+ const dt=Math.min(50,now-last);last=now;
+ frames++;ft+=dt;
+ if(ft>=500){fps=Math.round(frames*1000/ft);frames=0;ft=0;
+  document.getElementById("n").textContent=parts.length;
+  document.getElementById("f").textContent=fps;
+  document.getElementById("e").textContent=Math.round(energy);
+  document.getElementById("m").textContent=mode;}
+ step(dt);draw();
+ requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

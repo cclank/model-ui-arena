@@ -1,7 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { getReferenceModels, compareModels, sortModels } from "@/lib/model-order";
+import { PreviewFrame } from "@/components/preview-frame";
 import { PromptDrawer } from "@/components/prompt-drawer";
+import { SharePath } from "@/components/share-path";
 import { ScatterChart } from "@/components/scatter-chart";
 
 type ThemeMeta = {
@@ -15,6 +19,7 @@ type Submission = {
   theme: string;
   model: string;
   filename: string;
+  path: string;
   publicPath: string;
   renderKind: "html" | "text";
   linesTotal: number;
@@ -39,36 +44,23 @@ type ApiPayload = {
   submissions: Submission[];
 };
 
-const REFERENCE_MODEL_PATTERNS: RegExp[][] = [
-  [/^gpt-5\.5$/i, /^gpt-5\.4$/i, /^gpt-5\.3-codex$/i],
-  [/^claude-opus-4\.6$/i, /^opus-4\.7$/i, /^claude-sonnet-4-6$/i],
-  [/^Gemini-3\.1-Pro-High$/i, /^gemini-3\.5-flash-high$/i],
-  [/^qwen-3\.7-max$/i, /^qwen-3\.6-plus$/i],
-  [/^deepseek-v4-pro$/i],
-  [/^kimi-k2\.6$/i],
-  [/^glm-5\.1$/i, /^glm-5$/i],
-  [/^Seed-2\.0-Pro$/i],
-  [/^minimax-m2\.7$/i]
-];
-
 const UNLIMITED_LINE_THEMES = new Set(["cheetah-trophy-run", "dslr-camera"]);
+const MIN_CARD_WIDTH = 288;
+const GRID_GAP = 16;
+const MAX_PANES_PER_ROW = 6;
 
-function getReferenceModels(models: string[]): string[] {
-  return REFERENCE_MODEL_PATTERNS.map((patterns) =>
-    patterns
-      .map((pattern) => models.find((model) => pattern.test(model)))
-      .find((model): model is string => Boolean(model))
-  )
-    .filter((model): model is string => Boolean(model))
-    .sort();
-}
+type ArenaDashboardProps = {
+  initialTheme?: string;
+};
 
-export function ArenaDashboard() {
+export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) {
+  const gridRef = useRef<HTMLElement>(null);
   const [payload, setPayload] = useState<ApiPayload | null>(null);
   const [error, setError] = useState<string>("");
-  const [activeTheme, setActiveTheme] = useState<string>("clock");
+  const [activeTheme, setActiveTheme] = useState<string>(initialTheme);
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [panesPerRow, setPanesPerRow] = useState<number>(4);
+  const [maxPanesPerRow, setMaxPanesPerRow] = useState<number>(4);
   const [modelQuery, setModelQuery] = useState<string>("");
   const [pickerOpen, setPickerOpen] = useState<boolean>(false);
   const [showAllModels, setShowAllModels] = useState<boolean>(false);
@@ -92,11 +84,13 @@ export function ArenaDashboard() {
 
         setPayload(data);
 
-        if (!data.themes.find((theme) => theme.id === "clock")) {
-          setActiveTheme(data.themes[0]?.id ?? "clock");
-        }
+        setActiveTheme((current) =>
+          data.themes.some((theme) => theme.id === current)
+            ? current
+            : data.themes[0]?.id ?? "clock"
+        );
 
-        const models = [...new Set(data.submissions.map((item) => item.model))].sort();
+        const models = sortModels([...new Set(data.submissions.map((item) => item.model))]);
         const defaultModels = getReferenceModels(models);
         setSelectedModels(defaultModels.length ? defaultModels : models);
       })
@@ -110,17 +104,38 @@ export function ArenaDashboard() {
     };
   }, []);
 
+  useEffect(() => {
+    setActiveTheme(initialTheme);
+  }, [initialTheme]);
+
+  useEffect(() => {
+    const grid = gridRef.current;
+    if (!grid) {
+      return;
+    }
+
+    const updateMaximum = () => {
+      const availableWidth = grid.getBoundingClientRect().width;
+      const nextMaximum = Math.min(
+        MAX_PANES_PER_ROW,
+        Math.max(1, Math.floor((availableWidth + GRID_GAP) / (MIN_CARD_WIDTH + GRID_GAP)))
+      );
+      setMaxPanesPerRow((current) => current === nextMaximum ? current : nextMaximum);
+    };
+
+    updateMaximum();
+    const observer = new ResizeObserver(updateMaximum);
+    observer.observe(grid);
+
+    return () => observer.disconnect();
+  }, []);
+
   const availableModels = useMemo(() => {
     if (!payload) {
       return [];
     }
 
-    // Use a stable, deterministic order (alphabetical by model name). Sorting by
-    // file mtime was fragile — git checkout / pull / cross-machine mtimes shift,
-    // making the card order jump around.
-    return [...new Set(payload.submissions.map((item) => item.model))].sort((a, b) =>
-      a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" })
-    );
+    return sortModels([...new Set(payload.submissions.map((item) => item.model))]);
   }, [payload]);
 
   const filtered = useMemo(() => {
@@ -130,9 +145,7 @@ export function ArenaDashboard() {
 
     return payload.submissions
       .filter((item) => item.theme === activeTheme && selectedModels.includes(item.model))
-      .sort((a, b) =>
-        a.model.localeCompare(b.model, undefined, { numeric: true, sensitivity: "base" })
-      );
+      .sort((a, b) => compareModels(a.model, b.model));
   }, [activeTheme, payload, selectedModels]);
 
   const selectedModelSet = useMemo(() => new Set(selectedModels), [selectedModels]);
@@ -181,18 +194,19 @@ export function ArenaDashboard() {
     return payload?.themes.find((theme) => theme.id === activeTheme) ?? null;
   }, [activeTheme, payload]);
   const activeThemeHasUnlimitedLines = UNLIMITED_LINE_THEMES.has(activeTheme);
+  const effectivePanesPerRow = Math.min(panesPerRow, maxPanesPerRow);
 
   const toggleModel = (model: string) => {
     setSelectedModels((prev) => {
       if (prev.includes(model)) {
         return prev.filter((m) => m !== model);
       }
-      return [...prev, model].sort();
+      return sortModels([...prev, model]);
     });
   };
 
   const addVisibleModels = () => {
-    setSelectedModels((prev) => [...new Set([...prev, ...visibleModels])].sort());
+    setSelectedModels((prev) => sortModels([...new Set([...prev, ...visibleModels])]));
   };
 
   const removeVisibleModels = () => {
@@ -200,7 +214,7 @@ export function ArenaDashboard() {
   };
 
   const selectThemeModels = () => {
-    setSelectedModels([...modelsForActiveTheme].sort());
+    setSelectedModels(sortModels([...modelsForActiveTheme]));
   };
 
   const selectReferenceModels = () => {
@@ -258,14 +272,14 @@ export function ArenaDashboard() {
           <span className="toolbar-label">主题</span>
           <div className="chips">
             {payload?.themes.map((theme) => (
-              <button
+              <Link
                 key={theme.id}
-                type="button"
+                href={`/themes/${theme.id}`}
+                prefetch={false}
                 className={theme.id === activeTheme ? "chip active" : "chip"}
-                onClick={() => setActiveTheme(theme.id)}
               >
                 {theme.label}
-              </button>
+              </Link>
             ))}
           </div>
         </div>
@@ -276,14 +290,14 @@ export function ArenaDashboard() {
             <input
               type="range"
               min={1}
-              max={6}
+              max={maxPanesPerRow}
               step={1}
-              value={panesPerRow}
+              value={effectivePanesPerRow}
               onChange={(event) => setPanesPerRow(Number(event.target.value))}
               className="range-input mini"
               aria-label="每行窗格数"
             />
-            <strong className="per-row-value">{panesPerRow}</strong>
+            <strong className="per-row-value">{effectivePanesPerRow}</strong>
           </div>
 
           <div className="model-trigger-wrap">
@@ -451,14 +465,15 @@ export function ArenaDashboard() {
       ) : null}
 
       <section
+        ref={gridRef}
         className="arena-grid"
-        style={{ gridTemplateColumns: `repeat(${panesPerRow}, minmax(0, 1fr))` }}
+        style={{ gridTemplateColumns: `repeat(${effectivePanesPerRow}, minmax(0, 1fr))` }}
       >
         {filtered.map((item) => (
           <article className="panel card" key={item.id}>
             <div className="card-top">
               <div>
-                <h3>{item.model}</h3>
+                <h3 title={item.model}>{item.model}</h3>
                 <p className="meta">{item.theme}</p>
               </div>
               {item.unlimitedLines ? (
@@ -480,11 +495,10 @@ export function ArenaDashboard() {
             </div>
 
             {item.renderKind === "html" ? (
-              <iframe
+              <PreviewFrame
                 className="preview"
                 src={item.publicPath}
                 title={`${item.theme}-${item.model}`}
-                sandbox="allow-scripts allow-same-origin"
                 loading="lazy"
               />
             ) : (
@@ -496,9 +510,11 @@ export function ArenaDashboard() {
               </div>
             )}
 
-            <a className="source-link" href={item.publicPath} target="_blank" rel="noreferrer">
-              查看原始页面
-            </a>
+            <SharePath
+              theme={item.theme}
+              model={item.model}
+              returnPath={`/themes/${activeTheme}`}
+            />
           </article>
         ))}
       </section>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Cheetah Trophy Run · grok-4.5</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;
+  background:#0a1628;display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:12px
+}
+.stage{
+  width:min(420px,100%);aspect-ratio:3/4;position:relative;
+  border-radius:18px;overflow:hidden;
+  box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 1px rgba(251,191,36,.2)
+}
+svg{width:100%;height:100%;display:block}
+.caption{
+  position:absolute;left:0;right:0;bottom:0;padding:14px 16px 16px;
+  background:linear-gradient(transparent,rgba(5,10,20,.85));
+  color:#fde68a;font-size:.78rem;letter-spacing:.06em;text-align:center
+}
+.caption strong{display:block;font-size:1rem;color:#fff;margin-bottom:2px;letter-spacing:.12em}
+</style>
+</head>
+<body>
+<div class="stage">
+<svg viewBox="0 0 420 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="猎豹托举大力神杯冲刺">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0b1a33"/><stop offset="55%" stop-color="#132a4a"/><stop offset="100%" stop-color="#1a3d2a"/>
+    </linearGradient>
+    <linearGradient id="field" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1f6b3a"/><stop offset="100%" stop-color="#0d3d22"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff3b0"/><stop offset="35%" stop-color="#fbbf24"/><stop offset="70%" stop-color="#d97706"/><stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <linearGradient id="goldDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fcd34d"/><stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+    <linearGradient id="fur" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f6c76a"/><stop offset="50%" stop-color="#e8a83a"/><stop offset="100%" stop-color="#c47d1e"/>
+    </linearGradient>
+    <linearGradient id="furLight" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe6b0"/><stop offset="100%" stop-color="#f0c56a"/>
+    </linearGradient>
+    <radialGradient id="spotLight" cx="50%" cy="30%" r="55%">
+      <stop offset="0%" stop-color="#fff8e7" stop-opacity=".55"/><stop offset="55%" stop-color="#fbbf24" stop-opacity=".12"/><stop offset="100%" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ribbon" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#fbbf24"/><stop offset="50%" stop-color="#fde68a"/><stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="soft"><feGaussianBlur stdDeviation="1.2"/></filter>
+  </defs>
+
+  <!-- Background -->
+  <g id="bg">
+    <rect width="420" height="560" fill="url(#sky)"/>
+    <!-- stadium lights -->
+    <ellipse cx="210" cy="90" rx="180" ry="70" fill="url(#spotLight)"/>
+    <path d="M0 0 L60 120 L0 100 Z" fill="#fbbf24" opacity=".08"/>
+    <path d="M420 0 L360 120 L420 100 Z" fill="#fbbf24" opacity=".08"/>
+    <!-- crowd silhouettes -->
+    <g opacity=".35" fill="#0a1220">
+      <path d="M0 200 Q30 170 60 200 Q90 160 120 200 Q150 175 180 200 Q210 155 240 200 Q270 170 300 200 Q330 160 360 200 Q390 175 420 200 L420 250 L0 250 Z"/>
+      <circle cx="40" cy="188" r="10"/><circle cx="75" cy="182" r="11"/><circle cx="110" cy="190" r="9"/>
+      <circle cx="150" cy="180" r="12"/><circle cx="190" cy="185" r="10"/><circle cx="230" cy="178" r="11"/>
+      <circle cx="270" cy="186" r="10"/><circle cx="310" cy="180" r="12"/><circle cx="350" cy="188" r="9"/>
+      <circle cx="385" cy="184" r="10"/>
+    </g>
+    <!-- field -->
+    <rect y="300" width="420" height="260" fill="url(#field)"/>
+    <!-- grass stripes -->
+    <g opacity=".2">
+      <rect y="300" width="420" height="28" fill="#2d8f4e"/>
+      <rect y="356" width="420" height="28" fill="#2d8f4e"/>
+      <rect y="412" width="420" height="28" fill="#2d8f4e"/>
+      <rect y="468" width="420" height="28" fill="#2d8f4e"/>
+      <rect y="524" width="420" height="28" fill="#2d8f4e"/>
+    </g>
+    <!-- mid line -->
+    <line x1="0" y1="380" x2="420" y2="380" stroke="#fff" stroke-opacity=".15" stroke-width="2" stroke-dasharray="12 8"/>
+  </g>
+
+  <!-- Scoreboard -->
+  <g id="scoreboard" transform="translate(150,28)">
+    <rect x="0" y="0" width="120" height="52" rx="6" fill="#0b1220" stroke="#fbbf24" stroke-width="1.5"/>
+    <rect x="4" y="4" width="112" height="44" rx="4" fill="#111827"/>
+    <text x="60" y="20" text-anchor="middle" fill="#fbbf24" font-size="11" font-family="ui-monospace,monospace" letter-spacing="1">90+7′</text>
+    <text x="60" y="42" text-anchor="middle" fill="#fff" font-size="18" font-weight="700" font-family="ui-sans-serif,system-ui,sans-serif">3 : 2</text>
+  </g>
+
+  <!-- Speed lines / afterimages -->
+  <g id="speed" opacity=".45" stroke="#fde68a" stroke-linecap="round" fill="none">
+    <path d="M20 340 C80 320,140 330,200 310" stroke-width="2" opacity=".5"/>
+    <path d="M30 370 C100 350,160 360,220 340" stroke-width="1.5" opacity=".4"/>
+    <path d="M10 400 C70 385,130 390,190 370" stroke-width="2.5" opacity=".35"/>
+    <path d="M40 320 C90 300,150 305,200 290" stroke-width="1.2" opacity=".3"/>
+  </g>
+  <!-- cheetah afterimage ghosts -->
+  <g id="ghosts" opacity=".18" fill="#fbbf24">
+    <ellipse cx="120" cy="340" rx="50" ry="18" transform="rotate(-18 120 340)"/>
+    <ellipse cx="95" cy="360" rx="40" ry="14" transform="rotate(-15 95 360)"/>
+  </g>
+
+  <!-- Confetti / ribbons -->
+  <g id="ribbons">
+    <path d="M40 100 Q70 140 50 180 Q30 220 60 260" stroke="url(#ribbon)" stroke-width="4" fill="none" opacity=".85"/>
+    <path d="M360 90 Q330 130 350 170 Q370 210 340 250" stroke="url(#ribbon)" stroke-width="3.5" fill="none" opacity=".75"/>
+    <path d="M90 80 Q110 120 95 160" stroke="#f472b6" stroke-width="3" fill="none" opacity=".7"/>
+    <path d="M320 110 Q300 150 315 190" stroke="#38bdf8" stroke-width="3" fill="none" opacity=".7"/>
+    <rect x="70" y="130" width="10" height="4" rx="1" fill="#fbbf24" transform="rotate(25 75 132)"/>
+    <rect x="300" y="150" width="12" height="4" rx="1" fill="#f472b6" transform="rotate(-30 306 152)"/>
+    <rect x="100" y="200" width="8" height="3" rx="1" fill="#38bdf8" transform="rotate(40 104 201)"/>
+    <rect x="340" y="200" width="9" height="3" rx="1" fill="#a78bfa" transform="rotate(-20 344 201)"/>
+    <circle cx="55" cy="150" r="3" fill="#fde68a"/><circle cx="370" cy="160" r="2.5" fill="#f9a8d4"/>
+    <circle cx="80" cy="220" r="2" fill="#7dd3fc"/><circle cx="350" cy="230" r="2.5" fill="#fbbf24"/>
+  </g>
+
+  <!-- Rolling football -->
+  <g id="ball" transform="translate(80,430)">
+    <circle r="16" fill="#f5f5f5" stroke="#1f2937" stroke-width="1.2"/>
+    <path d="M0 -16 L5 -5 L16 -5 L7 3 L10 14 L0 7 L-10 14 L-7 3 L-16 -5 L-5 -5 Z" fill="#111827" opacity=".9" transform="scale(.55)"/>
+    <ellipse cx="2" cy="4" rx="14" ry="5" fill="#000" opacity=".12" transform="translate(0,18)"/>
+  </g>
+  <!-- grass scuffs -->
+  <g id="scuffs" stroke="#0a2e18" stroke-width="1.5" fill="none" opacity=".5">
+    <path d="M140 420 Q160 415 180 422"/><path d="M200 445 Q230 438 260 448"/>
+    <path d="M100 460 Q130 455 155 462"/><path d="M280 430 Q310 424 340 432"/>
+  </g>
+
+  <!-- ===== CHEETAH + TROPHY ===== -->
+  <g id="hero" transform="translate(30,40)">
+    <!-- Tail (behind, motion arc) -->
+    <path id="tail" d="M60 280 C20 300,-10 270,10 240 C30 215,50 230,55 250"
+      fill="none" stroke="#c47d1e" stroke-width="14" stroke-linecap="round"/>
+    <path d="M60 280 C20 300,-10 270,10 240 C30 215,50 230,55 250"
+      fill="none" stroke="#2a1a0a" stroke-width="3" stroke-linecap="round" stroke-dasharray="0 8 6 10 5 12" opacity=".7"/>
+
+    <!-- Hind legs (push off) -->
+    <g id="hind-legs">
+      <!-- left hind -->
+      <path d="M90 290 L70 340 L55 390 L48 400" fill="none" stroke="url(#fur)" stroke-width="18" stroke-linecap="round"/>
+      <ellipse cx="45" cy="402" rx="14" ry="7" fill="#3d2914" transform="rotate(-15 45 402)"/>
+      <!-- right hind extended -->
+      <path d="M110 285 L130 330 L155 370 L170 385" fill="none" stroke="url(#fur)" stroke-width="16" stroke-linecap="round"/>
+      <ellipse cx="175" cy="388" rx="13" ry="6" fill="#3d2914" transform="rotate(20 175 388)"/>
+    </g>
+
+    <!-- Body (leaning forward) -->
+    <g id="body">
+      <ellipse cx="160" cy="250" rx="95" ry="38" fill="url(#fur)" transform="rotate(-22 160 250)"/>
+      <!-- belly light -->
+      <ellipse cx="165" cy="258" rx="70" ry="18" fill="url(#furLight)" opacity=".75" transform="rotate(-22 165 258)"/>
+      <!-- spots -->
+      <g fill="#2a1a0a" opacity=".85">
+        <ellipse cx="110" cy="240" rx="5" ry="3.5" transform="rotate(-20 110 240)"/>
+        <ellipse cx="130" cy="228" rx="4.5" ry="3" transform="rotate(-25 130 228)"/>
+        <ellipse cx="150" cy="235" rx="5" ry="3.2" transform="rotate(-22 150 235)"/>
+        <ellipse cx="170" cy="222" rx="4" ry="2.8" transform="rotate(-20 170 222)"/>
+        <ellipse cx="190" cy="232" rx="5" ry="3" transform="rotate(-18 190 232)"/>
+        <ellipse cx="210" cy="225" rx="4" ry="2.5" transform="rotate(-15 210 225)"/>
+        <ellipse cx="140" cy="255" rx="4" ry="2.5" transform="rotate(-22 140 255)"/>
+        <ellipse cx="180" cy="250" rx="4.5" ry="3" transform="rotate(-20 180 250)"/>
+        <ellipse cx="200" cy="245" rx="3.5" ry="2.5" transform="rotate(-18 200 245)"/>
+        <ellipse cx="120" cy="260" rx="3.5" ry="2.2" transform="rotate(-25 120 260)"/>
+      </g>
+      <!-- muscle lines -->
+      <path d="M100 245 Q130 235 160 240" stroke="#a86a18" stroke-width="1.2" fill="none" opacity=".4"/>
+      <path d="M180 230 Q210 225 230 235" stroke="#a86a18" stroke-width="1.2" fill="none" opacity=".35"/>
+    </g>
+
+    <!-- Front legs raised holding trophy -->
+    <g id="front-legs">
+      <!-- left arm up -->
+      <path d="M210 230 C230 200,240 170,245 145" fill="none" stroke="url(#fur)" stroke-width="15" stroke-linecap="round"/>
+      <ellipse cx="245" cy="138" rx="12" ry="9" fill="#e8a83a" transform="rotate(-10 245 138)"/>
+      <!-- right arm up -->
+      <path d="M225 235 C250 210,265 180,272 150" fill="none" stroke="url(#fur)" stroke-width="14" stroke-linecap="round"/>
+      <ellipse cx="274" cy="143" rx="11" ry="8" fill="#e8a83a" transform="rotate(15 274 143)"/>
+      <!-- claws subtle -->
+      <path d="M238 132 L234 124 M245 130 L245 121 M252 132 L256 124" stroke="#2a1a0a" stroke-width="1.5" fill="none"/>
+      <path d="M268 136 L265 128 M274 134 L274 125 M280 136 L284 128" stroke="#2a1a0a" stroke-width="1.5" fill="none"/>
+    </g>
+
+    <!-- ===== WORLD CUP TROPHY ===== -->
+    <g id="trophy" transform="translate(230,40)" filter="url(#glow)">
+      <!-- green base -->
+      <ellipse cx="30" cy="100" rx="22" ry="6" fill="#14532d"/>
+      <rect x="12" y="88" width="36" height="14" rx="3" fill="#166534"/>
+      <rect x="16" y="90" width="28" height="4" fill="#22c55e" opacity=".4"/>
+      <!-- stem -->
+      <rect x="24" y="70" width="12" height="20" rx="2" fill="url(#goldDark)"/>
+      <ellipse cx="30" cy="72" rx="10" ry="3" fill="#fbbf24"/>
+      <!-- globe body -->
+      <circle cx="30" cy="48" r="26" fill="url(#gold)"/>
+      <ellipse cx="30" cy="48" rx="26" ry="10" fill="none" stroke="#b45309" stroke-width="1" opacity=".4"/>
+      <ellipse cx="30" cy="48" rx="10" ry="26" fill="none" stroke="#b45309" stroke-width="1" opacity=".35"/>
+      <path d="M10 40 Q30 30 50 40" fill="none" stroke="#fff3b0" stroke-width="1.5" opacity=".5"/>
+      <!-- two human figures holding globe (simplified iconic) -->
+      <g fill="url(#goldDark)" stroke="#92400e" stroke-width=".6">
+        <!-- left figure -->
+        <ellipse cx="10" cy="55" rx="5" ry="4"/>
+        <path d="M6 58 L4 78 L10 78 L12 62 L16 78 L20 78 L16 55 Z"/>
+        <path d="M8 48 Q14 42 22 46" fill="none" stroke="#d97706" stroke-width="2.5"/>
+        <!-- right figure -->
+        <ellipse cx="50" cy="55" rx="5" ry="4"/>
+        <path d="M54 58 L56 78 L50 78 L48 62 L44 78 L40 78 L44 55 Z"/>
+        <path d="M52 48 Q46 42 38 46" fill="none" stroke="#d97706" stroke-width="2.5"/>
+      </g>
+      <!-- top finial -->
+      <circle cx="30" cy="20" r="4" fill="#fde68a"/>
+      <rect x="28" y="22" width="4" height="6" fill="#fbbf24"/>
+      <!-- metal highlight -->
+      <path d="M18 35 Q25 28 32 32" fill="none" stroke="#fffbeb" stroke-width="2" opacity=".55" stroke-linecap="round"/>
+    </g>
+
+    <!-- Head -->
+    <g id="head" transform="translate(230,185)">
+      <!-- neck -->
+      <ellipse cx="0" cy="30" rx="16" ry="22" fill="url(#fur)" transform="rotate(-15 0 30)"/>
+      <!-- skull -->
+      <ellipse cx="18" cy="8" rx="32" ry="26" fill="url(#fur)"/>
+      <ellipse cx="22" cy="14" rx="22" ry="16" fill="url(#furLight)" opacity=".7"/>
+      <!-- ears -->
+      <path d="M-8 -12 L-18 -32 L2 -16 Z" fill="#e8a83a" stroke="#c47d1e" stroke-width="1"/>
+      <path d="M-12 -16 L-16 -26 L-2 -16 Z" fill="#f9a8d4" opacity=".7"/>
+      <path d="M35 -10 L48 -30 L28 -14 Z" fill="#e8a83a" stroke="#c47d1e" stroke-width="1"/>
+      <path d="M36 -14 L44 -24 L32 -14 Z" fill="#f9a8d4" opacity=".7"/>
+      <!-- tear marks (iconic cheetah) -->
+      <path d="M8 10 Q5 22 2 32" stroke="#1c1008" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <path d="M28 12 Q32 24 36 34" stroke="#1c1008" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <!-- eyes -->
+      <ellipse cx="10" cy="6" rx="5" ry="4" fill="#1c1008"/>
+      <ellipse cx="32" cy="7" rx="5" ry="4" fill="#1c1008"/>
+      <circle cx="11.5" cy="5" r="1.5" fill="#fde68a"/>
+      <circle cx="33.5" cy="6" r="1.5" fill="#fde68a"/>
+      <!-- nose -->
+      <ellipse cx="24" cy="22" rx="6" ry="4" fill="#2a1a0a"/>
+      <ellipse cx="22" cy="21" rx="2" ry="1.2" fill="#6b4a2a" opacity=".6"/>
+      <!-- mouth -->
+      <path d="M18 28 Q24 32 30 28" fill="none" stroke="#2a1a0a" stroke-width="1.5"/>
+      <!-- whisker dots -->
+      <circle cx="12" cy="24" r="1" fill="#2a1a0a"/><circle cx="10" cy="28" r="1" fill="#2a1a0a"/>
+      <circle cx="36" cy="24" r="1" fill="#2a1a0a"/><circle cx="38" cy="28" r="1" fill="#2a1a0a"/>
+      <!-- spots on head -->
+      <ellipse cx="0" cy="0" rx="3" ry="2" fill="#2a1a0a"/><ellipse cx="40" cy="2" rx="2.5" ry="1.8" fill="#2a1a0a"/>
+    </g>
+  </g>
+
+  <!-- Ground shadow under cheetah -->
+  <ellipse cx="230" cy="470" rx="110" ry="14" fill="#000" opacity=".28" filter="url(#soft)"/>
+
+  <!-- Title strip -->
+  <g id="title">
+    <text x="210" y="530" text-anchor="middle" fill="#fde68a" font-size="13" font-weight="700"
+      font-family="ui-sans-serif,system-ui,sans-serif" letter-spacing="3">CHAMPION SPRINT</text>
+    <text x="210" y="548" text-anchor="middle" fill="#94a3b8" font-size="9"
+      font-family="ui-sans-serif,system-ui,sans-serif" letter-spacing="2">90+7′  FINAL  ·  3:2</text>
+  </g>
+</svg>
+<div class="caption"><strong>猎豹托举大力神杯</strong>补时绝杀 · 冠军冲刺</div>
+</div>
+</body>
+</html>

@@ -1,13 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { sortModels } from "@/lib/model-order";
+import { PreviewFrame } from "@/components/preview-frame";
+import { SharePath } from "@/components/share-path";
 
 type Submission = {
   id: string;
   theme: string;
   model: string;
+  path: string;
   publicPath: string;
   renderKind: "html" | "text";
   linesTotal: number;
@@ -34,82 +38,17 @@ function Badge({ sub }: { sub: Submission }) {
   );
 }
 
-const FIT_MIN = 460;
-const FIT_MAX = 1600;
-
 function CompareColumn({
   sub,
   model,
   theme,
-  slot,
-  onMeasure,
-  targetHeight,
+  returnPath
 }: {
   sub?: Submission;
   model: string;
   theme: string;
-  slot: "a" | "b";
-  onMeasure: (slot: "a" | "b", h: number) => void;
-  targetHeight?: number;
+  returnPath: string;
 }) {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  // Measure the content's natural height so we can (a) reveal pages that
-  // would be clipped at a fixed height and (b) equalize the two columns to
-  // the taller one for balanced side-by-side comparison.
-  const measure = () => {
-    const f = iframeRef.current;
-    if (!f) return;
-    try {
-      const doc = f.contentDocument;
-      if (!doc || doc.readyState !== "complete") return;
-      // Break the circular height dependency that traps full-viewport pages:
-      // `html,body{height:100%|100vh}` makes scrollHeight report the iframe's
-      // own height instead of real content, so we'd never grow. height:auto
-      // lets the body expand; min-height:100vh preserves backgrounds / centering.
-      const override = doc.getElementById("__arena_fit");
-      if (!override) {
-        const st = doc.createElement("style");
-        st.id = "__arena_fit";
-        st.textContent =
-          "html,body{height:auto!important;min-height:100vh!important}";
-        (doc.head || doc.documentElement).appendChild(st);
-      }
-      const h = Math.max(
-        doc.body?.scrollHeight ?? 0,
-        doc.documentElement?.scrollHeight ?? 0
-      );
-      onMeasure(slot, Math.min(Math.max(h, FIT_MIN), FIT_MAX));
-    } catch {
-      /* cross-origin (should not happen for same-origin submissions) */
-    }
-  };
-
-  const applyHeight = (h?: number) => {
-    const f = iframeRef.current;
-    if (f && h) f.style.height = h + "px";
-  };
-
-  // measure on load + a few retries for async layout; re-measure on resize.
-  useEffect(() => {
-    if (!sub || sub.renderKind !== "html") return;
-    const timers = [200, 600, 1200, 2000, 3500].map((d) =>
-      window.setTimeout(measure, d)
-    );
-    const onResize = () => measure();
-    window.addEventListener("resize", onResize);
-    return () => {
-      timers.forEach((t) => window.clearTimeout(t));
-      window.removeEventListener("resize", onResize);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sub, theme, model]);
-
-  // whenever the (equalized) target height changes, apply it.
-  useEffect(() => {
-    applyHeight(targetHeight);
-  }, [targetHeight]);
-
   return (
     <article className="panel card compare-col">
       <div className="card-top">
@@ -129,22 +68,16 @@ function CompareColumn({
             <span>{Math.round(sub.sizeBytes / 1024)} KB</span>
           </div>
           {sub.renderKind === "html" ? (
-            <iframe
-              ref={iframeRef}
-              className="preview preview-autofit"
+            <PreviewFrame
+              className="preview"
               src={sub.publicPath}
               title={`${theme}-${model}`}
-              sandbox="allow-scripts allow-same-origin"
               loading="lazy"
-              onLoad={measure}
-              scrolling="auto"
             />
           ) : (
             <pre className="qa-answer">{sub.answerText || "(empty answer)"}</pre>
           )}
-          <a className="source-link" href={sub.publicPath} target="_blank" rel="noreferrer">
-            查看原始页面
-          </a>
+          <SharePath theme={sub.theme} model={sub.model} returnPath={returnPath} />
         </>
       ) : (
         <p className="empty-selection">该模型在此主题暂无作品</p>
@@ -158,16 +91,6 @@ export function CompareView() {
   const sp = useSearchParams();
   const [payload, setPayload] = useState<ApiPayload | null>(null);
   const [copied, setCopied] = useState(false);
-  // measured natural height per column, equalized to the taller one so the
-  // two cards line up and full-viewport canvas pages fill the row.
-  const heightsRef = useRef<{ a?: number; b?: number }>({});
-  const [targetHeight, setTargetHeight] = useState<number | undefined>(undefined);
-  const handleMeasure = (slot: "a" | "b", h: number) => {
-    const next = { ...heightsRef.current, [slot]: h };
-    heightsRef.current = next;
-    const max = Math.max(next.a ?? FIT_MIN, next.b ?? FIT_MIN);
-    if (max !== targetHeight) setTargetHeight(max);
-  };
 
   useEffect(() => {
     let cancelled = false;
@@ -187,7 +110,7 @@ export function CompareView() {
 
   const theme = sp.get("theme") || themes[0]?.id || "";
   const modelsForTheme = useMemo(
-    () => [...new Set(subs.filter((s) => s.theme === theme).map((s) => s.model))].sort(),
+    () => sortModels([...new Set(subs.filter((s) => s.theme === theme).map((s) => s.model))]),
     [subs, theme]
   );
   const a = sp.get("a") || modelsForTheme[0] || "";
@@ -195,6 +118,7 @@ export function CompareView() {
 
   const subA = subs.find((s) => s.theme === theme && s.model === a);
   const subB = subs.find((s) => s.theme === theme && s.model === b);
+  const comparePath = `/compare?theme=${encodeURIComponent(theme)}&a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`;
 
   const update = (next: Record<string, string>, resetModels = false) => {
     const p = new URLSearchParams(sp.toString());
@@ -221,17 +145,10 @@ export function CompareView() {
   const kbA = subA ? Math.round(subA.sizeBytes / 1024) : 0;
   const kbB = subB ? Math.round(subB.sizeBytes / 1024) : 0;
 
-  // reset equalized height when the selection changes so stale measurements
-  // from a different submission don't persist.
-  useEffect(() => {
-    heightsRef.current = {};
-    setTargetHeight(undefined);
-  }, [theme, a, b]);
-
   return (
     <main className="arena-shell">
       <header className="compare-head">
-        <Link href="/" className="task-back">
+        <Link href={`/themes/${theme || "clock"}`} className="task-back">
           ← 返回 Arena
         </Link>
         <h1 className="compare-title">双模型对比</h1>
@@ -282,8 +199,8 @@ export function CompareView() {
       ) : null}
 
       <div className="compare-pair">
-        <CompareColumn sub={subA} model={a} theme={theme} slot="a" onMeasure={handleMeasure} targetHeight={targetHeight} />
-        <CompareColumn sub={subB} model={b} theme={theme} slot="b" onMeasure={handleMeasure} targetHeight={targetHeight} />
+        <CompareColumn sub={subA} model={a} theme={theme} returnPath={comparePath} />
+        <CompareColumn sub={subB} model={b} theme={theme} returnPath={comparePath} />
       </div>
     </main>
   );

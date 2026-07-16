@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Solara S56 Camera</title>
+<style>
+  :root{color-scheme:dark}
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:#141615;color:#ece9df;font-family:ui-sans-serif,system-ui,sans-serif}
+  body{min-height:100vh;display:grid;place-items:center;overflow:hidden}
+  .studio{position:relative;width:100vw;height:100vh;min-height:560px;background:linear-gradient(135deg,#2c302e 0,#171918 44%,#090a0a 100%);overflow:hidden}
+  .studio:before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,#ffffff0a 0 18%,transparent 33% 100%);pointer-events:none}
+  svg{width:100%;height:100%;display:block}
+  .copy{position:absolute;left:clamp(20px,5vw,70px);top:clamp(20px,6vh,60px);z-index:2;pointer-events:none}
+  .copy small{font:700 10px ui-monospace,monospace;letter-spacing:.28em;color:#d04d39}
+  .copy h1{margin:10px 0 5px;font-size:clamp(30px,5vw,66px);font-weight:300;letter-spacing:.08em}
+  .copy p{margin:0;color:#8f9792;font:11px ui-monospace,monospace;letter-spacing:.14em}
+  .spec{position:absolute;right:clamp(16px,4vw,56px);bottom:clamp(18px,5vh,48px);z-index:2;text-align:right;color:#777f7a;font:9px/1.7 ui-monospace,monospace;letter-spacing:.14em;pointer-events:none}
+  .spec b{display:block;color:#c6cbc4;font-size:11px}
+  #modeDial{cursor:pointer;outline:none;transform-box:view-box;transform-origin:855px 240px;transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+  #modeDial:hover .dial-edge{stroke:#e65d45}
+  .glassSweep{animation:sweep 4.5s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+  .focusMark{animation:focus 3s ease-in-out infinite}
+  @keyframes sweep{0%,25%{transform:translateX(-35px);opacity:.08}55%{transform:translateX(35px);opacity:.55}85%,100%{transform:translateX(45px);opacity:.08}}
+  @keyframes focus{50%{opacity:.35}}
+  @media(max-width:600px){.studio{min-height:100svh}.copy h1{font-size:34px}.copy p{display:none}.spec{font-size:8px}svg{transform:scale(1.3);transform-origin:53% 58%}}
+</style>
+</head>
+<body>
+<main class="studio">
+  <div class="copy"><small>OPTICAL INSTRUMENT / S SERIES</small><h1>SOLARA S56</h1><p>FULL FRAME · 56 MP · HAND-DRAWN OPTICS</p></div>
+  <div class="spec"><b id="modeReadout">MODE / MANUAL</b>85 MM&nbsp;&nbsp;F 1.4<br>BODY NO. S56-0710</div>
+  <svg viewBox="0 0 1200 780" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="cameraTitle cameraDesc">
+    <title id="cameraTitle">Solara S56 三分之四视角单反相机</title>
+    <desc id="cameraDesc">由内联 SVG 手绘的相机，包含机身、军舰头、模式转盘、握把和多层镜头。</desc>
+    <defs>
+      <linearGradient id="table" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#303431"/><stop offset="1" stop-color="#111312"/></linearGradient>
+      <linearGradient id="bodyFace" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#4a4d4a"/><stop offset=".18" stop-color="#292b29"/><stop offset=".55" stop-color="#151716"/><stop offset=".83" stop-color="#222422"/><stop offset="1" stop-color="#090a0a"/></linearGradient>
+      <linearGradient id="bodySide" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#262825"/><stop offset=".6" stop-color="#101110"/><stop offset="1" stop-color="#050606"/></linearGradient>
+      <linearGradient id="topFace" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#555955"/><stop offset=".3" stop-color="#292c29"/><stop offset="1" stop-color="#111211"/></linearGradient>
+      <linearGradient id="metal" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#090a0a"/><stop offset=".12" stop-color="#777b77"/><stop offset=".2" stop-color="#202220"/><stop offset=".46" stop-color="#a9aca7"/><stop offset=".53" stop-color="#343634"/><stop offset=".8" stop-color="#777a76"/><stop offset="1" stop-color="#0b0c0b"/></linearGradient>
+      <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b8b9b4"/><stop offset=".16" stop-color="#30312f"/><stop offset=".44" stop-color="#0a0b0a"/><stop offset=".7" stop-color="#5e605c"/><stop offset="1" stop-color="#151615"/></linearGradient>
+      <radialGradient id="glass" cx="35%" cy="28%" r="72%"><stop stop-color="#9cd8d2"/><stop offset=".1" stop-color="#355d63"/><stop offset=".32" stop-color="#132b38"/><stop offset=".57" stop-color="#080e1a"/><stop offset=".78" stop-color="#17102a"/><stop offset="1" stop-color="#010305"/></radialGradient>
+      <radialGradient id="glassInner" cx="43%" cy="38%"><stop stop-color="#467d88"/><stop offset=".17" stop-color="#122a38"/><stop offset=".55" stop-color="#080815"/><stop offset=".78" stop-color="#261332"/><stop offset="1" stop-color="#010203"/></radialGradient>
+      <linearGradient id="redRing" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#61170f"/><stop offset=".3" stop-color="#ef6048"/><stop offset=".55" stop-color="#7c1d12"/><stop offset=".8" stop-color="#fc7b61"/><stop offset="1" stop-color="#511008"/></linearGradient>
+      <pattern id="grip" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(28)"><rect width="9" height="9" fill="#111211"/><path d="M0 1h9M0 6h9" stroke="#343633" stroke-width="1"/></pattern>
+      <pattern id="rib" width="10" height="12" patternUnits="userSpaceOnUse"><rect width="10" height="12" fill="#171817"/><path d="M2 0v12M7 0v12" stroke="#4b4d49" stroke-width="1.2"/><path d="M4 0v12M9 0v12" stroke="#070807"/></pattern>
+      <pattern id="fineRib" width="6" height="10" patternUnits="userSpaceOnUse"><rect width="6" height="10" fill="#202120"/><path d="M1 0v10" stroke="#666863"/><path d="M4 0v10" stroke="#090a09"/></pattern>
+      <filter id="objectShadow" x="-25%" y="-30%" width="160%" height="180%"><feGaussianBlur in="SourceAlpha" stdDeviation="10" result="b"/><feOffset dx="8" dy="18" result="o"/><feColorMatrix in="o" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .62 0"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="softShadow"><feGaussianBlur stdDeviation="18"/></filter>
+      <filter id="texture" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="2" seed="8" result="noise"/><feColorMatrix in="noise" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 .07 0"/><feBlend in="SourceGraphic" mode="overlay"/></filter>
+      <filter id="glassGlow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <clipPath id="frontGlass"><ellipse cx="363" cy="459" rx="131" ry="143" transform="rotate(-5 363 459)"/></clipPath>
+    </defs>
+
+    <path d="M0 563 C240 520 952 520 1200 575 L1200 780 L0 780Z" fill="url(#table)"/>
+    <path d="M0 564 C320 539 880 536 1200 577" fill="none" stroke="#676d67" stroke-opacity=".25"/>
+    <ellipse cx="620" cy="641" rx="430" ry="72" fill="#000" opacity=".7" filter="url(#softShadow)"/>
+    <ellipse cx="600" cy="618" rx="347" ry="35" fill="#000" opacity=".52"/>
+
+    <g id="camera" filter="url(#objectShadow)">
+      <path d="M482 266 L887 243 Q944 243 979 285 L1031 343 L1010 554 Q1006 598 960 612 L501 604 Q451 596 439 557 L422 334 Q425 289 482 266Z" fill="url(#bodyFace)" stroke="#5a5d58" stroke-width="3" filter="url(#texture)"/>
+      <path d="M887 243 Q950 244 979 285 L1031 343 L1010 554 Q1006 594 960 612 L900 596 L910 321Z" fill="url(#bodySide)" stroke="#151715" stroke-width="2"/>
+      <path d="M481 267 L887 244 L910 321 L427 333 Q432 289 481 267Z" fill="url(#topFace)" stroke="#626560" stroke-width="2"/>
+      <path d="M447 347 L468 330 L892 319 L911 337" fill="none" stroke="#777a74" stroke-opacity=".48"/>
+      <path d="M446 552 Q585 575 905 557" fill="none" stroke="#050605" stroke-width="5" opacity=".7"/>
+      <path d="M449 565 Q605 588 908 568" fill="none" stroke="#858981" stroke-width="1" opacity=".26"/>
+
+      <g id="prism">
+        <path d="M605 267 L642 187 L776 183 L834 253 L829 310 L591 315Z" fill="url(#topFace)" stroke="#646762" stroke-width="3"/>
+        <path d="M642 187 L776 183 L806 219 L619 225Z" fill="#343633" stroke="#81847e" stroke-width="2"/>
+        <path d="M629 231 L792 226 L818 259 L607 266Z" fill="#0e100f"/>
+        <path d="M665 197 L757 194 L773 210 L650 214Z" fill="#0a0b0a" stroke="#60635e"/>
+        <rect x="682" y="197" width="60" height="8" rx="2" fill="url(#metal)" transform="rotate(-1.8 712 201)"/>
+        <path d="M620 280L802 275" stroke="#080908" stroke-width="5"/>
+      </g>
+
+      <g id="hotShoe" transform="translate(685 174) rotate(-2)">
+        <path d="M0 18L12 0h73l15 17-11 13H11Z" fill="#0b0c0b" stroke="#747771" stroke-width="2"/>
+        <path d="M15 7h68l8 10H7Z" fill="url(#metal)"/>
+        <rect x="32" y="9" width="33" height="12" rx="2" fill="#101210" stroke="#a0a39c"/>
+      </g>
+
+      <g id="modeDial" role="button" tabindex="0" aria-label="切换相机模式">
+        <ellipse class="dial-edge" cx="855" cy="240" rx="59" ry="21" fill="#090a09" stroke="#7a7d77" stroke-width="3"/>
+        <path d="M798 240v23q6 20 57 21q51-2 59-22v-22" fill="url(#fineRib)" stroke="#101110" stroke-width="2"/>
+        <ellipse cx="855" cy="240" rx="54" ry="18" fill="#30322f" stroke="#92958e"/>
+        <ellipse cx="855" cy="239" rx="39" ry="12" fill="#181a18"/>
+        <g stroke="#d7d8d2" stroke-width="2"><path d="M810 235l-8-3"/><path d="M821 227l-5-5"/><path d="M841 222l-2-6"/><path d="M865 221l2-6"/><path d="M887 225l6-5"/><path d="M900 234l8-2"/></g>
+        <text x="855" y="244" text-anchor="middle" fill="#e05b43" font-size="12" font-family="monospace" font-weight="700">M</text>
+      </g>
+      <path d="M855 202l5 10h-10Z" fill="#e85d45"/>
+
+      <g id="shutter">
+        <path d="M921 265 Q968 265 987 291 L976 324 L906 312Z" fill="#171918" stroke="#5a5e59" stroke-width="2"/>
+        <ellipse cx="953" cy="286" rx="27" ry="12" fill="url(#metal)" stroke="#aaa" stroke-width="2" transform="rotate(8 953 286)"/>
+        <ellipse cx="953" cy="284" rx="18" ry="7" fill="#272a27" transform="rotate(8 953 284)"/>
+        <circle cx="987" cy="310" r="7" fill="#ba3d2e" stroke="#e26b56"/>
+      </g>
+
+      <g id="gripBody">
+        <path d="M872 327 Q936 292 1003 336 L1015 510 Q1012 579 960 602 L899 587 L878 513Z" fill="url(#grip)" stroke="#30332f" stroke-width="3"/>
+        <path d="M895 350 Q946 323 991 349" fill="none" stroke="#696c66" stroke-width="2" opacity=".5"/>
+        <path d="M919 381 Q952 364 993 378 L997 504 Q986 551 950 565 L918 551Z" fill="#0b0c0b" opacity=".62"/>
+        <path d="M934 399q25-12 54-4M936 427q26-11 54-4M938 455q25-10 53-3M940 483q24-9 51-2M942 511q19-7 43-1" fill="none" stroke="#3d403c" stroke-width="3"/>
+      </g>
+
+      <g id="bodyDetails">
+        <text x="778" y="362" fill="#e7e7df" font-size="25" font-family="sans-serif" font-weight="700" letter-spacing="5">SOLARA</text>
+        <text x="824" y="386" fill="#9ea39d" font-size="11" font-family="monospace" letter-spacing="2">S56 FULL FRAME</text>
+        <path d="M777 336h114" stroke="#e75843" stroke-width="3"/>
+        <circle cx="834" cy="423" r="12" fill="#121412" stroke="#777b75"/><circle cx="834" cy="423" r="5" fill="#a93e30"/>
+        <circle cx="949" cy="351" r="5" fill="#121312" stroke="#7a7e77"/>
+        <path d="M944 377h34M944 385h34" stroke="#4b4e4a" stroke-width="3"/>
+        <rect x="939" y="523" width="50" height="20" rx="3" fill="#090a09" stroke="#383b38"/>
+        <text x="964" y="537" text-anchor="middle" fill="#777d78" font-size="8" font-family="monospace">CARD</text>
+        <path d="M1005 370q22 4 26 22v58" fill="none" stroke="#090a09" stroke-width="8"/>
+        <rect x="1017" y="386" width="14" height="44" rx="4" fill="#1f211f" stroke="#6a6d67"/>
+      </g>
+
+      <g id="mount">
+        <ellipse cx="620" cy="440" rx="178" ry="197" fill="#0a0b0a" stroke="#858882" stroke-width="8" transform="rotate(-4 620 440)"/>
+        <ellipse cx="612" cy="443" rx="158" ry="180" fill="url(#metal)" stroke="#111" stroke-width="4" transform="rotate(-4 612 443)"/>
+        <ellipse cx="599" cy="447" rx="145" ry="169" fill="#0c0d0c" stroke="#7d807a" stroke-width="2" transform="rotate(-4 599 447)"/>
+        <g fill="#bfc2ba"><rect x="592" y="271" width="13" height="20" rx="2"/><rect x="592" y="601" width="13" height="20" rx="2"/><rect x="444" y="439" width="20" height="12" rx="2"/></g>
+      </g>
+
+      <g id="lensBarrel">
+        <path d="M351 299 C438 274 548 288 618 326 L625 558 C550 611 431 622 337 589Z" fill="#121312" stroke="#4b4e49" stroke-width="3"/>
+        <path d="M358 312 C436 289 521 299 586 329 L589 570 C518 600 425 602 345 574Z" fill="url(#rib)" opacity=".92"/>
+        <path d="M332 330 C389 306 467 310 522 341 L526 574 C462 606 385 604 326 573Z" fill="#131513" stroke="#5e615c" stroke-width="3"/>
+        <path d="M324 344 C375 324 434 327 481 351 L484 567 C431 590 373 590 318 569Z" fill="url(#fineRib)"/>
+        <path d="M299 363 C352 341 416 344 459 370 L463 553 C412 580 346 580 293 555Z" fill="#0b0c0b" stroke="#6a6d67" stroke-width="3"/>
+        <path d="M300 365 C351 344 411 347 451 371" fill="none" stroke="#b7bab4" stroke-width="4" opacity=".35"/>
+        <path d="M449 354 L455 570" stroke="url(#redRing)" stroke-width="8"/>
+        <path d="M466 359 L472 563" stroke="#777a75" stroke-width="3"/>
+        <path d="M520 337 L525 578" stroke="#090a09" stroke-width="12" opacity=".7"/>
+        <rect x="487" y="361" width="78" height="22" rx="3" fill="#080908" stroke="#555853" transform="rotate(2 526 372)"/>
+        <text x="526" y="376" text-anchor="middle" fill="#d8d9d2" font-size="10" font-family="monospace">0.85  1.2  3  INF</text>
+        <path class="focusMark" d="M506 386v14" stroke="#e35842" stroke-width="3"/>
+        <text x="479" y="526" fill="#aeb1ab" font-size="11" font-family="monospace" transform="rotate(-87 479 526)">85 MM  1:1.4  ASPH</text>
+      </g>
+
+      <g id="frontElement">
+        <ellipse cx="363" cy="459" rx="187" ry="201" fill="#080908" stroke="url(#ring)" stroke-width="13" transform="rotate(-5 363 459)"/>
+        <ellipse cx="363" cy="459" rx="170" ry="184" fill="#1b1d1b" stroke="#777a75" stroke-width="4" transform="rotate(-5 363 459)"/>
+        <ellipse cx="363" cy="459" rx="158" ry="172" fill="#060706" stroke="#20221f" stroke-width="12" transform="rotate(-5 363 459)"/>
+        <ellipse cx="363" cy="459" rx="145" ry="158" fill="url(#glass)" stroke="#777f7b" stroke-width="4" transform="rotate(-5 363 459)"/>
+        <ellipse cx="363" cy="459" rx="116" ry="130" fill="url(#glassInner)" stroke="#101827" stroke-width="5" transform="rotate(-5 363 459)"/>
+        <ellipse cx="363" cy="459" rx="79" ry="92" fill="#030408" stroke="#263849" stroke-width="8" transform="rotate(-5 363 459)"/>
+        <circle cx="366" cy="461" r="30" fill="#090715" stroke="#4b265f" stroke-width="2"/>
+        <g clip-path="url(#frontGlass)" filter="url(#glassGlow)">
+          <path class="glassSweep" d="M245 319 L310 304 L471 558 L420 591Z" fill="#bffeff" opacity=".26"/>
+          <ellipse cx="315" cy="385" rx="35" ry="74" fill="#d9ffff" opacity=".16" transform="rotate(-34 315 385)"/>
+          <path d="M282 522q85 82 172 8" fill="none" stroke="#a65cff" stroke-width="12" opacity=".13"/>
+          <path d="M263 405q75-94 170-70" fill="none" stroke="#dfffff" stroke-width="8" opacity=".13"/>
+        </g>
+        <path id="aperture" d="M335 423 L382 414 L405 450 L385 494 L340 500 L314 463Z" fill="#010203" stroke="#303b49" stroke-width="2" opacity=".75"/>
+        <text x="365" y="286" text-anchor="middle" fill="#bfc1bb" font-size="12" font-family="monospace" letter-spacing="3" transform="rotate(-5 365 286)">SOLARA OPTICAL 85 MM</text>
+        <text x="365" y="646" text-anchor="middle" fill="#8c8f89" font-size="10" font-family="monospace" letter-spacing="2" transform="rotate(-5 365 646)">MULTI COATED · 1:1.4</text>
+        <g fill="#9a9d97"><circle cx="224" cy="366" r="3"/><circle cx="502" cy="350" r="3"/><circle cx="511" cy="563" r="3"/><circle cx="243" cy="583" r="3"/></g>
+      </g>
+
+      <g id="smallControls">
+        <rect x="478" y="291" width="68" height="15" rx="3" fill="#0a0b0a" stroke="#777a74" transform="rotate(-2 512 299)"/>
+        <circle cx="499" cy="299" r="4" fill="#d95742"/><circle cx="525" cy="298" r="4" fill="#3c403c"/>
+        <path d="M456 323v-30q0-12 12-12" fill="none" stroke="#0a0b0a" stroke-width="8"/>
+        <rect x="434" y="295" width="29" height="45" rx="5" fill="#161816" stroke="#777a74"/>
+        <path d="M440 307h16M440 316h16M440 325h16" stroke="#4f524e" stroke-width="2"/>
+      </g>
+    </g>
+
+    <g transform="translate(765 650)" opacity=".78"><path d="M0 0h265" stroke="#5a5f5b"/><text y="22" fill="#7f8781" font-size="9" font-family="monospace" letter-spacing="2">CLICK MODE DIAL TO ROTATE</text></g>
+  </svg>
+</main>
+<script>
+const dial=document.querySelector('#modeDial'),readout=document.querySelector('#modeReadout'),modes=['MANUAL','APERTURE','SHUTTER','PROGRAM'],letters=['M','A','S','P'];let mode=0;
+function turn(){mode=(mode+1)%modes.length;dial.style.transform=`rotate(${mode*18}deg)`;dial.querySelector('text').textContent=letters[mode];readout.textContent=`MODE / ${modes[mode]}`}
+dial.addEventListener('click',turn);dial.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();turn()}});
+</script>
+</body>
+</html>

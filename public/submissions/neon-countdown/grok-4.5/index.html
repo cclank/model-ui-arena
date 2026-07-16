@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Neon Countdown · grok-4.5</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;
+  background:#05060f;color:#e2e8f0;display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:16px;overflow:hidden
+}
+body::before{
+  content:'';position:fixed;inset:-20%;background:
+    radial-gradient(circle at 30% 20%,rgba(236,72,153,.18),transparent 40%),
+    radial-gradient(circle at 70% 80%,rgba(56,189,248,.15),transparent 40%),
+    radial-gradient(circle at 50% 50%,rgba(167,139,250,.1),transparent 50%);
+  animation:bg 8s ease-in-out infinite alternate;pointer-events:none
+}
+@keyframes bg{to{transform:scale(1.08) rotate(3deg)}}
+.wrap{width:min(390px,100%);text-align:center;position:relative;z-index:1}
+.title{font-size:.85rem;letter-spacing:.28em;color:#94a3b8;margin-bottom:18px;text-transform:uppercase}
+.ring-wrap{position:relative;width:260px;height:260px;margin:0 auto 18px}
+svg.ring{width:100%;height:100%;transform:rotate(-90deg)}
+.track{fill:none;stroke:rgba(148,163,184,.15);stroke-width:10}
+.prog{
+  fill:none;stroke:url(#g);stroke-width:10;stroke-linecap:round;
+  stroke-dasharray:754;stroke-dashoffset:0;
+  filter:drop-shadow(0 0 8px #f472b6);transition:stroke-dashoffset .25s linear
+}
+.num{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:6rem;font-weight:800;font-variant-numeric:tabular-nums;
+  color:#fff;text-shadow:0 0 20px #f472b6,0 0 40px #38bdf8;transition:transform .15s,color .2s
+}
+.num.pulse{transform:scale(1.12);color:#fde68a}
+.num.urgent{animation:urgent .5s ease-in-out infinite alternate;color:#fb7185}
+@keyframes urgent{from{text-shadow:0 0 12px #f43f5e,0 0 30px #f43f5e}to{text-shadow:0 0 28px #f43f5e,0 0 60px #fb7185;transform:scale(1.08)}}
+.bar{
+  height:8px;border-radius:999px;background:rgba(148,163,184,.15);overflow:hidden;margin:0 12px 16px
+}
+.bar>i{display:block;height:100%;width:100%;border-radius:999px;
+  background:linear-gradient(90deg,#38bdf8,#a78bfa,#f472b6);
+  box-shadow:0 0 12px rgba(244,114,182,.5);transform-origin:left;transition:transform .25s linear}
+.status{font-size:.95rem;min-height:1.4em;color:#cbd5e1;margin-bottom:18px}
+.status.done{color:#fde68a;font-weight:700;font-size:1.15rem;
+  text-shadow:0 0 16px rgba(253,230,138,.5);animation:flash .4s ease 3}
+@keyframes flash{50%{opacity:.4}}
+button{
+  border:none;cursor:pointer;border-radius:14px;padding:12px 28px;font-size:.95rem;font-weight:700;
+  color:#0f172a;background:linear-gradient(135deg,#fde68a,#f472b6,#38bdf8);background-size:200% 100%;
+  box-shadow:0 0 24px rgba(244,114,182,.35);transition:transform .12s,box-shadow .2s
+}
+button:active{transform:scale(.96)}
+button:hover{box-shadow:0 0 36px rgba(56,189,248,.45)}
+.burst{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .3s;
+  background:radial-gradient(circle at 50% 45%,rgba(253,230,138,.35),transparent 50%)}
+.burst.on{opacity:1}
+</style>
+</head>
+<body>
+<div class="burst" id="burst"></div>
+<div class="wrap">
+  <div class="title">Neon Countdown</div>
+  <div class="ring-wrap">
+    <svg class="ring" viewBox="0 0 260 260">
+      <defs>
+        <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#38bdf8"/><stop offset="50%" stop-color="#a78bfa"/>
+          <stop offset="100%" stop-color="#f472b6"/>
+        </linearGradient>
+      </defs>
+      <circle class="track" cx="130" cy="130" r="120"/>
+      <circle class="prog" id="prog" cx="130" cy="130" r="120"/>
+    </svg>
+    <div class="num" id="num">10</div>
+  </div>
+  <div class="bar"><i id="bar"></i></div>
+  <div class="status" id="status">倒计时启动</div>
+  <button id="restart">Restart</button>
+</div>
+<script>
+const TOTAL=10,CIRC=2*Math.PI*120;
+const num=document.getElementById('num'),prog=document.getElementById('prog');
+const bar=document.getElementById('bar'),status=document.getElementById('status');
+const burst=document.getElementById('burst'),btn=document.getElementById('restart');
+prog.style.strokeDasharray=CIRC;
+let left=TOTAL,timer=null,done=false;
+function paint(){
+  const p=left/TOTAL;
+  prog.style.strokeDashoffset=CIRC*(1-p);
+  bar.style.transform=`scaleX(${p})`;
+  num.textContent=left;
+  num.classList.remove('urgent');
+  if(left>0&&left<=3)num.classList.add('urgent');
+  if(done){
+    num.textContent='0';status.textContent='完成 · 霓虹爆发';status.classList.add('done');
+    burst.classList.add('on');num.classList.remove('urgent');
+  }else{
+    status.textContent=left<=3&&left>0?`最后 ${left} 秒！`:`剩余 ${left} 秒`;
+    status.classList.remove('done');burst.classList.remove('on');
+  }
+}
+function beat(){
+  num.classList.add('pulse');
+  setTimeout(()=>num.classList.remove('pulse'),160);
+}
+function tick(){
+  if(left<=0){done=true;paint();clearInterval(timer);timer=null;return}
+  left--;beat();
+  if(left<=0){done=true}
+  paint();
+}
+function start(){
+  clearInterval(timer);left=TOTAL;done=false;paint();beat();
+  timer=setInterval(tick,1000);
+}
+btn.onclick=start;start();
+</script>
+</body>
+</html>

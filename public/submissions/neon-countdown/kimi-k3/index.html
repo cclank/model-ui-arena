@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>NEON · 10s Countdown</title>
+<style>
+:root{--h:190}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{
+  background:#05030f;font-family:system-ui,-apple-system,"PingFang SC",sans-serif;
+  display:flex;align-items:center;justify-content:center;
+  user-select:none;-webkit-user-select:none;color:#eaf2ff;
+}
+.bg{position:fixed;inset:-40%;z-index:0;pointer-events:none;
+  background:
+   radial-gradient(38% 30% at 50% 46%,hsla(var(--h),100%,60%,.20),transparent 70%),
+   conic-gradient(from 0deg at 50% 46%,transparent 0 40%,hsla(var(--h),100%,55%,.06) 46% 50%,transparent 56% 100%);
+  animation:spin 14s linear infinite;transition:background .5s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.grid{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background:
+   repeating-linear-gradient(0deg,transparent 0 46px,hsla(var(--h),90%,70%,.05) 46px 47px),
+   repeating-linear-gradient(90deg,transparent 0 46px,hsla(var(--h),90%,70%,.05) 46px 47px)}
+#fx{position:fixed;inset:0;z-index:4;pointer-events:none}
+.stage{position:relative;z-index:2;text-align:center;padding:20px}
+.stage.danger{animation:shake .12s linear infinite}
+@keyframes shake{
+  25%{transform:translate(1.5px,-1px)}50%{transform:translate(-1.5px,1px)}
+  75%{transform:translate(1px,1.5px)}}
+.ringwrap{position:relative;width:min(74vw,320px);height:min(74vw,320px);margin:0 auto}
+svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.track{fill:none;stroke:hsla(var(--h),60%,40%,.18);stroke-width:10}
+.prog{fill:none;stroke:hsl(var(--h),100%,62%);stroke-width:10;stroke-linecap:round;
+  stroke-dasharray:816.8;stroke-dashoffset:0;
+  filter:drop-shadow(0 0 8px hsl(var(--h),100%,60%)) drop-shadow(0 0 22px hsla(var(--h),100%,55%,.6))}
+.num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:clamp(96px,32vw,150px);font-weight:800;line-height:1;
+  color:hsl(var(--h),100%,72%);letter-spacing:.02em;
+  text-shadow:0 0 12px hsl(var(--h),100%,60%),0 0 42px hsl(var(--h),100%,55%),0 0 90px hsla(var(--h),100%,50%,.7)}
+.num.pulse{animation:pulse .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pulse{0%{transform:scale(1.22)}100%{transform:scale(1)}}
+.stage.danger .num{animation-duration:.28s}
+.label{margin-top:26px;font-size:13px;letter-spacing:.55em;text-indent:.55em;
+  color:hsla(var(--h),80%,78%,.9);text-shadow:0 0 10px hsla(var(--h),100%,60%,.8)}
+.ticks{margin-top:14px;display:flex;gap:8px;justify-content:center}
+.tick{width:22px;height:5px;border-radius:3px;background:hsla(var(--h),70%,55%,.16);transition:all .25s}
+.tick.on{background:hsl(var(--h),100%,62%);box-shadow:0 0 8px hsl(var(--h),100%,60%)}
+#btn{margin-top:30px;padding:12px 34px;font-size:13px;letter-spacing:.35em;text-indent:.35em;
+  color:hsl(var(--h),100%,75%);background:hsla(var(--h),100%,55%,.08);
+  border:1px solid hsla(var(--h),100%,60%,.55);border-radius:999px;cursor:pointer;
+  text-shadow:0 0 8px hsla(var(--h),100%,60%,.9);
+  box-shadow:0 0 14px hsla(var(--h),100%,55%,.35),inset 0 0 12px hsla(var(--h),100%,60%,.15);
+  transition:all .2s}
+#btn:hover{background:hsla(var(--h),100%,55%,.2);transform:scale(1.05)}
+#btn:active{transform:scale(.96)}
+.done .ringwrap,.done .ticks{display:none}
+.bigend{display:none;font-size:clamp(64px,20vw,110px);font-weight:900;letter-spacing:.06em;
+  color:#fff;text-shadow:0 0 16px hsl(var(--h),100%,60%),0 0 60px hsl(var(--h),100%,55%),0 0 130px hsl(var(--h),100%,50%);
+  animation:boom .7s cubic-bezier(.2,1.8,.35,1)}
+.done .bigend{display:block}
+@keyframes boom{0%{transform:scale(.2);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="grid"></div>
+<canvas id="fx"></canvas>
+<div class="stage" id="stage">
+  <div class="ringwrap">
+    <svg viewBox="0 0 300 300">
+      <circle class="track" cx="150" cy="150" r="130"></circle>
+      <circle class="prog" id="prog" cx="150" cy="150" r="130"></circle>
+    </svg>
+    <div class="num" id="num">10</div>
+  </div>
+  <div class="bigend" id="bigend">BOOM!</div>
+  <div class="label" id="label">COUNTDOWN</div>
+  <div class="ticks" id="ticks"></div>
+  <button id="btn">↻ RESTART</button>
+</div>
+<script>
+const TOTAL=10000,C=816.8;
+const stage=document.getElementById('stage'),num=document.getElementById('num'),
+prog=document.getElementById('prog'),label=document.getElementById('label'),
+ticksEl=document.getElementById('ticks'),btn=document.getElementById('btn'),
+cv=document.getElementById('fx'),ctx=cv.getContext('2d');
+let W,H,DPR;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;
+  cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
+addEventListener('resize',resize);resize();
+const ticks=[];
+for(let i=0;i<10;i++){const d=document.createElement('div');d.className='tick';
+  ticksEl.appendChild(d);ticks.push(d);}
+let endAt=0,lastSec=-1,done=false;
+const parts=[];
+function burst(){
+  const cx=W/2,cy=H*0.46;
+  for(let i=0;i<180;i++){
+    const a=Math.random()*Math.PI*2,sp=1.5+Math.random()*7;
+    parts.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.5,
+      life:1,decay:0.006+Math.random()*0.012,
+      h:Math.random()<0.5?hue:Math.random()*360,size:1.5+Math.random()*2.5});
+  }
+}
+let hue=190;
+function start(){
+  endAt=performance.now()+TOTAL;lastSec=-1;done=false;
+  parts.length=0;
+  stage.classList.remove('done','danger');
+  label.textContent='COUNTDOWN';
+  num.style.display='flex';
+}
+function frame(now){
+  const rem=Math.max(0,endAt-now),t=rem/TOTAL;
+  hue=190+(1-t)*140;
+  document.documentElement.style.setProperty('--h',hue.toFixed(0));
+  prog.style.strokeDashoffset=(C*(1-t)).toFixed(1);
+  const sec=Math.ceil(rem/1000);
+  if(sec!==lastSec){
+    lastSec=sec;
+    num.textContent=sec;
+    num.classList.remove('pulse');void num.offsetWidth;num.classList.add('pulse');
+    ticks.forEach((d,i)=>d.classList.toggle('on',i>=10-sec&&sec>0));
+    if(sec<=3&&sec>0)stage.classList.add('danger');
+    if(sec===0&&!done){
+      done=true;
+      stage.classList.remove('danger');
+      stage.classList.add('done');
+      num.style.display='none';
+      label.textContent='🎉 任 务 完 成 · HAPPY MOMENT 🎉';
+      burst();setTimeout(burst,260);setTimeout(burst,560);
+    }
+  }
+  ctx.globalCompositeOperation='source-over';
+  ctx.clearRect(0,0,W,H);
+  ctx.globalCompositeOperation='lighter';
+  for(let i=parts.length-1;i>=0;i--){
+    const p=parts[i];
+    p.vx*=0.985;p.vy=p.vy*0.985+0.09;
+    p.x+=p.vx;p.y+=p.vy;p.life-=p.decay;
+    if(p.life<=0||p.y>H+30){parts.splice(i,1);continue;}
+    ctx.fillStyle=`hsla(${p.h},100%,65%,${p.life})`;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.size*p.life+0.4,0,7);ctx.fill();
+  }
+  requestAnimationFrame(frame);
+}
+btn.addEventListener('click',start);
+start();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

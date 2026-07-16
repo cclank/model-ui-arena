@@ -1,6 +1,7 @@
 import { Dirent, promises as fs } from "node:fs";
 import path from "node:path";
 import generatedSubmissions from "@/lib/generated-submissions.json";
+import { compareModels } from "@/lib/model-order";
 
 export type ThemeMeta = {
   id: string;
@@ -13,6 +14,7 @@ export type Submission = {
   theme: string;
   model: string;
   filename: string;
+  path: string;
   publicPath: string;
   renderKind: "html" | "text";
   linesTotal: number;
@@ -71,11 +73,6 @@ export const THEMES: ThemeMeta[] = [
     objective: "粒子物理、交互反馈、性能稳定性、视觉冲击力"
   },
   {
-    id: "data-dashboard",
-    label: "数据仪表盘",
-    objective: "信息层级、图表绘制、数据联动、响应式布局"
-  },
-  {
     id: "cheetah-trophy-run",
     label: "猎豹举杯冲刺",
     objective: "SVG 造型、足球冠军叙事、奔跑动势、细节理解"
@@ -91,6 +88,14 @@ export const THEMES: ThemeMeta[] = [
     objective: "单问答推理能力：直接结论 + 理由解释"
   }
 ];
+
+const THEME_ORDER = new Map(THEMES.map((theme, index) => [theme.id, index]));
+const SUPPORTED_THEME_IDS = new Set(THEMES.map((theme) => theme.id));
+
+function sharePathForSubmission(themeId: string, model: string, filename: string): string {
+  const base = `/submissions/${themeId}/${model}`;
+  return filename.toLowerCase() === "index.html" ? `${base}/` : `${base}/${filename}`;
+}
 
 function countInlineTagLines(html: string, tagName: "style" | "script"): number {
   const pattern = new RegExp(`<${tagName}[^>]*>([\\s\\S]*?)<\\/${tagName}>`, "gi");
@@ -148,6 +153,10 @@ async function scanFilesystemSubmissions(): Promise<Submission[]> {
     }
 
     const themeId = themeDir.name;
+    if (!SUPPORTED_THEME_IDS.has(themeId)) {
+      continue;
+    }
+
     const themePath = path.join(submissionsRoot, themeId);
     const modelDirs = await fs.readdir(themePath, { withFileTypes: true });
 
@@ -195,6 +204,7 @@ async function scanFilesystemSubmissions(): Promise<Submission[]> {
         theme: themeId,
         model,
         filename,
+        path: sharePathForSubmission(themeId, model, filename),
         publicPath: `/submissions/${themeId}/${model}/${filename}`,
         renderKind: isHtml ? "html" : "text",
         linesTotal,
@@ -212,10 +222,13 @@ async function scanFilesystemSubmissions(): Promise<Submission[]> {
   }
 
   output.sort((a, b) => {
-    if (a.theme !== b.theme) {
-      return a.theme.localeCompare(b.theme);
+    const themeDelta =
+      (THEME_ORDER.get(a.theme) ?? Number.MAX_SAFE_INTEGER) -
+      (THEME_ORDER.get(b.theme) ?? Number.MAX_SAFE_INTEGER);
+    if (themeDelta !== 0) {
+      return themeDelta;
     }
-    return a.model.localeCompare(b.model);
+    return compareModels(a.model, b.model);
   });
 
   return output;

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Weather · grok-4.5</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;color:#fff;
+  display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px;
+  background:#0b1220;transition:background .5s
+}
+.card{
+  width:min(390px,100%);border-radius:24px;overflow:hidden;position:relative;
+  box-shadow:0 24px 60px rgba(0,0,0,.4);background:linear-gradient(165deg,#1d4ed8,#0ea5e9 55%,#67e8f9);
+  transition:background .6s ease
+}
+.card.rain{background:linear-gradient(165deg,#1e293b,#334155 50%,#475569)}
+.card.snow{background:linear-gradient(165deg,#1e3a5f,#64748b 55%,#94a3b8)}
+.card.night{filter:brightness(.88)}
+.fx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.sun{position:absolute;top:28px;right:28px;width:64px;height:64px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#fff7ed,#fbbf24 50%,#f59e0b);
+  box-shadow:0 0 40px 12px rgba(251,191,36,.55);animation:glow 3s ease-in-out infinite}
+@keyframes glow{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.ray{position:absolute;top:52px;right:52px;width:2px;height:18px;background:rgba(251,191,36,.7);
+  transform-origin:center 8px;animation:spin 8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.drop,.flake{position:absolute;top:-10px;opacity:.75;animation:fall linear infinite}
+.drop{width:2px;height:12px;background:linear-gradient(transparent,#bae6fd);border-radius:1px}
+.flake{width:6px;height:6px;background:#fff;border-radius:50%;box-shadow:0 0 4px #fff}
+@keyframes fall{to{transform:translateY(420px)}}
+.inner{position:relative;z-index:1;padding:20px 18px 16px}
+.cities{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.cities button{
+  border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;
+  border-radius:999px;padding:6px 12px;font-size:.78rem;cursor:pointer;transition:.25s
+}
+.cities button.on{background:#fff;color:#0f172a;font-weight:600}
+.unit{margin-left:auto;border:1px solid rgba(255,255,255,.35)!important;padding:6px 10px!important}
+.main{display:flex;align-items:flex-end;gap:12px;margin-bottom:8px;min-height:88px}
+.temp{font-size:4rem;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;
+  transition:opacity .25s}
+.desc{padding-bottom:10px}
+.desc h2{font-size:1.15rem;font-weight:600}
+.desc p{font-size:.8rem;opacity:.88;margin-top:4px}
+.meta{display:flex;gap:14px;font-size:.78rem;opacity:.9;margin-bottom:16px}
+.forecast{
+  background:rgba(15,23,42,.28);border-radius:16px;padding:12px 10px 10px;
+  backdrop-filter:blur(6px)
+}
+.forecast h3{font-size:.75rem;opacity:.8;margin-bottom:8px;font-weight:500}
+.days{display:flex;justify-content:space-between;gap:4px;margin-bottom:6px}
+.day{flex:1;text-align:center;font-size:.68rem}
+.day .d{opacity:.8;margin-bottom:2px}
+.day .w{font-weight:600;margin-bottom:2px}
+.day .t{opacity:.9}
+svg.chart{width:100%;height:48px;display:block}
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="fx" id="fx"></div>
+  <div class="inner">
+    <div class="cities" id="cities"></div>
+    <div class="main">
+      <div class="temp" id="temp">--°</div>
+      <div class="desc">
+        <h2 id="weather">—</h2>
+        <p id="cityName">—</p>
+      </div>
+    </div>
+    <div class="meta">
+      <span id="wind">风 —</span>
+      <span id="hum">湿度 —</span>
+      <span id="unitLabel">°C</span>
+    </div>
+    <div class="forecast">
+      <h3>5 日预报</h3>
+      <div class="days" id="days"></div>
+      <svg class="chart" id="chart" viewBox="0 0 340 48" preserveAspectRatio="none"></svg>
+    </div>
+  </div>
+</div>
+<script>
+const DATA={
+  shanghai:{name:'上海',temp:28,weather:'晴',wind:'东南 3 级',hum:'62%',type:'sunny',
+    days:[{d:'今',w:'晴',h:30,l:24},{d:'二',w:'多云',h:29,l:23},{d:'三',w:'雨',h:25,l:21},
+      {d:'四',w:'雨',h:24,l:20},{d:'五',w:'晴',h:28,l:22}]},
+  beijing:{name:'北京',temp:22,weather:'小雨',wind:'北风 2 级',hum:'78%',type:'rain',
+    days:[{d:'今',w:'雨',h:23,l:18},{d:'二',w:'雨',h:22,l:17},{d:'三',w:'阴',h:24,l:18},
+      {d:'四',w:'晴',h:27,l:19},{d:'五',w:'晴',h:28,l:20}]},
+  harbin:{name:'哈尔滨',temp:-4,weather:'小雪',wind:'西北 4 级',hum:'55%',type:'snow',
+    days:[{d:'今',w:'雪',h:-2,l:-8},{d:'二',w:'雪',h:-3,l:-10},{d:'三',w:'阴',h:0,l:-7},
+      {d:'四',w:'晴',h:2,l:-6},{d:'五',w:'晴',h:3,l:-5}]}
+};
+const keys=Object.keys(DATA);
+let cur='shanghai',useF=false,animT=null;
+const card=document.getElementById('card'),fx=document.getElementById('fx');
+const tempEl=document.getElementById('temp'),weatherEl=document.getElementById('weather');
+const cityEl=document.getElementById('cityName'),windEl=document.getElementById('wind');
+const humEl=document.getElementById('hum'),daysEl=document.getElementById('days');
+const chart=document.getElementById('chart'),cities=document.getElementById('cities');
+const unitLabel=document.getElementById('unitLabel');
+const h=new Date().getHours(),isNight=h<6||h>=18;
+function toF(c){return Math.round(c*9/5+32)}
+function disp(c){return useF?toF(c):c}
+function buildCities(){
+  cities.innerHTML='';
+  keys.forEach(k=>{
+    const b=document.createElement('button');
+    b.textContent=DATA[k].name;b.className=k===cur?'on':'';
+    b.onclick=()=>switchCity(k);cities.appendChild(b);
+  });
+  const u=document.createElement('button');u.className='unit';u.textContent=useF?'°F':'°C';
+  u.onclick=()=>{useF=!useF;render(true)};cities.appendChild(u);
+}
+function particles(type){
+  fx.innerHTML='';
+  if(type==='sunny'){
+    const s=document.createElement('div');s.className='sun';fx.appendChild(s);
+    for(let i=0;i<8;i++){const r=document.createElement('div');r.className='ray';
+      r.style.transform=`rotate(${i*45}deg)`;r.style.animationDelay=`${i*0.1}s`;fx.appendChild(r)}
+  }else if(type==='rain'){
+    for(let i=0;i<36;i++){const d=document.createElement('div');d.className='drop';
+      d.style.left=`${Math.random()*100}%`;d.style.animationDuration=`${0.6+Math.random()*0.8}s`;
+      d.style.animationDelay=`${Math.random()}s`;fx.appendChild(d)}
+  }else{
+    for(let i=0;i<28;i++){const f=document.createElement('div');f.className='flake';
+      f.style.left=`${Math.random()*100}%`;f.style.animationDuration=`${2+Math.random()*2.5}s`;
+      f.style.animationDelay=`${Math.random()}s`;f.style.opacity=.4+Math.random()*.5;fx.appendChild(f)}
+  }
+}
+function countUp(from,to){
+  cancelAnimationFrame(animT);const t0=performance.now(),dur=420;
+  function step(now){
+    const p=Math.min(1,(now-t0)/dur),v=Math.round(from+(to-from)*p);
+    tempEl.textContent=v+'°';if(p<1)animT=requestAnimationFrame(step);
+  }
+  animT=requestAnimationFrame(step);
+}
+function drawChart(days){
+  const highs=days.map(d=>disp(d.h)),lows=days.map(d=>disp(d.l));
+  const all=[...highs,...lows],min=Math.min(...all)-2,max=Math.max(...all)+2;
+  const W=340,H=48,n=days.length,sx=i=>i*(W/(n-1)),sy=v=>H-((v-min)/(max-min))*H;
+  let ph='',pl='';
+  highs.forEach((v,i)=>{ph+=(i?' L':'M')+` ${sx(i).toFixed(1)} ${sy(v).toFixed(1)}`});
+  lows.forEach((v,i)=>{pl+=(i?' L':'M')+` ${sx(i).toFixed(1)} ${sy(v).toFixed(1)}`});
+  chart.innerHTML=`<path d="${ph}" fill="none" stroke="#fde68a" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="${pl}" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.6" stroke-dasharray="4 3"/>
+    ${highs.map((v,i)=>`<circle cx="${sx(i)}" cy="${sy(v)}" r="2.5" fill="#fde68a"/>`).join('')}`;
+}
+function render(keepTemp){
+  const d=DATA[cur],t=disp(d.temp);
+  card.className='card '+d.type+(isNight?' night':'');
+  if(!keepTemp)countUp(parseInt(tempEl.textContent)||t,t);else tempEl.textContent=t+'°';
+  weatherEl.textContent=d.weather;cityEl.textContent=d.name;
+  windEl.textContent='风 '+d.wind;humEl.textContent='湿度 '+d.hum;
+  unitLabel.textContent=useF?'°F':'°C';
+  daysEl.innerHTML=d.days.map(x=>`<div class="day"><div class="d">${x.d}</div>
+    <div class="w">${x.w}</div><div class="t">${disp(x.h)}°/${disp(x.l)}°</div></div>`).join('');
+  drawChart(d.days);particles(d.type);buildCities();
+}
+function switchCity(k){if(k===cur)return;cur=k;render(false)}
+render(false);
+</script>
+</body>
+</html>

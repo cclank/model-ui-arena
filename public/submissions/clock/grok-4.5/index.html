@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Clock · grok-4.5</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0b1220;--fg:#e8eefc;--accent:#5eead4;--ring:#1e293b;--tick:#94a3b8}
+body.day{--bg:#e8f0fe;--fg:#0f172a;--accent:#0d9488;--ring:#cbd5e1;--tick:#64748b}
+html,body{height:100%}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;
+  background:radial-gradient(120% 80% at 50% 20%,#1a2744 0%,var(--bg) 60%);
+  color:var(--fg);display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:16px;transition:background .6s,color .4s;
+}
+body.day{background:radial-gradient(120% 80% at 50% 20%,#c7d8f5 0%,var(--bg) 60%)}
+.card{
+  width:min(390px,100%);background:rgba(15,23,42,.55);backdrop-filter:blur(12px);
+  border:1px solid rgba(148,163,184,.25);border-radius:24px;padding:28px 20px 24px;
+  box-shadow:0 20px 50px rgba(0,0,0,.35);text-align:center;
+}
+body.day .card{background:rgba(255,255,255,.72);box-shadow:0 16px 40px rgba(15,23,42,.12)}
+.clock{
+  width:220px;height:220px;margin:0 auto 20px;border-radius:50%;
+  background:conic-gradient(from 0deg,var(--ring),#0f172a 40%,var(--ring));
+  border:3px solid var(--accent);position:relative;
+  box-shadow:0 0 0 6px rgba(94,234,212,.12),inset 0 0 40px rgba(0,0,0,.25);
+}
+body.day .clock{background:conic-gradient(from 0deg,#f1f5f9,#fff 40%,#e2e8f0);box-shadow:0 0 0 6px rgba(13,148,136,.12)}
+.tick{position:absolute;width:2px;height:10px;background:var(--tick);left:50%;top:10px;
+  transform-origin:50% 100px;margin-left:-1px;opacity:.85}
+  animation:breathe 2s ease-in-out infinite}
+}
+.tick.major{height:14px;width:3px;background:var(--accent);top:8px;transform-origin:50% 102px}
+@keyframes breathe{0%,100%{opacity:.55}50%{opacity:1}}
+.hand{position:absolute;left:50%;bottom:50%;transform-origin:50% 100%;border-radius:4px;
+  background:var(--fg);margin-left:-2px}
+.hand.h{width:4px;height:55px;margin-left:-2px}
+.hand.m{width:3px;height:75px;margin-left:-1.5px;opacity:.9}
+.hand.s{width:2px;height:88px;margin-left:-1px;background:var(--accent);
+  box-shadow:0 0 8px var(--accent)}
+.cap{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--accent);
+  left:50%;top:50%;transform:translate(-50%,-50%);box-shadow:0 0 10px var(--accent)}
+.digital{font-variant-numeric:tabular-nums;font-size:2rem;font-weight:700;letter-spacing:.06em;
+  margin-bottom:6px}
+.digital span{color:var(--accent)}
+.meta{font-size:.85rem;opacity:.72;display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
+  background:rgba(94,234,212,.12);border:1px solid rgba(94,234,212,.3);font-size:.75rem}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="clock" id="clock">
+    <div class="hand h" id="h"></div>
+    <div class="hand m" id="m"></div>
+    <div class="hand s" id="s"></div>
+    <div class="cap"></div>
+  </div>
+  <div class="digital" id="dig">00<span>:</span>00<span>:</span>00</div>
+  <div class="meta">
+    <span id="date">—</span>
+    <span class="badge"><i class="dot"></i><span id="period">LIVE</span></span>
+  </div>
+</div>
+<script>
+const clock=document.getElementById('clock');
+for(let i=0;i<12;i++){
+  const t=document.createElement('div');
+  t.className='tick'+(i%3===0?' major':'');
+  t.style.transform=`rotate(${i*30}deg)`;
+  t.style.animationDelay=`${i*0.12}s`;
+  clock.appendChild(t);
+}
+const hEl=document.getElementById('h'),mEl=document.getElementById('m'),sEl=document.getElementById('s');
+const dig=document.getElementById('dig'),dateEl=document.getElementById('date'),period=document.getElementById('period');
+const pad=n=>String(n).padStart(2,'0');
+const days=['周日','周一','周二','周三','周四','周五','周六'];
+function tick(){
+  const now=new Date();
+  const h=now.getHours(),m=now.getMinutes(),s=now.getSeconds(),ms=now.getMilliseconds();
+  const sA=(s+ms/1000)*6,mA=(m+s/60)*6,hA=((h%12)+m/60)*30;
+  sEl.style.transform=`rotate(${sA}deg)`;
+  mEl.style.transform=`rotate(${mA}deg)`;
+  hEl.style.transform=`rotate(${hA}deg)`;
+  dig.innerHTML=`${pad(h)}<span>:</span>${pad(m)}<span>:</span>${pad(s)}`;
+  dateEl.textContent=`${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())} ${days[now.getDay()]}`;
+  const isDay=h>=6&&h<18;
+  document.body.classList.toggle('day',isDay);
+  period.textContent=isDay?'DAY':'NIGHT';
+  requestAnimationFrame(tick);
+}
+tick();
+</script>
+</body>
+</html>

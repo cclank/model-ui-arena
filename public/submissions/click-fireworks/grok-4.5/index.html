@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Fireworks · grok-4.5</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;
+  background:#050816;color:#e2e8f0;cursor:crosshair;touch-action:none
+}
+canvas{display:block;width:100%;height:100%}
+.hud{
+  position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
+  background:rgba(15,23,42,.55);border:1px solid rgba(148,163,184,.25);
+  backdrop-filter:blur(8px);border-radius:999px;padding:10px 18px;
+  font-size:.82rem;letter-spacing:.02em;pointer-events:none;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);white-space:nowrap
+}
+.hud b{color:#fde68a}
+.stars{position:fixed;inset:0;pointer-events:none;background:
+  radial-gradient(1px 1px at 10% 20%,#fff8,transparent),
+  radial-gradient(1px 1px at 30% 70%,#fff6,transparent),
+  radial-gradient(1.5px 1.5px at 70% 30%,#fff7,transparent),
+  radial-gradient(1px 1px at 85% 60%,#fff5,transparent),
+  radial-gradient(1px 1px at 50% 50%,#fff4,transparent),
+  radial-gradient(1.2px 1.2px at 20% 90%,#fff5,transparent),
+  radial-gradient(1px 1px at 90% 15%,#fff6,transparent)}
+</style>
+</head>
+<body>
+<div class="stars"></div>
+<canvas id="c"></canvas>
+<div class="hud">点击夜空放烟花 · 活跃粒子 <b id="n">0</b></div>
+<script>
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+const nEl=document.getElementById('n');
+let W,H,particles=[],rockets=[],last=0;
+const colors=['#f472b6','#a78bfa','#38bdf8','#fbbf24','#4ade80','#fb7185','#e879f9','#22d3ee'];
+function resize(){W=canvas.width=innerWidth;H=canvas.height=innerHeight}
+addEventListener('resize',resize);resize();
+function burst(x,y,color,count){
+  const n=count||40+Math.floor(Math.random()*40);
+  const r=2.2+Math.random()*2.2;
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2,sp=r*(0.4+Math.random());
+    particles.push({
+      x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,
+      life:1,decay:0.012+Math.random()*0.018,
+      size:1.2+Math.random()*2.2,color:color||colors[Math.floor(Math.random()*colors.length)],
+      trail:Math.random()>.4,g:0.028+Math.random()*0.02
+    });
+  }
+}
+function launch(x,y){
+  rockets.push({
+    x,y:H+4,tx:x,ty:y,vx:(Math.random()-0.5)*1.2,
+    vy:-(6+Math.random()*3),color:colors[Math.floor(Math.random()*colors.length)],
+    trail:[]
+  });
+}
+function spawn(x,y){launch(x,y)}
+canvas.addEventListener('pointerdown',e=>{
+  const r=canvas.getBoundingClientRect();
+  spawn(e.clientX-r.left,e.clientY-r.top);
+});
+function frame(t){
+  const dt=Math.min(32,t-last||16)/16;last=t;
+  ctx.fillStyle='rgba(5,8,22,0.22)';
+  ctx.fillRect(0,0,W,H);
+  // rockets
+  for(let i=rockets.length-1;i>=0;i--){
+    const r=rockets[i];
+    r.trail.push({x:r.x,y:r.y});if(r.trail.length>8)r.trail.shift();
+    r.x+=r.vx*dt;r.y+=r.vy*dt;r.vy+=0.06*dt;
+    for(let j=0;j<r.trail.length;j++){
+      const p=r.trail[j],a=j/r.trail.length;
+      ctx.beginPath();ctx.fillStyle=`${r.color}${Math.floor(a*180).toString(16).padStart(2,'0')}`;
+      ctx.arc(p.x,p.y,1.5,0,Math.PI*2);ctx.fill();
+    }
+    ctx.beginPath();ctx.fillStyle=r.color;ctx.arc(r.x,r.y,2.2,0,Math.PI*2);ctx.fill();
+    if(r.vy>=0||r.y<=r.ty){burst(r.x,r.y,r.color);rockets.splice(i,1)}
+  }
+  // particles
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.vx*=0.985;p.vy=p.vy*0.985+p.g*dt;
+    p.x+=p.vx*dt*2.2;p.y+=p.vy*dt*2.2;
+    p.life-=p.decay*dt;
+    if(p.life<=0){particles.splice(i,1);continue}
+    ctx.globalAlpha=Math.max(0,p.life);
+    if(p.trail){
+      ctx.beginPath();ctx.strokeStyle=p.color;ctx.lineWidth=p.size*.6;
+      ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-p.vx*2,p.y-p.vy*2);ctx.stroke();
+    }
+    ctx.beginPath();ctx.fillStyle=p.color;ctx.arc(p.x,p.y,p.size*p.life,0,Math.PI*2);ctx.fill();
+    // sparkle
+    if(Math.random()>.92){ctx.fillStyle='#fff';ctx.fillRect(p.x,p.y,1.2,1.2)}
+  }
+  ctx.globalAlpha=1;
+  // cap memory
+  if(particles.length>1800)particles.splice(0,particles.length-1800);
+  nEl.textContent=particles.length+rockets.length;
+  requestAnimationFrame(frame);
+}
+// ambient auto fireworks
+setInterval(()=>{if(particles.length<400)launch(W*(.15+Math.random()*.7),H*(.15+Math.random()*.35))},2200);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

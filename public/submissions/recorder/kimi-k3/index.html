@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PULSE · 录音机原型</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--red:#ff3b5c;--amber:#ffb454;--ink:#eef2f6;--dim:#8b95a5}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  font-family:"Helvetica Neue",Arial,sans-serif;color:var(--ink);
+  background:radial-gradient(110% 100% at 50% 0%,#1b2233 0%,#0a0d16 65%)}
+.deck{width:min(92vw,390px);padding:26px 24px 30px;border-radius:26px;
+  background:linear-gradient(160deg,#171e2e,#10141f);border:1px solid #2a3347;
+  box-shadow:0 30px 60px -30px #000,inset 0 1px 0 rgba(255,255,255,.05)}
+.head{display:flex;align-items:center;justify-content:space-between}
+.brand{font-size:12px;letter-spacing:.4em;color:var(--dim)}
+.badge{display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.15em;
+  padding:5px 12px;border-radius:99px;border:1px solid #2a3347;color:var(--dim);transition:.3s}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--dim);transition:.3s}
+body[data-st="REC"] .dot{background:var(--red);animation:blip 1s infinite}
+body[data-st="REC"] .badge{color:var(--red);border-color:rgba(255,59,92,.5)}
+body[data-st="PAUSE"] .dot{background:var(--amber)}
+body[data-st="PAUSE"] .badge{color:var(--amber);border-color:rgba(255,180,84,.5)}
+@keyframes blip{50%{opacity:.2;transform:scale(.7)}}
+.timer{margin:26px 0 4px;text-align:center;font-size:clamp(54px,16vw,72px);font-weight:200;
+  letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.timer em{font-style:normal;font-size:.32em;color:var(--dim);display:block;letter-spacing:.5em;margin-top:2px}
+.wave{display:flex;align-items:center;justify-content:center;gap:3px;height:64px;margin:14px 0 6px}
+.wb{width:3.5px;height:6px;border-radius:3px;background:#39445c;transition:height .12s}
+body[data-st="REC"] .wb{background:linear-gradient(180deg,var(--red),#8a1e35)}
+body[data-st="PAUSE"] .wb{background:var(--amber)}
+.track{margin:10px 0 20px;height:4px;border-radius:4px;background:#242d42;overflow:hidden}
+.track i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--red),#ff7a90);
+  transition:width .3s;box-shadow:0 0 10px rgba(255,59,92,.6)}
+.ctrl{display:flex;align-items:center;justify-content:center;gap:22px}
+.btn{border:none;cursor:pointer;font-family:inherit;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;transition:transform .15s,box-shadow .2s,opacity .2s}
+.btn:active{transform:scale(.9)}
+.btn:disabled{opacity:.25;cursor:not-allowed}
+.side{width:52px;height:52px;background:#1d2639;color:var(--ink);font-size:11px;letter-spacing:.1em;
+  border:1px solid #2f3a55}
+.main{width:78px;height:78px;background:linear-gradient(160deg,#ff4d6b,#c81e3f);color:#fff;font-size:12px;
+  font-weight:600;letter-spacing:.1em;box-shadow:0 12px 30px -10px rgba(255,59,92,.7)}
+body[data-st="REC"] .main{background:linear-gradient(160deg,#ffb454,#d07f1e);box-shadow:0 12px 30px -10px rgba(255,180,84,.7)}
+.hint{margin-top:14px;text-align:center;font-size:11px;color:var(--dim);letter-spacing:.12em;min-height:14px}
+.summary{margin-top:20px;padding:16px;border-radius:16px;background:#131a29;border:1px solid #26314a;
+  transform-origin:top;animation:pop .4s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{opacity:0;transform:scale(.85) translateY(8px)}}
+.summary h3{font-size:11px;letter-spacing:.3em;color:var(--dim);margin-bottom:12px}
+.row{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px dashed #242d42}
+.row:last-child{border:none}
+.row b{font-variant-numeric:tabular-nums}
+.row .ok{color:#4ade80}
+.miniwave{display:flex;align-items:flex-end;gap:2px;height:30px;margin-top:12px}
+.miniwave i{flex:1;background:linear-gradient(180deg,var(--red),#6e1830);border-radius:2px;opacity:.85}
+.hidden{display:none}
+</style>
+</head>
+<body data-st="IDLE">
+<div class="deck">
+  <div class="head">
+    <div class="brand">PULSE REC</div>
+    <div class="badge"><span class="dot"></span><span id="stx">待机</span></div>
+  </div>
+  <div class="timer" id="tm">00:00<em>ELAPSED · 时长</em></div>
+  <div class="wave" id="wave"></div>
+  <div class="track"><i id="prog"></i></div>
+  <div class="ctrl">
+    <button class="btn side" id="bStop" disabled>STOP</button>
+    <button class="btn main" id="bMain">REC</button>
+    <button class="btn side" id="bReset" disabled>RESET</button>
+  </div>
+  <div class="hint" id="hint">点击 REC 开始录音（模拟）</div>
+  <div class="summary hidden" id="sum">
+    <h3>SESSION SUMMARY · 录音摘要</h3>
+    <div class="row"><span>总时长</span><b id="sDur">—</b></div>
+    <div class="row"><span>暂停次数</span><b id="sPa">—</b></div>
+    <div class="row"><span>结束于</span><b id="sEnd">—</b></div>
+    <div class="row"><span>状态</span><b class="ok">已保存 ✓</b></div>
+    <div class="miniwave" id="mWave"></div>
+  </div>
+</div>
+<script>
+var S={st:'IDLE',sec:0,pauses:0,confirming:false,timer:null,peaks:[]};
+var $=function(id){return document.getElementById(id)};
+var bars=[],i;
+for(i=0;i<40;i++){var b=document.createElement('div');b.className='wb';$('wave').appendChild(b);bars.push(b)}
+function pad(n){return (n<10?'0':'')+n}
+function fmt(s){return pad(Math.floor(s/60))+':'+pad(s%60)}
+function setState(st,label){
+  S.st=st;document.body.dataset.st=st==='STOPPED'?'IDLE':st;$('stx').textContent=label;
+  $('bStop').disabled=(st==='IDLE');$('bReset').disabled=(st==='IDLE');
+  $('bMain').textContent=st==='REC'?'PAUSE':(st==='PAUSE'?'RESUME':'REC');
+}
+function tick(){
+  S.sec++;
+  $('tm').innerHTML=fmt(S.sec)+'<em>ELAPSED · 时长</em>';
+  $('prog').style.width=Math.min(S.sec/600*100,100)+'%'; // 10 分钟进度刻度
+  S.peaks.push(20+Math.random()*80);
+}
+function waveIdle(){bars.forEach(function(b){b.style.height='6px'})}
+var raf;
+function waveLoop(){ // 波形动效：录音时跳动，暂停时平缓呼吸
+  if(S.st==='REC')bars.forEach(function(b){b.style.height=(6+Math.random()*52)+'px'});
+  else if(S.st==='PAUSE')bars.forEach(function(b,k){b.style.height=(10+Math.sin(Date.now()/300+k)*6)+'px'});
+  raf=setTimeout(waveLoop,S.st==='REC'?120:80);
+}
+$('bMain').onclick=function(){
+  $('sum').classList.add('hidden');
+  if(S.st==='IDLE'){
+    S.sec=0;S.pauses=0;S.peaks=[];S.confirming=false;
+    setState('REC','录音中');S.timer=setInterval(tick,1000);
+    $('hint').textContent='REC ● 正在录音…再次点击可暂停';
+  }else if(S.st==='REC'){
+    clearInterval(S.timer);S.pauses++;
+    setState('PAUSE','已暂停');$('hint').textContent='已暂停 · 点击 RESUME 继续';
+  }else if(S.st==='PAUSE'){
+    setState('REC','录音中');S.timer=setInterval(tick,1000);
+    $('hint').textContent='REC ● 继续录音…';
+  }
+};
+$('bStop').onclick=function(){ // 二次确认防误触
+  if(S.st==='IDLE')return;
+  if(!S.confirming){
+    S.confirming=true;$('bStop').textContent='确认?';$('bStop').style.borderColor='var(--red)';
+    $('bStop').style.color='var(--red)';$('hint').textContent='再点一次 STOP 确认结束录音';
+    setTimeout(function(){if(S.confirming){S.confirming=false;$('bStop').textContent='STOP';
+      $('bStop').style.borderColor='';$('bStop').style.color='';}},3000);
+    return;
+  }
+  clearInterval(S.timer);S.confirming=false;
+  $('bStop').textContent='STOP';$('bStop').style.borderColor='';$('bStop').style.color='';
+  setState('STOPPED','已完成');
+  var d=new Date();
+  $('sDur').textContent=fmt(S.sec)+'（'+S.sec+' 秒）';
+  $('sPa').textContent=S.pauses+' 次';
+  $('sEnd').textContent=pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+  var mw=$('mWave');mw.innerHTML='';
+  var n=28,step=Math.max(1,Math.floor(S.peaks.length/n));
+  for(i=0;i<n;i++){var p=document.createElement('i');
+    var v=S.peaks.length?S.peaks[Math.min(i*step,S.peaks.length-1)]:15;
+    p.style.height=Math.max(4,v/100*30)+'px';mw.appendChild(p)}
+  $('sum').classList.remove('hidden');
+  $('hint').textContent='录音已保存 · 点击 REC 开始新录音，RESET 清空';
+  waveIdle();
+};
+$('bReset').onclick=function(){
+  clearInterval(S.timer);S.st='IDLE';S.sec=0;S.pauses=0;S.peaks=[];S.confirming=false;
+  setState('IDLE','待机');waveIdle();
+  $('tm').innerHTML='00:00<em>ELAPSED · 时长</em>';$('prog').style.width='0';
+  $('sum').classList.add('hidden');$('hint').textContent='点击 REC 开始录音（模拟）';
+};
+setState('IDLE','待机');waveLoop();
+</script>
+</body>
+</html>

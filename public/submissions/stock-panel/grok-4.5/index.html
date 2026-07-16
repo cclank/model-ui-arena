@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Stock · grok-4.5</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;
+  background:linear-gradient(145deg,#0a0f1a,#111827 50%,#0b1324);
+  color:#e5e7eb;display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:16px
+}
+.panel{
+  width:min(390px,100%);background:rgba(17,24,39,.92);border:1px solid rgba(75,85,99,.5);
+  border-radius:20px;padding:18px 16px 14px;box-shadow:0 22px 50px rgba(0,0,0,.45)
+}
+.head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.head h1{font-size:1rem;font-weight:650;letter-spacing:.03em}
+.live{display:flex;align-items:center;gap:6px;font-size:.72rem;color:#86efac}
+.live i{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:p 1.2s infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+.list{display:flex;flex-direction:column;gap:10px}
+.item{
+  background:rgba(31,41,55,.85);border:1px solid rgba(55,65,81,.8);border-radius:14px;
+  padding:12px 12px 10px;transition:border-color .25s
+}
+.item.up{border-color:rgba(34,197,94,.35)}
+.item.down{border-color:rgba(239,68,68,.35)}
+.row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.name{font-weight:600;font-size:.92rem}
+.code{font-size:.7rem;color:#9ca3af;margin-top:2px}
+.price{text-align:right;font-variant-numeric:tabular-nums}
+.price .p{font-size:1.15rem;font-weight:700}
+.price .chg{font-size:.75rem;margin-top:2px}
+.up .price .p,.up .price .chg{color:#4ade80}
+.down .price .p,.down .price .chg{color:#f87171}
+svg.spark{width:100%;height:36px;display:block;margin-top:4px}
+.risk{
+  margin-top:12px;padding:10px 12px;border-radius:12px;font-size:.75rem;line-height:1.45;
+  background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.28);color:#fcd34d
+}
+.foot{margin-top:8px;font-size:.68rem;color:#6b7280;text-align:center}
+</style>
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <h1>市场监控</h1>
+    <span class="live"><i></i>模拟实时</span>
+  </div>
+  <div class="list" id="list"></div>
+  <div class="risk" id="risk">波动提示：数据为本地 mock，仅用于 UI 压测展示。</div>
+  <div class="foot">每 1.2s 伪刷新 · grok-4.5</div>
+</div>
+<script>
+const stocks=[
+  {name:'星云科技',code:'XNY.SH',price:186.42,chg:2.35,hist:[178,180,179,182,181,184,183,185,186.42]},
+  {name:'瀚海能源',code:'HHE.SZ',price:42.18,chg:-0.86,hist:[44.2,43.8,43.5,43.1,42.9,42.6,42.4,42.3,42.18]},
+  {name:'云枢互联',code:'YSH.HK',price:98.7,chg:1.12,hist:[95,95.5,96.2,96,97.1,97.8,98.1,98.4,98.7]}
+];
+const list=document.getElementById('list'),risk=document.getElementById('risk');
+function spark(hist,up){
+  const min=Math.min(...hist),max=Math.max(...hist),W=340,H=36,n=hist.length;
+  const sx=i=>i*(W/(n-1)),sy=v=>H-4-((v-min)/(max-min||1))*(H-8);
+  let d='';hist.forEach((v,i)=>{d+=(i?' L':'M')+` ${sx(i).toFixed(1)} ${sy(v).toFixed(1)}`});
+  const c=up?'#4ade80':'#f87171';
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <path d="${d}" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="${sx(n-1)}" cy="${sy(hist[n-1])}" r="2.5" fill="${c}"/></svg>`;
+}
+function pct(s){return ((s.chg/ (s.price-s.chg))*100).toFixed(2)}
+function render(){
+  list.innerHTML=stocks.map((s,i)=>{
+    const up=s.chg>=0;
+    return `<div class="item ${up?'up':'down'}" data-i="${i}">
+      <div class="row"><div><div class="name">${s.name}</div><div class="code">${s.code}</div></div>
+      <div class="price"><div class="p">${s.price.toFixed(2)}</div>
+      <div class="chg">${up?'▲':'▼'} ${up?'+':''}${s.chg.toFixed(2)} (${up?'+':''}${pct(s)}%)</div></div></div>
+      ${spark(s.hist,up)}</div>`;
+  }).join('');
+  const vol=stocks.reduce((a,s)=>a+Math.abs(s.chg),0);
+  risk.textContent=vol>3.5
+    ?`波动提示：当前组合波动偏高（Σ|Δ|=${vol.toFixed(2)}），注意回撤风险。`
+    :`波动提示：市场节奏平稳（Σ|Δ|=${vol.toFixed(2)}），继续观察即可。`;
+}
+function tick(){
+  stocks.forEach(s=>{
+    const delta=(Math.random()-0.48)*0.35;
+    s.price=Math.max(1,+(s.price+delta).toFixed(2));
+    s.chg=+(s.chg+delta*0.6).toFixed(2);
+    s.hist.push(s.price);if(s.hist.length>12)s.hist.shift();
+  });
+  render();
+}
+render();
+setInterval(tick,1200);
+</script>
+</body>
+</html>

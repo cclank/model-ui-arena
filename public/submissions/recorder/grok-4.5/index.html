@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Recorder · grok-4.5</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;
+  background:linear-gradient(160deg,#0f0a12 0%,#1a0f1e 45%,#0c1220 100%);
+  color:#f1e9f5;display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:16px;
+}
+.card{
+  width:min(390px,100%);background:rgba(28,18,36,.88);border:1px solid rgba(244,114,182,.25);
+  border-radius:24px;padding:28px 22px 22px;box-shadow:0 24px 60px rgba(0,0,0,.45);
+}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.header h1{font-size:1.05rem;font-weight:600;letter-spacing:.04em}
+.rec-badge{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
+  background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.35);font-size:.72rem;
+  color:#fca5a5;opacity:.5;transition:.25s
+}
+.rec-badge.on{opacity:1;box-shadow:0 0 12px rgba(248,113,113,.35)}
+.rec-badge .dot{width:7px;height:7px;border-radius:50%;background:#ef4444}
+.rec-badge.on .dot{animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.timer{
+  font-variant-numeric:tabular-nums;font-size:3rem;font-weight:700;text-align:center;
+  letter-spacing:.08em;margin:8px 0 6px
+}
+.timer.live{color:#f9a8d4;text-shadow:0 0 20px rgba(244,114,182,.35)}
+.status{text-align:center;font-size:.8rem;color:#a78bba;margin-bottom:18px;min-height:1.2em}
+.wave{
+  height:64px;display:flex;align-items:center;justify-content:center;gap:3px;
+  margin-bottom:22px;padding:8px 12px;border-radius:14px;background:rgba(0,0,0,.25);
+  border:1px solid rgba(167,139,186,.15);overflow:hidden
+}
+.bar{width:4px;border-radius:2px;background:linear-gradient(180deg,#f472b6,#a78bfa);opacity:.35;
+  height:12px;transition:height .12s}
+.wave.live .bar{opacity:1;animation:wave 0.8s ease-in-out infinite alternate}
+@keyframes wave{from{height:8px}to{height:48px}}
+.controls{display:flex;gap:10px;justify-content:center;margin-bottom:16px}
+button{
+  border:none;cursor:pointer;border-radius:14px;padding:12px 16px;font-size:.9rem;font-weight:600;
+  color:#fff;min-width:88px;transition:transform .12s,opacity .2s,box-shadow .2s
+}
+button:active{transform:scale(.96)}
+button:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none!important}
+.btn-start{background:linear-gradient(135deg,#ec4899,#db2777);box-shadow:0 6px 18px rgba(236,72,153,.35)}
+.btn-pause{background:linear-gradient(135deg,#a78bfa,#7c3aed);box-shadow:0 6px 18px rgba(124,58,237,.3)}
+.btn-stop{background:linear-gradient(135deg,#64748b,#334155);box-shadow:0 6px 18px rgba(51,65,85,.35)}
+.summary{
+  border-radius:14px;padding:12px 14px;background:rgba(15,10,20,.55);
+  border:1px dashed rgba(167,139,186,.3);font-size:.82rem;line-height:1.55;color:#c4b5d4;
+  min-height:56px
+}
+.summary strong{color:#f9a8d4}
+.confirm{
+  display:none;margin-top:10px;padding:10px;border-radius:12px;background:rgba(239,68,68,.1);
+  border:1px solid rgba(239,68,68,.3);font-size:.8rem;text-align:center
+}
+.confirm.show{display:block}
+.confirm button{min-width:64px;padding:8px 12px;margin:8px 4px 0;font-size:.78rem}
+.yes{background:#ef4444}.no{background:#475569}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <h1>RECORDER</h1>
+    <span class="rec-badge" id="badge"><i class="dot"></i>REC</span>
+  </div>
+  <div class="timer" id="timer">00:00</div>
+  <div class="status" id="status">就绪 · 点击开始模拟录音</div>
+  <div class="wave" id="wave"></div>
+  <div class="controls">
+    <button class="btn-start" id="start">Start</button>
+    <button class="btn-pause" id="pause" disabled>Pause</button>
+    <button class="btn-stop" id="stop" disabled>Stop</button>
+  </div>
+  <div class="summary" id="summary">尚未录音。Start → Pause → Stop 体验完整状态机。</div>
+  <div class="confirm" id="confirm">
+    确认结束本次录音？
+    <div><button class="yes" id="yes">确认</button><button class="no" id="no">取消</button></div>
+  </div>
+</div>
+<script>
+const wave=document.getElementById('wave');
+for(let i=0;i<28;i++){
+  const b=document.createElement('div');
+  b.className='bar';
+  b.style.animationDelay=`${(i%10)*0.07}s`;
+  b.style.animationDuration=`${0.55+Math.random()*0.5}s`;
+  wave.appendChild(b);
+}
+const timerEl=document.getElementById('timer'),statusEl=document.getElementById('status');
+const badge=document.getElementById('badge'),summary=document.getElementById('summary');
+const startBtn=document.getElementById('start'),pauseBtn=document.getElementById('pause');
+const stopBtn=document.getElementById('stop'),confirm=document.getElementById('confirm');
+let state='idle',ms=0,tick=null,session=0;
+const pad=n=>String(n).padStart(2,'0');
+function fmt(t){const s=Math.floor(t/1000);return `${pad(Math.floor(s/60))}:${pad(s%60)}`}
+function setUI(){
+  const live=state==='recording';
+  badge.classList.toggle('on',live);
+  wave.classList.toggle('live',live);
+  timerEl.classList.toggle('live',live||state==='paused');
+  startBtn.disabled=state==='recording';
+  pauseBtn.disabled=state==='idle'||state==='stopped';
+  stopBtn.disabled=state==='idle'||state==='stopped';
+  startBtn.textContent=state==='paused'?'Resume':'Start';
+  pauseBtn.textContent=state==='paused'?'Paused':'Pause';
+  if(state==='idle')statusEl.textContent='就绪 · 点击开始模拟录音';
+  if(state==='recording')statusEl.textContent='录音中…';
+  if(state==='paused')statusEl.textContent='已暂停';
+  if(state==='stopped')statusEl.textContent='已停止 · 可查看摘要或重新开始';
+}
+function loop(ts){
+  if(!loop.last)loop.last=ts;
+  if(state==='recording'){ms+=ts-loop.last;timerEl.textContent=fmt(ms)}
+  loop.last=ts;
+  tick=requestAnimationFrame(loop);
+}
+function start(){
+  if(state==='idle'||state==='stopped'){ms=0;session++;timerEl.textContent='00:00';summary.textContent=`会话 #${session} 进行中…`}
+  state='recording';confirm.classList.remove('show');setUI();
+  if(!tick){loop.last=0;tick=requestAnimationFrame(loop)}
+}
+function pause(){if(state==='recording'){state='paused';setUI()}else if(state==='paused'){state='recording';setUI()}}
+function askStop(){if(state==='recording'||state==='paused')confirm.classList.add('show')}
+function doStop(){
+  state='stopped';confirm.classList.remove('show');setUI();
+  summary.innerHTML=`<strong>录音摘要 #${session}</strong><br>时长 ${fmt(ms)} · 状态：已完成 · 模式：模拟录音（无麦克风权限）`;
+}
+startBtn.onclick=start;pauseBtn.onclick=pause;stopBtn.onclick=askStop;
+document.getElementById('yes').onclick=doStop;
+document.getElementById('no').onclick=()=>confirm.classList.remove('show');
+setUI();
+</script>
+</body>
+</html>

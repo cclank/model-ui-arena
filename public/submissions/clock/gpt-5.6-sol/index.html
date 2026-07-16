@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Local Orbit Clock</title>
+<style>
+:root{color-scheme:dark;--ink:#f4f0e8;--muted:#929aa5;--accent:#ff5c35;--cool:#65d9ff;--panel:#101419;--line:#283039}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;overflow:hidden;background:#080a0d;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,sans-serif}
+body.day{--accent:#ff4f1f;--cool:#2589a8;--panel:#f0eee7;--line:#c9c6bd;--ink:#171a1d;--muted:#667079;background:#dbd8cf}
+.stage{width:min(960px,94vw);min-height:min(680px,94vh);display:grid;grid-template-columns:1fr .8fr;align-items:center;gap:clamp(24px,6vw,80px);position:relative}
+.stage:before,.stage:after{content:"";position:absolute;pointer-events:none}.stage:before{inset:6% 0;border-top:1px solid color-mix(in srgb,var(--cool) 25%,transparent);transform:rotate(-8deg)}.stage:after{width:55%;height:1px;right:0;bottom:13%;background:linear-gradient(90deg,transparent,var(--accent),transparent)}
+.dial{width:min(58vw,470px);aspect-ratio:1;border-radius:50%;position:relative;justify-self:center;overflow:hidden;background:radial-gradient(circle at 48% 42%,color-mix(in srgb,var(--panel) 86%,white),var(--panel) 65%,#050607 66%);box-shadow:0 30px 70px #0009,inset 0 0 0 1px #ffffff17,inset 0 0 0 14px #ffffff08}
+.dial:before{content:"";position:absolute;inset:8%;border:1px solid var(--line);border-radius:50%;box-shadow:inset 0 0 35px #0004}
+.tick{position:absolute;inset:3%;transform:rotate(calc(var(--i)*6deg));pointer-events:none}.tick:after{content:"";display:block;margin:auto;width:1px;height:7px;background:var(--muted);opacity:.42}.tick.major:after{height:14px;width:2px;background:var(--ink);opacity:.9}
+.numeral{position:absolute;font:600 13px ui-monospace,SFMono-Regular,monospace;color:var(--muted);letter-spacing:.08em}.n12{top:13%;left:50%;transform:translateX(-50%)}.n3{right:14%;top:50%;transform:translateY(-50%)}.n6{bottom:13%;left:50%;transform:translateX(-50%)}.n9{left:14%;top:50%;transform:translateY(-50%)}
+.hand{position:absolute;left:50%;bottom:50%;transform-origin:50% 100%;border-radius:8px;will-change:transform}.hour{height:23%;width:6px;margin-left:-3px;background:var(--ink)}.minute{height:33%;width:3px;margin-left:-1.5px;background:var(--ink)}.second{height:38%;width:2px;margin-left:-1px;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+.second:after{content:"";position:absolute;width:10px;height:10px;border:2px solid var(--accent);border-radius:50%;left:50%;bottom:-6px;transform:translateX(-50%);background:var(--panel)}
+.orbit{position:absolute;inset:22%;border:1px dashed color-mix(in srgb,var(--cool) 35%,transparent);border-radius:50%;animation:spin 24s linear infinite}.orbit:after{content:"";position:absolute;width:8px;height:8px;background:var(--cool);border-radius:50%;top:-4px;left:50%;box-shadow:0 0 18px var(--cool)}
+.info{position:relative;z-index:2}.eyebrow{display:flex;align-items:center;gap:10px;color:var(--muted);font:600 11px ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase}.live{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 55%,transparent);animation:pulse 2s infinite}
+#digital{font:300 clamp(46px,7vw,88px)/.95 ui-monospace,SFMono-Regular,monospace;letter-spacing:-.04em;margin:22px 0 14px;font-variant-numeric:tabular-nums}.seconds{color:var(--accent);font-size:.46em;vertical-align:top;margin-left:8px;letter-spacing:0}
+#date{font-size:15px;color:var(--muted);margin-bottom:42px}.meta{border-top:1px solid var(--line);padding-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:16px}.meta b{display:block;font:500 13px ui-monospace,monospace}.meta span{font-size:11px;color:var(--muted)}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{70%{box-shadow:0 0 0 9px transparent}}@media(max-width:700px){.stage{grid-template-columns:1fr;gap:22px;min-height:100vh;padding:24px 0}.stage:before{transform:none}.dial{width:min(82vw,390px)}.info{text-align:center}.eyebrow{justify-content:center}.meta{text-align:left;margin:0 6vw}#digital{margin-top:12px}#date{margin-bottom:22px}}
+</style>
+</head>
+<body><main class="stage">
+<div class="dial" aria-label="模拟时钟"><div class="orbit"></div><div id="ticks"></div><span class="numeral n12">12</span><span class="numeral n3">03</span><span class="numeral n6">06</span><span class="numeral n9">09</span><i class="hand hour"></i><i class="hand minute"></i><i class="hand second"></i></div>
+<section class="info"><div class="eyebrow"><i class="live"></i><span id="phase">LOCAL SIGNAL</span></div><div id="digital">00:00<span class="seconds">00</span></div><div id="date"></div><div class="meta"><div><span>TIME ZONE</span><b id="zone"></b></div><div><span>UTC OFFSET</span><b id="offset"></b></div></div></section>
+</main>
+<script>
+const ticks=document.querySelector('#ticks');for(let i=0;i<60;i++)ticks.insertAdjacentHTML('beforeend',`<i class="tick ${i%5?'':'major'}" style="--i:${i}"></i>`);
+const h=document.querySelector('.hour'),m=document.querySelector('.minute'),s=document.querySelector('.second'),digital=document.querySelector('#digital'),dateEl=document.querySelector('#date');let last=-1;
+const zone=Intl.DateTimeFormat().resolvedOptions().timeZone;document.querySelector('#zone').textContent=zone;document.querySelector('#offset').textContent=`UTC ${-new Date().getTimezoneOffset()/60>=0?'+':''}${-new Date().getTimezoneOffset()/60}`;
+function frame(){const d=new Date(),ms=d.getMilliseconds(),sec=d.getSeconds()+ms/1000,min=d.getMinutes()+sec/60,hr=d.getHours()+min/60;s.style.transform=`rotate(${sec*6}deg)`;m.style.transform=`rotate(${min*6}deg)`;h.style.transform=`rotate(${hr*30}deg)`;if(d.getSeconds()!==last){last=d.getSeconds();const p=n=>String(n).padStart(2,'0');digital.innerHTML=`${p(d.getHours())}:${p(d.getMinutes())}<span class="seconds">${p(last)}</span>`;dateEl.textContent=new Intl.DateTimeFormat('zh-CN',{weekday:'long',year:'numeric',month:'long',day:'numeric'}).format(d);const day=d.getHours()>=6&&d.getHours()<18;document.body.classList.toggle('day',day);document.querySelector('#phase').textContent=day?'DAYLIGHT / LOCAL':'AFTER DARK / LOCAL'}requestAnimationFrame(frame)}frame();
+</script></body></html>
