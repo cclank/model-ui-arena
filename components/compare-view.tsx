@@ -88,7 +88,7 @@ function CompareColumn({
 
 export function CompareView() {
   const router = useRouter();
-  const sp = useSearchParams();
+  const sp = useSearchParams() ?? new URLSearchParams();
   const [payload, setPayload] = useState<ApiPayload | null>(null);
   const [copied, setCopied] = useState(false);
 
