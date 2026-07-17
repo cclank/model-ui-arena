@@ -1,4 +1,9 @@
 {
+  "latestModels": [
+    "gpt-5.6-sol",
+    "grok-4.5",
+    "kimi-k3"
+  ],
   "modelOrder": [
     "^gpt-5\\.6-sol$",
     "^gpt-5\\.5$",

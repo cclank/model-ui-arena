@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "NEXT_DEV_ISOLATED=1 next dev",
-    "build": "npm run manifest && next build",
+    "build": "npm run manifest && npm run check:model-order && next build",
+    "check:model-order": "node scripts/check-model-order.mjs",
     "deploy": "opennextjs-cloudflare build && OPEN_NEXT_DEPLOY=true CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false wrangler deploy",
     "manifest": "node scripts/generate-submissions-manifest.mjs",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",

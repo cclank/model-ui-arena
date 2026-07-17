@@ -26,11 +26,21 @@ const carwashQuestion =
   "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？";
 
 const modelOrderData = JSON.parse(await fs.readFile(modelOrderFile, "utf8"));
+const latestModelRank = new Map(
+  modelOrderData.latestModels.map((model, index) => [model.toLowerCase(), index])
+);
 const modelOrderPatterns = modelOrderData.modelOrder.map((pattern) => new RegExp(pattern, "i"));
 
 function modelRank(model) {
+  const latestRank = latestModelRank.get(model.toLowerCase());
+  if (latestRank !== undefined) {
+    return latestRank;
+  }
+
   const rank = modelOrderPatterns.findIndex((pattern) => pattern.test(model));
-  return rank === -1 ? Number.MAX_SAFE_INTEGER : rank;
+  return rank === -1
+    ? Number.MAX_SAFE_INTEGER
+    : modelOrderData.latestModels.length + rank;
 }
 
 function compareModels(a, b) {
