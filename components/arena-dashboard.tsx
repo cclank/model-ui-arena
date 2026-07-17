@@ -3,7 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { buildThemePath, parseModelSelection } from "@/lib/arena-navigation";
-import { getReferenceModels, compareModels, sortModels } from "@/lib/model-order";
+import {
+  getLatestModels,
+  getReferenceModels,
+  compareModels,
+  sortModels
+} from "@/lib/model-order";
 import { PreviewFrame } from "@/components/preview-frame";
 import { PromptDrawer } from "@/components/prompt-drawer";
 import { SharePath } from "@/components/share-path";
@@ -54,8 +59,11 @@ type ArenaDashboardProps = {
   initialTheme?: string;
 };
 
+type ModelScope = "theme" | "all" | "selected";
+
 export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) {
   const gridRef = useRef<HTMLElement>(null);
+  const modelSearchRef = useRef<HTMLInputElement>(null);
   const [payload, setPayload] = useState<ApiPayload | null>(null);
   const [error, setError] = useState<string>("");
   const [activeTheme, setActiveTheme] = useState<string>(initialTheme);
@@ -64,7 +72,7 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
   const [maxPanesPerRow, setMaxPanesPerRow] = useState<number>(4);
   const [modelQuery, setModelQuery] = useState<string>("");
   const [pickerOpen, setPickerOpen] = useState<boolean>(false);
-  const [showAllModels, setShowAllModels] = useState<boolean>(false);
+  const [modelScope, setModelScope] = useState<ModelScope>("theme");
   const [promptOpen, setPromptOpen] = useState<boolean>(false);
   const [chartOpen, setChartOpen] = useState<boolean>(false);
 
@@ -113,6 +121,30 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
   useEffect(() => {
     setActiveTheme(initialTheme);
   }, [initialTheme]);
+
+  useEffect(() => {
+    if (!pickerOpen) {
+      return;
+    }
+
+    const focusTimer = window.setTimeout(() => {
+      if (window.matchMedia("(min-width: 641px)").matches) {
+        modelSearchRef.current?.focus();
+      }
+    }, 0);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setPickerOpen(false);
+        setModelQuery("");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [pickerOpen]);
 
   useEffect(() => {
     const grid = gridRef.current;
@@ -169,17 +201,20 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
   }, [activeTheme, payload]);
 
   const referenceModels = useMemo(() => getReferenceModels(availableModels), [availableModels]);
+  const latestModels = useMemo(() => getLatestModels(availableModels), [availableModels]);
+  const latestModelSet = useMemo(() => new Set(latestModels), [latestModels]);
 
   const visibleModels = useMemo(() => {
     const query = modelQuery.trim().toLowerCase();
 
     return availableModels.filter((model) => {
       const matchesQuery = !query || model.toLowerCase().includes(query);
-      const inScope =
-        showAllModels || modelsForActiveTheme.has(model) || selectedModelSet.has(model);
+      const inScope = modelScope === "all"
+        || (modelScope === "theme" && modelsForActiveTheme.has(model))
+        || (modelScope === "selected" && selectedModelSet.has(model));
       return matchesQuery && inScope;
     });
-  }, [availableModels, modelQuery, selectedModelSet, showAllModels, modelsForActiveTheme]);
+  }, [availableModels, modelQuery, modelScope, modelsForActiveTheme, selectedModelSet]);
 
   const visibleSelectedCount = useMemo(() => {
     return visibleModels.filter((model) => selectedModelSet.has(model)).length;
@@ -224,12 +259,12 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
     );
   };
 
-  const addVisibleModels = () => {
-    commitSelectedModels([...selectedModels, ...visibleModels]);
-  };
-
-  const removeVisibleModels = () => {
-    commitSelectedModels(selectedModels.filter((model) => !visibleModels.includes(model)));
+  const toggleVisibleModels = () => {
+    commitSelectedModels(
+      allVisibleSelected
+        ? selectedModels.filter((model) => !visibleModels.includes(model))
+        : [...selectedModels, ...visibleModels]
+    );
   };
 
   const selectThemeModels = () => {
@@ -238,6 +273,15 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
 
   const selectReferenceModels = () => {
     commitSelectedModels(referenceModels);
+  };
+
+  const selectLatestModels = () => {
+    commitSelectedModels(latestModels);
+  };
+
+  const closeModelPicker = () => {
+    setPickerOpen(false);
+    setModelQuery("");
   };
 
   return (
@@ -323,8 +367,10 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
             <button
               type="button"
               className={pickerOpen ? "model-trigger open" : "model-trigger"}
-              onClick={() => setPickerOpen((value) => !value)}
+              onClick={() => pickerOpen ? closeModelPicker() : setPickerOpen(true)}
               aria-expanded={pickerOpen}
+              aria-haspopup="dialog"
+              aria-controls="model-picker"
             >
               <span>模型</span>
               <strong>{selectedModels.length}</strong>
@@ -336,69 +382,128 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
 
             {pickerOpen ? (
               <>
-                <div className="popover-backdrop" onClick={() => setPickerOpen(false)} />
-                <div className="model-popover" role="dialog" aria-label="模型选择">
+                <div className="popover-backdrop" onClick={closeModelPicker} />
+                <div
+                  id="model-picker"
+                  className="model-popover"
+                  role="dialog"
+                  aria-labelledby="model-picker-title"
+                >
                   <div className="popover-head">
                     <div>
-                      <span className="label-eyebrow">Model</span>
+                      <span className="label-eyebrow">模型筛选</span>
+                      <h2 id="model-picker-title">选择对比模型</h2>
                       <p>
-                        {selectedModels.length} 已选 / {availableModels.length} 总数 · 本主题{" "}
-                        {modelsForActiveTheme.size} 可对比
+                        已选 {selectedModels.length} 个 · 本主题 {modelsForActiveTheme.size} 个可对比
                       </p>
                     </div>
                     <button
                       type="button"
                       className="popover-close"
-                      onClick={() => setPickerOpen(false)}
+                      onClick={closeModelPicker}
                       aria-label="关闭"
                     >
                       ×
                     </button>
                   </div>
 
-                  <input
-                    className="model-search"
-                    type="search"
-                    value={modelQuery}
-                    onChange={(event) => setModelQuery(event.target.value)}
-                    placeholder="搜索 gpt / claude / qwen / gemini"
-                    aria-label="搜索模型"
-                  />
+                  <div className="model-search-wrap">
+                    <input
+                      ref={modelSearchRef}
+                      className="model-search"
+                      type="search"
+                      value={modelQuery}
+                      onChange={(event) => setModelQuery(event.target.value)}
+                      placeholder="搜索模型名称"
+                      aria-label="搜索模型"
+                    />
+                    {modelQuery ? (
+                      <button
+                        type="button"
+                        className="model-search-clear"
+                        onClick={() => setModelQuery("")}
+                        aria-label="清除搜索"
+                      >
+                        ×
+                      </button>
+                    ) : null}
+                  </div>
 
-                  <div className="model-actions">
-                    <button type="button" className="action-button" onClick={selectReferenceModels}>
-                      参考组合
-                    </button>
-                    <button type="button" className="action-button" onClick={selectThemeModels}>
-                      本主题全选
-                    </button>
-                    <button
-                      type="button"
-                      className="action-button"
-                      onClick={allVisibleSelected ? removeVisibleModels : addVisibleModels}
-                    >
-                      {allVisibleSelected ? "移除可见" : "加入可见"}
-                    </button>
-                    <button
-                      type="button"
-                      className="action-button ghost"
-                      onClick={() => commitSelectedModels([])}
-                    >
-                      清空
-                    </button>
+                  <div className="model-scope-tabs" role="tablist" aria-label="模型范围">
+                    {([
+                      ["theme", "本主题", modelsForActiveTheme.size],
+                      ["all", "全部", availableModels.length],
+                      ["selected", "已选", selectedModels.length]
+                    ] as const).map(([scope, label, count]) => (
+                      <button
+                        key={scope}
+                        type="button"
+                        role="tab"
+                        aria-selected={modelScope === scope}
+                        className={modelScope === scope ? "model-scope-tab active" : "model-scope-tab"}
+                        onClick={() => setModelScope(scope)}
+                      >
+                        <span>{label}</span>
+                        <strong>{count}</strong>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="model-quick-row">
+                    <span className="model-section-label">快捷选择</span>
+                    <div className="model-actions">
+                      <button
+                        type="button"
+                        className="action-button preset"
+                        onClick={selectLatestModels}
+                      >
+                        最新 {latestModels.length} 个
+                      </button>
+                      <button
+                        type="button"
+                        className="action-button preset"
+                        onClick={selectReferenceModels}
+                      >
+                        参考组合
+                      </button>
+                      <button
+                        type="button"
+                        className="action-button preset"
+                        onClick={selectThemeModels}
+                      >
+                        本主题全选
+                      </button>
+                      <button
+                        type="button"
+                        className="action-button ghost"
+                        onClick={() => commitSelectedModels([])}
+                        disabled={selectedModels.length === 0}
+                      >
+                        清空
+                      </button>
+                    </div>
                   </div>
 
                   <div className="model-list-head">
-                    <button
-                      type="button"
-                      className={showAllModels ? "scope-toggle" : "scope-toggle active"}
-                      onClick={() => setShowAllModels((value) => !value)}
-                    >
-                      {showAllModels ? `显示全部 ${availableModels.length}` : "仅可对比 + 已选"}
-                    </button>
-                    <span>
-                      可见 {visibleModels.length} / 已选 {visibleSelectedCount}
+                    <span aria-live="polite">
+                      {modelQuery
+                        ? "搜索结果"
+                        : modelScope === "theme"
+                          ? "本主题模型"
+                          : modelScope === "all"
+                            ? "全部模型"
+                            : "已选模型"}
+                      <strong>{visibleModels.length}</strong>
                     </span>
+                    {visibleModels.length ? (
+                      <button
+                        type="button"
+                        className="model-batch-button"
+                        onClick={toggleVisibleModels}
+                      >
+                        {allVisibleSelected ? "取消当前结果" : "全选当前结果"}
+                      </button>
+                    ) : null}
                   </div>
 
                   <div className="model-list">
@@ -417,33 +522,61 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
                             onChange={() => toggleModel(model)}
                           />
                           <span className="model-name">{model}</span>
-                          <span className={hasActiveTheme ? "model-availability" : "model-availability muted"}>
-                            {hasActiveTheme ? "可对比" : "缺主题"}
+                          <span className="model-tags">
+                            {latestModelSet.has(model) ? (
+                              <span className="model-latest">最新</span>
+                            ) : null}
+                            <span
+                              className={hasActiveTheme
+                                ? "model-availability"
+                                : "model-availability muted"}
+                            >
+                              {hasActiveTheme ? "可对比" : "缺本主题"}
+                            </span>
                           </span>
                         </label>
                       );
                     })}
                     {visibleModels.length === 0 ? (
-                      <p className="empty-selection">没有匹配的模型</p>
+                      <div className="empty-selection">
+                        <strong>
+                          {modelScope === "selected" && !modelQuery
+                            ? "还没有选择模型"
+                            : "没有匹配的模型"}
+                        </strong>
+                        <span>{modelQuery ? "换个关键词试试" : "可以从最新模型开始"}</span>
+                        {!modelQuery ? (
+                          <button
+                            type="button"
+                            className="action-button preset"
+                            onClick={selectLatestModels}
+                          >
+                            选择最新 {latestModels.length} 个
+                          </button>
+                        ) : null}
+                      </div>
                     ) : null}
                   </div>
 
-                  {selectedModels.length ? (
-                    <div className="selected-tray" aria-label="已选模型">
-                      {selectedModels.map((model) => (
-                        <button
-                          key={model}
-                          type="button"
-                          className="selected-pill"
-                          onClick={() => toggleModel(model)}
-                          title={`移除 ${model}`}
-                        >
-                          <span>{model}</span>
-                          <span aria-hidden="true">×</span>
-                        </button>
-                      ))}
+                  <div className="model-picker-footer">
+                    <div className="model-selection-summary" aria-live="polite">
+                      <span>
+                        已选 <strong>{selectedModels.length}</strong> 个
+                      </span>
+                      <p title={selectedModels.join("、")}>
+                        {selectedModels.length
+                          ? `${selectedModels.slice(0, 2).join(" · ")}${
+                              selectedModels.length > 2
+                                ? ` · +${selectedModels.length - 2}`
+                                : ""
+                            }`
+                          : "选择后会立即更新页面"}
+                      </p>
                     </div>
-                  ) : null}
+                    <button type="button" className="model-done-button" onClick={closeModelPicker}>
+                      完成
+                    </button>
+                  </div>
                 </div>
               </>
             ) : null}

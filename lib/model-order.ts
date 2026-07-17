@@ -46,11 +46,16 @@ export function sortSubmissionsByModel<T extends { model: string }>(items: T[]):
   return [...items].sort((a, b) => compareModels(a.model, b.model));
 }
 
-export function getReferenceModels(models: string[]): string[] {
+export function getLatestModels(models: string[]): string[] {
   const availableByName = new Map(models.map((model) => [model.toLowerCase(), model]));
-  const latestModels = modelOrderData.latestModels
+
+  return modelOrderData.latestModels
     .map((model) => availableByName.get(model.toLowerCase()))
     .filter((model): model is string => Boolean(model));
+}
+
+export function getReferenceModels(models: string[]): string[] {
+  const latestModels = getLatestModels(models);
   const referenceModels = REFERENCE_MODEL_GROUPS.map((patterns) =>
     patterns
       .map((pattern) => models.find((model) => pattern.test(model)))
