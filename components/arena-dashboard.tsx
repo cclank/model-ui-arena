@@ -64,8 +64,7 @@ type EvaluatorGuide = {
   title: string;
   items: Array<{
     action: string;
-    signal: string;
-    failure: string;
+    criterion: string;
     verdict: string;
     level: "reject" | "downgrade";
   }>;
@@ -73,26 +72,23 @@ type EvaluatorGuide = {
 
 const EVALUATOR_GUIDES: Record<string, EvaluatorGuide> = {
   "schwarzschild-black-hole": {
-    title: "30 秒快筛 · 三个动作分层",
+    title: "30 秒快筛",
     items: [
       {
         action: "拖拽视角转一圈",
-        signal: "背景星光靠近黑洞时应被拉伸、成环，并出现镜像翻折。",
-        failure: "星空纹理始终不变形，通常是 CSS、贴图或屏幕空间假透镜。",
+        criterion: "星光应拉伸、成环并镜像；始终不变形多为贴图或假透镜。",
         verdict: "直接淘汰",
         level: "reject"
       },
       {
         action: "对比盘面左右两侧",
-        signal: "迎向观察者的一侧明显更亮、更蓝；背离侧更暗、更红。",
-        failure: "两侧亮度和色温近似对称，说明未实现相对论多普勒集束。",
+        criterion: "盘面应一侧亮蓝、一侧暗红；近似对称说明缺少多普勒集束。",
         verdict: "降档",
         level: "downgrade"
       },
       {
         action: "观察黑洞正上方",
-        signal: "远侧盘面应被翻折到黑洞上方与下方，形成环抱式次级像。",
-        failure: "看不到多重像，通常是透镜近似失真或积分距离、步数不足。",
+        criterion: "远侧盘应上下翻折成环；无次级像说明积分距离或步数不足。",
         verdict: "直接淘汰",
         level: "reject"
       }
@@ -145,11 +141,23 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
         );
 
         const models = sortModels([...new Set(data.submissions.map((item) => item.model))]);
-        const defaultModels = getReferenceModels(models);
+        const referenceModels = getReferenceModels(models);
+        const initialThemeModels = sortModels([
+          ...new Set(
+            data.submissions
+              .filter((item) => item.theme === initialTheme)
+              .map((item) => item.model)
+          )
+        ]);
+        // Small benchmark sets are more useful when every available result is visible.
+        const defaultModels = initialThemeModels.length > 0
+          && initialThemeModels.length <= referenceModels.length
+          ? initialThemeModels
+          : referenceModels.length ? referenceModels : models;
         const requestedModels = parseModelSelection(window.location.search);
         const availableModelSet = new Set(models);
         const nextModels = requestedModels === null
-          ? defaultModels.length ? defaultModels : models
+          ? defaultModels
           : sortModels(requestedModels.filter((model) => availableModelSet.has(model)));
         setSelectedModels(nextModels);
       })
@@ -161,7 +169,7 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialTheme]);
 
   useEffect(() => {
     setActiveTheme(initialTheme);
@@ -663,7 +671,7 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
               <span className="evaluator-guide-kicker">评委验收手册</span>
               <h3 id="evaluator-guide-title">{evaluatorGuide.title}</h3>
             </div>
-            <p className="evaluator-guide-note">评委专用 · 不进入模型 Prompt</p>
+            <p className="evaluator-guide-note">不进入模型 Prompt</p>
           </header>
           <ol className="evaluator-guide-list">
             {evaluatorGuide.items.map((item, index) => (
@@ -672,18 +680,13 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 <div>
-                  <h4>{item.action}</h4>
-                  <p className="evaluator-guide-signal">
-                    <strong>观察</strong>
-                    {item.signal}
-                  </p>
-                  <p className="evaluator-guide-failure">
-                    <strong>异常</strong>
-                    {item.failure}
-                  </p>
-                  <span className={`evaluator-guide-verdict ${item.level}`}>
-                    {item.verdict}
-                  </span>
+                  <div className="evaluator-guide-item-title">
+                    <h4>{item.action}</h4>
+                    <span className={`evaluator-guide-verdict ${item.level}`}>
+                      {item.verdict}
+                    </span>
+                  </div>
+                  <p>{item.criterion}</p>
                 </div>
               </li>
             ))}

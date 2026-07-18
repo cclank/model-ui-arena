@@ -1047,7 +1047,9 @@ button.task-link {
 }
 
 .evaluator-guide {
-  margin: 0 0 18px;
+  display: grid;
+  grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
+  margin: 0 0 14px;
   border-top: 1px solid rgba(255, 191, 105, 0.28);
   border-bottom: 1px solid rgba(255, 191, 105, 0.28);
   background: rgba(13, 18, 27, 0.88);
@@ -1055,34 +1057,34 @@ button.task-link {
 
 .evaluator-guide-head {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 13px 14px;
-  border-bottom: 1px solid rgba(154, 168, 200, 0.14);
+  align-items: flex-start;
+  flex-direction: column;
+  justify-content: center;
+  padding: 10px 14px;
+  border-right: 1px solid rgba(154, 168, 200, 0.14);
 }
 
 .evaluator-guide-kicker {
   display: block;
   color: #ffbf69;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 0;
 }
 
 .evaluator-guide-head h3 {
-  margin: 5px 0 0;
+  margin: 3px 0 0;
   font-family: var(--font-title), serif;
-  font-size: 18px;
+  font-size: 16px;
   letter-spacing: 0;
 }
 
 .evaluator-guide-note {
-  margin: 0;
-  padding-left: 9px;
+  margin: 7px 0 0;
+  padding-left: 7px;
   border-left: 2px solid #ffbf69;
   color: #c6cfdf;
-  font-size: 11px;
+  font-size: 9px;
   white-space: nowrap;
 }
 
@@ -1096,10 +1098,11 @@ button.task-link {
 
 .evaluator-guide-item {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
   min-width: 0;
-  padding: 14px;
+  padding: 10px 12px;
 }
 
 .evaluator-guide-item + .evaluator-guide-item {
@@ -1108,41 +1111,39 @@ button.task-link {
 
 .evaluator-guide-index {
   color: #ffbf69;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
 }
 
+.evaluator-guide-item-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
 .evaluator-guide-item h4 {
-  margin: 0 0 9px;
+  margin: 0;
   color: var(--text);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .evaluator-guide-item p {
-  margin: 0 0 7px;
+  margin: 0;
   color: var(--muted);
-  font-size: 11px;
-  line-height: 1.55;
-}
-
-.evaluator-guide-item p strong {
-  display: inline-block;
-  width: 38px;
-  color: #dce6f6;
   font-size: 10px;
-}
-
-.evaluator-guide-failure {
-  color: #c9aeb0 !important;
+  line-height: 1.45;
 }
 
 .evaluator-guide-verdict {
   display: inline-block;
-  margin-top: 3px;
-  padding-left: 8px;
+  flex: 0 0 auto;
+  padding-left: 6px;
   border-left: 2px solid currentColor;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .evaluator-guide-verdict.reject {
@@ -1641,13 +1642,20 @@ button.task-link {
     flex-direction: column;
   }
 
-  .evaluator-guide-list {
+  .evaluator-guide {
     grid-template-columns: 1fr;
   }
 
-  .evaluator-guide-item + .evaluator-guide-item {
-    border-top: 1px solid rgba(154, 168, 200, 0.14);
-    border-left: 0;
+  .evaluator-guide-head {
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+    border-right: 0;
+    border-bottom: 1px solid rgba(154, 168, 200, 0.14);
+  }
+
+  .evaluator-guide-note {
+    margin: 0;
   }
 
   .model-list {
@@ -1710,14 +1718,13 @@ button.task-link {
 }
 
 @media (max-width: 640px) {
-  .evaluator-guide-head {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 9px;
+  .evaluator-guide-list {
+    grid-template-columns: 1fr;
   }
 
-  .evaluator-guide-note {
-    white-space: normal;
+  .evaluator-guide-item + .evaluator-guide-item {
+    border-top: 1px solid rgba(154, 168, 200, 0.14);
+    border-left: 0;
   }
 
   .popover-backdrop {
