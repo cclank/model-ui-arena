@@ -8,7 +8,11 @@ const submissionsRoot = path.join(projectRoot, "public", "submissions");
 const outputFile = path.join(projectRoot, "lib", "generated-submissions.json");
 const modelOrderFile = path.join(projectRoot, "lib", "model-order-data.json");
 const lineLimit = 220;
-const unlimitedLineThemes = new Set(["cheetah-trophy-run", "dslr-camera"]);
+const unlimitedLineThemes = new Set([
+  "cheetah-trophy-run",
+  "dslr-camera",
+  "schwarzschild-black-hole"
+]);
 const themeOrder = [
   "clock",
   "recorder",
@@ -19,6 +23,7 @@ const themeOrder = [
   "particle-gravity",
   "cheetah-trophy-run",
   "dslr-camera",
+  "schwarzschild-black-hole",
   "carwash-decision"
 ];
 const themeRank = new Map(themeOrder.map((theme, index) => [theme, index]));

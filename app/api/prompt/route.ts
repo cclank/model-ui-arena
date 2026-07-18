@@ -4,6 +4,7 @@ import path from "node:path";
 
 const noLimitThemes = new Set(["cheetah-trophy-run"]);
 const replicaThemes = new Set(["dslr-camera"]);
+const webglThemes = new Set(["schwarzschild-black-hole"]);
 
 export async function GET(request: Request) {
   const theme = new URL(request.url).searchParams.get("theme") ?? "";
@@ -16,6 +17,8 @@ export async function GET(request: Request) {
   const baseFile =
     theme === "carwash-decision"
       ? "base-reasoning.md"
+      : webglThemes.has(theme)
+        ? "base-webgl.md"
       : replicaThemes.has(theme)
         ? "base-replica.md"
         : noLimitThemes.has(theme)
@@ -31,8 +34,10 @@ export async function GET(request: Request) {
     ]);
 
     const language =
-      replicaThemes.has(theme) || noLimitThemes.has(theme)
-        ? "HTML + CSS + SVG + JavaScript"
+      webglThemes.has(theme)
+        ? "HTML + CSS + WebGL2 + JavaScript"
+        : replicaThemes.has(theme) || noLimitThemes.has(theme)
+          ? "HTML + CSS + SVG + JavaScript"
         : "HTML + CSS + JavaScript";
     const maxLines = theme === "carwash-decision" ? "18" : "220";
 

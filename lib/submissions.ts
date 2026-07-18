@@ -31,7 +31,13 @@ export type Submission = {
 
 export const LINE_LIMIT = 220;
 
-export const UNLIMITED_LINE_THEMES = new Set<string>(["cheetah-trophy-run", "dslr-camera"]);
+export const UNLIMITED_LINE_THEMES = new Set<string>([
+  "cheetah-trophy-run",
+  "dslr-camera",
+  "schwarzschild-black-hole"
+]);
+
+export const BITMAP_AUDIT_THEMES = new Set<string>(["cheetah-trophy-run", "dslr-camera"]);
 
 export const CARWASH_Q1 =
   "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？";
@@ -81,6 +87,11 @@ export const THEMES: ThemeMeta[] = [
     id: "dslr-camera",
     label: "拟物相机",
     objective: "拟物复刻：结构透视、材质光影、细节还原、纯手绘无贴图"
+  },
+  {
+    id: "schwarzschild-black-hole",
+    label: "施瓦西黑洞",
+    objective: "真实测地线积分、相对论吸积盘、多重像、HDR 后期与交互性能"
   },
   {
     id: "carwash-decision",

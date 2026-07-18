@@ -1,8 +1,13 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-const noCodeLimitThemes = new Set(["cheetah-trophy-run", "dslr-camera"]);
+const noCodeLimitThemes = new Set([
+  "cheetah-trophy-run",
+  "dslr-camera",
+  "schwarzschild-black-hole"
+]);
 const replicaThemes = new Set(["dslr-camera"]);
+const webglThemes = new Set(["schwarzschild-black-hole"]);
 
 function parseArgs(argv) {
   const args = {};
@@ -37,6 +42,8 @@ async function run() {
   const baseFile =
     theme === "carwash-decision"
       ? "base-reasoning.md"
+      : webglThemes.has(theme)
+        ? "base-webgl.md"
       : replicaThemes.has(theme)
         ? "base-replica.md"
         : noCodeLimitThemes.has(theme)

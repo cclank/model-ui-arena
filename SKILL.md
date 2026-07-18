@@ -23,7 +23,8 @@ Required themes:
 7. `particle-gravity`
 8. `cheetah-trophy-run`
 9. `dslr-camera`
-10. `carwash-decision`
+10. `schwarzschild-black-hole`
+11. `carwash-decision`
 
 For each requested model, agent must generate and save one submission per theme.
 
@@ -56,6 +57,7 @@ Themes:
 7. `particle-gravity`
 8. `cheetah-trophy-run`
 9. `dslr-camera`
+10. `schwarzschild-black-hole`
 
 File name must be:
 
@@ -127,6 +129,20 @@ Generation command:
 npm run prompt -- --theme carwash-decision --model <model_name>
 ```
 
+### Physics WebGL theme prompt base
+
+Use this for `schwarzschild-black-hole`:
+1. `prompts/base-webgl.md`
+2. `prompts/themes/schwarzschild-black-hole.md`
+
+No line limit. The core requirements are fragment-shader null-geodesic integration, relativistic disk emission, a multi-pass HDR pipeline, responsive interaction, adaptive quality, and explicit failure states.
+
+Generation command:
+
+```bash
+npm run prompt -- --theme schwarzschild-black-hole --model <model_name> --language "HTML + CSS + WebGL2 + JavaScript"
+```
+
 ## 5. Constraint Defaults
 
 ### Visual themes
@@ -157,6 +173,14 @@ npm run prompt -- --theme carwash-decision --model <model_name>
 2. No code block output
 3. Clear decision + reasons + action suggestion
 4. Default line limit from prompt template
+
+### Physics WebGL theme
+
+1. Theme: `schwarzschild-black-hole`
+2. Single file: `index.html`
+3. No code line limit; preserve the complete numerical integrator, HDR passes, interaction, adaptive quality, and error handling
+4. Zero dependencies and zero external assets; the file must run by double-clicking it
+5. Geodesic bending must be produced by fragment-shader numerical integration, never by screen-space lens distortion
 
 ## 6. Render Behavior (Already Implemented)
 
@@ -206,7 +230,8 @@ Create:
 7. `public/submissions/particle-gravity/gpt-5.3-codex/index.html`
 8. `public/submissions/cheetah-trophy-run/gpt-5.3-codex/index.html`
 9. `public/submissions/dslr-camera/gpt-5.3-codex/index.html`
-10. `public/submissions/carwash-decision/gpt-5.3-codex/response.md`
+10. `public/submissions/schwarzschild-black-hole/gpt-5.3-codex/index.html`
+11. `public/submissions/carwash-decision/gpt-5.3-codex/response.md`
 
 ### Example B: Single custom reasoning task
 
@@ -226,3 +251,4 @@ If `<custom-theme>` is new, agent should:
 5. If overwriting same model output, clear only `public/submissions/<theme>/<model>/` before writing new files.
 6. Anti-cheating rule: never read or inspect other model directories under `public/submissions/<theme>/`; only write to the current target model directory.
 7. Replica anti-cheat (`dslr-camera` and replica tasks): hand-draw with HTML + CSS + inline SVG only; no `<img>`, base64 / `data:` images, `<canvas>` bitmaps, emoji, or ready-made SVG/icon assets. Submissions using bitmaps are flagged 贴图 in the dashboard.
+8. Physics WebGL anti-cheat (`schwarzschild-black-hole`): lensing must come from numerical null-geodesic integration inside the fragment shader; screen-space distortion or handcrafted photon rings are disqualifying.

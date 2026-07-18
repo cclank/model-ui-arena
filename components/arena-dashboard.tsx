@@ -50,7 +50,12 @@ type ApiPayload = {
   submissions: Submission[];
 };
 
-const UNLIMITED_LINE_THEMES = new Set(["cheetah-trophy-run", "dslr-camera"]);
+const UNLIMITED_LINE_THEMES = new Set([
+  "cheetah-trophy-run",
+  "dslr-camera",
+  "schwarzschild-black-hole"
+]);
+const BITMAP_AUDIT_THEMES = new Set(["cheetah-trophy-run", "dslr-camera"]);
 const MIN_CARD_WIDTH = 288;
 const GRID_GAP = 16;
 const MAX_PANES_PER_ROW = 6;
@@ -629,8 +634,14 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
                 <p className="meta">{item.theme}</p>
               </div>
               {item.unlimitedLines ? (
-                <span className={item.usesBitmap ? "badge bad" : "badge ok"}>
-                  {item.usesBitmap ? "贴图" : "手绘"}
+                <span
+                  className={BITMAP_AUDIT_THEMES.has(item.theme) && item.usesBitmap
+                    ? "badge bad"
+                    : "badge ok"}
+                >
+                  {BITMAP_AUDIT_THEMES.has(item.theme)
+                    ? item.usesBitmap ? "贴图" : "手绘"
+                    : "NO LIMIT"}
                 </span>
               ) : (
                 <span className={item.withinLineLimit ? "badge ok" : "badge bad"}>

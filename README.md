@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Deploy to Vercel](https://img.shields.io/badge/Deploy-Vercel-000000?logo=vercel)](https://vercel.com/new/clone?repository-url=https://github.com/cclank/model-ui-arena)
+[![Cloudflare Workers](https://img.shields.io/badge/Deploy-Cloudflare%20Workers-F38020?logo=cloudflare&logoColor=white)](https://model-ui-arena.lank.workers.dev)
 [![GitHub stars](https://img.shields.io/github/stars/cclank/model-ui-arena?style=social)](https://github.com/cclank/model-ui-arena/stargazers)
 
 A production-ready benchmarking workspace for comparing LLM capability outputs under standardized task constraints.
@@ -27,13 +27,13 @@ public/submissions/carwash-decision/gemini-3.1-pro-high/response.md
 放好后会自动被页面读取并渲染（无需改前端代码）：
 
 - 本地开发：刷新 `http://localhost:3000` 即可看到
-- Vercel 线上：提交并重新部署后可见
+- Cloudflare 线上：提交并重新部署后可见
 
 硬性要求（按主题类型）：
 
-- 视觉主题（`clock` / `recorder` / `weather-card` / `stock-panel` / `click-fireworks` / `neon-countdown` / `particle-gravity` / `cheetah-trophy-run` / `dslr-camera`）文件名必须是 `index.html`
+- 视觉主题（`clock` / `recorder` / `weather-card` / `stock-panel` / `click-fireworks` / `neon-countdown` / `particle-gravity` / `cheetah-trophy-run` / `dslr-camera` / `schwarzschild-black-hole`）文件名必须是 `index.html`
 - 问答主题（`carwash-decision`）文件名推荐 `response.md`（也支持 `answer.md` / `response.txt` / `answer.txt`）
-- 目录名必须是已支持主题之一（`clock` / `recorder` / `weather-card` / `stock-panel` / `click-fireworks` / `neon-countdown` / `particle-gravity` / `cheetah-trophy-run` / `dslr-camera` / `carwash-decision`）
+- 目录名必须是已支持主题之一（`clock` / `recorder` / `weather-card` / `stock-panel` / `click-fireworks` / `neon-countdown` / `particle-gravity` / `cheetah-trophy-run` / `dslr-camera` / `schwarzschild-black-hole` / `carwash-decision`）
 - 一个模型一个目录（目录名就是模型名）
 - 反作弊：严禁查看 `public/submissions/<theme>/` 下其他模型目录；只能写入当前目标模型目录
 
@@ -50,7 +50,7 @@ This project enforces a consistent benchmark surface so you can compare models f
 ## Core Features
 
 - Unified benchmark dashboard (single-page comparison)
-- Theme switching (Clock, Recorder, Weather Card, Stock Panel, Click Fireworks, Neon Countdown, Particle Gravity, Cheetah Trophy Run, DSLR Camera, Carwash Decision)
+- Theme switching (Clock, Recorder, Weather Card, Stock Panel, Click Fireworks, Neon Countdown, Particle Gravity, Cheetah Trophy Run, DSLR Camera, Schwarzschild Black Hole, Carwash Decision)
 - Model filtering (multi-select)
 - Automatic submission discovery from filesystem
 - Constraint inspection per submission:
@@ -60,13 +60,14 @@ This project enforces a consistent benchmark surface so you can compare models f
   - line-limit pass/fail
 - Reusable prompt templates with hard constraints
 - One-command prompt generator
-- Vercel-ready Next.js deployment
+- OpenNext + Cloudflare Workers deployment
 
 ## Tech Stack
 
 - Next.js (App Router)
 - React + TypeScript
 - Filesystem-based submission ingestion (`public/submissions/**`)
+- OpenNext for Cloudflare Workers
 
 ## Project Structure
 
@@ -85,6 +86,7 @@ model-ui-arena/
     base.md                       # shared hard constraints
     base-svg.md                   # unlimited inline SVG task constraints
     base-replica.md               # unlimited hand-drawn replica task constraints
+    base-webgl.md                 # unlimited physics WebGL task constraints
     full-prompts.md               # full ready-to-use prompts
     themes/
       clock.md
@@ -96,6 +98,7 @@ model-ui-arena/
       particle-gravity.md
       cheetah-trophy-run.md
       dslr-camera.md
+      schwarzschild-black-hole.md
       carwash-decision.md
   public/
     submissions/
@@ -150,6 +153,7 @@ Anti-cheating policy:
 - `particle-gravity`
 - `cheetah-trophy-run`
 - `dslr-camera`
+- `schwarzschild-black-hole`
 - `carwash-decision`
 
 ## Prompt Workflow
@@ -179,7 +183,7 @@ The benchmark page updates from filesystem scans.
 
 - Runtime: visual themes use `HTML + CSS + JavaScript`; carwash-decision is text reasoning
 - File count: exactly `1` per model per theme
-- Max lines: `180-220` for standard visual themes; `cheetah-trophy-run` and `dslr-camera` have no code line limit
+- Max lines: `180-220` for standard visual themes; `cheetah-trophy-run`, `dslr-camera` and `schwarzschild-black-hole` have no code line limit
 - External dependencies: forbidden
 - Mobile baseline: width `390px`
 
@@ -193,16 +197,14 @@ Returns:
 - normalized submission list
 - per-submission metrics and pass/fail state
 
-## Deploy to Vercel
+## Deploy to Cloudflare Workers
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/cclank/model-ui-arena)
+1. Run `npx wrangler login` once and confirm with `npx wrangler whoami`
+2. Push repository changes to GitHub
+3. Run `npm run deploy`
+4. Verify [model-ui-arena.lank.workers.dev](https://model-ui-arena.lank.workers.dev)
 
-1. Push repository to GitHub
-2. Import into Vercel
-3. Framework preset: Next.js
-4. Deploy
-
-After each submission update, redeploy to publish latest benchmark results.
+The deploy script builds the submissions manifest, creates the OpenNext bundle, uploads static assets, and deploys the Worker.
 
 ## Troubleshooting
 
@@ -232,6 +234,7 @@ npm run dev
 npm run build
 npm run start
 npm run prompt -- --theme <theme> --model <name> --max-lines <n>
+npm run deploy
 ```
 
 ## License

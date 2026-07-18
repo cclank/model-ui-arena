@@ -2,7 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PreviewFrame } from "@/components/preview-frame";
 import { SharePath } from "@/components/share-path";
-import { LINE_LIMIT, THEMES, UNLIMITED_LINE_THEMES, scanSubmissions } from "@/lib/submissions";
+import {
+  BITMAP_AUDIT_THEMES,
+  LINE_LIMIT,
+  THEMES,
+  UNLIMITED_LINE_THEMES,
+  scanSubmissions
+} from "@/lib/submissions";
 import { sortSubmissionsByModel } from "@/lib/model-order";
 
 type TaskPageProps = {
@@ -66,8 +72,14 @@ export default async function TaskPage({ params }: TaskPageProps) {
                 <p className="meta">{item.filename}</p>
               </div>
               {item.unlimitedLines ? (
-                <span className={item.usesBitmap ? "badge bad" : "badge ok"}>
-                  {item.usesBitmap ? "贴图" : "手绘"}
+                <span
+                  className={BITMAP_AUDIT_THEMES.has(item.theme) && item.usesBitmap
+                    ? "badge bad"
+                    : "badge ok"}
+                >
+                  {BITMAP_AUDIT_THEMES.has(item.theme)
+                    ? item.usesBitmap ? "贴图" : "手绘"
+                    : "NO LIMIT"}
                 </span>
               ) : (
                 <span className={item.withinLineLimit ? "badge ok" : "badge bad"}>
