@@ -1046,6 +1046,113 @@ button.task-link {
   font-size: 13px;
 }
 
+.evaluator-guide {
+  margin: 0 0 18px;
+  border-top: 1px solid rgba(255, 191, 105, 0.28);
+  border-bottom: 1px solid rgba(255, 191, 105, 0.28);
+  background: rgba(13, 18, 27, 0.88);
+}
+
+.evaluator-guide-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 13px 14px;
+  border-bottom: 1px solid rgba(154, 168, 200, 0.14);
+}
+
+.evaluator-guide-kicker {
+  display: block;
+  color: #ffbf69;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.evaluator-guide-head h3 {
+  margin: 5px 0 0;
+  font-family: var(--font-title), serif;
+  font-size: 18px;
+  letter-spacing: 0;
+}
+
+.evaluator-guide-note {
+  margin: 0;
+  padding-left: 9px;
+  border-left: 2px solid #ffbf69;
+  color: #c6cfdf;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.evaluator-guide-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.evaluator-guide-item {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+  padding: 14px;
+}
+
+.evaluator-guide-item + .evaluator-guide-item {
+  border-left: 1px solid rgba(154, 168, 200, 0.14);
+}
+
+.evaluator-guide-index {
+  color: #ffbf69;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.evaluator-guide-item h4 {
+  margin: 0 0 9px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.evaluator-guide-item p {
+  margin: 0 0 7px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.evaluator-guide-item p strong {
+  display: inline-block;
+  width: 38px;
+  color: #dce6f6;
+  font-size: 10px;
+}
+
+.evaluator-guide-failure {
+  color: #c9aeb0 !important;
+}
+
+.evaluator-guide-verdict {
+  display: inline-block;
+  margin-top: 3px;
+  padding-left: 8px;
+  border-left: 2px solid currentColor;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.evaluator-guide-verdict.reject {
+  color: var(--warning);
+}
+
+.evaluator-guide-verdict.downgrade {
+  color: #ffbf69;
+}
+
 .arena-grid {
   display: grid;
   gap: 16px;
@@ -1534,6 +1641,15 @@ button.task-link {
     flex-direction: column;
   }
 
+  .evaluator-guide-list {
+    grid-template-columns: 1fr;
+  }
+
+  .evaluator-guide-item + .evaluator-guide-item {
+    border-top: 1px solid rgba(154, 168, 200, 0.14);
+    border-left: 0;
+  }
+
   .model-list {
     grid-template-columns: 1fr;
     max-height: 300px;
@@ -1594,6 +1710,16 @@ button.task-link {
 }
 
 @media (max-width: 640px) {
+  .evaluator-guide-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .evaluator-guide-note {
+    white-space: normal;
+  }
+
   .popover-backdrop {
     background: rgba(3, 7, 13, 0.68);
     backdrop-filter: blur(2px);
