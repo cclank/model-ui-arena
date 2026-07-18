@@ -3842,6 +3842,23 @@
     "updatedAt": "2026-07-18T02:54:26.433Z"
   },
   {
+    "id": "schwarzschild-black-hole:fable-5",
+    "theme": "schwarzschild-black-hole",
+    "model": "fable-5",
+    "filename": "index.html",
+    "path": "/submissions/schwarzschild-black-hole/fable-5/",
+    "publicPath": "/submissions/schwarzschild-black-hole/fable-5/index.html",
+    "renderKind": "html",
+    "linesTotal": 741,
+    "linesCss": 131,
+    "linesJs": 545,
+    "sizeBytes": 31461,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-18T08:32:29.335Z"
+  },
+  {
     "id": "carwash-decision:gpt-5.6-sol",
     "theme": "carwash-decision",
     "model": "gpt-5.6-sol",
