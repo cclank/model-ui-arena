@@ -4,7 +4,14 @@ const useIsolatedDevDist =
 
 const nextConfig = {
   reactStrictMode: true,
-  distDir: useIsolatedDevDist ? ".next-dev" : ".next"
+  distDir: useIsolatedDevDist ? ".next-dev" : ".next",
+  webpack(config) {
+    config.module.rules.push({
+      test: /\.md$/i,
+      type: "asset/source"
+    });
+    return config;
+  }
 };
 
 export default nextConfig;
