@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<!--
+  设计手记 ·《一夜鱼龙舞》—— 跨年夜，城市上空
+  深青夜幕 × 双层楼宇剪影 × 暖黄窗灯；点击夜空，火箭拖着火花尾迹升至指尖高度，炸为主爆与二次碎星。
+  纯 HTML/CSS/JS 单文件 · 粒子对象池 1200 上限复用 · DPR≤2 · 页签隐藏自动暂停
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#041527">
+<title>一夜鱼龙舞 · 点击放烟花</title>
+<style>
+:root{--ink:#f3ead2;--gold:#ffd27a;--dim:#8ea9ba;--mono:ui-monospace,'SF Mono',Menlo,Consolas,'Courier New',monospace;--disp:Georgia,'Times New Roman','Songti SC',STSong,'SimSun',serif}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{overflow:hidden;background:#020a14;color:var(--ink);font-family:system-ui,'PingFang SC','Microsoft YaHei',sans-serif;user-select:none;-webkit-user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:crosshair}
+#stage,#sky,#stars,#stars2,#moon,#haze,#city,#fx,#vig{position:absolute}
+#stage{position:fixed;inset:0}
+#sky{inset:0;background:radial-gradient(130% 55% at 50% 102%,rgba(255,168,74,.16),transparent 62%),linear-gradient(180deg,#01060e 0%,#03121f 30%,#07263e 58%,#0b3349 76%,#123c4c 88%,#1b3a41 100%)}
+#stars,#stars2{top:0;left:0;width:1px;height:1px;border-radius:50%}
+#stars2{animation:twk 3.6s ease-in-out infinite alternate}
+@keyframes twk{from{opacity:.2}to{opacity:1}}
+#moon{top:11%;right:13%;width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 38% 34%,#fffdf4,#ffedbb 58%,rgba(255,224,150,.05) 78%);box-shadow:0 0 46px 14px rgba(255,228,164,.16);animation:brt 7s ease-in-out infinite;transition:translate 1.6s ease-out}
+@keyframes brt{50%{box-shadow:0 0 62px 20px rgba(255,228,164,.25)}}
+#haze{inset:-10%;background:radial-gradient(55% 38% at 28% 80%,rgba(96,150,158,.10),transparent 70%),radial-gradient(48% 34% at 74% 88%,rgba(255,178,92,.08),transparent 70%);animation:dft 28s ease-in-out infinite alternate}
+@keyframes dft{to{transform:translateX(4.5%)}}
+#city{left:-10px;right:-10px;bottom:0;height:36vh;min-height:150px;pointer-events:none;transition:translate 1.6s ease-out}
+#city svg{display:block;width:100%;height:100%}
+.bl{animation:bl 3.2s steps(2,end) infinite}
+@keyframes bl{50%{opacity:.08}}
+#fx{inset:0}
+#vig{inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 42%,transparent 55%,rgba(1,5,10,.55) 100%)}
+#head{position:absolute;top:clamp(16px,4vh,42px);left:clamp(16px,3.4vw,46px);z-index:5;pointer-events:none;animation:up 1s .1s both}
+@keyframes up{from{opacity:0;transform:translateY(12px)}}
+.kicker{font:600 10.5px/1 var(--mono);letter-spacing:.4em;color:var(--gold);opacity:.9}
+.kicker i{font-style:normal;color:var(--dim);letter-spacing:.18em;margin-left:8px}
+h1{margin:12px 0 9px;font-family:var(--disp);font-weight:700;font-size:clamp(34px,6.4vw,62px);line-height:1.04;letter-spacing:.08em;text-shadow:0 0 26px rgba(255,190,90,.22),0 2px 18px rgba(0,0,0,.65)}
+h1 em{font-style:normal;color:var(--gold)}
+.sub{font-size:clamp(12px,1.5vw,14px);color:var(--dim);letter-spacing:.14em}
+#hint{position:absolute;right:clamp(10px,2.6vw,34px);top:50%;transform:translateY(-50%);writing-mode:vertical-rl;font-family:var(--disp);font-size:15px;letter-spacing:.7em;color:var(--ink);z-index:5;pointer-events:none;animation:pls 3.8s ease-in-out infinite;transition:opacity 1.4s ease}
+#hint b{display:block;width:1px;height:52px;margin:0 auto 16px;background:linear-gradient(180deg,rgba(255,210,122,0),var(--gold))}
+@keyframes pls{0%,100%{opacity:.85}50%{opacity:.3}}
+#hint.seen{animation:none;opacity:0}
+#bar{position:absolute;left:clamp(16px,3.4vw,46px);right:clamp(14px,2.6vw,40px);bottom:clamp(12px,2.8vh,24px);display:flex;justify-content:space-between;align-items:flex-end;z-index:5;pointer-events:none;animation:up 1s .35s both}
+#count{font:500 11.5px/1.55 var(--mono);letter-spacing:.1em}
+#count b{color:var(--gold);font-weight:700;font-size:15px}
+#count .mut{color:var(--dim)}
+#sw{display:flex;gap:6px;margin-top:8px}
+#sw i{width:9px;height:9px;border-radius:2px;opacity:.35;transform:scale(.9);transition:all .5s ease}
+#sw i.on{opacity:1;transform:scale(1.3);box-shadow:0 0 10px 2px currentColor}
+#tip{font:400 10.5px/1.7 var(--mono);color:var(--dim);letter-spacing:.3em;text-align:right}
+.ring{position:fixed;width:34px;height:34px;margin:-17px 0 0 -17px;border:1.5px solid rgba(255,216,138,.9);border-radius:50%;pointer-events:none;z-index:6;animation:pop .5s ease-out forwards}
+@keyframes pop{to{transform:scale(2.7);opacity:0}}
+@media (max-width:560px){#tip{display:none}#hint{right:8px;font-size:13px}h1{letter-spacing:.04em}.sub{letter-spacing:.05em}#moon{right:9%;width:34px;height:34px}}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="sky"></div><div id="stars"></div><div id="stars2"></div><div id="moon"></div><div id="haze"></div>
+  <canvas id="fx"></canvas>
+  <div id="city"></div><div id="vig"></div>
+  <header id="head">
+    <p class="kicker">NEW YEAR EVE<i id="clock">--:--:--</i></p>
+    <h1>一夜<em>鱼龙舞</em></h1>
+    <p class="sub">点击夜空 —— 升一枚火箭，炸一场只属于你的花火</p>
+  </header>
+  <div id="hint"><b></b>点击夜空</div>
+  <footer id="bar">
+    <div>
+      <div id="count">已燃 <b id="cnt">000</b> 发 · <span id="an">待点亮</span><br><span class="mut">粒子 <span id="alive">0000</span>/1200</span></div>
+      <div id="sw"><i style="color:#ffcd6e;background:#ffcd6e"></i><i style="color:#ff5f9e;background:#ff5f9e"></i><i style="color:#39e0c0;background:#39e0c0"></i><i style="color:#b78bff;background:#b78bff"></i><i style="color:#ff8a3d;background:#ff8a3d"></i></div>
+    </div>
+    <div id="tip">连续点击更绚烂<br>SPACE 亦可点燃</div>
+  </footer>
+</div>
+<script>
+(()=>{'use strict';
+const $=s=>document.querySelector(s),cv=$('#fx'),ctx=cv.getContext('2d');
+if(!ctx)return;
+const HUES=[42,338,172,274,20],HNAME=['鎏金','绯樱','翠潮','紫穹','赤橙'];
+const cnt=$('#cnt'),an=$('#an'),aliveEl=$('#alive'),sw=$('#sw'),hint=$('#hint'),moonEl=$('#moon'),cityEl=$('#city');
+const rnd=(a,b)=>a+Math.random()*(b-a);
+function mul32(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+let W=0,H=0;
+function resize(){const d=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=Math.round(W*d);cv.height=Math.round(H*d);ctx.setTransform(d,0,0,d,0,0)}
+addEventListener('resize',resize);resize();
+/* —— 星空：两层 box-shadow 星点，上层缓慢呼吸 —— */
+function dots(n,seed){const r=mul32(seed),s=[];for(let i=0;i<n;i++)s.push((r()*100).toFixed(1)+'vw '+(r()*58).toFixed(1)+'vh 0 '+(r()<.16?'1px':'0')+' rgba(255,246,220,'+(.2+r()*.65).toFixed(2)+')');return s.join(',')}
+$('#stars').style.boxShadow=dots(72,7);$('#stars2').style.boxShadow=dots(42,13);
+/* —— 城市剪影：远近两层楼群 + 暖窗，少量窗灯明灭 —— */
+(function(){const VH=320;let out='';
+for(const[seed,fill,op,maxBh,baseBh,winP]of[[2026,'#0a2032',.75,250,80,.14],[2027,'#040e18',1,200,60,.30]]){
+  const r=mul32(seed);let s='',x=-12;
+  while(x<1212){const bw=26+r()*70,bh=baseBh+r()*maxBh,y=VH-bh;
+    s+='<rect x="'+x.toFixed(0)+'" y="'+y.toFixed(0)+'" width="'+bw.toFixed(0)+'" height="'+bh.toFixed(0)+'" fill="'+fill+'"/>';
+    if(r()<.34)s+='<rect x="'+(x+bw/2).toFixed(0)+'" y="'+(y-10-r()*24).toFixed(0)+'" width="2" height="'+(10+r()*24).toFixed(0)+'" fill="'+fill+'"/>';
+    for(let wx=x+4;wx<x+bw-6;wx+=8)for(let wy=y+7;wy<VH-6;wy+=12)if(r()<winP){const fl=r()<.07;
+      s+='<rect x="'+wx.toFixed(1)+'" y="'+wy.toFixed(1)+'" width="3.6" height="5" fill="'+(r()<.8?'#ffcd6e':'#a9dcd2')+'" opacity="'+(.3+r()*.65).toFixed(2)+'"'+(fl?' class="bl" style="animation-delay:'+(-r()*3).toFixed(1)+'s"':'')+'/>';}
+    x+=bw+3+r()*16;}
+  out+='<g opacity="'+op+'">'+s+'</g>';}
+$('#city').innerHTML='<svg viewBox="0 0 1200 320" preserveAspectRatio="xMidYMax slice">'+out+'</svg>'})();
+/* —— 粒子对象池：固定 1200，优先回收死粒子，超限复用旧槽，内存零增长 —— */
+const MAX=1200,pool=[];for(let i=0;i<MAX;i++)pool.push({x:0,y:0,vx:0,vy:0,age:1,life:1,hue:45,sat:95,lit:62,sz:2,drag:.986,gr:.05,fl:0,crk:0,bri:1});
+let cursor=0;
+function spawn(o){let p=null;for(let k=0;k<6;k++){const q=pool[(cursor+k)%MAX];if(q.age>=q.life){p=q;cursor=(cursor+k+1)%MAX;break}}
+  if(!p){p=pool[cursor];cursor=(cursor+1)%MAX}p.age=0;Object.assign(p,o);return p}
+/* —— 发射 / 主爆 / 二次碎星 —— */
+const rockets=[];let count=0,autoT=100,shownAlive=-1;
+function launch(tx,ty){if(rockets.length>=18)return;
+  tx=Math.min(Math.max(tx,24),W-24);ty=Math.min(Math.max(ty,54),H*.84);
+  const sx=tx+rnd(-30,30),hi=(Math.random()*HUES.length)|0;
+  rockets.push({x:sx,y:H+8,ty,vx:(tx-sx)/52,vy:-Math.sqrt(.11*(H-ty)+6)*1.16,hue:HUES[hi],age:0,life:110});
+  ring(tx,ty);mark(hi);count++;cnt.textContent=String(count).padStart(3,'0');hint.classList.add('seen')}
+function ring(x,y){const d=document.createElement('div');d.className='ring';d.style.left=x+'px';d.style.top=y+'px';document.body.appendChild(d);setTimeout(()=>d.remove(),520)}
+function mark(i){for(let k=0;k<sw.children.length;k++)sw.children[k].classList.toggle('on',k===i);an.textContent=HNAME[i]}
+function explode(x,y,hue,pw,bri){spawn({x,y,vx:0,vy:0,life:9,sz:26+pw*16,hue,sat:40,lit:88,drag:1,gr:0,fl:0,crk:0,bri:bri*.5});
+  const n=(56+pw*50)|0,R=2.3+pw*3.2;
+  for(let i=0;i<n;i++){const a=rnd(0,6.2832),v=Math.pow(Math.random(),.42)*R;
+    spawn({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v*.94,life:rnd(52,96),sz:rnd(1.5,3.1),hue:hue+rnd(-14,14),sat:rnd(80,100),lit:rnd(55,68),drag:rnd(.982,.99),gr:.042,fl:Math.random()<.8?1:0,crk:Math.random()<.15?rnd(24,44):0,bri})}}
+function crackle(p){const n=5+((Math.random()*3)|0);for(let i=0;i<n;i++){const a=rnd(0,6.2832),v=rnd(.4,1.9);
+  spawn({x:p.x,y:p.y,vx:Math.cos(a)*v+p.vx*.4,vy:Math.sin(a)*v+p.vy*.4,life:rnd(22,40),sz:rnd(1,1.8),hue:p.hue+rnd(24,60),sat:70,lit:78,drag:.98,gr:.03,fl:1,crk:0,bri:p.bri})}}
+/* —— 每帧：远场自动礼花 → 火箭尾迹 → 粒子（destination-out 余辉 + lighter 加色）—— */
+function step(dt){autoT-=dt;
+  if(autoT<=0){autoT=rnd(150,340);explode(rnd(W*.12,W*.88),rnd(H*.14,H*.42),HUES[(Math.random()*HUES.length)|0],rnd(.25,.55),.5)}
+  ctx.globalCompositeOperation='destination-out';ctx.fillStyle='rgba(0,0,0,.17)';ctx.fillRect(0,0,W,H);
+  ctx.globalCompositeOperation='lighter';
+  for(let i=rockets.length-1;i>=0;i--){const r=rockets[i];r.age+=dt;r.x+=r.vx*dt;r.y+=r.vy*dt;r.vy=(r.vy+.045*dt)*.995;
+    for(let k=0;k<2;k++)spawn({x:r.x+rnd(-1.5,1.5),y:r.y+rnd(0,4),vx:rnd(-.5,.5),vy:rnd(.4,1.5),life:rnd(14,26),sz:rnd(1,2),hue:38,sat:100,lit:rnd(55,72),drag:.97,gr:.02,fl:1,crk:0,bri:.9});
+    ctx.globalAlpha=1;ctx.fillStyle='hsl(45 100% 88%)';ctx.fillRect(r.x-1.5,r.y-4,3,7);
+    if(r.y<=r.ty||r.vy>-1.4||r.age>r.life){rockets.splice(i,1);explode(r.x,r.y,r.hue,rnd(.6,1),1)}}
+  let alive=0;
+  for(let i=0;i<MAX;i++){const p=pool[i];if(p.age>=p.life)continue;alive++;p.age+=dt;
+    if(p.crk&&p.age>=p.crk){p.crk=0;crackle(p);p.life=Math.min(p.life,p.age+rnd(4,9))}
+    const d=Math.pow(p.drag,dt);p.vx*=d;p.vy=p.vy*d+p.gr*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;
+    let a=1-p.age/p.life;if(p.fl&&a<.55)a*=.5+.5*Math.abs(Math.sin(p.age*.55+p.hue));
+    ctx.globalAlpha=Math.max(a,0)*p.bri;ctx.fillStyle='hsl('+(p.hue|0)+' '+(p.sat|0)+'% '+(p.lit|0)+'%)';
+    const s=p.sz*(.45+a*.75);ctx.fillRect(p.x-s/2,p.y-s/2,s,s)}
+  ctx.globalAlpha=1;
+  if(alive!==shownAlive){shownAlive=alive;aliveEl.textContent=String(alive).padStart(4,'0')}}
+/* —— 主循环与时钟：页签隐藏即暂停，恢复时重置时间基准 —— */
+let raf=0,last=performance.now(),on=true,clockId=0;
+function loop(t){raf=requestAnimationFrame(loop);const dt=Math.min((t-last)/16.7,2.5);last=t;step(dt)}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){on=false;cancelAnimationFrame(raf);clearInterval(clockId)}else if(!on){on=true;last=performance.now();raf=requestAnimationFrame(loop);clockId=setInterval(tick,1000)}});
+raf=requestAnimationFrame(loop);
+/* —— 输入：点击 / 触摸 / 空格 —— */
+addEventListener('pointerdown',e=>launch(e.clientX,e.clientY));
+addEventListener('keydown',e=>{if(e.key===' '){e.preventDefault();launch(rnd(W*.2,W*.8),rnd(H*.18,H*.5))}});
+addEventListener('pointermove',e=>{const x=e.clientX/W-.5,y=e.clientY/H-.5;moonEl.style.translate=(x*-10)+'px '+(y*-6)+'px';cityEl.style.translate=(x*7)+'px 0px'});
+/* —— 开演：远处先亮一记，页面一打开就是跨年夜 —— */
+setTimeout(()=>explode(W*.5+rnd(-80,80),H*.3,HUES[0],.95,1),700);
+/* —— 时钟 —— */
+const clock=$('#clock'),pad=n=>String(n).padStart(2,'0');
+function tick(){const d=new Date();clock.textContent=pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())}
+tick();clockId=setInterval(tick,1000);
+})();
+</script>
+</body>
+</html>

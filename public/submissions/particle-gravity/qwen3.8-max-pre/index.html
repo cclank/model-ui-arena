@@ -1,0 +1,205 @@
+<!--
+  设计说明 ·「吸积盘实验台」：以引力井观测仪表台的视角呈现粒子引力场。
+  速度→色谱映射（冷青=慢 / 炽橙=快），三层景深 + 半透明覆写形成长尾迹；
+  单击=冲击波，按住拖动=移动引力点；核心吞噬粒子后在外圈重生，
+  平方反比引力（含软化项）+ 半隐式欧拉积分保证运动连续稳定。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>吸积盘实验台 · Accretion Disk Bench</title>
+<style>
+:root{--abyss:#050f16;--ion:#5ce3cb;--ion-hi:#8ff5e2;--amber:#ffb14e;--ember:#ff6b35;--ink:#eaf5f1;--dim:#47707c;--mono:ui-monospace,'SF Mono',Menlo,Consolas,'Courier New',monospace;--cjk:system-ui,'PingFang SC','Microsoft YaHei',sans-serif}
+*{margin:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--abyss);color:var(--ink);font-family:var(--cjk);overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+#cv{position:fixed;inset:0;display:block;touch-action:none;cursor:crosshair}
+#nebula{position:fixed;inset:-18%;pointer-events:none;mix-blend-mode:screen;opacity:.55;background:radial-gradient(44% 36% at 28% 22%,rgba(92,227,203,.09),transparent 70%),radial-gradient(38% 32% at 74% 74%,rgba(255,138,61,.06),transparent 70%);animation:drift 26s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate3d(3%,-2.5%,0) scale(1.07)}}
+#vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(125% 95% at 50% 46%,transparent 55%,rgba(2,7,11,.6) 100%)}
+.c{position:fixed;width:18px;height:18px;pointer-events:none;border:0 solid rgba(92,227,203,.4)}
+.tl{top:12px;left:12px;border-top-width:1px;border-left-width:1px}
+.tr{top:12px;right:12px;border-top-width:1px;border-right-width:1px}
+.bl{bottom:12px;left:12px;border-bottom-width:1px;border-left-width:1px}
+.br{bottom:12px;right:12px;border-bottom-width:1px;border-right-width:1px}
+#plate{position:fixed;top:24px;left:26px;pointer-events:none;max-width:min(78vw,560px)}
+.over{font:600 10px/1 var(--mono);letter-spacing:.32em;color:var(--ion);display:flex;align-items:center;gap:9px;opacity:.92}
+.led{width:6px;height:6px;border-radius:50%;background:var(--ion);box-shadow:0 0 9px var(--ion);animation:blink 2.4s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+h1{font:900 clamp(34px,6vw,58px)/1 var(--cjk);letter-spacing:.05em;margin-top:10px;text-shadow:0 2px 28px rgba(92,227,203,.3)}
+h1 em{display:block;font:700 clamp(10px,1.3vw,12px)/1 var(--mono);letter-spacing:.42em;color:var(--amber);font-style:normal;margin-top:9px}
+#hint{margin-top:12px;font:500 10px/1.7 var(--mono);letter-spacing:.12em;color:var(--dim)}
+#hint b{color:var(--ion-hi);font-weight:700}
+#edge{position:fixed;right:16px;top:50%;transform:translateY(-50%);writing-mode:vertical-rl;font:600 9px/1 var(--mono);letter-spacing:.4em;color:rgba(92,227,203,.35);pointer-events:none}
+#hud{position:fixed;left:14px;bottom:14px;display:flex;background:rgba(5,15,21,.82);border:1px solid rgba(92,227,203,.22);box-shadow:0 6px 30px rgba(0,0,0,.45)}
+.st{padding:10px 16px 9px;border-left:1px solid rgba(92,227,203,.14);transition:background .3s}
+.st:first-child{border-left:0}
+.st:hover{background:rgba(92,227,203,.06)}
+.st b{display:block;font:700 clamp(16px,3vw,21px)/1.1 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums;min-width:3ch;transition:color .3s,text-shadow .3s}
+.st span{display:block;font:600 8px/1 var(--mono);letter-spacing:.24em;color:var(--dim);margin-top:6px}
+.m-orbit b{color:var(--ion)}
+.m-shock b{color:var(--ember);text-shadow:0 0 12px rgba(255,107,53,.7)}
+.m-attract b{color:var(--amber);text-shadow:0 0 12px rgba(255,177,78,.6)}
+@media(max-width:560px){#edge{display:none}#plate{top:16px;left:16px}.st{padding:8px 10px 7px}.st span{letter-spacing:.14em}#hud{left:10px;right:10px;bottom:10px}#hud .st{flex:1}}
+@media(prefers-reduced-motion:reduce){#nebula,.led{animation:none}}
+</style>
+</head>
+<body>
+<canvas id="cv" role="img" aria-label="粒子引力场模拟"></canvas>
+<div id="nebula"></div><div id="vig"></div>
+<i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>
+<header id="plate">
+<div class="over"><i class="led"></i>GRAV-WELL OBSERVATORY · UNIT N-07</div>
+<h1>吸积盘<em>ACCRETION DISK BENCH</em></h1>
+<p id="hint"><b>单击</b> 冲击波&ensp;/&ensp;<b>按住拖动</b> 引力点&ensp;/&ensp;核心吞噬 · 外圈重生</p>
+</header>
+<div id="edge">SQ-INVERSE GRAVITY · SOFTENED CORE · SEMI-IMPLICIT EULER</div>
+<div id="hud" role="status" aria-live="polite">
+<div class="st"><b id="vn">—</b><span>粒子 PARTS</span></div>
+<div class="st"><b id="vf">—</b><span>帧率 FPS</span></div>
+<div class="st"><b id="vk">—</b><span>动能 KE</span></div>
+<div class="st mode m-orbit"><b id="vm">ORBIT</b><span>模式 MODE</span></div>
+</div>
+<script>
+(()=>{'use strict';
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+if(!ctx)return;
+const $=id=>document.getElementById(id);
+const hud={n:$('vn'),f:$('vf'),k:$('vk'),m:$('vm'),mp:$('vm').parentNode};
+const TAU=Math.PI*2,GM=2.4e6,SOFT2=42*42,GMP=3.6e6,SOFTP2=34*34,EAT=16,VMAX=230;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+let W=0,H=0,CX=0,CY=0,minD=0,parts=[],dust=[],waves=[],flashes=[];
+let last=performance.now(),lastHud=last,lastShock=-9e9,T=0,frames=0,running=true,raf=0;
+const ptr={x:innerWidth/2,y:innerHeight/2,down:false,active:false,t:0};
+function size(){
+ const dpr=Math.min(2,window.devicePixelRatio||1),ox=CX,oy=CY;
+ W=innerWidth;H=innerHeight;CX=W/2;CY=H*0.46;minD=Math.min(W,H);
+ if(ox||oy)for(const p of parts){p.x+=CX-ox;p.y+=CY-oy;}
+ cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+ cv.style.width=W+'px';cv.style.height=H+'px';
+ ctx.setTransform(dpr,0,0,dpr,0,0);
+ ctx.fillStyle='#040c12';ctx.fillRect(0,0,W,H);
+ const nd=Math.min(90,(W*H/16000)|0);dust=[];
+ for(let i=0;i<nd;i++)dust.push({x:Math.random()*W,y:Math.random()*H,r:rnd(.5,1.4),p:rnd(0,TAU),s:rnd(.35,1)});
+}
+function spawn(p){
+ const a=rnd(0,TAU),R=rnd(minD*.26,minD*.46),ux=Math.cos(a),uy=Math.sin(a);
+ const v=Math.sqrt(GM*R/(R*R+SOFT2))*rnd(.86,1.12);
+ p.x=CX+ux*R;p.y=CY+uy*R;
+ p.vx=-uy*v+rnd(-7,7);p.vy=ux*v+rnd(-7,7);
+ p.d=Math.random();p.life=rnd(9,26);p.age=0;p.fl=1;
+ return p;
+}
+function seed(){
+ const n=Math.min(500,(W*H/2300)|0);parts=[];
+ for(let i=0;i<n;i++)parts.push(spawn({}));
+ waves=[];flashes=[];
+}
+function shock(x,y){waves.push({x,y,r:8,a:1});if(waves.length>7)waves.shift();lastShock=performance.now();}
+cv.addEventListener('pointerdown',e=>{
+ ptr.down=true;ptr.active=false;ptr.x=e.clientX;ptr.y=e.clientY;ptr.t=performance.now();
+ try{cv.setPointerCapture(e.pointerId);}catch(_){}
+});
+cv.addEventListener('pointermove',e=>{ptr.x=e.clientX;ptr.y=e.clientY;});
+const up=()=>{if(!ptr.down)return;if(!ptr.active)shock(ptr.x,ptr.y);ptr.active=false;ptr.down=false;};
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden){cancelAnimationFrame(raf);running=false;}
+ else if(!running){running=true;last=performance.now();lastHud=last;raf=requestAnimationFrame(tick);}
+});
+addEventListener('resize',size);
+function tick(now){
+ raf=requestAnimationFrame(tick);
+ let dt=(now-last)/1000;last=now;if(dt>0.05)dt=0.05;T+=dt;
+ if(ptr.down&&!ptr.active&&now-ptr.t>170)ptr.active=true;
+ ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+ ctx.fillStyle='rgba(4,12,18,0.13)';ctx.fillRect(0,0,W,H);
+ ctx.globalCompositeOperation='lighter';
+ for(const s of dust){
+  s.x+=dt*3*s.s;if(s.x>W+2)s.x=-2;
+  ctx.globalAlpha=(.18+.14*Math.sin(T*s.s*1.7+s.p))*.5;
+  ctx.fillStyle='#6fb9c4';ctx.fillRect(s.x,s.y,s.r,s.r);
+ }
+ for(const w of waves){w.r+=520*dt;w.a-=dt*1.15;}
+ const pulse=1+.08*Math.sin(T*2.1)+.05*Math.sin(T*3.7),hr=minD*.17*pulse;
+ let g=ctx.createRadialGradient(CX,CY,0,CX,CY,hr);
+ g.addColorStop(0,'rgba(255,186,116,.5)');g.addColorStop(.3,'rgba(255,138,61,.16)');g.addColorStop(1,'rgba(255,120,60,0)');
+ ctx.globalAlpha=1;ctx.fillStyle=g;ctx.beginPath();ctx.arc(CX,CY,hr,0,TAU);ctx.fill();
+ ctx.lineWidth=1.4;
+ ctx.strokeStyle='rgba(92,227,203,.5)';ctx.setLineDash([2,14]);ctx.lineDashOffset=T*26;
+ ctx.beginPath();ctx.arc(CX,CY,25*pulse+3,0,TAU);ctx.stroke();
+ ctx.strokeStyle='rgba(255,177,78,.55)';ctx.setLineDash([1,9]);ctx.lineDashOffset=-T*40;
+ ctx.beginPath();ctx.arc(CX,CY,38*pulse,0,TAU);ctx.stroke();
+ ctx.setLineDash([]);
+ g=ctx.createRadialGradient(CX,CY,0,CX,CY,15*pulse);
+ g.addColorStop(0,'rgba(255,247,232,.95)');g.addColorStop(.55,'rgba(255,190,110,.5)');g.addColorStop(1,'rgba(255,150,80,0)');
+ ctx.fillStyle=g;ctx.beginPath();ctx.arc(CX,CY,15*pulse,0,TAU);ctx.fill();
+ let ke=0;const n=parts.length;
+ for(let i=0;i<n;i++){
+  const p=parts[i];
+  let dx=CX-p.x,dy=CY-p.y,r2=dx*dx+dy*dy,r=Math.sqrt(r2)||1e-4;
+  let f=GM/(r2+SOFT2),ax=dx/r*f,ay=dy/r*f;
+  if(ptr.active){
+   dx=ptr.x-p.x;dy=ptr.y-p.y;r2=dx*dx+dy*dy;r=Math.sqrt(r2)||1e-4;
+   f=Math.min(2600,GMP/(r2+SOFTP2));ax+=dx/r*f;ay+=dy/r*f;
+  }
+  p.vx+=ax*dt;p.vy+=ay*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.age+=dt;
+  for(const w of waves){
+   dx=p.x-w.x;dy=p.y-w.y;
+   const d=Math.hypot(dx,dy)||1e-4,q=Math.abs(d-w.r);
+   if(q<52){const k=w.a*(1-q/52)*1300*dt/d;p.vx+=dx*k;p.vy+=dy*k;}
+  }
+  const sp=Math.hypot(p.vx,p.vy);ke+=sp*sp*.5;
+  const er=Math.hypot(p.x-CX,p.y-CY);
+  if(er<EAT||p.age>p.life||p.x<-60||p.x>W+60||p.y<-60||p.y>H+60){
+   if(er<EAT&&flashes.length<24)flashes.push({r:5,a:1});
+   spawn(p);continue;
+  }
+  const t=Math.min(1,sp/VMAX),hue=168-144*t,sz=(0.7+p.d*1.9)*(1+t*.7);
+  p.fl=Math.max(0,p.fl-dt*2);
+  if(p.d>.62){
+   ctx.globalAlpha=.14+p.d*.1;ctx.fillStyle='hsl('+hue+',95%,'+(60+t*12)+'%)';
+   ctx.beginPath();ctx.arc(p.x,p.y,sz*3,0,TAU);ctx.fill();
+  }
+  ctx.globalAlpha=Math.min(1,(.3+p.d*.55)*(1+p.fl));
+  ctx.fillStyle='hsl('+hue+',92%,'+(58+t*16)+'%)';
+  ctx.beginPath();ctx.arc(p.x,p.y,sz,0,TAU);ctx.fill();
+ }
+ waves=waves.filter(w=>w.a>0);
+ for(const w of waves){
+  ctx.globalAlpha=Math.max(0,w.a)*.7;ctx.strokeStyle='#8ff5e2';ctx.lineWidth=1.2+w.a*1.6;
+  ctx.beginPath();ctx.arc(w.x,w.y,w.r,0,TAU);ctx.stroke();
+  ctx.globalAlpha=Math.max(0,w.a)*.3;ctx.strokeStyle='#ffb14e';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(w.x,w.y,w.r*.8,0,TAU);ctx.stroke();
+ }
+ flashes=flashes.filter(f=>f.a>0);
+ for(const f of flashes){
+  f.r+=260*dt;f.a-=dt*2.4;
+  ctx.globalAlpha=Math.max(0,f.a)*.8;ctx.strokeStyle='#ffd9a0';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(CX,CY,f.r,0,TAU);ctx.stroke();
+ }
+ if(ptr.down){
+  ctx.globalAlpha=ptr.active?.9:.55;
+  ctx.strokeStyle=ptr.active?'#ffb14e':'#8ff5e2';ctx.lineWidth=1.3;
+  ctx.setLineDash(ptr.active?[3,6]:[]);ctx.lineDashOffset=-T*30;
+  ctx.beginPath();ctx.arc(ptr.x,ptr.y,ptr.active?16+4*Math.sin(T*6):9,0,TAU);ctx.stroke();
+  ctx.setLineDash([]);
+ }
+ frames++;
+ if(now-lastHud>250){
+  const fps=Math.round(frames*1000/(now-lastHud));frames=0;lastHud=now;
+  hud.n.textContent=parts.length;
+  hud.f.textContent=fps;
+  hud.k.textContent=(ke/(parts.length||1)/1000).toFixed(1)+'k';
+  const mode=ptr.active?'ATTRACT':(now-lastShock<900?'SHOCK':'ORBIT');
+  if(hud.m.textContent!==mode){hud.m.textContent=mode;hud.mp.className='st mode m-'+mode.toLowerCase();}
+ }
+}
+size();seed();raf=requestAnimationFrame(t=>{last=t;lastHud=t;tick(t);});
+})();
+</script>
+</body>
+</html>

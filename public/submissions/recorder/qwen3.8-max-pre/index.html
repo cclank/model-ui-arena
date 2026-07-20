@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>琥珀 ST-77 · 开盘磁带录音机</title>
+<!--
+  「琥珀 ST-77」开盘磁带录音机交互原型：暖炭黑机身 × 黄铜按键 × 米白示波屏，
+  双带轮随录音匀速走带、磁带量此消彼长；波形由确定性正弦叠加生成。
+  零外部依赖，系统字体，可离线双击直接运行。
+-->
+<style>
+:root{--mono:ui-monospace,'SF Mono',Menlo,Consolas,'Courier New',monospace;--serif:Georgia,'Times New Roman','Songti SC',STSong,serif;--body:system-ui,'PingFang SC','Microsoft YaHei',sans-serif;--char:#241e18;--cream:#f2e8d4;--brass:#c79a3b;--red:#e2483d;--ink:#4c3b26;--amb:#b96a1f}
+*{margin:0;box-sizing:border-box}
+body{min-height:100vh;display:grid;place-items:center;padding:30px 14px;font-family:var(--body);color:var(--cream);background:radial-gradient(130% 90% at 50% -10%,#372c20,#1d1813 55%,#0e0b08);overflow-x:hidden}
+.fog{position:fixed;inset:-20%;z-index:0;pointer-events:none;filter:blur(70px)}
+.f1{background:radial-gradient(30% 26% at 24% 30%,rgba(199,154,59,.16),transparent 70%);animation:drift 26s ease-in-out infinite alternate}
+.f2{background:radial-gradient(28% 30% at 76% 72%,rgba(226,72,61,.10),transparent 70%);animation:drift 34s ease-in-out infinite alternate-reverse}
+@keyframes drift{to{transform:translate(5%,-4%) scale(1.15)}}
+.grain{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.55;background:repeating-linear-gradient(0deg,rgba(255,244,220,.025) 0 1px,transparent 1px 3px)}
+.deck{position:relative;z-index:1;width:min(680px,100%);padding:22px 22px 16px;border-radius:20px 20px 12px 12px;background:linear-gradient(160deg,#312a22,#221c16 58%,#1a1511);border:1px solid #40352a;box-shadow:0 34px 70px -24px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,236,200,.14)}
+.deck::before,.deck::after{content:'';position:absolute;top:11px;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle at 35% 32%,#cdb489,#6e5638 62%,#392b19);box-shadow:inset 0 -1px 1px rgba(0,0,0,.75)}
+.deck::before{left:12px}.deck::after{right:12px}
+.plate{display:flex;align-items:center;gap:10px;padding:0 6px 14px;border-bottom:1px solid rgba(242,232,212,.12)}
+.brand{font-family:var(--serif);font-size:clamp(21px,5vw,27px);letter-spacing:.14em;color:var(--brass);text-shadow:0 1px 0 rgba(0,0,0,.6)}
+.model{font-family:var(--mono);font-size:11px;letter-spacing:.28em;color:#a3906e;border:1px solid #5a4a37;border-radius:3px;padding:3px 8px 3px 10px}
+.plate .tag{margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:#7c6a52}
+.reelwin{display:flex;align-items:center;gap:12px;margin:16px 0 14px;padding:14px;background:#141009;border-radius:12px;border:1px solid #000;box-shadow:inset 0 5px 16px rgba(0,0,0,.85),inset 0 -1px 0 rgba(255,255,255,.05)}
+.reel{flex:none;width:clamp(104px,26vw,150px);filter:drop-shadow(0 5px 9px rgba(0,0,0,.65))}
+.rim{fill:#211b14;stroke:#4d3f2d;stroke-width:2.5}
+.pack{fill:#38291a;stroke:#5c4730;stroke-width:1.2}
+.hub{fill:#241c13;stroke:var(--brass);stroke-width:1.6}
+.spin rect{fill:#b98e34}
+.cap{fill:var(--brass)}
+.spin{transform-box:view-box;transform-origin:50% 50%}
+.running .spin{animation:rot 2.6s linear infinite}
+.paused .spin{animation-play-state:paused}
+@keyframes rot{to{transform:rotate(360deg)}}
+.tapeline{flex:1;height:2px;background:linear-gradient(90deg,#5c4730,#8a6a3c,#5c4730);position:relative}
+.tapeline::after{content:'';position:absolute;left:50%;top:-8px;width:11px;height:18px;transform:translateX(-50%);border-radius:2px;background:linear-gradient(#6d5839,#3b2f1e);box-shadow:0 0 0 1px #000,0 2px 4px rgba(0,0,0,.6)}
+.screen{position:relative;padding:13px 16px 12px;border-radius:10px;border:1px solid #0a0805;background:linear-gradient(#f8f0de,#eee1c5);box-shadow:inset 0 3px 12px rgba(66,44,12,.35),inset 0 0 70px rgba(122,86,32,.16)}
+.screen::before{content:'';position:absolute;inset:0;border-radius:10px;pointer-events:none;background:repeating-linear-gradient(90deg,rgba(76,59,38,.07) 0 1px,transparent 1px 22px),repeating-linear-gradient(0deg,rgba(76,59,38,.06) 0 1px,transparent 1px 18px)}
+.statusrow{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11px;letter-spacing:.24em;color:var(--ink)}
+.dot{width:9px;height:9px;border-radius:50%;background:#b6a98e;box-shadow:0 0 0 2px rgba(76,59,38,.15)}
+.running .dot{background:var(--red);animation:breath 1.4s ease-in-out infinite}
+.paused .dot{background:var(--brass);animation:blink 1.1s ease-in-out infinite}
+@keyframes breath{50%{box-shadow:0 0 0 5px rgba(226,72,61,.16),0 0 14px rgba(226,72,61,.85)}}
+@keyframes blink{50%{opacity:.3}}
+#clock{margin-left:auto;font-family:var(--mono);font-weight:700;font-size:clamp(27px,7.5vw,36px);letter-spacing:.05em;color:#392b17;font-variant-numeric:tabular-nums;text-shadow:0 1px 0 rgba(255,255,255,.55)}
+#wave{display:block;width:100%;height:88px;margin-top:5px}
+.level{display:flex;align-items:center;gap:10px;margin-top:8px;font-family:var(--mono);font-size:9px;letter-spacing:.24em;color:var(--ink)}
+.meter{flex:1;height:6px;border-radius:3px;background:rgba(76,59,38,.16);overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--amb),var(--red));transition:width .08s linear}
+.transport{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:18px}
+.btn{--edge:#6e5117;appearance:none;border:0;cursor:pointer;font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.12em;color:#392b14;padding:12px 22px;border-radius:9px;background:linear-gradient(#e6bf67,#c79a3b 46%,#9c742a);box-shadow:0 5px 0 var(--edge),0 9px 16px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,246,216,.85);transition:transform .13s,box-shadow .13s,filter .25s}
+.btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
+.btn:active:not(:disabled){transform:translateY(4px);box-shadow:0 1px 0 var(--edge),0 3px 7px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,246,216,.6)}
+.btn:disabled{cursor:not-allowed;filter:grayscale(.8) brightness(.55);box-shadow:0 3px 0 rgba(0,0,0,.55)}
+.btn.rec{--edge:#701510;background:linear-gradient(#f06f60,#e2483d 46%,#a52c22);color:#fff3ee;box-shadow:0 5px 0 var(--edge),0 9px 16px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,216,206,.75)}
+.btn.rec:not(:disabled){animation:invite 2.8s ease-in-out infinite}
+@keyframes invite{50%{box-shadow:0 5px 0 var(--edge),0 10px 26px rgba(226,72,61,.5),inset 0 1px 0 rgba(255,216,206,.75)}}
+.btn.rec:active:not(:disabled){box-shadow:0 1px 0 var(--edge),0 3px 7px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,216,206,.55)}
+.btn.mini{padding:10px 18px;font-size:12px}
+.btn.ghost{background:linear-gradient(#f1e6cd,#d9c69e);--edge:#8f7440}
+.foot{display:flex;justify-content:space-between;gap:8px;margin-top:16px;padding:0 4px;font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:#75634b}
+.veil{position:fixed;inset:0;z-index:6;display:grid;place-items:center;background:rgba(13,9,6,.6);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .22s}
+.veil.show{opacity:1;pointer-events:auto}
+.card{width:min(340px,90vw);padding:24px 22px 22px;text-align:center;border-radius:12px;color:var(--ink);background:linear-gradient(#f8f0de,#e9ddc0);box-shadow:0 26px 60px rgba(0,0,0,.65),inset 0 1px 0 #fff;transform:translateY(16px) scale(.96);transition:transform .28s cubic-bezier(.2,.9,.3,1.25)}
+.veil.show .card{transform:none}
+.card h2{font-family:var(--serif);font-size:20px;letter-spacing:.06em;color:#392b17;margin-bottom:9px}
+.card p{font-size:13px;line-height:1.7;margin-bottom:18px}
+.card .row{display:flex;justify-content:center;gap:12px}
+.summary{position:fixed;left:50%;bottom:18px;z-index:5;width:min(560px,calc(100vw - 28px));padding:18px 20px 16px;border-radius:14px;background:linear-gradient(160deg,#312a22,#211b15);border:1px solid #4a3c2c;box-shadow:0 24px 50px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,236,200,.1);transform:translate(-50%,140%);transition:transform .5s cubic-bezier(.2,.9,.25,1)}
+.summary.show{transform:translate(-50%,0)}
+.summary h3{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--serif);font-size:17px;letter-spacing:.1em;color:var(--brass)}
+.summary h3 span{font-family:var(--mono);font-size:9px;letter-spacing:.3em;color:#8b7a5f}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 16px}
+.stat{padding:11px 6px 9px;text-align:center;border-radius:8px;background:rgba(0,0,0,.3);border:1px solid rgba(199,154,59,.2)}
+.stat b{display:block;font-family:var(--mono);font-size:clamp(13px,3.6vw,18px);color:var(--cream);font-variant-numeric:tabular-nums}
+.stat i{font-style:normal;display:block;margin-top:4px;font-size:9px;letter-spacing:.16em;color:#8b7a5f}
+.summary .act{display:flex;justify-content:center}
+@media(max-width:430px){.stats{grid-template-columns:repeat(2,1fr)}.plate .tag{display:none}.btn{padding:11px 15px}.summary{bottom:12px}}
+</style>
+</head>
+<body>
+<div class="fog f1"></div><div class="fog f2"></div><div class="grain"></div>
+<main class="deck" id="deck">
+<header class="plate"><span class="brand">琥珀</span><span class="model">ST-77</span><span class="tag">开盘磁带录音机 · OPEN REEL DECK</span></header>
+<section class="reelwin">
+<svg class="reel" viewBox="0 0 120 120" aria-hidden="true"><circle class="rim" cx="60" cy="60" r="57"/><circle class="pack" id="packL" cx="60" cy="60" r="36"/>
+<g class="spin"><circle class="hub" cx="60" cy="60" r="15"/><rect x="58" y="45" width="4" height="16" rx="2"/><rect x="58" y="45" width="4" height="16" rx="2" transform="rotate(120 60 60)"/><rect x="58" y="45" width="4" height="16" rx="2" transform="rotate(240 60 60)"/><circle class="cap" cx="60" cy="60" r="4.5"/></g></svg>
+<div class="tapeline"></div>
+<svg class="reel" viewBox="0 0 120 120" aria-hidden="true"><circle class="rim" cx="60" cy="60" r="57"/><circle class="pack" id="packR" cx="60" cy="60" r="19"/>
+<g class="spin"><circle class="hub" cx="60" cy="60" r="15"/><rect x="58" y="45" width="4" height="16" rx="2"/><rect x="58" y="45" width="4" height="16" rx="2" transform="rotate(120 60 60)"/><rect x="58" y="45" width="4" height="16" rx="2" transform="rotate(240 60 60)"/><circle class="cap" cx="60" cy="60" r="4.5"/></g></svg>
+</section>
+<section class="screen">
+<div class="statusrow"><span class="dot"></span><span id="stateTxt">待机 STANDBY</span><span id="clock">00:00</span></div>
+<canvas id="wave"></canvas>
+<div class="level"><span>LEVEL</span><div class="meter"><i id="meterFill"></i></div><span>MONO · L/R</span></div>
+</section>
+<section class="transport">
+<button class="btn rec" id="btnRec">●&nbsp;录音 REC</button>
+<button class="btn" id="btnPause" disabled>❚❚&nbsp;暂停 PAUSE</button>
+<button class="btn" id="btnStop" disabled>■&nbsp;停止 STOP</button>
+</section>
+<footer class="foot"><span>SER. Nº 1977-0420</span><span>交互原型 · 无需麦克风权限</span></footer>
+</main>
+<div class="veil" id="veil" role="dialog" aria-label="停止确认">
+<div class="card"><h2>停止本次录音？</h2><p>停止后磁带将立即归档并生成本次录音摘要，<br>已录制的段落会完整保留。</p>
+<div class="row"><button class="btn mini ghost" id="keep">继续录音</button><button class="btn mini" id="doStop">确认停止</button></div></div>
+</div>
+<aside class="summary" id="summary" aria-live="polite">
+<h3>本次录音摘要 <span>TAKE ARCHIVE</span></h3>
+<div class="stats">
+<div class="stat"><b id="sDur">00:00</b><i>时长 DURATION</i></div>
+<div class="stat"><b id="sPeak">-∞ dB</b><i>峰值电平 PEAK</i></div>
+<div class="stat"><b id="sTime">--:--:--</b><i>完成时间 ENDED</i></div>
+<div class="stat"><b id="sState">—</b><i>状态 STATUS</i></div>
+</div>
+<div class="act"><button class="btn" id="again">↺&nbsp;新录音 NEW TAKE</button></div>
+</aside>
+<script>
+(()=>{'use strict';
+const $=s=>document.querySelector(s);
+const deck=$('#deck'),cv=$('#wave'),ctx=cv.getContext('2d'),clock=$('#clock'),stateTxt=$('#stateTxt');
+if(!ctx)return;
+const packL=$('#packL'),packR=$('#packR'),meter=$('#meterFill'),veil=$('#veil'),sum=$('#summary');
+const btnRec=$('#btnRec'),btnPause=$('#btnPause'),btnStop=$('#btnStop');
+const GAP=3,TAPE=180;let state='idle',base=0,stamp=0,peak=0,acc=0,last=0,raf=0,W=0,H=0,samples=[];
+const amp=t=>Math.min(1,Math.abs(Math.sin(t*2.1)*.52+Math.sin(t*5.3+1.7)*.31+Math.sin(t*11.9+4.2)*.17)*1.3);
+const elapsed=()=>state==='rec'?base+(performance.now()-stamp)/1000:base;
+const fmt=s=>{s=Math.floor(s);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+function fit(){const d=Math.min(window.devicePixelRatio||1,2);W=cv.clientWidth;H=cv.clientHeight;cv.width=Math.round(W*d);cv.height=Math.round(H*d);ctx.setTransform(d,0,0,d,0,0)}
+function draw(){ctx.clearRect(0,0,W,H);const mid=H/2,n=samples.length,x0=W-n*GAP;
+ctx.strokeStyle='rgba(76,59,38,.3)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,mid+.5);ctx.lineTo(W,mid+.5);ctx.stroke();
+ctx.lineWidth=2;ctx.lineCap='round';
+for(let i=0;i<n;i++){const h=Math.max(2,samples[i]*H*.82);ctx.strokeStyle=(state==='rec'&&i===n-1)?'#e2483d':'#b96a1f';
+ctx.beginPath();ctx.moveTo(x0+i*GAP+1.5,mid-h/2);ctx.lineTo(x0+i*GAP+1.5,mid+h/2);ctx.stroke()}
+if(!n){ctx.fillStyle='rgba(76,59,38,.45)';ctx.font='11px ui-monospace,Menlo,Consolas,monospace';ctx.textAlign='center';ctx.fillText('— 示波屏待命 · 按下 ● REC 开始走带 —',W/2,mid+4)}}
+function paint(){deck.className='deck'+(state==='idle'?'':' running')+(state==='paused'?' paused':'');
+btnRec.disabled=state!=='idle';btnPause.disabled=state==='idle';btnStop.disabled=state==='idle';
+btnPause.innerHTML=state==='paused'?'▶ 继续 RESUME':'❚❚ 暂停 PAUSE';
+stateTxt.textContent=state==='rec'?'录音中 REC':state==='paused'?'已暂停 PAUSED':'待机 STANDBY';
+const e=elapsed(),p=Math.min(e/TAPE,1);clock.textContent=fmt(e);
+packL.setAttribute('r',(36-17*p).toFixed(2));packR.setAttribute('r',(19+17*p).toFixed(2));
+if(state==='idle')meter.style.width='0%'}
+function loop(t){raf=0;if(!last)last=t;const dt=Math.min(.05,(t-last)/1000);last=t;
+if(state==='rec'){acc+=dt;const cap=Math.max(40,Math.floor(W/GAP));
+while(acc>=.035){acc-=.035;samples.push(amp(elapsed()));if(samples.length>cap)samples.shift()}
+const a=amp(elapsed());peak=Math.max(peak,a);meter.style.width=Math.round(a*100)+'%'}
+draw();paint();if(state!=='idle')raf=requestAnimationFrame(loop)}
+const wake=()=>{if(!raf){last=0;raf=requestAnimationFrame(loop)}};
+btnRec.onclick=()=>{state='rec';base=0;stamp=performance.now();peak=0;acc=0;samples=[];sum.classList.remove('show');paint();wake()};
+btnPause.onclick=()=>{if(state==='rec'){base=elapsed();state='paused'}else{stamp=performance.now();state='rec'}paint()};
+btnStop.onclick=()=>veil.classList.add('show');
+$('#keep').onclick=()=>veil.classList.remove('show');
+$('#doStop').onclick=()=>{const dur=elapsed();base=dur;state='idle';veil.classList.remove('show');
+$('#sDur').textContent=fmt(dur);$('#sPeak').textContent=(20*Math.log10(Math.max(peak*.93,.001))).toFixed(1)+' dB';
+$('#sTime').textContent=new Date().toLocaleTimeString('zh-CN',{hour12:false});$('#sState').textContent='手动停止·已归档';
+sum.classList.add('show');paint()};
+$('#again').onclick=()=>{sum.classList.remove('show');base=0;peak=0;samples=[];paint()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')veil.classList.remove('show')});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){if(raf){cancelAnimationFrame(raf);raf=0}}else wake()});
+addEventListener('resize',fit);
+fit();paint();wake();
+})();
+</script>
+</body>
+</html>

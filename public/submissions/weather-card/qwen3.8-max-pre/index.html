@@ -1,0 +1,193 @@
+<!--
+  城市天气剧场 · City Weather Theater —— 三城三幕天气卡片
+  北京·琥珀晴尘 / 上海·青灰雨幕 / 哈尔滨·暮雪蓝夜；单块 canvas 粒子 + 双层天空交叉淡入
+  纯 HTML/CSS/JS 单文件 · 数据全部本地 mock · 昼夜随本地时刻(06-18 为昼)自动换光
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>城市天气剧场 · Weather Theater</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#f6f1e4;--dim:rgba(246,241,228,.6);--line:rgba(246,241,228,.16);--mono:ui-monospace,'SF Mono',Menlo,Consolas,'Courier New',monospace;--serif:Georgia,'Times New Roman','Songti SC',STSong,serif;--sans:system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif}
+html,body{height:100%}
+body{display:flex;align-items:center;justify-content:center;padding:26px 14px;font-family:var(--sans);color:var(--ink);background:#0b0e12;overflow-x:hidden}
+#stage{position:fixed;inset:0;z-index:0;background:radial-gradient(62% 58% at 50% 36%,var(--sg,#43310f),transparent 72%);opacity:.55}
+#stars{position:fixed;top:0;left:0;width:2px;height:2px;border-radius:50%;z-index:0;opacity:.35;transition:opacity 1.2s}
+body.night #stars{opacity:.9}
+.card{position:relative;z-index:1;width:min(432px,100%);border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.1);box-shadow:0 34px 90px -22px rgba(0,0,0,.75);isolation:isolate}
+.sky,.sky i{position:absolute;inset:0}
+.sky i{opacity:0;transition:opacity .9s ease}
+.sky i.on{opacity:1}
+#fx{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+.halo{position:absolute;top:-110px;right:-90px;width:330px;height:330px;border-radius:50%;z-index:2;pointer-events:none;opacity:0;transition:opacity 1.1s;background:radial-gradient(circle,var(--h1,rgba(255,216,128,.95)) 0%,var(--h2,rgba(255,170,70,.2)) 46%,transparent 72%);animation:pulse 6.5s ease-in-out infinite}
+.wx-sun .halo,.wx-snow .halo{opacity:1}
+.cl{position:absolute;z-index:2;width:340px;height:90px;border-radius:50%;background:rgba(18,30,42,.55);filter:blur(26px);opacity:0;transition:opacity 1.1s;pointer-events:none}
+.c1{top:-24px;left:-70px;animation:drift 46s ease-in-out infinite alternate}
+.c2{top:56px;right:-120px;width:400px;animation:drift 62s ease-in-out infinite alternate-reverse}
+.wx-rain .cl{opacity:1}
+.frost{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity 1.1s;background:radial-gradient(130% 95% at 50% 8%,transparent 52%,rgba(198,222,246,.3) 100%),radial-gradient(46% 34% at 6% -4%,rgba(226,240,255,.4),transparent 70%),radial-gradient(40% 30% at 100% 100%,rgba(226,240,255,.26),transparent 70%)}
+.wx-snow .frost{opacity:1}
+@keyframes pulse{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.07);filter:brightness(1.18)}}
+@keyframes drift{from{transform:translateX(-4%)}to{transform:translateX(9%)}}
+.ui{position:relative;z-index:3;padding:20px 22px 16px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.tabs{display:flex;background:rgba(0,0,0,.24);border:1px solid var(--line);border-radius:999px;padding:3px}
+.tab{border:0;background:0 0;color:var(--dim);font:600 12px/1 var(--sans);letter-spacing:.12em;padding:8px 10px;border-radius:999px;cursor:pointer;transition:color .3s,background .3s,transform .15s}
+.tab:hover{color:var(--ink)}.tab:active{transform:scale(.94)}
+.tab.on{background:var(--ink);color:#181410;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+#unit{border:1px solid var(--line);background:rgba(0,0,0,.24);color:var(--ink);font:700 12px/1 var(--mono);letter-spacing:.08em;padding:8px 11px;border-radius:999px;cursor:pointer;transition:transform .15s,background .3s}
+#unit:hover{background:rgba(0,0,0,.4)}#unit:active{transform:scale(.92)}
+.act{transition:opacity .3s ease,transform .3s ease}
+.sw .act{opacity:0;transform:translateY(12px)}
+.city{font:700 30px/1.1 var(--serif);letter-spacing:.06em;margin-top:20px}
+.city span{display:block;font:600 10px/1 var(--mono);letter-spacing:.42em;color:var(--dim);margin-top:7px}
+.meta{margin-top:9px;font-size:11px;letter-spacing:.18em;color:var(--dim)}
+.meta b{color:var(--ink);font-weight:600}
+.now{display:flex;align-items:flex-end;justify-content:space-between;margin-top:6px}
+.big{font-family:var(--mono);font-weight:700;font-size:clamp(64px,21vw,88px);line-height:1;letter-spacing:-.05em;display:flex;align-items:flex-start;text-shadow:0 4px 30px rgba(0,0,0,.28)}
+.big i{font-style:normal;font-size:.32em;font-weight:600;margin-top:.34em;opacity:.85;letter-spacing:0}
+.wxi{width:66px;height:66px;color:var(--ink);flex:none;margin:0 2px 10px 0;filter:drop-shadow(0 3px 12px rgba(0,0,0,.3))}
+.desc{font:italic 500 15px/1.5 var(--serif);letter-spacing:.14em;margin-top:2px}
+.stats{display:flex;gap:18px;margin-top:16px;padding-top:13px;border-top:1px solid var(--line)}
+.stats span{font-size:10px;letter-spacing:.2em;color:var(--dim)}
+.stats b{display:block;margin-top:5px;font:600 13px/1 var(--sans);letter-spacing:.04em;color:var(--ink)}
+.ft{display:flex;align-items:baseline;justify-content:space-between;margin-top:20px;font:700 13px/1 var(--serif);letter-spacing:.3em}
+.ft span{font:600 9px/1 var(--mono);letter-spacing:.4em;color:var(--dim)}
+#chart{display:block;width:100%;height:92px;margin-top:10px}
+.days{list-style:none;display:flex;margin-top:2px}
+.days li{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:7px;padding:9px 2px 11px;border-radius:10px;cursor:default;transition:background .3s,transform .3s;animation:pop .55s backwards;animation-delay:calc(var(--i)*70ms)}
+.days li:hover{background:rgba(255,255,255,.08);transform:translateY(-3px)}
+.days b{font:600 10px/1 var(--sans);letter-spacing:.14em;color:var(--dim)}
+.days svg{width:20px;height:20px;color:var(--ink)}
+.hl{font-family:var(--mono);font-size:12px;letter-spacing:-.02em}
+.hl em{font-style:normal}.hl i{font-style:normal;color:var(--dim);margin-left:4px;font-size:11px}
+@keyframes pop{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.foot{margin-top:14px;padding-top:11px;border-top:1px solid var(--line);font:500 9px/1.6 var(--mono);letter-spacing:.14em;color:var(--dim);display:flex;justify-content:space-between;gap:8px}
+@media (max-width:420px){.ui{padding:18px 15px 13px}.city{font-size:26px}.stats{gap:12px}.wxi{width:54px;height:54px}.stats span{letter-spacing:.1em}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="stage"></div><div id="stars"></div>
+<main class="card" id="card">
+<div class="sky"><i id="skyA" class="on"></i><i id="skyB"></i></div>
+<canvas id="fx"></canvas>
+<div class="halo"></div><div class="cl c1"></div><div class="cl c2"></div><div class="frost"></div>
+<div class="ui">
+<header class="top act"><nav class="tabs" id="tabs"></nav><button id="unit" title="切换温标">°C</button></header>
+<section class="act">
+<h1 class="city" id="cName">北京<span>BEIJING · ACT Ⅰ</span></h1>
+<p class="meta" id="meta"></p>
+<div class="now"><div class="big"><span id="temp">0</span><i id="uLab">°C</i></div><svg class="wxi" id="bigIco" viewBox="0 0 24 24"></svg></div>
+<p class="desc" id="desc"></p>
+<div class="stats"><span>风速<b id="wind"></b></span><span>湿度<b id="hum"></b></span><span>体感<b id="feel"></b></span></div>
+</section>
+<section class="act">
+<h2 class="ft">未来五日<span>NEXT 5 DAYS</span></h2>
+<svg id="chart" preserveAspectRatio="none"></svg>
+<ol class="days" id="days"></ol>
+<p class="foot"><span>本地 MOCK · 三城三幕</span><span id="phaseTag"></span></p>
+</section>
+</div>
+</main>
+<script>
+const $=s=>document.querySelector(s),R=Math.random,WK='日一二三四五六';
+const card=$('#card'),CV=$('#fx'),X=CV.getContext('2d');
+const now=new Date();let night=false;
+const RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
+let unit='C',curId=null,shown=0,w=0,h=0,P=[],SP=[],raf=null,lt=0;
+const IC={
+sun:'<circle cx="12" cy="12" r="4.4" fill="currentColor"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5 5l1.9 1.9M17.1 17.1 19 19M19 5l-1.9 1.9M6.9 17.1 5 19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"/>',
+cloud:'<g fill="currentColor"><circle cx="9" cy="13" r="4.3"/><circle cx="14.6" cy="11.6" r="5.2"/><rect x="4.8" y="12.4" width="14.6" height="5.8" rx="2.9"/></g>',
+rain:'<g fill="currentColor"><circle cx="9" cy="10.4" r="3.8"/><circle cx="14.2" cy="9.2" r="4.6"/><rect x="5.4" y="10" width="13.4" height="5" rx="2.5"/></g><path d="M7.6 17.6l-1.2 3.4M12.4 17.6l-1.2 3.4M17.2 17.6l-1.2 3.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none" opacity=".85"/>',
+snow:'<g fill="currentColor"><circle cx="9" cy="10.4" r="3.8"/><circle cx="14.2" cy="9.2" r="4.6"/><rect x="5.4" y="10" width="13.4" height="5" rx="2.5"/></g><path d="M7.4 18.2h.01M12 20h.01M16.6 18.2h.01M9.7 21.4h.01M14.3 21.4h.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".9"/>'};
+const DATA={
+bj:{name:'北京',en:'BEIJING · ACT Ⅰ',type:'sun',t:31,feel:33,wind:'西南风 2 级',hum:'38%',
+ d:['晴 · 日光倾城，长空如洗','晴 · 月上燕山，灯火可亲'],
+ sky:['#8a5410','#c2842b','#6f3f0e'],nsk:['#0b1526','#172842','#0d1a2e'],
+ hd:['rgba(255,216,128,.95)','rgba(255,170,70,.2)'],hn:['rgba(228,239,255,.9)','rgba(150,185,235,.15)'],sd:'#43310f',sn:'#121c2c',
+ days:[{k:'sun',hi:33,lo:24},{k:'sun',hi:34,lo:25},{k:'cloud',hi:32,lo:24},{k:'sun',hi:33,lo:23},{k:'rain',hi:29,lo:22}]},
+sh:{name:'上海',en:'SHANGHAI · ACT Ⅱ',type:'rain',t:30,feel:34,wind:'东南风 3 级',hum:'82%',
+ d:['雨 · 梧桐滴漏，江雾未收','夜雨 · 灯影江湖，檐声入梦'],
+ sky:['#3d5a72','#5b7d95','#33495f'],nsk:['#0c1824','#16293a','#091320'],
+ hd:['rgba(190,215,235,.35)','rgba(140,170,195,.08)'],hn:['rgba(190,215,235,.35)','rgba(140,170,195,.08)'],sd:'#182430',sn:'#0b131c',
+ days:[{k:'rain',hi:30,lo:25},{k:'cloud',hi:31,lo:25},{k:'rain',hi:29,lo:24},{k:'cloud',hi:31,lo:25},{k:'sun',hi:33,lo:26}]},
+hrb:{name:'哈尔滨',en:'HARBIN · ACT Ⅲ',type:'snow',t:-9,feel:-14,wind:'西北风 4 级',hum:'68%',
+ d:['雪 · 松花江上，千树琼花','暮雪 · 冰城灯暖，落雪无声'],
+ sky:['#54708e','#7d99b8','#455f7b'],nsk:['#0c192b','#172940','#0a1220'],
+ hd:['rgba(232,243,255,.5)','rgba(190,215,245,.12)'],hn:['rgba(214,232,255,.65)','rgba(140,175,225,.14)'],sd:'#1c2836',sn:'#0a1220',
+ days:[{k:'snow',hi:-4,lo:-13},{k:'snow',hi:-6,lo:-15},{k:'cloud',hi:-5,lo:-12},{k:'snow',hi:-3,lo:-11},{k:'sun',hi:-7,lo:-16}]}};
+const tf=v=>unit==='C'?Math.round(v):Math.round(v*9/5+32);
+const grad=p=>`linear-gradient(168deg,${p[0]} -4%,${p[1]} 52%,${p[2]} 108%)`;
+const SK=[$('#skyA'),$('#skyB')];let skOn=0;
+function setSky(p){const nx=SK[1-skOn];nx.style.background=grad(p);nx.classList.add('on');SK[skOn].classList.remove('on');skOn=1-skOn}
+function count(el,from,to,dur){const t0=performance.now();const f=t=>{const k=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-k,3);el.textContent=Math.round(from+(to-from)*e);if(k<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
+function chart(){const c=DATA[curId],svg=$('#chart'),wd=Math.max(svg.clientWidth,280),ht=92;
+ svg.setAttribute('viewBox',`0 0 ${wd} ${ht}`);
+ const hs=c.days.map(v=>v.hi),ls=c.days.map(v=>v.lo),mx=Math.max(...hs),mn=Math.min(...ls);
+ const Px=i=>(i+.5)*wd/5,Py=v=>8+(mx-v)/((mx-mn)||1)*(ht-26);
+ const A=hs.map((v,i)=>Px(i)+','+Py(v)).join(' '),B=ls.map((v,i)=>Px(i)+','+Py(v)).join(' ');
+ const rB=B.split(' ').reverse().join(' ');
+ svg.innerHTML='<defs><linearGradient id="gA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe2a6" stop-opacity=".3"/><stop offset="1" stop-color="#9cc3e8" stop-opacity=".04"/></linearGradient></defs>'
+ +`<polygon points="${A} ${rB}" fill="url(#gA)"/><polyline points="${A}" fill="none" stroke="#ffe2a6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><polyline points="${B}" fill="none" stroke="#a9c9e9" stroke-width="2" stroke-dasharray="1 5" stroke-linejoin="round" stroke-linecap="round"/>`
+ +hs.map((v,i)=>`<circle cx="${Px(i)}" cy="${Py(v)}" r="3.1" fill="#ffe2a6"/><circle cx="${Px(i)}" cy="${Py(ls[i])}" r="2.7" fill="#a9c9e9"/>`).join('')}
+function days(){const c=DATA[curId],lab=[];
+ for(let i=0;i<5;i++){const d=new Date(Date.now()+i*864e5);lab.push(i?'周'+WK[d.getDay()]:'今天')}
+ $('#days').innerHTML=c.days.map((v,i)=>`<li style="--i:${i}"><b>${lab[i]}</b><svg viewBox="0 0 24 24">${IC[v.k]}</svg><span class="hl"><em>${tf(v.hi)}°</em><i>${tf(v.lo)}°</i></span></li>`).join('')}
+function apply(id,first){const c=DATA[id],hr=new Date().getHours();curId=id;night=hr<6||hr>=18;
+ card.className='card wx-'+c.type;setSky(night?c.nsk:c.sky);
+ card.style.setProperty('--h1',(night?c.hn:c.hd)[0]);card.style.setProperty('--h2',(night?c.hn:c.hd)[1]);
+ $('#stage').style.setProperty('--sg',night?c.sn:c.sd);
+ $('#cName').innerHTML=c.name+'<span>'+c.en+'</span>';
+ $('#meta').innerHTML=`${now.getMonth()+1}月${now.getDate()}日 · 周${WK[now.getDay()]} · <b>${night?'夜场放映':'日场放映'}</b>`;
+ $('#desc').textContent=night?c.d[1]:c.d[0];
+ $('#wind').textContent=c.wind;$('#hum').textContent=c.hum;
+ const tg=tf(c.t);count($('#temp'),first?tg-6:shown,tg,750);shown=tg;
+ $('#feel').textContent=tf(c.feel)+'°';$('#uLab').textContent='°'+unit;$('#unit').textContent='°'+unit;
+ $('#bigIco').innerHTML=IC[c.type];
+ $('#phaseTag').textContent=night?'夜场 18:00 – 06:00':'日场 06:00 – 18:00';
+ document.body.classList.toggle('night',night);
+ days();chart();seed();
+ document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.id===id))}
+function go(id){if(id===curId)return;card.classList.add('sw');setTimeout(()=>{apply(id);card.classList.remove('sw')},240)}
+$('#tabs').innerHTML=Object.keys(DATA).map(k=>`<button class="tab" data-id="${k}">${DATA[k].name}</button>`).join('');
+$('#tabs').onclick=e=>{const b=e.target.closest('.tab');if(b)go(b.dataset.id)};
+$('#unit').onclick=()=>{unit=unit==='C'?'F':'C';const p=shown;shown=tf(DATA[curId].t);count($('#temp'),p,shown,600);
+ $('#feel').textContent=tf(DATA[curId].feel)+'°';$('#uLab').textContent='°'+unit;$('#unit').textContent='°'+unit;days()};
+function resize(){const r=card.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,2);
+ w=r.width;h=r.height;CV.width=Math.round(w*d);CV.height=Math.round(h*d);X.setTransform(d,0,0,d,0,0)}
+function seed(){P=[];SP=[];const m=DATA[curId].type;
+ if(m==='sun'){for(let i=0;i<64;i++)P.push({x:R()*w,y:R()*h,r:.7+R()*1.7,b:R()<.12?3+R()*4:0,s:.5+R()*1.4,ph:R()*6.28,a:.2+R()*.5})}
+ else if(m==='rain'){for(let i=0;i<110;i++)P.push({x:R()*(w+80),y:R()*h,l:9+R()*13,v:680+R()*380,a:.14+R()*.3})}
+ else{for(let i=0;i<120;i++){const z=R();P.push({x:R()*w,y:R()*h,r:z<.55?.8+z*1.6:1.8+z*2.4,v:14+z*46,s:.4+z*1.1,ph:R()*6.28,a:z<.55?.25+z*.5:.5+z*.45})}}}
+function draw(dt){X.clearRect(0,0,w,h);const m=DATA[curId].type;
+ if(m==='sun'){for(const p of P){p.y-=p.s*22*dt;p.ph+=dt*1.6;if(p.y<-10){p.y=h+10;p.x=R()*w}
+  const px=p.x+Math.sin(p.ph*.7)*7,tw=p.a*(.6+.4*Math.sin(p.ph)),rr=p.r+(p.b||0);
+  X.fillStyle='#ffdf9b';X.globalAlpha=tw*.35;X.beginPath();X.arc(px,p.y,rr*2.4,0,7);X.fill();
+  X.globalAlpha=tw;X.beginPath();X.arc(px,p.y,rr,0,7);X.fill()}}
+ else if(m==='rain'){X.strokeStyle=night?'rgba(168,200,226,.5)':'rgba(206,228,248,.55)';X.lineWidth=1;X.beginPath();
+  for(const p of P){p.y+=p.v*dt;p.x-=p.v*.24*dt;
+   if(p.y>h-4){if(SP.length<34)SP.push({x:p.x,y:h-3,r:1,a:.5});p.y=-p.l;p.x=R()*(w+80)}
+   X.moveTo(p.x,p.y);X.lineTo(p.x+p.l*.24,p.y+p.l)}
+  X.stroke();
+  for(let i=SP.length-1;i>=0;i--){const s=SP[i];s.r+=46*dt;s.a-=1.4*dt;
+   if(s.a<=0){SP.splice(i,1);continue}
+   X.globalAlpha=s.a;X.strokeStyle='rgba(214,232,248,.8)';X.beginPath();X.ellipse(s.x,s.y,s.r,s.r*.3,0,0,7);X.stroke()}}
+ else{for(const p of P){p.y+=p.v*dt;p.ph+=p.s*dt;p.x+=Math.sin(p.ph)*p.s*7*dt;
+  if(p.y>h+6){p.y=-6;p.x=R()*w}
+  X.fillStyle='#eef5ff';X.globalAlpha=p.a;X.beginPath();X.arc(p.x,p.y,p.r,0,7);X.fill();
+  if(p.r>2.6){X.globalAlpha=p.a*.22;X.beginPath();X.arc(p.x,p.y,p.r*2.3,0,7);X.fill()}}}
+ X.globalAlpha=1}
+function loop(t){raf=requestAnimationFrame(loop);const dt=Math.min(.05,(t-lt)/1000);lt=t;draw(dt)}
+function stop(){if(raf!=null){cancelAnimationFrame(raf);raf=null}}
+function play(){if(RM){draw(.016);return}if(raf==null&&!document.hidden){lt=performance.now();raf=requestAnimationFrame(loop)}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else{apply(curId);play()}});
+let rT;window.addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(()=>{resize();seed();chart();if(RM)draw(.016)},150)});
+(function(){const s=$('#stars'),sh=[];for(let i=0;i<70;i++)sh.push(`${R()*100}vw ${R()*100}vh 0 ${R()<.2?1:0}px rgba(255,244,220,${(.25+R()*.55).toFixed(2)})`);s.style.boxShadow=sh.join(',')})();
+resize();if(!X){throw'2d context unavailable'}apply('bj',true);play();
+</script>
+</body>
+</html>

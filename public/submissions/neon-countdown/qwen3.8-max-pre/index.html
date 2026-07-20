@@ -1,0 +1,195 @@
+<!--
+  设计笔记 ·「夜航点火」火箭发射倒计时
+  气质：深夜发射控台。电光青主环 × 品红刻度 × 琥珀警戒，三色霓虹贯穿；60 刻度随秒逐组熄灭。
+  最后 3 秒切入警报态：心跳暗角、加速脉冲、刻度压迫式熄灭；归零瞬间粒子爆发 + 双色冲击波，宣告点火成功。
+  纯 HTML/CSS/JS · 系统字体 · 零外部依赖，双击即开。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>点火倒计时 · IGNITION COUNTDOWN</title>
+<style>
+:root{--bg0:#04070F;--bg1:#0B1531;--cyan:#1AE4FF;--mag:#FF3D9A;--amber:#FFB020;--red:#FF3B30;--ink:#EAF7FF;--dim:#5E7CA8;--ring:var(--cyan)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{min-height:100vh;min-height:100dvh;background:linear-gradient(178deg,var(--bg0) 0%,#081226 55%,var(--bg1));color:var(--ink);font-family:system-ui,'PingFang SC','Microsoft YaHei',sans-serif;display:grid;place-items:center;overflow:hidden;user-select:none;-webkit-user-select:none}
+body.alarm{--ring:#FF5030}
+body.done{--ring:var(--mag)}
+.mono{font-family:ui-monospace,'SF Mono',Menlo,Consolas,'Courier New',monospace}
+#glowA,#glowB{position:fixed;width:70vmax;height:70vmax;border-radius:50%;filter:blur(70px);pointer-events:none;z-index:0}
+#glowA{left:-25vmax;top:-30vmax;background:radial-gradient(circle,rgba(26,228,255,.16),transparent 62%);animation:drift 26s ease-in-out infinite alternate}
+#glowB{right:-28vmax;bottom:-32vmax;background:radial-gradient(circle,rgba(255,61,154,.12),transparent 62%);animation:drift 34s ease-in-out infinite alternate-reverse}
+@keyframes drift{to{transform:translate(9vmax,6vmax) scale(1.15)}}
+#sky{position:fixed;inset:0;z-index:1;pointer-events:none}
+#pulse{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 46%,rgba(26,228,255,.22),transparent 55%)}
+body.alarm #pulse{background:radial-gradient(circle at 50% 46%,rgba(255,80,40,.26),transparent 55%)}
+#pulse.beat{animation:beat .7s ease-out}
+@keyframes beat{0%{opacity:.9}100%{opacity:0}}
+#vig{position:fixed;inset:0;z-index:6;pointer-events:none;background:radial-gradient(ellipse at 50% 48%,transparent 55%,rgba(2,5,12,.78));opacity:.6;transition:opacity .6s,background .6s}
+body.alarm #vig{background:radial-gradient(ellipse at 50% 48%,transparent 46%,rgba(46,3,10,.88));animation:heart .8s ease-in-out infinite}
+@keyframes heart{0%,100%{opacity:.45}45%{opacity:.95}}
+header{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;gap:10px;padding:14px 18px;font-size:11px;letter-spacing:.22em;color:var(--dim)}
+header i{font-style:normal;color:var(--cyan);animation:blink 1.2s steps(2) infinite}
+body.alarm header i{color:var(--red)}
+@keyframes blink{50%{opacity:.25}}
+#stage{position:relative;z-index:4;display:flex;flex-direction:column;align-items:center;gap:clamp(14px,3vh,26px);padding:56px 16px 30px}
+#rig{position:relative;width:min(78vw,52vh,400px);aspect-ratio:1}
+#rig.jar{animation:jar .32s linear}
+@keyframes jar{25%{transform:translate(-2px,1px)}60%{transform:translate(2px,-1px)}}
+svg{width:100%;height:100%;display:block;transform:rotate(-90deg);overflow:visible}
+.spin{fill:none;stroke:#1F3560;stroke-width:1.5;stroke-dasharray:3 9;transform-box:fill-box;transform-origin:center;animation:rot 50s linear infinite}
+body.alarm .spin{stroke:#6B2436}
+@keyframes rot{to{transform:rotate(360deg)}}
+.track{fill:none;stroke:#14243F;stroke-width:6}
+#arc{fill:none;stroke:var(--ring);stroke-width:7;stroke-linecap:round;transition:stroke .4s;filter:drop-shadow(0 0 5px var(--ring)) drop-shadow(0 0 16px rgba(26,228,255,.45))}
+body.alarm #arc{filter:drop-shadow(0 0 5px var(--ring)) drop-shadow(0 0 16px rgba(255,80,48,.55))}
+body.done #arc{filter:drop-shadow(0 0 5px var(--ring)) drop-shadow(0 0 22px rgba(255,61,154,.6))}
+.tk{stroke:#7FE9FF;stroke-width:3;opacity:.95;transition:stroke .25s,opacity .25s}
+.tk.mj{stroke-width:4.5}
+.tk.off{stroke:#182A49;opacity:.5}
+.tk.hit{animation:hitf .5s ease-out}
+@keyframes hitf{0%{stroke:var(--mag);opacity:1;stroke-width:6}100%{stroke:#182A49}}
+body.alarm .tk:not(.off){stroke:var(--amber)}
+#core{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;transition:opacity .5s,transform .5s}
+body.done #core{opacity:0;transform:scale(.82)}
+.eyebrow{font-size:clamp(10px,2.6vw,13px);letter-spacing:.42em;color:var(--dim)}
+#num{font-family:ui-monospace,'SF Mono',Menlo,Consolas,'Courier New',monospace;font-size:clamp(76px,24vw,168px);font-weight:800;line-height:.95;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink);text-shadow:0 0 8px rgba(26,228,255,.9),0 0 28px rgba(26,228,255,.55),0 0 70px rgba(26,228,255,.35);animation:breathe 3.4s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:1}50%{opacity:.86}}
+#num.punch{animation:punch .55s cubic-bezier(.2,.9,.3,1.4)}
+@keyframes punch{0%{transform:scale(1.22);filter:brightness(1.9)}60%{transform:scale(.96)}100%{transform:scale(1)}}
+.unit{font-size:clamp(9px,2.2vw,11px);letter-spacing:.6em;color:var(--dim)}
+.stat{margin-top:7px;font-size:clamp(10px,2.4vw,12px);letter-spacing:.18em;color:var(--cyan);min-height:1.3em;transition:color .3s}
+body.alarm .stat{color:var(--amber)}
+#tele{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(8px,2vw,18px);width:min(92vw,470px)}
+#tele>div{background:rgba(10,20,44,.55);border:1px solid #1C3054;padding:9px 12px 11px;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);transition:border-color .3s,transform .2s}
+#tele>div:hover{border-color:#2E4C82;transform:translateY(-2px)}
+#tele b{display:block;font-size:clamp(16px,4.5vw,22px);font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+#tele span{display:block;margin:2px 0 7px;font-size:9px;letter-spacing:.2em;color:var(--dim)}
+#tele i{display:block;height:3px;background:#162642;overflow:hidden}
+#tele i::after{content:'';display:block;height:100%;width:var(--w,0%);background:linear-gradient(90deg,var(--cyan),var(--mag));transition:width .5s ease}
+#done{position:absolute;inset:0;z-index:7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;pointer-events:none}
+#done[hidden]{display:none}
+#done h1{font-size:clamp(38px,11vw,68px);font-weight:900;letter-spacing:.12em;color:#FFF;text-shadow:0 0 10px rgba(26,228,255,.9),0 0 34px rgba(255,61,154,.7),0 0 90px rgba(26,228,255,.5);opacity:0;transform:scale(.6)}
+#done.show h1{animation:land .8s cubic-bezier(.2,.9,.25,1.3) forwards}
+@keyframes land{to{opacity:1;transform:scale(1)}}
+#done p{font-size:clamp(10px,2.8vw,13px);letter-spacing:.34em;color:var(--cyan);opacity:0}
+#done.show p{animation:rise .7s .35s ease forwards}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+#again{pointer-events:auto;margin-top:14px;font:700 13px/1 ui-monospace,'SF Mono',Menlo,Consolas,'Courier New',monospace;letter-spacing:.3em;color:var(--cyan);background:rgba(26,228,255,.06);border:1px solid rgba(26,228,255,.65);padding:13px 24px 13px 28px;cursor:pointer;touch-action:manipulation;clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);opacity:0;transition:background .2s,transform .15s}
+#done.show #again{animation:rise .6s .9s ease forwards}
+#again:hover{background:rgba(26,228,255,.16);transform:translateY(-2px)}
+#again:active{transform:translateY(1px) scale(.98)}
+#again:focus-visible{outline:2px solid var(--mag);outline-offset:3px}
+#hint{position:fixed;bottom:12px;left:0;right:0;z-index:5;text-align:center;font-size:10px;letter-spacing:.3em;color:var(--dim);opacity:.6}
+@media (prefers-reduced-motion:reduce){#glowA,#glowB,.spin,header i,body.alarm #vig,#num,#num.punch,#rig.jar,#pulse.beat{animation:none}}
+</style>
+</head>
+<body>
+<div id="glowA"></div><div id="glowB"></div>
+<canvas id="sky"></canvas>
+<div id="pulse"></div>
+<header class="mono"><span>◤ MISSION CTRL · LC-39A</span><span>窗口 OPEN <i>● GO</i></span></header>
+<main id="stage">
+  <div id="rig">
+    <svg viewBox="0 0 400 400" aria-hidden="true"><circle class="spin" cx="200" cy="200" r="199"/><circle class="track" cx="200" cy="200" r="168"/><circle id="arc" cx="200" cy="200" r="168" stroke-dasharray="1055.6" stroke-dashoffset="0"/><g id="ticks"></g></svg>
+    <div id="core">
+      <div class="eyebrow mono">T-MINUS · 点火倒计时</div>
+      <div id="num" aria-live="polite">10</div>
+      <div class="unit mono">SECONDS</div>
+      <div id="stat" class="stat mono">系统自检 GO</div>
+    </div>
+    <div id="done" hidden><h1>点火成功</h1><p class="mono">IGNITION SUCCESS · 主发动机额定推力</p><button id="again">↻ 重新点火 RESTART</button></div>
+  </div>
+  <section id="tele">
+    <div><b class="mono" id="t1">0</b><span>推力 THRUST %</span><i id="b1"></i></div>
+    <div><b class="mono" id="t2">0.0</b><span>高度 ALT · KM</span><i id="b2"></i></div>
+    <div><b class="mono" id="t3">0</b><span>速度 VEL · M/S</span><i id="b3"></i></div>
+  </section>
+</main>
+<div id="hint" class="mono">按 R 重新点火</div>
+<div id="vig"></div>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const num=$('num'),arc=$('arc'),pulse=$('pulse'),stat=$('stat'),rig=$('rig'),doneEl=$('done'),body=document.body;
+const DUR=10,C=2*Math.PI*168;
+let tk='';
+for(let i=0;i<60;i++){const a=i/60*Math.PI*2,mj=i%5===0,r1=mj?171:177,r2=mj?195:189;
+  tk+='<line class="tk'+(mj?' mj':'')+'" x1="'+(200+Math.cos(a)*r1).toFixed(1)+'" y1="'+(200+Math.sin(a)*r1).toFixed(1)+'" x2="'+(200+Math.cos(a)*r2).toFixed(1)+'" y2="'+(200+Math.sin(a)*r2).toFixed(1)+'"/>';}
+$('ticks').innerHTML=tk;
+const ticks=[...document.querySelectorAll('.tk')];
+const MSG=['系统自检 GO','燃料加注 OK','电力总线 OK','陀螺仪校准','遥测链路 LOCK','惯导对齐 OK','塔架摆杆脱离','点火序列启动','⚠ T-2 · 终端计数','⚠ T-1 · 终端计数','● 点火 IGNITE'];
+let start=0,acc=0,lastSec=DUR+1,state='idle',raf=0,hitT=[];
+const retrig=(el,c)=>{el.classList.remove(c);void el.offsetWidth;el.classList.add(c);};
+function onSecond(sec){
+  num.textContent=sec;retrig(num,'punch');retrig(pulse,'beat');
+  if(sec<=3&&sec>0)retrig(rig,'jar');
+  const lit=sec*6;
+  ticks.forEach((t,i)=>{if(i>=lit){if(!t.classList.contains('off')){t.classList.add('off');t.classList.add('hit');hitT.push(setTimeout(()=>t.classList.remove('hit'),520));}}else t.classList.remove('off','hit');});
+  body.classList.toggle('alarm',sec<=3&&sec>0);
+  stat.textContent=MSG[DUR-sec]||'';
+  const p=(DUR-sec)/DUR,e=1-Math.pow(1-p,2.2);
+  $('t1').textContent=Math.round(e*100);$('t2').textContent=(e*184).toFixed(1);$('t3').textContent=Math.round(e*2380);
+  $('b1').style.setProperty('--w',(e*100)+'%');$('b2').style.setProperty('--w',(e*100)+'%');$('b3').style.setProperty('--w',(e*100)+'%');
+  if(sec===0)finish();
+}
+const cv=$('sky'),ctx=cv.getContext('2d');
+let W=0,H=0,dust=[],parts=[],rings=[];
+function resize(){
+  const d=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;
+  cv.width=W*d;cv.height=H*d;cv.style.width=W+'px';cv.style.height=H+'px';ctx.setTransform(d,0,0,d,0,0);
+  dust.length=0;const n=Math.min(120,Math.round(W*H/9000));
+  for(let i=0;i<n;i++)dust.push({x:Math.random()*W,y:Math.random()*H,r:.5+Math.random()*1.4,s:.06+Math.random()*.22,p:Math.random()*6.28,f:.4+Math.random()*1.2,c:Math.random()<.7?'26,228,255':(Math.random()<.5?'255,61,154':'234,247,255')});
+}
+addEventListener('resize',resize);resize();
+function drawSky(t){
+  ctx.clearRect(0,0,W,H);
+  for(const d of dust){d.y-=d.s;if(d.y<-3){d.y=H+3;d.x=Math.random()*W;}
+    ctx.fillStyle='rgba('+d.c+','+(.22+.4*(.5+.5*Math.sin(t/1000*d.f+d.p)))+')';
+    ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,6.29);ctx.fill();}
+  ctx.globalCompositeOperation='lighter';
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.045;p.vx*=.986;p.vy*=.986;p.life-=p.dc;
+    if(p.life<=0){parts.splice(i,1);continue;}
+    ctx.fillStyle='rgba('+p.c+','+p.life+')';ctx.beginPath();ctx.arc(p.x,p.y,Math.max(.2,p.sz*p.life),0,6.29);ctx.fill();}
+  for(let i=rings.length-1;i>=0;i--){const g=rings[i];g.r+=g.v;g.a*=.93;
+    if(g.a<.02){rings.splice(i,1);continue;}
+    ctx.strokeStyle='rgba('+g.c+','+g.a+')';ctx.lineWidth=2+7*g.a;ctx.beginPath();ctx.arc(g.x,g.y,g.r,0,6.29);ctx.stroke();}
+  ctx.globalCompositeOperation='source-over';
+}
+function burst(){
+  const b=rig.getBoundingClientRect(),cx=b.left+b.width/2,cy=b.top+b.height/2;
+  const cols=['26,228,255','255,61,154','255,176,32','234,247,255'];
+  for(let i=0,n=parts.length<240?170:50;i<n;i++){const a=Math.random()*6.283,v=1.5+Math.random()*7.5;
+    parts.push({x:cx,y:cy,vx:Math.cos(a)*v,vy:Math.sin(a)*v-1.5,life:1,dc:.008+Math.random()*.014,sz:1.5+Math.random()*3,c:cols[i&3]});}
+  rings.push({x:cx,y:cy,r:12,v:13,a:.9,c:'26,228,255'},{x:cx,y:cy,r:4,v:8,a:.8,c:'255,61,154'});
+}
+function finish(){
+  state='done';body.classList.remove('alarm');body.classList.add('done');
+  burst();setTimeout(burst,260);
+  doneEl.hidden=false;requestAnimationFrame(()=>doneEl.classList.add('show'));
+}
+function restart(){
+  hitT.forEach(clearTimeout);hitT.length=0;
+  doneEl.classList.remove('show');doneEl.hidden=true;body.classList.remove('done','alarm');
+  parts.length=0;rings.length=0;lastSec=DUR+1;acc=0;start=performance.now();state='run';
+}
+$('again').addEventListener('click',restart);
+addEventListener('keydown',e=>{if(e.key==='r'||e.key==='R')restart();});
+function loop(t){
+  raf=requestAnimationFrame(loop);
+  const rem=state==='run'?Math.max(0,DUR-(t-start)/1000):0;
+  arc.setAttribute('stroke-dashoffset',rem<=0?C+20:C*(1-rem/DUR));
+  const sec=Math.ceil(rem);
+  if(state==='run'&&sec!==lastSec){lastSec=sec;onSecond(sec);}
+  drawSky(t);
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){acc+=performance.now()-start;cancelAnimationFrame(raf);raf=0;}
+  else{start=performance.now()-acc;if(!raf)raf=requestAnimationFrame(loop);}
+});
+start=performance.now();state='run';raf=requestAnimationFrame(loop);
+</script>
+</body>
+</html>
