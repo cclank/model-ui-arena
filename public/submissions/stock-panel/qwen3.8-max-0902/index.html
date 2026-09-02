@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>股票面板</title>
+<style>
+  *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+  body{min-height:100vh;background:#0a0e17;color:#e8edf8;padding:18px 14px;
+    font-family:-apple-system,"PingFang SC",system-ui,sans-serif;display:flex;justify-content:center}
+  .panel{width:min(98vw,420px)}
+  .head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
+  .head h1{font-size:19px;font-weight:800;letter-spacing:.5px}
+  .live{display:flex;align-items:center;gap:6px;font-size:11px;color:#7d8aa5}
+  .live i{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:bp 1.4s infinite}
+  @keyframes bp{50%{opacity:.25}}
+  .idx{font-size:12px;color:#7d8aa5;margin-bottom:14px}
+  .idx b{color:#e8edf8}
+  .card{background:#111827;border:1px solid #1f2a3d;border-radius:16px;padding:13px 14px;margin-bottom:10px;
+    display:grid;grid-template-columns:1fr auto;gap:8px;transition:border-color .3s}
+  .card.flash-up{border-color:#16a34a}.card.flash-down{border-color:#dc2626}
+  .name{font-size:15px;font-weight:700}
+  .code{font-size:11px;color:#7d8aa5;margin-top:2px}
+  .price{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;text-align:right;transition:color .3s}
+  .chg{font-size:12px;font-weight:700;text-align:right;margin-top:3px;font-variant-numeric:tabular-nums}
+  .up{color:#22c55e}.down{color:#f43f5e}
+  .spark{grid-column:1/-1;height:44px;width:100%;display:block}
+  .foot{display:flex;justify-content:space-between;font-size:10.5px;color:#5d6b85;margin-top:4px}
+  .warn{margin-top:12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.35);
+    border-radius:12px;padding:10px 12px;font-size:11.5px;color:#fbbf24;line-height:1.55}
+  .warn b{color:#fcd34d}
+</style>
+</head>
+<body>
+<div class="panel">
+  <div class="head"><h1>自选股监控</h1><div class="live"><i></i>实时行情（模拟流）</div></div>
+  <div class="idx">沪指 <b id="sh">3,241.56</b> · 深成指 <b id="sz">10,472.03</b> · 更新 <b id="ts">--:--:--</b></div>
+  <div id="list"></div>
+  <div class="warn"><b>⚠ 波动提示：</b><span id="warnTxt">今日振幅正常。</span> 行情为本地模拟数据，不构成投资建议。</div>
+</div>
+<script>
+const STOCKS=[
+  {n:'宁德时代',c:'300750.SZ',p:186.40,prev:182.10,vol:1.2},
+  {n:'贵州茅台',c:'600519.SH',p:1688.00,prev:1701.50,vol:0.6},
+  {n:'中芯国际',c:'688981.SH',p:52.36,prev:49.80,vol:2.2},
+  {n:'比亚迪',c:'002594.SZ',p:241.85,prev:244.30,vol:1.5}
+];
+const list=document.getElementById('list');
+STOCKS.forEach((s,i)=>{s.hist=[];let p=s.prev;for(let k=0;k<28;k++){p+= (Math.random()-.48)*s.vol*1.2;s.hist.push(p);}s.hist.push(s.p);
+  const el=document.createElement('div');el.className='card';el.id='c'+i;
+  el.innerHTML='<div><div class="name">'+s.n+'</div><div class="code">'+s.c+'</div></div>'+
+    '<div><div class="price" id="p'+i+'"></div><div class="chg" id="g'+i+'"></div></div>'+
+    '<svg class="spark" id="s'+i+'" viewBox="0 0 300 44" preserveAspectRatio="none"></svg>'+
+    '<div class="foot" style="grid-column:1/-1"><span id="o'+i+'"></span><span id="v'+i+'"></span></div>';
+  list.appendChild(el);});
+function fmt(x,d){return x.toLocaleString('zh-CN',{minimumFractionDigits:d,maximumFractionDigits:d});}
+function paint(i){const s=STOCKS[i],d=s.p-s.prev,pc=d/s.prev*100,up=d>=0;
+  const pe=document.getElementById('p'+i),ge=document.getElementById('g'+i);
+  pe.textContent=fmt(s.p,2);pe.className='price '+(up?'up':'down');
+  ge.textContent=(up?'▲ +':'▼ ')+fmt(d,2)+'  '+(up?'+':'')+pc.toFixed(2)+'%';ge.className='chg '+(up?'up':'down');
+  const h=s.hist,mx=Math.max(...h),mn=Math.min(...h),rg=(mx-mn)||1;
+  const pts=h.map((v,k)=>(k/(h.length-1)*300).toFixed(1)+','+(40-(v-mn)/rg*36).toFixed(1));
+  const col=up?'#22c55e':'#f43f5e';
+  document.getElementById('s'+i).innerHTML=
+    '<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+col+'" stroke-width="1.8"/>'+
+    '<polygon points="0,44 '+pts.join(' ')+' 300,44" fill="'+col+'" opacity="0.10"/>'+
+    '<circle cx="300" cy="'+(40-(s.p-mn)/rg*36).toFixed(1)+'" r="2.6" fill="'+col+'"/>';
+  document.getElementById('o'+i).textContent='今开 '+fmt(s.prev,2)+' · 高 '+fmt(mx,2)+' · 低 '+fmt(mn,2);
+  document.getElementById('v'+i).textContent='振幅 '+((mx-mn)/s.prev*100).toFixed(2)+'%';}
+STOCKS.forEach((s,i)=>paint(i));
+function tick(){let biggest=null,bigAmp=0;
+  STOCKS.forEach((s,i)=>{
+    const drift=(Math.random()-.5)*s.vol;s.p=Math.max(1,s.p+drift);
+    s.hist.push(s.p);if(s.hist.length>60)s.hist.shift();
+    paint(i);
+    const card=document.getElementById('c'+i);
+    card.classList.remove('flash-up','flash-down');void card.offsetWidth;
+    card.classList.add(drift>=0?'flash-up':'flash-down');
+    setTimeout(()=>card.classList.remove('flash-up','flash-down'),500);
+    const amp=Math.abs(drift/s.p*100);if(amp>bigAmp){bigAmp=amp;biggest={s,drift};}
+  });
+  const w=document.getElementById('warnTxt');
+  if(bigAmp>1.1)w.textContent=biggest.s.n+' 出现快速'+(biggest.drift>0?'拉升':'跳水')+'（'+bigAmp.toFixed(2)+'%），注意波动风险。';
+  else w.textContent='今日振幅正常，'+STOCKS[0].n+'等 '+STOCKS.length+' 支标的持续监控中。';
+  const t=new Date();
+  document.getElementById('ts').textContent=t.toTimeString().slice(0,8);
+  const sh=3241.56+(Math.random()-.5)*6,sz=10472.03+(Math.random()-.5)*20;
+  document.getElementById('sh').textContent=fmt(sh,2);document.getElementById('sz').textContent=fmt(sz,2);
+}
+setInterval(tick,1600);tick();
+</script>
+</body>
+</html>

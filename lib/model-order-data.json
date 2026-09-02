@@ -1,5 +1,6 @@
 {
   "latestModels": [
+    "fable-5.1",
     "ox-alpha",
     "glm-5.3",
     "claude-opus-5",
@@ -25,8 +26,10 @@
     "^gemini-3\\.1-flash-lite-preview$",
     "^gemini-3\\.0-flash$",
     "^qwen3\\.8-max-new$",
+    "^qwen3\\.8-max-0902$",
     "^qwen3\\.8-max$",
     "^qwen3\\.8-max-pre$",
+    "^qwen3\\.8-flash$",
     "^qwen3\\.8-27b$",
     "^qwen-3\\.7-max$",
     "^qwen-3\\.6-plus$",
@@ -53,20 +56,23 @@
     "^Seed-2\\.0-Pro$",
     "^minimax-m2\\.7$",
     "^minimax-portal-MiniMax-M2\\.5$",
+    "^fable-5\\.1$",
     "^fable-5$",
     "^healer-alpha$",
     "^hunter-alpha$",
-    "^ox-alpha$"
+    "^ox-alpha$",
+    "^hy4$"
   ],
   "referenceGroups": [
     ["^gpt-5\\.6-sol$", "^gpt-5\\.5$", "^gpt-5\\.4$", "^gpt-5\\.3-codex$"],
     ["^claude-opus-5$", "^claude-opus-4-8$", "^claude-opus-4\\.6$", "^opus-4\\.7$", "^claude-sonnet-4-6$"],
     ["^Gemini-3\\.1-Pro-High$", "^gemini-3\\.5-flash-high$"],
-    ["^qwen3\\.8-max-new$", "^qwen3\\.8-max$", "^qwen3\\.8-max-pre$", "^qwen-3\\.7-max$", "^qwen-3\\.6-plus$", "^qwen3\\.7-plus$"],
+    ["^qwen3\\.8-max-0902$", "^qwen3\\.8-max-new$", "^qwen3\\.8-max$", "^qwen3\\.8-max-pre$", "^qwen3\\.8-flash$", "^qwen-3\\.7-max$", "^qwen-3\\.6-plus$", "^qwen3\\.7-plus$"],
     ["^deepseek-v4-pro-GA$", "^deepseek-v4-pro$", "^deepseek-v4-flash$"],
     ["^kimi-k3$", "^kimi-k2\\.7$", "^kimi-k2\\.6$"],
     ["^glm-5\\.3$", "^glm-5\\.2$", "^glm-5\\.1$", "^glm-5$"],
     ["^Seed-2\\.0-Pro$"],
-    ["^minimax-m2\\.7$", "^minimax-portal-MiniMax-M2\\.5$"]
+    ["^minimax-m2\\.7$", "^minimax-portal-MiniMax-M2\\.5$"],
+    ["^fable-5\\.1$", "^fable-5$"]
   ]
 }

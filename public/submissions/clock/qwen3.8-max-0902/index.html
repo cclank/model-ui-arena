@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>钟表</title>
+<style>
+  :root{--bg1:#0b1020;--bg2:#141a33;--face:#0e142b;--ink:#e8ecff;--sub:#8d97c4;--accent:#6ea8ff;--gold:#ffcc66}
+  *{box-sizing:border-box;margin:0}
+  html,body{height:100%}
+  body{display:grid;place-items:center;background:radial-gradient(120% 120% at 50% 0%,var(--bg2),var(--bg1));
+    color:var(--ink);font-family:-apple-system,"PingFang SC",system-ui,sans-serif;overflow:hidden}
+  .wrap{display:flex;flex-direction:column;align-items:center;gap:22px;padding:24px}
+  .clock{position:relative;width:min(78vw,300px);aspect-ratio:1;border-radius:50%;
+    background:radial-gradient(circle at 50% 38%,#1a2142,var(--face) 70%);
+    box-shadow:0 0 0 6px rgba(110,168,255,.08),0 0 40px rgba(110,168,255,.15),inset 0 6px 30px rgba(0,0,0,.6)}
+  .clock.night{background:radial-gradient(circle at 50% 38%,#141a3a,#080c1c 72%);
+    box-shadow:0 0 0 6px rgba(255,204,102,.06),0 0 44px rgba(255,204,102,.12),inset 0 6px 30px #000}
+  .tick{position:absolute;left:50%;top:50%;width:2px;height:50%;transform-origin:bottom center;pointer-events:none}
+  .tick i{position:absolute;top:0;left:0;width:2px;height:9px;background:var(--sub);border-radius:2px}
+  .tick.major i{height:16px;width:3px;background:var(--accent)}
+  .clock.night .tick.major i{background:var(--gold)}
+  .num{position:absolute;font-size:15px;font-weight:600;color:var(--sub);transform:translate(-50%,-50%)}
+  .hand{position:absolute;left:50%;bottom:50%;transform-origin:bottom center;border-radius:6px;will-change:transform}
+  .h{width:6px;height:26%;background:var(--ink);margin-left:-3px}
+  .m{width:4px;height:36%;background:var(--accent);margin-left:-2px}
+  .clock.night .m{background:var(--gold)}
+  .s{width:2px;height:42%;background:#ff5f6d;margin-left:-1px}
+  .s::after{content:"";position:absolute;bottom:-14px;left:-4px;width:10px;height:10px;border-radius:50%;background:#ff5f6d}
+  .cap{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px;border-radius:50%;
+    background:#fff;box-shadow:0 0 8px rgba(255,255,255,.7);z-index:5}
+  .ring{position:absolute;inset:-14px;border-radius:50%;border:1px solid rgba(110,168,255,.25);
+    animation:breathe 4s ease-in-out infinite;pointer-events:none}
+  .clock.night .ring{border-color:rgba(255,204,102,.22)}
+  .digital{text-align:center}
+  .time{font-size:clamp(38px,13vw,60px);font-weight:800;letter-spacing:2px;font-variant-numeric:tabular-nums;
+    text-shadow:0 0 22px rgba(110,168,255,.45)}
+  .clock.night~.digital .time{text-shadow:0 0 22px rgba(255,204,102,.4)}
+  .meta{display:flex;gap:12px;justify-content:center;align-items:center;color:var(--sub);font-size:14px;margin-top:6px}
+  .badge{padding:3px 10px;border-radius:999px;background:rgba(110,168,255,.12);color:var(--accent);font-size:12px;font-weight:600}
+  .clock.night~.digital .badge{background:rgba(255,204,102,.12);color:var(--gold)}
+  .pulse{animation:breathe 4s ease-in-out infinite}
+  @keyframes breathe{0%,100%{opacity:.55}50%{opacity:1}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="clock" id="clock">
+      <div class="ring"></div>
+      <div class="hand h" id="hh"></div>
+      <div class="hand m" id="mh"></div>
+      <div class="hand s" id="sh"></div>
+      <div class="cap"></div>
+    </div>
+    <div class="digital">
+      <div class="time" id="dtime">00:00:00</div>
+      <div class="meta">
+        <span id="date">—</span>
+        <span class="badge" id="phase">白天</span>
+      </div>
+    </div>
+  </div>
+<script>
+  const clock=document.getElementById('clock');
+  // build ticks + numerals
+  for(let i=0;i<60;i++){
+    const t=document.createElement('div');
+    t.className='tick'+(i%5===0?' major':'');
+    t.style.transform=`translate(-50%,-100%) rotate(${i*6}deg)`;
+    t.innerHTML='<i></i>';clock.appendChild(t);
+  }
+  for(let n=1;n<=12;n++){
+    const a=(n*30-90)*Math.PI/180,r=38;
+    const el=document.createElement('div');el.className='num';
+    el.style.left=(50+r*Math.cos(a))+'%';el.style.top=(50+r*Math.sin(a))+'%';
+    el.textContent=n;clock.appendChild(el);
+  }
+  const hh=document.getElementById('hh'),mh=document.getElementById('mh'),sh=document.getElementById('sh');
+  const dt=document.getElementById('dtime'),dd=document.getElementById('date'),ph=document.getElementById('phase');
+  const wk=['周日','周一','周二','周三','周四','周五','周六'];
+  const p2=x=>String(x).padStart(2,'0');
+  let lastS=-1;
+  function frame(){
+    const now=new Date();
+    const ms=now.getMilliseconds(),s=now.getSeconds(),m=now.getMinutes(),h=now.getHours();
+    const sd=s+ms/1000;
+    sh.style.transform=`rotate(${sd*6}deg)`;
+    mh.style.transform=`rotate(${(m+sd/60)*6}deg)`;
+    hh.style.transform=`rotate(${((h%12)+m/60)*30}deg)`;
+    if(s!==lastS){
+      lastS=s;
+      dt.textContent=`${p2(h)}:${p2(m)}:${p2(s)}`;
+      dd.textContent=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${wk[now.getDay()]}`;
+      const day=h>=6&&h<18;
+      clock.classList.toggle('night',!day);
+      ph.textContent=day?'白天':'夜晚';
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+</script>
+</body>
+</html>

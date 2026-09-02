@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cheetah Trophy Run · Hy4</title>
+<style>
+*{box-sizing:border-box;margin:0}
+body{min-height:100vh;display:grid;place-items:center;background:#05070e;padding:0;
+  font:400 14px/1.5 -apple-system,"PingFang SC",system-ui,sans-serif}
+.stage{width:100%;max-width:1180px;box-shadow:0 40px 90px -40px #000}
+svg{display:block;width:100%;height:auto}
+/* ---------- animations ---------- */
+.cheetah{animation:bob 1.5s ease-in-out infinite;transform-origin:500px 450px}
+@keyframes bob{50%{transform:translateY(-9px) rotate(-.5deg)}}
+.beam{animation:beat 6s ease-in-out infinite alternate;transform-origin:top center}
+.beam.b2{animation-duration:7.5s;animation-delay:-2s}
+.beam.b3{animation-duration:5s;animation-delay:-1s}
+@keyframes beat{from{opacity:.10}to{opacity:.26}}
+.streak{stroke-dasharray:70 260;animation:zoom .85s linear infinite}
+.streak:nth-child(2){animation-duration:.7s}.streak:nth-child(3){animation-duration:1s}
+.streak:nth-child(4){animation-duration:.62s}.streak:nth-child(5){animation-duration:.9s}
+@keyframes zoom{from{stroke-dashoffset:330}to{stroke-dashoffset:0}}
+.roll{transform-box:fill-box;transform-origin:50% 50%;animation:roll 2.8s linear infinite}
+@keyframes roll{0%{transform:translateX(10px) rotate(0)}50%{transform:translateX(-10px) rotate(-360deg)}
+  100%{transform:translateX(10px) rotate(-720deg)}}
+.glint{animation:glint 3.4s ease-in-out infinite}
+@keyframes glint{0%,18%{transform:translateX(-14px) skewX(-18deg);opacity:0}
+  26%{opacity:.75}46%{transform:translateX(126px) skewX(-18deg);opacity:0}100%{opacity:0}}
+.confetti{transform-box:fill-box;transform-origin:50% 50%;animation:cf linear infinite}
+@keyframes cf{0%{transform:translateY(-40px) rotate(0)}100%{transform:translateY(760px) rotate(720deg)}}
+.flash{animation:fl 3.4s ease-in-out infinite;opacity:0}
+@keyframes fl{0%,88%{opacity:0}92%{opacity:1}96%,100%{opacity:0}}
+.tuft{animation:tf 2.2s ease-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes tf{0%{opacity:0;transform:translate(0,0) scale(.4)}30%{opacity:.9}
+  100%{opacity:0;transform:translate(-70px,-46px) scale(1.1)}}
+.board{animation:bglow 4s ease-in-out infinite}
+@keyframes bglow{50%{filter:drop-shadow(0 0 16px rgba(255,196,64,.75))}}
+.core{animation:cp 2.4s ease-in-out infinite}
+@keyframes cp{50%{opacity:.75;transform:scale(1.06)}}
+@media (max-width:560px){.stage{max-width:100%}}
+</style>
+</head>
+<body>
+<div class="stage">
+<svg id="poster" viewBox="0 0 1000 700" role="img" aria-label="拟人化猎豹在补时绝杀后高举大力神杯冲刺">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#060a1c"/><stop offset=".55" stop-color="#0e2145"/>
+      <stop offset=".86" stop-color="#22496f"/><stop offset="1" stop-color="#3a6a86"/>
+    </linearGradient>
+    <linearGradient id="stand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a1322"/><stop offset="1" stop-color="#16233c"/>
+    </linearGradient>
+    <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0f4f28"/><stop offset=".45" stop-color="#187a3b"/>
+      <stop offset="1" stop-color="#0d5127"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#bfe4ff" stop-opacity=".55"/><stop offset="1" stop-color="#bfe4ff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="furG" gradientUnits="userSpaceOnUse" x1="280" y1="300" x2="700" y2="620">
+      <stop offset="0" stop-color="#ffdf94"/><stop offset=".45" stop-color="#f0be55"/>
+      <stop offset="1" stop-color="#c98a25"/>
+    </linearGradient>
+    <linearGradient id="creamG" gradientUnits="userSpaceOnUse" x1="300" y1="380" x2="700" y2="560">
+      <stop offset="0" stop-color="#fff6de"/><stop offset="1" stop-color="#e9cf9a"/>
+    </linearGradient>
+    <linearGradient id="goldG" gradientUnits="userSpaceOnUse" x1="820" y1="80" x2="940" y2="260">
+      <stop offset="0" stop-color="#fff6c4"/>
+      <stop offset=".28" stop-color="#ffd75e"/><stop offset=".55" stop-color="#c9901f"/>
+      <stop offset=".78" stop-color="#ffe9a3"/><stop offset="1" stop-color="#9c6c10"/>
+    </linearGradient>
+    <linearGradient id="goldRim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fffbe0"/><stop offset=".5" stop-color="#ffd75e"/><stop offset="1" stop-color="#b9811a"/>
+    </linearGradient>
+    <linearGradient id="mal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2f8f5f"/><stop offset=".5" stop-color="#166b41"/><stop offset="1" stop-color="#0a3a22"/>
+    </linearGradient>
+    <linearGradient id="malDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b3a22"/><stop offset="1" stop-color="#05200f"/>
+    </linearGradient>
+    <radialGradient id="globe" cx=".34" cy=".3" r=".85">
+      <stop offset="0" stop-color="#fff8d8"/>
+      <stop offset=".45" stop-color="#efc04a"/>
+      <stop offset="1" stop-color="#a5740f"/>
+    </radialGradient>
+    <radialGradient id="vig" cx=".5" cy=".44" r=".78">
+      <stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".62"/>
+    </radialGradient>
+    <radialGradient id="coreG" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/><stop offset=".4" stop-color="#ffe9a8" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#ffb347" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="soft2" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+    <clipPath id="cupClip"><path d="M832 202 C832 176 844 164 860 156 L896 156 C912 164 924 176 924 202 Z"/></clipPath>
+    <!-- 双人托举剪影（以 x=0 为中心，供左右镜像复用） -->
+    <g id="fig" fill="url(#goldG)">
+      <circle cx="0" cy="120" r="7.5"/>
+      <path d="M-8 131 C-3 127 3 127 8 131 L11 156 L-11 156 Z"/>
+      <path d="M-8 132 C-16 124 -22 114 -22 104 L-15 102 C-14 112 -10 120 -3 127 Z"/>
+      <path d="M8 132 C16 124 21 116 21 106 L28 109 C25 119 18 127 10 133 Z"/>
+    </g>
+    <!-- 足球 -->
+    <g id="ballart">
+      <circle r="26" fill="#f4f7fb"/><circle r="26" fill="none" stroke="#0d1526" stroke-width="1.6" opacity=".22"/>
+      <g fill="#141d2e">
+        <path d="M0 -11 L10.5 -3.5 L6.5 8.5 L-6.5 8.5 L-10.5 -3.5 Z"/>
+        <path d="M-25 -9 L-14 -16 L-11 -4 L-19 0 Z"/><path d="M25 -9 L14 -16 L11 -4 L19 0 Z"/>
+        <path d="M-15 23 L-5 18 L-1 26 Z"/><path d="M15 23 L5 18 L1 26 Z"/>
+      </g>
+    </g>
+  </defs>
+
+  <!-- ===== 背景：夜空 / 星 / 看台 ===== -->
+  <rect width="1000" height="700" fill="url(#sky)"/>
+  <g id="stars" filter="url(#soft2)"></g>
+  <g id="beams">
+    <polygon class="beam" points="110,84 -60,700 300,700" fill="url(#beam)" opacity=".16" filter="url(#soft)"/>
+    <polygon class="beam b2" points="890,84 700,700 1060,700" fill="url(#beam)" opacity=".16" filter="url(#soft)"/>
+    <polygon class="beam b3" points="500,40 180,700 820,700" fill="url(#beam)" opacity=".12" filter="url(#soft)"/>
+  </g>
+  <rect x="0" y="118" width="1000" height="212" fill="url(#stand)"/>
+  <g id="crowd"></g>
+  <rect x="0" y="118" width="1000" height="6" fill="#2b4a78"/>
+  <rect x="0" y="296" width="1000" height="44" fill="#0a1526"/>
+  <rect x="0" y="296" width="1000" height="3" fill="#33578c" opacity=".8"/>
+  <g id="towers" fill="#16233a">
+    <g><rect x="104" y="70" width="12" height="228" /><rect x="66" y="52" width="88" height="20" rx="5"/></g>
+    <g><rect x="884" y="70" width="12" height="228"/><rect x="846" y="52" width="88" height="20" rx="5"/></g>
+  </g>
+  <g id="lamps" fill="#fff8d0">
+    <g filter="url(#soft2)">
+      <circle cx="82" cy="62" r="6"/><circle cx="102" cy="62" r="6"/><circle cx="122" cy="62" r="6"/><circle cx="142" cy="62" r="6"/>
+      <circle cx="862" cy="62" r="6"/><circle cx="882" cy="62" r="6"/><circle cx="902" cy="62" r="6"/><circle cx="922" cy="62" r="6"/>
+    </g>
+  </g>
+
+  <!-- ===== 球场草皮 ===== -->
+  <rect x="0" y="340" width="1000" height="360" fill="url(#grass)"/>
+  <g id="stripes"></g>
+  <ellipse cx="500" cy="560" rx="430" ry="130" fill="none" stroke="#ffffff" stroke-opacity=".08" stroke-width="4"/>
+  <path d="M0 352 H1000" stroke="#ffffff" stroke-opacity=".10" stroke-width="3"/>
+
+  <!-- ===== 地面草痕 + 飞屑 ===== -->
+  <g id="scars" stroke="#08361c" stroke-width="5" stroke-linecap="round" fill="none" opacity=".75">
+    <path d="M300 608 C332 614 362 612 390 604"/><path d="M466 610 C498 616 528 614 554 606"/>
+    <path d="M248 596 C270 601 288 601 302 597"/><path d="M556 596 C580 601 600 600 618 595"/>
+  </g>
+  <g id="tufts"></g>
+
+  <!-- ===== 速度残影 ===== -->
+  <g id="streaks" stroke="#ffe8a8" stroke-linecap="round" fill="none" opacity=".55">
+    <path class="streak" d="M60 372 H308" stroke-width="5"/>
+    <path class="streak" d="M40 412 H336" stroke-width="7"/>
+    <path class="streak" d="M74 452 H300" stroke-width="6"/>
+    <path class="streak" d="M52 492 H330" stroke-width="8"/>
+    <path class="streak" d="M88 532 H286" stroke-width="5"/>
+    <path class="streak" d="M64 566 H312" stroke-width="6"/>
+  </g>
+
+  <!-- ===== 滚动的足球（猎豹身后） ===== -->
+  <g transform="translate(248,586)">
+    <ellipse cx="0" cy="30" rx="30" ry="7" fill="#052a12" opacity=".55"/>
+    <g class="roll"><use href="#ballart"/></g>
+  </g>
+
+  <!-- ===== 主角：拟人化猎豹 ===== -->
+  <g class="cheetah">
+    <!-- 后腿（远） -->
+    <path d="M340 430 C308 470 294 512 306 552 C313 578 306 592 296 600" stroke="#c98824" stroke-width="30"
+      stroke-linecap="round" fill="none"/>
+    <!-- 尾巴 -->
+    <path d="M312 430 C252 442 196 420 156 366 C136 338 134 312 152 300" stroke="url(#furG)" stroke-width="22"
+      stroke-linecap="round" fill="none"/>
+    <circle cx="151" cy="300" r="11" fill="#fff3d2"/>
+    <g id="tailspots" fill="#3a2410" opacity=".85">
+      <ellipse cx="278" cy="433" rx="8" ry="6.5" transform="rotate(-18 278 433)"/>
+      <ellipse cx="236" cy="428" rx="8" ry="6.5" transform="rotate(-30 236 428)"/>
+      <ellipse cx="200" cy="411" rx="7.5" ry="6" transform="rotate(-46 200 411)"/>
+      <ellipse cx="170" cy="382" rx="7" ry="5.5" transform="rotate(-62 170 382)"/>
+      <ellipse cx="152" cy="344" rx="6.5" ry="5" transform="rotate(-80 152 344)"/>
+      <ellipse cx="150" cy="316" rx="6" ry="4.6" transform="rotate(-90 150 316)"/>
+    </g>
+    <!-- 躯干 -->
+    <path d="M306 424 C332 350 432 316 546 314 C602 313 642 330 658 360 C676 396 640 444 584 452
+      C500 464 378 464 328 450 C304 443 296 437 306 424 Z" fill="url(#furG)"/>
+    <path d="M330 452 C400 468 502 466 582 452 C622 444 652 420 658 392 C650 438 610 462 556 466
+      C470 472 380 470 330 456 Z" fill="url(#creamG)" opacity=".85"/>
+    <path d="M336 344 C420 316 520 312 600 330 C560 322 470 318 396 330 C372 334 350 340 336 344 Z"
+      fill="#fff2c9" opacity=".55"/>
+    <!-- 脖颈 -->
+    <path d="M624 360 C640 332 664 300 690 274 L728 292 C706 318 690 344 676 372 Z" fill="url(#furG)"/>
+    <!-- 身体斑点 -->
+    <g fill="#3a2410" opacity=".92">
+      <ellipse cx="362" cy="362" rx="9" ry="7.2" transform="rotate(-12 362 362)"/>
+      <ellipse cx="406" cy="346" rx="9.5" ry="7.4" transform="rotate(-8 406 346)"/>
+      <ellipse cx="452" cy="334" rx="9" ry="7" transform="rotate(-6 452 334)"/>
+      <ellipse cx="498" cy="327" rx="9.5" ry="7.2" transform="rotate(-4 498 327)"/>
+      <ellipse cx="544" cy="327" rx="9" ry="7" />
+      <ellipse cx="588" cy="334" rx="9" ry="7" transform="rotate(6 588 334)"/>
+      <ellipse cx="624" cy="348" rx="8.4" ry="6.6" transform="rotate(12 624 348)"/>
+      <ellipse cx="352" cy="392" rx="9.6" ry="7.6" transform="rotate(-16 352 392)"/>
+      <ellipse cx="398" cy="378" rx="10" ry="7.8" transform="rotate(-10 398 378)"/>
+      <ellipse cx="446" cy="366" rx="9.6" ry="7.4" transform="rotate(-6 446 366)"/>
+      <ellipse cx="494" cy="358" rx="10" ry="7.6"/>
+      <ellipse cx="542" cy="357" rx="9.6" ry="7.4" transform="rotate(4 542 357)"/>
+      <ellipse cx="588" cy="364" rx="9.2" ry="7" transform="rotate(10 588 364)"/>
+      <ellipse cx="628" cy="378" rx="8" ry="6.4" transform="rotate(18 628 378)"/>
+      <ellipse cx="368" cy="420" rx="9" ry="7" transform="rotate(-20 368 420)"/>
+      <ellipse cx="416" cy="410" rx="9.4" ry="7.2" transform="rotate(-12 416 410)"/>
+      <ellipse cx="466" cy="400" rx="9.4" ry="7.2" transform="rotate(-6 466 400)"/>
+      <ellipse cx="514" cy="392" rx="9.2" ry="7"/>
+      <ellipse cx="560" cy="394" rx="8.8" ry="6.8" transform="rotate(8 560 394)"/>
+      <ellipse cx="602" cy="404" rx="8" ry="6.2" transform="rotate(16 602 404)"/>
+      <ellipse cx="668" cy="336" rx="7.4" ry="6" transform="rotate(24 668 336)"/>
+      <ellipse cx="684" cy="310" rx="7" ry="5.6" transform="rotate(30 684 310)"/>
+      <ellipse cx="352" cy="446" rx="8" ry="6.2" transform="rotate(-24 352 446)"/>
+      <ellipse cx="436" cy="452" rx="8.2" ry="6.4" transform="rotate(-14 436 452)"/>
+    </g>
+    <!-- 后腿（近） -->
+    <path d="M416 444 C452 480 468 520 452 556 C442 578 452 592 470 602" stroke="url(#furG)" stroke-width="34"
+      stroke-linecap="round" fill="none"/>
+    <ellipse cx="470" cy="604" rx="23" ry="14" fill="url(#furG)"/>
+    <ellipse cx="296" cy="602" rx="21" ry="13" fill="#c98824"/>
+    <!-- 落地投影 -->
+    <ellipse cx="300" cy="614" rx="34" ry="8" fill="#04220f" opacity=".5"/>
+    <ellipse cx="474" cy="616" rx="36" ry="8" fill="#04220f" opacity=".5"/>
+
+    <!-- ===== 大力神杯 ===== -->
+    <g id="trophy">
+      <path d="M824 244 v10 a54 13 0 0 0 108 0 v-10 z" fill="url(#malDark)"/>
+      <ellipse cx="878" cy="244" rx="54" ry="13" fill="url(#mal)"/>
+      <ellipse cx="878" cy="241" rx="45" ry="10" fill="#ffffff" opacity=".08"/>
+      <path d="M864 240 L858 202 L898 202 L892 240 Z" fill="url(#goldG)"/>
+      <path d="M832 202 C832 176 844 164 860 156 L896 156 C912 164 924 176 924 202 Z" fill="url(#goldG)"/>
+      <path d="M840 202 C840 180 850 168 864 160 L872 160 C858 170 850 182 850 202 Z" fill="#fff3bd" opacity=".45"/>
+      <ellipse cx="878" cy="156" rx="46" ry="10" fill="url(#goldRim)"/>
+      <ellipse cx="878" cy="157" rx="34" ry="7" fill="#8a6410" opacity=".5"/>
+      <g clip-path="url(#cupClip)">
+        <rect class="glint" x="826" y="146" width="12" height="66" fill="#ffffff" opacity=".6"/>
+      </g>
+      <use href="#fig" transform="translate(866,0)"/>
+      <use href="#fig" transform="translate(890,0) scale(-1,1)"/>
+      <circle cx="878" cy="104" r="30" fill="url(#globe)"/>
+      <g fill="#a5740f" opacity=".55">
+        <path d="M862 92 C869 85 880 88 884 96 C888 105 879 110 870 107 C863 105 857 99 862 92 Z"/>
+        <path d="M888 113 C896 111 902 117 900 123 C898 129 889 129 885 123 C883 118 884 114 888 113 Z"/>
+      </g>
+      <circle cx="878" cy="104" r="30" fill="none" stroke="#fff3bd" stroke-width="1.4" opacity=".75"/>
+      <ellipse cx="866" cy="92" rx="10" ry="5.5" fill="#ffffff" opacity=".38" transform="rotate(-32 866 92)"/>
+    </g>
+
+    <!-- 高举奖杯的双前爪 -->
+    <path d="M628 356 C660 344 686 322 712 296 C748 260 796 226 840 208" stroke="#c98824" stroke-width="30"
+      stroke-linecap="round" fill="none"/>
+    <path d="M648 376 C692 366 736 336 776 300 C812 268 852 246 892 238" stroke="url(#furG)" stroke-width="34"
+      stroke-linecap="round" fill="none"/>
+    <g fill="url(#furG)">
+      <ellipse cx="848" cy="212" rx="21" ry="16" transform="rotate(-22 848 212)"/>
+      <ellipse cx="900" cy="232" rx="22" ry="17" transform="rotate(16 900 232)"/>
+    </g>
+    <g stroke="#8a5c14" stroke-width="2" stroke-linecap="round" opacity=".7">
+      <path d="M840 200 v14 M850 197 v14 M860 200 v12"/>
+      <path d="M894 221 v14 M904 222 v14 M914 227 v12"/>
+    </g>
+
+    <!-- 头部 -->
+    <path d="M688 268 C678 233 698 205 728 201 C756 197 780 209 788 227 C796 245 788 263 768 273
+      C743 285 703 285 688 268 Z" fill="url(#furG)"/>
+    <path d="M778 231 C794 226 806 233 805 242 C804 252 792 258 779 255 C772 250 772 236 778 231 Z"
+      fill="url(#creamG)"/>
+    <path d="M700 214 C696 194 706 182 718 186 C728 190 732 202 728 214 Z" fill="#e0a63c"/>
+    <path d="M744 198 C746 180 758 172 768 178 C778 184 778 196 774 206 Z" fill="#e0a63c"/>
+    <path d="M706 208 C705 197 710 190 716 192 C721 194 723 202 721 210 Z" fill="#b4665e"/>
+    <path d="M750 194 C752 184 758 180 763 183 C768 186 768 194 766 200 Z" fill="#b4665e"/>
+    <path d="M747 246 C743 260 739 272 735 283" stroke="#2b1a0a" stroke-width="7" stroke-linecap="round" fill="none"/>
+    <ellipse cx="754" cy="234" rx="12.5" ry="9" fill="#fffdf4"/>
+    <circle cx="757" cy="234" r="5.6" fill="#20160c"/>
+    <circle cx="759.5" cy="231.5" r="2" fill="#ffffff"/>
+    <path d="M796 233 C803 231 808 236 805 241 C802 246 795 245 793 240 Z" fill="#3b2a1e"/>
+    <path d="M792 250 C795 256 791 261 785 260" stroke="#8a5c14" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <g stroke="#f6e6c4" stroke-width="1.6" stroke-linecap="round" opacity=".85">
+      <path d="M802 246 L828 240"/><path d="M801 252 L826 254"/><path d="M798 257 L820 265"/>
+    </g>
+  </g>
+
+  <!-- ===== 比分牌 ===== -->
+  <g class="board">
+    <rect x="42" y="40" width="238" height="104" rx="14" fill="#080e1c" stroke="#ffc440" stroke-width="2.5" opacity=".96"/>
+    <rect x="42" y="40" width="238" height="104" rx="14" fill="none" stroke="#ffc440" stroke-width="8" opacity=".18"/>
+    <text x="60" y="66" fill="#7f93bb" font-size="15" letter-spacing="3" font-family="monospace">FULL TIME</text>
+    <text x="60" y="106" fill="#ffc440" font-size="34" font-weight="700" letter-spacing="1"
+      font-family="monospace">90+7'</text>
+    <text x="196" y="106" fill="#ffffff" font-size="36" font-weight="700" font-family="monospace">3:2</text>
+    <text x="196" y="132" fill="#8fa4c8" font-size="14" letter-spacing="2" font-family="monospace">补时绝杀</text>
+    <text x="60" y="132" fill="#8fa4c8" font-size="14" letter-spacing="2" font-family="monospace">CHAMPION</text>
+  </g>
+
+  <!-- ===== 金色彩带 ===== -->
+  <g id="confetti"></g>
+
+  <!-- ===== 氛围层 ===== -->
+  <ellipse class="core" cx="878" cy="180" rx="120" ry="120" fill="url(#coreG)" opacity=".35"
+    style="transform-origin:878px 180px"/>
+  <rect width="1000" height="700" fill="url(#vig)"/>
+  <text x="52" y="662" fill="#ffe6a6" font-size="30" font-weight="700" letter-spacing="6"
+    font-family="-apple-system,'PingFang SC',system-ui,sans-serif"
+    style="paint-order:stroke;stroke:#06210f;stroke-width:7">补时绝杀 · 冠军时刻</text>
+</svg>
+</div>
+<script>
+const NS='http://www.w3.org/2000/svg',S=document.getElementById('poster');
+const add=(p,tag,a)=>{const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);p.appendChild(e);return e;};
+/* 星空 */
+const st=S.querySelector('#stars');
+for(let i=0;i<80;i++)add(st,'circle',{cx:(Math.random()*1000).toFixed(0),cy:(Math.random()*250).toFixed(0),
+  r:(Math.random()*1.5+.5).toFixed(2),fill:'#e6eeff',opacity:(.2+Math.random()*.65).toFixed(2)});
+/* 观众席 */
+const cr=S.querySelector('#crowd'),CP=['#f2d7a0','#e8b98a','#c98f6a','#f7e7c8','#b3765a','#efe0c0','#8ea9c9'];
+for(let r=0;r<4;r++)for(let i=0;i<60;i++)add(cr,'circle',{cx:(6+i*17+Math.random()*11).toFixed(0),
+  cy:(146+r*33+Math.random()*7).toFixed(0),r:(2.4+Math.random()*1.9).toFixed(1),
+  fill:CP[(Math.random()*CP.length)|0],opacity:(.45+Math.random()*.55).toFixed(2)});
+for(let i=0;i<16;i++){const f=add(cr,'circle',{cx:(20+Math.random()*960).toFixed(0),cy:(146+Math.random()*110).toFixed(0),
+  r:4,fill:'#ffffff',class:'flash'});f.style.animationDelay=(Math.random()*4).toFixed(2)+'s';}
+/* 草皮割痕（透视条纹） */
+const sp=S.querySelector('#stripes');
+for(let i=0;i<8;i++){
+  const x1=i*125,x2=(i+1)*125,b1=500+(x1-500)*1.6,b2=500+(x2-500)*1.6;
+  add(sp,'polygon',{points:x1+',340 '+x2+',340 '+b2.toFixed(0)+',700 '+b1.toFixed(0)+',700',
+    fill:i%2?'#ffffff':'#000000',opacity:i%2?.045:.05});
+}
+/* 飞起的草屑 */
+const tf=S.querySelector('#tufts');
+for(let i=0;i<14;i++){const x=250+Math.random()*340,y=580+Math.random()*40;
+  const t=add(tf,'path',{d:'M0 0 L'+(4+Math.random()*5).toFixed(0)+' -'+(9+Math.random()*9).toFixed(0)+
+    ' L'+(9+Math.random()*6).toFixed(0)+' 0 Z',fill:'#2ea05a',class:'tuft',transform:'translate('+x.toFixed(0)+','+y.toFixed(0)+')'});
+  t.style.animationDelay=(Math.random()*2.2).toFixed(2)+'s';t.style.animationDuration=(1.8+Math.random()*1.4).toFixed(2)+'s';}
+/* 金色彩带 */
+const cf=S.querySelector('#confetti'),CC=['#ffd75e','#fff3bd','#f0a93a','#7fe3a5','#ffffff'];
+for(let i=0;i<64;i++){
+  const w=5+Math.random()*8,h=9+Math.random()*14;
+  const r=add(cf,'rect',{x:(Math.random()*1000).toFixed(0),y:(-30-Math.random()*260).toFixed(0),width:w.toFixed(1),
+    height:h.toFixed(1),rx:2,fill:CC[(Math.random()*CC.length)|0],opacity:(.6+Math.random()*.4).toFixed(2),class:'confetti'});
+  r.style.animationDuration=(4+Math.random()*6).toFixed(2)+'s';
+  r.style.animationDelay=(-Math.random()*9).toFixed(2)+'s';
+}
+</script>
+</body>
+</html>

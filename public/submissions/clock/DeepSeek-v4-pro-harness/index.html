@@ -1,0 +1,84 @@
+<!-- 设计说明：高辨识度双模时钟 —— 模拟表盘（平滑秒针）+ 数字读秒，
+     日夜主题随本地小时自动切换，60 根刻度由 JS 生成，光晕呼吸动效。 -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>光影时钟 · 模拟 + 数字</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--s1:#9fd0ff;--s2:#f7ecd9;--ink:#22304f;--card:#ffffffd9;--face1:#ffffff;--face2:#e9eef7;--ring:#c9d5ea;--tick:#a3b3cf;--halo:#ffd88e5e;--sec:#ff5a3c;--chipbg:#ffffff;--chipink:#22304f}
+body.night{--s1:#0a0f28;--s2:#221a4f;--ink:#e9edff;--card:#141a36d9;--face1:#232b4e;--face2:#131936;--ring:#3a4670;--tick:#4c5a8c;--halo:#7d8dff40;--sec:#ff9d5c;--chipbg:#0d122c;--chipink:#cdd6ff}
+body{font-family:system-ui,-apple-system,'Segoe UI','PingFang SC',sans-serif;min-height:100vh;display:grid;place-items:center;background:linear-gradient(165deg,var(--s1),var(--s2));transition:background 1.2s ease;padding:16px}
+.card{position:relative;width:min(92vw,372px);display:flex;flex-direction:column;align-items:center;gap:12px;padding:22px 18px 20px;border-radius:32px;background:var(--card);box-shadow:0 26px 60px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.5);backdrop-filter:blur(8px);transition:background 1.2s ease}
+.halo{position:absolute;inset:6% 4%;background:radial-gradient(circle,var(--halo),transparent 66%);animation:haloPulse 4.5s ease-in-out infinite;pointer-events:none}
+@keyframes haloPulse{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.045)}}
+.dial{position:relative;width:min(74vw,296px);height:auto}
+.dial .tick{stroke:var(--tick);stroke-width:1.4;stroke-linecap:round}
+.dial .tick.major{stroke-width:2.7;stroke:var(--ink);opacity:.75}
+.dial .h-hand{stroke:var(--ink);stroke-width:7;stroke-linecap:round}
+.dial .m-hand{stroke:var(--ink);stroke-width:5;stroke-linecap:round}
+.dial .s-hand{stroke:var(--sec);stroke-width:2.6;stroke-linecap:round}
+.digital{font-size:clamp(34px,9vw,44px);font-weight:650;letter-spacing:.07em;color:var(--ink);font-variant-numeric:tabular-nums}
+.date{font-size:13px;color:var(--ink);opacity:.62;letter-spacing:.04em}
+.chip{font-size:12px;padding:6px 14px;border-radius:999px;background:var(--chipbg);color:var(--chipink);box-shadow:0 2px 8px rgba(0,0,0,.12);letter-spacing:.05em}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="halo"></div>
+  <svg class="dial" viewBox="0 0 220 220" aria-label="模拟表盘">
+    <defs>
+      <radialGradient id="face" cx="50%" cy="42%">
+        <stop offset="0" stop-color="var(--face1)"/>
+        <stop offset="1" stop-color="var(--face2)"/>
+      </radialGradient>
+    </defs>
+    <circle cx="110" cy="110" r="104" fill="url(#face)"/>
+    <circle cx="110" cy="110" r="104" fill="none" stroke="var(--ring)" stroke-width="2"/>
+    <g id="ticks"></g>
+    <line id="hh" x1="110" y1="110" x2="110" y2="64" class="h-hand"/>
+    <line id="mh" x1="110" y1="110" x2="110" y2="48" class="m-hand"/>
+    <line id="sh" x1="110" y1="129" x2="110" y2="42" class="s-hand"/>
+    <circle cx="110" cy="110" r="5.6" fill="var(--ink)"/>
+    <circle cx="110" cy="110" r="2.2" fill="var(--sec)"/>
+  </svg>
+  <div class="digital" id="dig">00:00:00</div>
+  <div class="date" id="date"></div>
+  <div class="chip" id="chip">白天 · 日光模式</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const ticks=$('ticks');
+for(let i=0;i<60;i++){
+  const l=document.createElementNS(NS,'line'),major=i%5===0;
+  l.setAttribute('x1',110);l.setAttribute('y1',major?12:17);
+  l.setAttribute('x2',110);l.setAttribute('y2',major?28:23);
+  l.setAttribute('transform','rotate('+i*6+' 110 110)');
+  l.setAttribute('class',major?'tick major':'tick');
+  ticks.appendChild(l);
+}
+const p=n=>n<10?'0'+n:''+n;
+let lastSec=-1;
+function frame(){
+  const d=new Date(),ms=d.getMilliseconds();
+  const s=d.getSeconds()+ms/1000,m=d.getMinutes()+s/60,h=(d.getHours()%12)+m/60;
+  $('sh').setAttribute('transform','rotate('+s*6+' 110 110)');
+  $('mh').setAttribute('transform','rotate('+m*6+' 110 110)');
+  $('hh').setAttribute('transform','rotate('+h*30+' 110 110)');
+  if(d.getSeconds()!==lastSec){
+    lastSec=d.getSeconds();
+    $('dig').textContent=p(d.getHours())+':'+p(d.getMinutes())+':'+p(lastSec);
+    $('date').textContent=d.toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+    const night=d.getHours()<6||d.getHours()>=18;
+    document.body.classList.toggle('night',night);
+    $('chip').textContent=night?'夜间 · 星幕模式':'白天 · 日光模式';
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

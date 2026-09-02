@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantum Gravity Vortex</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 100vw; height: 100vh; overflow: hidden; background: #020617;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+    }
+    canvas { width: 100%; height: 100%; display: block; }
+    .hud {
+      position: absolute; top: 16px; left: 16px; background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px; padding: 10px 14px; color: #94a3b8; font-size: 0.75rem;
+      display: flex; flex-direction: column; gap: 4px; pointer-events: none;
+    }
+    .hud b { color: #38bdf8; }
+    .mode-tag {
+      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; color: #e2e8f0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div>粒子总数: <b id="pCount">400</b></div>
+    <div>FPS: <b id="fpsVal">60</b></div>
+    <div>交互: <b>拖拽/点击产生引力场</b></div>
+  </div>
+  <div class="mode-tag">🌌 粒子引力井模式 (点击激活动力波)</div>
+  <canvas id="canvas"></canvas>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const particles = [];
+    const NUM = 450;
+    let core = { x: width / 2, y: height / 2, power: 1 };
+    let pointer = { x: width / 2, y: height / 2, active: false };
+
+    class Particle {
+      constructor() {
+        this.reset(true);
+      }
+      reset(initial = false) {
+        this.x = initial ? Math.random() * width : (Math.random() > 0.5 ? 0 : width);
+        this.y = initial ? Math.random() * height : Math.random() * height;
+        this.vx = (Math.random() - 0.5) * 2;
+        this.vy = (Math.random() - 0.5) * 2;
+        this.size = Math.random() * 2 + 1;
+        this.color = Math.random() > 0.3 ? '#38bdf8' : '#a855f7';
+      }
+      update() {
+        // Core gravity
+        const targetX = pointer.active ? pointer.x : core.x;
+        const targetY = pointer.active ? pointer.y : core.y;
+        const dx = targetX - this.x;
+        const dy = targetY - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+
+        const force = Math.min(2.5, 120 / (dist + 50));
+        // Cross product for vortex motion
+        this.vx += (dx / dist) * force * 0.4 - (dy / dist) * force * 0.6;
+        this.vy += (dy / dist) * force * 0.4 + (dx / dist) * force * 0.6;
+
+        this.vx *= 0.96;
+        this.vy *= 0.96;
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < -50 || this.x > width + 50 || this.y < -50 || this.y > height + 50) {
+          this.reset();
+        }
+      }
+      draw(ctx) {
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < NUM; i++) particles.push(new Particle());
+
+    window.addEventListener('pointermove', (e) => {
+      pointer.x = e.clientX;
+      pointer.y = e.clientY;
+      pointer.active = true;
+    });
+    window.addEventListener('pointerleave', () => { pointer.active = false; });
+    window.addEventListener('pointerdown', (e) => {
+      // Shockwave push
+      particles.forEach(p => {
+        const dx = p.x - e.clientX;
+        const dy = p.y - e.clientY;
+        const d = Math.sqrt(dx * dx + dy * dy) || 1;
+        if (d < 200) {
+          p.vx += (dx / d) * 12;
+          p.vy += (dy / d) * 12;
+        }
+      });
+    });
+
+    let lastTime = performance.now();
+    let frames = 0;
+    const fpsVal = document.getElementById('fpsVal');
+
+    function loop(time) {
+      frames++;
+      if (time - lastTime >= 1000) {
+        fpsVal.textContent = frames;
+        frames = 0;
+        lastTime = time;
+      }
+
+      ctx.fillStyle = 'rgba(2, 6, 23, 0.15)';
+      ctx.fillRect(0, 0, width, height);
+
+      // Draw active center
+      const cx = pointer.active ? pointer.x : core.x;
+      const cy = pointer.active ? pointer.y : core.y;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
+      ctx.fill();
+
+      particles.forEach(p => {
+        p.update();
+        p.draw(ctx);
+      });
+
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>

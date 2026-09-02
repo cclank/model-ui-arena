@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>引力场 · GRAVITY WELL</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; overflow:hidden; }
+  body { background:#04060f; font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; color:#c8d4ff; touch-action:none; }
+  #field { position:fixed; inset:0; width:100%; height:100%; display:block; cursor:crosshair; }
+  .hud {
+    position:fixed; top:16px; left:16px; z-index:2; padding:12px 16px; border-radius:14px;
+    background:rgba(8,12,28,.62); border:1px solid rgba(120,150,255,.22); backdrop-filter:blur(8px);
+    font-size:12px; line-height:1.9; letter-spacing:.06em; pointer-events:none; min-width:158px;
+  }
+  .hud b { float:right; color:#fff; font-variant-numeric:tabular-nums; font-weight:600; }
+  .hud .mode { color:#69e6ff; }
+  .title { position:fixed; top:16px; right:18px; z-index:2; font-size:11px; letter-spacing:.42em; color:rgba(200,212,255,.5); pointer-events:none; }
+  .tip { position:fixed; bottom:18px; left:50%; transform:translateX(-50%); z-index:2; font-size:11.5px;
+    letter-spacing:.2em; color:rgba(200,212,255,.55); pointer-events:none; white-space:nowrap; }
+  .toast { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:3; padding:10px 22px;
+    border-radius:99px; background:rgba(8,12,28,.8); border:1px solid rgba(105,230,255,.5); color:#69e6ff;
+    font-size:13px; letter-spacing:.14em; opacity:0; transition:opacity .4s; pointer-events:none; }
+  .toast.show { opacity:1; }
+</style>
+</head>
+<body>
+  <canvas id="field"></canvas>
+  <div class="hud">
+    <div>粒子 <b id="hN">0</b></div>
+    <div>能量 <b id="hE">0</b></div>
+    <div>FPS <b id="hF">0</b></div>
+    <div>模式 <b class="mode" id="hM">环绕</b></div>
+  </div>
+  <div class="title">GRAVITY WELL</div>
+  <div class="tip">按住拖动 = 排斥场 · 松开 = 冲击波</div>
+  <div class="toast" id="toast"></div>
+<script>
+(function () {
+  "use strict";
+  var cv = document.getElementById("field"), ctx = cv.getContext("2d");
+  var W = 0, H = 0, DPR = Math.min(2, devicePixelRatio || 1);
+  var N = 340, P = [], cx = 0, cy = 0;
+  var pointer = { x: 0, y: 0, down: false };
+  var G = 2600, SOFT = 18;
+  var energy = 0, swAt = 0;
+  var fps = 60, fpsAcc = 0, fpsN = 0, fpsT = 0, lowMode = false;
+
+  function resize() {
+    W = innerWidth; H = innerHeight;
+    cv.width = W * DPR; cv.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    cx = W / 2; cy = H / 2;
+  }
+  function seed(n) {
+    P = [];
+    for (var i = 0; i < n; i++) {
+      // 圆环分布 + 切向初速度 → 稳定环绕轨道，避免随机抖动
+      var a = Math.random() * 6.283, r = 60 + Math.random() * Math.min(W, H) * .42;
+      var x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+      var v = Math.sqrt(G / r) * (0.75 + Math.random() * 0.5); // 低于圆轨道速度 → 椭圆偏转
+      P.push({ x: x, y: y, vx: -Math.sin(a) * v, vy: Math.cos(a) * v, hue: 195 + Math.random() * 60 });
+    }
+  }
+  function shockwave(x, y) {
+    // 冲击波：从点击点向外的径向冲量，距离衰减
+    swAt = performance.now();
+    for (var i = 0; i < P.length; i++) {
+      var p = P[i], dx = p.x - x, dy = p.y - y, d2 = dx * dx + dy * dy + 400, d = Math.sqrt(d2);
+      var f = 26000 / d2;
+      p.vx += dx / d * f; p.vy += dy / d * f;
+    }
+  }
+  addEventListener("pointerdown", function (e) {
+    pointer.down = true; pointer.x = e.clientX; pointer.y = e.clientY;
+  });
+  addEventListener("pointermove", function (e) {
+    pointer.x = e.clientX; pointer.y = e.clientY;
+    if (pointer.down) {
+      for (var i = 0; i < P.length; i++) {
+        var p = P[i], dx = p.x - pointer.x, dy = p.y - pointer.y, d2 = dx * dx + dy * dy + 300;
+        if (d2 < 40000) { var d = Math.sqrt(d2), f = 9000 / d2; p.vx += dx / d * f; p.vy += dy / d * f; }
+      }
+    }
+  });
+  addEventListener("pointerup", function (e) {
+    if (pointer.down) { pointer.down = false; shockwave(e.clientX, e.clientY); }
+  });
+  addEventListener("pointercancel", function () { pointer.down = false; });
+  addEventListener("resize", function () { resize(); });
+
+  function frame(now) {
+    var dt = Math.min(2.5, Math.max(0.4, (now - (frame.prev || now - 16.7)) / 16.667)); // 帧率无关（60/120Hz 一致）
+    frame.prev = now;
+    // 半透明覆盖形成粒子尾迹（画布即深空背景）
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = "rgba(4,6,15,.22)";
+    ctx.fillRect(0, 0, W, H);
+
+    // 中心能量核心：脉动光晕
+    var pulse = 1 + Math.sin(now * .002) * .08;
+    var core = ctx.createRadialGradient(cx, cy, 0, cx, cy, 90 * pulse);
+    core.addColorStop(0, "rgba(190,225,255,.95)");
+    core.addColorStop(.25, "rgba(90,140,255,.5)");
+    core.addColorStop(1, "rgba(20,40,120,0)");
+    ctx.globalCompositeOperation = "lighter";
+    ctx.fillStyle = core;
+    ctx.beginPath(); ctx.arc(cx, cy, 90 * pulse, 0, 7); ctx.fill();
+
+    var sum = 0;
+    for (var i = 0; i < P.length; i++) {
+      var p = P[i];
+      var dx = cx - p.x, dy = cy - p.y;
+      var d2 = dx * dx + dy * dy + SOFT * SOFT, d = Math.sqrt(d2);
+      var a = G / d2; // 引力井 a = GM/r²
+      p.vx += dx / d * a * dt; p.vy += dy / d * a * dt;
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      var sp2 = p.vx * p.vx + p.vy * p.vy;
+      sum += sp2;
+      // 逃逸回收：飞出 3 倍视口后拉回边缘（粒子数量恒定，无内存增长）
+      if (p.x < -W || p.x > 2 * W || p.y < -H || p.y > 2 * H) {
+        var an = Math.random() * 6.283, rr = Math.min(W, H) * .45;
+        p.x = cx + Math.cos(an) * rr; p.y = cy + Math.sin(an) * rr;
+        p.vx = -Math.sin(an) * Math.sqrt(G / rr); p.vy = Math.cos(an) * Math.sqrt(G / rr);
+      }
+      var sp = Math.sqrt(sp2);
+      var heat = Math.min(1, sp / 7); // 速度 → 颜色：慢蓝 → 快白橙
+      ctx.globalAlpha = .5 + heat * .5;
+      ctx.fillStyle = "hsl(" + (p.hue - heat * 150) + "," + (60 + heat * 35) + "%," + (55 + heat * 30) + "%)";
+      ctx.beginPath(); ctx.arc(p.x, p.y, 1.1 + heat * 1.6, 0, 7); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // 遥测：FPS / 能量 / 自适应降载
+    fpsAcc += 1000 / Math.max(1, now - (frame.last || now)); fpsN++;
+    frame.last = now;
+    if (now - fpsT > 500) {
+      fps = Math.round(fpsAcc / fpsN); fpsAcc = 0; fpsN = 0; fpsT = now;
+      energy = Math.round(sum / P.length / 10);
+      document.getElementById("hF").textContent = fps;
+      document.getElementById("hE").textContent = energy;
+      document.getElementById("hN").textContent = P.length;
+      document.getElementById("hM").textContent = pointer.down ? "排斥场" : (swAt && now - swAt < 700 ? "冲击波" : "环绕");
+      if (!lowMode && fps < 30) { // 持续低帧 → 降档并提示
+        lowMode = true; N = 170;
+        var t = document.getElementById("toast");
+        t.textContent = "已自动切换低负载模式（粒子减半）";
+        t.classList.add("show");
+        setTimeout(function () { t.classList.remove("show"); }, 2600);
+      }
+      if (lowMode && P.length > N) P.length = N;
+    }
+    if (mode === "冲击波") frame.swT = now;
+    requestAnimationFrame(frame);
+  }
+  resize();
+  seed(N);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroWeather Card</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: #0f172a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 16px; color: #fff;
+    }
+    .card {
+      width: 100%; max-width: 360px; border-radius: 24px; padding: 24px 20px;
+      display: flex; flex-direction: column; gap: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      transition: background 0.5s ease, box-shadow 0.5s ease; position: relative; overflow: hidden;
+    }
+    .card.sunny { background: linear-gradient(135deg, #0284c7 0%, #38bdf8 60%, #fbbf24 100%); }
+    .card.rainy { background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%); }
+    .card.cloudy { background: linear-gradient(135deg, #475569 0%, #64748b 60%, #94a3b8 100%); }
+    .city-nav { display: flex; background: rgba(0, 0, 0, 0.25); border-radius: 12px; padding: 3px; }
+    .city-btn {
+      flex: 1; border: none; background: transparent; color: rgba(255,255,255,0.7);
+      padding: 6px 0; font-size: 0.85rem; font-weight: 600; border-radius: 9px; cursor: pointer; transition: 0.2s;
+    }
+    .city-btn.active { background: rgba(255, 255, 255, 0.25); color: #fff; }
+    .main-info { display: flex; justify-content: space-between; align-items: flex-start; }
+    .temp-wrap { display: flex; flex-direction: column; }
+    .temp { font-size: 3.5rem; font-weight: 800; line-height: 1; }
+    .desc { font-size: 1.1rem; font-weight: 500; opacity: 0.9; margin-top: 4px; }
+    .weather-icon { width: 64px; height: 64px; }
+    .stats-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.2);
+      border-radius: 14px; padding: 12px;
+    }
+    .stat-item { display: flex; flex-direction: column; gap: 2px; }
+    .stat-label { font-size: 0.75rem; opacity: 0.7; }
+    .stat-val { font-size: 1rem; font-weight: 700; }
+    .trend { display: flex; flex-direction: column; gap: 6px; }
+    .trend-title { font-size: 0.8rem; opacity: 0.8; font-weight: 600; }
+    .trend-bars { display: flex; justify-content: space-between; align-items: flex-end; height: 44px; gap: 6px; }
+    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .bar-pill { width: 100%; background: rgba(255,255,255,0.3); border-radius: 4px; transition: height 0.3s; }
+    .bar-time { font-size: 0.65rem; opacity: 0.7; }
+  </style>
+</head>
+<body>
+  <div id="weatherCard" class="card sunny">
+    <div class="city-nav">
+      <button class="city-btn active" onclick="setCity(0)">北京</button>
+      <button class="city-btn" onclick="setCity(1)">上海</button>
+      <button class="city-btn" onclick="setCity(2)">深圳</button>
+    </div>
+    <div class="main-info">
+      <div class="temp-wrap">
+        <div id="tempVal" class="temp">26°</div>
+        <div id="descVal" class="desc">晴空万里</div>
+      </div>
+      <div id="iconWrap" class="weather-icon">
+        <svg viewBox="0 0 64 64" width="64" height="64">
+          <circle cx="32" cy="32" r="16" fill="#fde047" />
+          <g stroke="#fde047" stroke-width="3" stroke-linecap="round">
+            <line x1="32" y1="6" x2="32" y2="10" />
+            <line x1="32" y1="54" x2="32" y2="58" />
+            <line x1="6" y1="32" x2="10" y2="32" />
+            <line x1="54" y1="32" x2="58" y2="32" />
+          </g>
+        </svg>
+      </div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <span class="stat-label">相对湿度</span>
+        <span id="humidityVal" class="stat-val">42%</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">东北风</span>
+        <span id="windVal" class="stat-val">3级 (12km/h)</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">空气质量 (AQI)</span>
+        <span id="aqiVal" class="stat-val">38 优</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">体感温度</span>
+        <span id="feelsVal" class="stat-val">27°</span>
+      </div>
+    </div>
+    <div class="trend">
+      <div class="trend-title">24小时气温走势</div>
+      <div id="trendBars" class="trend-bars"></div>
+    </div>
+  </div>
+  <script>
+    const data = [
+      { name: '北京', type: 'sunny', temp: 26, desc: '晴朗无云', hum: '38%', wind: '3级 (12km/h)', aqi: '36 优', feels: '27°', trend: [22, 25, 28, 26, 23] },
+      { name: '上海', type: 'rainy', temp: 21, desc: '阵雨连绵', hum: '85%', wind: '4级 (20km/h)', aqi: '24 优', feels: '20°', trend: [20, 21, 23, 21, 19] },
+      { name: '深圳', type: 'cloudy', temp: 29, desc: '多云转阴', hum: '72%', wind: '2级 (8km/h)', aqi: '45 优', feels: '32°', trend: [27, 29, 31, 30, 28] }
+    ];
+
+    const icons = {
+      sunny: `<svg viewBox="0 0 64 64" width="64" height="64"><circle cx="32" cy="32" r="14" fill="#fde047"/><g stroke="#fde047" stroke-width="3" stroke-linecap="round"><line x1="32" y1="6" x2="32" y2="10"/><line x1="32" y1="54" x2="32" y2="58"/><line x1="6" y1="32" x2="10" y2="32"/><line x1="54" y1="32" x2="58" y2="32"/></g></svg>`,
+      rainy: `<svg viewBox="0 0 64 64" width="64" height="64"><path d="M20 32a10 10 0 0 1 18-5 8 8 0 0 1 12 7 6 6 0 0 1-6 6H20a8 8 0 0 1 0-16z" fill="#94a3b8"/><g stroke="#60a5fa" stroke-width="2.5" stroke-linecap="round"><line x1="22" y1="44" x2="18" y2="54"/><line x1="32" y1="44" x2="28" y2="54"/><line x1="42" y1="44" x2="38" y2="54"/></g></svg>`,
+      cloudy: `<svg viewBox="0 0 64 64" width="64" height="64"><path d="M22 36a11 11 0 0 1 20-5 9 9 0 0 1 13 8 7 7 0 0 1-7 7H22a9 9 0 0 1 0-18z" fill="#e2e8f0"/><path d="M14 42a8 8 0 0 1 14-4 7 7 0 0 1 10 6 5 5 0 0 1-5 5H14a7 7 0 0 1 0-14z" fill="#94a3b8" opacity="0.7"/></svg>`
+    };
+
+    const times = ['08:00', '12:00', '16:00', '20:00', '00:00'];
+
+    function setCity(idx) {
+      document.querySelectorAll('.city-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+      const c = data[idx];
+      const card = document.getElementById('weatherCard');
+      card.className = `card ${c.type}`;
+      document.getElementById('tempVal').textContent = `${c.temp}°`;
+      document.getElementById('descVal').textContent = c.desc;
+      document.getElementById('humidityVal').textContent = c.hum;
+      document.getElementById('windVal').textContent = c.wind;
+      document.getElementById('aqiVal').textContent = c.aqi;
+      document.getElementById('feelsVal').textContent = c.feels;
+      document.getElementById('iconWrap').innerHTML = icons[c.type];
+
+      const maxT = Math.max(...c.trend);
+      const trendHtml = c.trend.map((t, i) => `
+        <div class="bar-col">
+          <span style="font-size:0.65rem">${t}°</span>
+          <div class="bar-pill" style="height: ${Math.max(10, (t / maxT) * 26)}px"></div>
+          <span class="bar-time">${times[i]}</span>
+        </div>
+      `).join('');
+      document.getElementById('trendBars').innerHTML = trendHtml;
+    }
+
+    setCity(0);
+  </script>
+</body>
+</html>

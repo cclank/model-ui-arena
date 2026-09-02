@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>粒子引力场</title>
+<style>
+  *{margin:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:#04050c;
+    font-family:-apple-system,"PingFang SC",system-ui,sans-serif;color:#cfe6ff}
+  canvas{display:block;position:fixed;inset:0;width:100%;height:100%;touch-action:none}
+  .hud{position:fixed;top:12px;left:12px;z-index:3;background:rgba(8,14,30,.55);border:1px solid rgba(90,150,255,.2);
+    border-radius:12px;padding:9px 12px;font-size:11.5px;line-height:1.7;backdrop-filter:blur(8px);font-variant-numeric:tabular-nums;pointer-events:none}
+  .hud b{color:#7fd4ff;font-weight:700}
+  .hud .row{display:flex;justify-content:space-between;gap:14px}
+  .hud span:first-child{color:#6f86ad}
+  .bar{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:3;display:flex;gap:8px}
+  .bar button{border:1px solid rgba(120,180,255,.3);background:rgba(20,40,80,.5);color:#a9cdf5;padding:8px 15px;
+    border-radius:999px;font-size:12px;font-weight:600;cursor:pointer;backdrop-filter:blur(6px);transition:.2s;font-family:inherit}
+  .bar button.on{background:linear-gradient(180deg,#3b82f6,#2563eb);color:#fff;border-color:#60a5fa;box-shadow:0 0 16px rgba(59,130,246,.5)}
+  .bar button:active{transform:scale(.94)}
+  .tip{position:fixed;top:12px;right:12px;z-index:3;font-size:11px;color:#5d7196;max-width:150px;text-align:right;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="hud">
+  <div class="row"><span>粒子</span><b id="hN">0</b></div>
+  <div class="row"><span>动能</span><b id="hE">0</b></div>
+  <div class="row"><span>FPS</span><b id="hF">0</b></div>
+  <div class="row"><span>模式</span><b id="hM">引力</b></div>
+</div>
+<div class="tip">点击/拖动制造冲击波<br>与临时引力点</div>
+<div class="bar">
+  <button id="mA" class="on">引力井</button>
+  <button id="mR">排斥场</button>
+  <button id="mV">漩涡</button>
+</div>
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+let W,H,DPR,cx,cy;
+function rs(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;
+  cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);cx=W/2;cy=H/2;}
+rs();addEventListener('resize',rs);
+let mode='attract';
+const COLORS=['#7fd4ff','#a78bfa','#4ade80','#f472b6','#facc15','#38bdf8'];
+const parts=[];const N=Math.min(320,Math.floor(innerWidth*innerHeight/2600));
+for(let i=0;i<N;i++)spawn();
+function spawn(){
+  const a=Math.random()*7,r=60+Math.random()*Math.min(W,H)*0.42;
+  const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;
+  const sp=Math.sqrt(6000/Math.max(r,40))*0.5,tan=a+Math.PI/2;
+  parts.push({x,y,vx:Math.cos(tan)*sp+(Math.random()-.5)*.3,vy:Math.sin(tan)*sp+(Math.random()-.5)*.3,
+    z:Math.random()*0.7+0.3,c:COLORS[Math.floor(Math.random()*COLORS.length)]});
+}
+const wells=[];
+function addWell(x,y){wells.push({x,y,life:1,r:0});}
+let pointer=null;
+cv.addEventListener('pointerdown',e=>{pointer={x:e.clientX,y:e.clientY};addWell(e.clientX,e.clientY);});
+cv.addEventListener('pointermove',e=>{if(pointer){pointer={x:e.clientX,y:e.clientY};if(Math.random()<0.15)addWell(e.clientX,e.clientY);}});
+addEventListener('pointerup',()=>pointer=null);
+function setMode(m){mode=m;['A','R','V'].forEach(k=>document.getElementById('m'+k).classList.remove('on'));
+  document.getElementById({attract:'mA',repel:'mR',vortex:'mV'}[m]).classList.add('on');
+  document.getElementById('hM').textContent={attract:'引力',repel:'排斥',vortex:'漩涡'}[m];}
+document.getElementById('mA').onclick=()=>setMode('attract');
+document.getElementById('mR').onclick=()=>setMode('repel');
+document.getElementById('mV').onclick=()=>setMode('vortex');
+let last=performance.now(),fps=60,acc=0,frames=0;
+function step(now){
+  const dt=Math.min(32,now-last);last=now;frames++;acc+=dt;
+  if(acc>400){fps=Math.round(frames*1000/acc);frames=0;acc=0;document.getElementById('hF').textContent=fps;}
+  ctx.globalCompositeOperation='source-over';
+  ctx.fillStyle='rgba(4,5,12,0.28)';ctx.fillRect(0,0,W,H);
+  // 中心能量核心
+  const pulse=1+0.12*Math.sin(now/300);
+  const g=ctx.createRadialGradient(cx,cy,0,cx,cy,40*pulse);
+  const coreCol=mode==='repel'?'255,90,120':mode==='vortex'?'180,120,255':'90,180,255';
+  g.addColorStop(0,'rgba(255,255,255,.9)');g.addColorStop(.3,`rgba(${coreCol},.6)`);g.addColorStop(1,`rgba(${coreCol},0)`);
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,40*pulse,0,7);ctx.fill();
+  ctx.globalCompositeOperation='lighter';
+  let energy=0;const dtf=dt/16;
+  for(const p of parts){
+    let ax=0,ay=0;
+    const ddx=cx-p.x,ddy=cy-p.y,d2=Math.max(ddx*ddx+ddy*ddy,400),d=Math.sqrt(d2);
+    const f=mode==='repel'?-9000:9000;
+    ax+=f*ddx/(d2*d);ay+=f*ddy/(d2*d);
+    if(mode==='vortex'){ax+=-ddy/d*0.9;ay+=ddx/d*0.9;}
+    for(const wl of wells){const wx=wl.x-p.x,wy=wl.y-p.y,wd2=Math.max(wx*wx+wy*wy,300),wd=Math.sqrt(wd2);
+      const wf=mode==='repel'?-1:1;const imp=16000*wl.life*wf/(wd2*wd);ax+=imp*wx;ay+=imp*wy;}
+    p.vx+=ax*dtf*0.06;p.vy+=ay*dtf*0.06;
+    p.vx*=0.995;p.vy*=0.995;
+    const sp=Math.hypot(p.vx,p.vy),mx=9;if(sp>mx){p.vx*=mx/sp;p.vy*=mx/sp;}
+    const ox=p.x,oy=p.y;
+    p.x+=p.vx*dtf;p.y+=p.vy*dtf;
+    let wrapped=false;
+    if(p.x<0){p.x+=W;wrapped=true;}if(p.x>W){p.x-=W;wrapped=true;}
+    if(p.y<0){p.y+=H;wrapped=true;}if(p.y>H){p.y-=H;wrapped=true;}
+    energy+=0.5*(p.vx*p.vx+p.vy*p.vy)*p.z;
+    const r=p.z*2.1;
+    // 连续拖尾：画上一帧到本帧的线段（round cap），跨边界回卷时只画头部圆点
+    ctx.strokeStyle=p.c;ctx.fillStyle=p.c;ctx.lineCap='round';ctx.lineWidth=r*1.8;
+    ctx.globalAlpha=0.5*p.z+0.3;
+    ctx.beginPath();
+    if(!wrapped){ctx.moveTo(ox,oy);ctx.lineTo(p.x,p.y);}else{ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+0.01,p.y+0.01);}
+    ctx.stroke();
+    ctx.globalAlpha=0.15*p.z;ctx.beginPath();ctx.arc(p.x,p.y,r*2.8,0,7);ctx.fill();
+  }
+  for(let i=wells.length-1;i>=0;i--){const wl=wells[i];wl.life-=0.02;wl.r+=6*dtf;
+    if(wl.life<=0){wells.splice(i,1);continue;}
+    ctx.globalAlpha=wl.life*0.4;ctx.strokeStyle=mode==='repel'?'#ff6b8a':'#69b7ff';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(wl.x,wl.y,wl.r,0,7);ctx.stroke();}
+  ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+  document.getElementById('hN').textContent=parts.length;
+  document.getElementById('hE').textContent=(energy/1000).toFixed(1)+'k';
+  requestAnimationFrame(step);
+}
+requestAnimationFrame(step);
+</script>
+</body>
+</html>

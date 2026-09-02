@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>录音机</title>
+<style>
+*{margin:0;box-sizing:border-box}
+body{min-height:100dvh;display:flex;align-items:center;justify-content:center;background:radial-gradient(120% 100% at 50% 0%,#20283a,#0b0f1a 60%,#06080e);font-family:ui-monospace,Menlo,Consolas,monospace;color:#e9eef7}
+.deck{width:min(92vw,380px);background:linear-gradient(180deg,#161d2d,#0e1322);border:1px solid #ffffff1a;border-radius:26px;padding:22px;display:grid;gap:16px;box-shadow:0 40px 80px -40px #000,0 1px 0 #ffffff14 inset;animation:rise .7s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+.head{display:flex;align-items:center;gap:10px}
+#dot{width:12px;height:12px;border-radius:50%;background:#4a5570;transition:.25s}
+.rec #dot{background:#ff3b4e;box-shadow:0 0 14px #ff3b4e;animation:blink 1s steps(2) infinite}
+.pause #dot{background:#ffb02e}
+@keyframes blink{50%{opacity:.2}}
+#state{font-size:11px;letter-spacing:.3em;color:#9fb0c8}
+canvas{width:100%;height:92px;border-radius:14px;background:#0a0e18;border:1px solid #ffffff0d}
+#time{font-size:clamp(44px,15vw,58px);text-align:center;letter-spacing:.06em;font-weight:700;text-shadow:0 0 26px #7fd4ff33}
+.btns{display:flex;gap:10px;justify-content:center}
+button{font:inherit;font-size:14px;cursor:pointer;border-radius:999px;padding:11px 18px;border:1px solid #ffffff26;background:#ffffff0d;color:#e9eef7;transition:.15s;display:flex;align-items:center;gap:7px}
+button:active{transform:scale(.93)}
+button:disabled{opacity:.3;cursor:not-allowed;transform:none}
+#bRec{background:#ff3b4e;border-color:#ff3b4e;font-weight:700}
+#bRec.on{background:#5a6478;border-color:#5a6478}
+#bStop{border-color:#ff3b4e88;color:#ffb3ba}
+#sum{background:#0a0e18;border:1px dashed #ffffff2e;border-radius:14px;padding:12px 14px;font-size:13px;color:#c8d4e8;line-height:1.7;animation:rise .4s ease both}
+#sum b{color:#fff}
+#log{display:grid;gap:6px;font-size:12px;color:#8fa0bd;max-height:88px;overflow:auto}
+#log div{display:flex;justify-content:space-between;border-bottom:1px solid #ffffff0a;padding-bottom:4px}
+#mask{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+#ask{background:#1a2236;border:1px solid #ffffff2a;border-radius:18px;padding:22px;display:grid;gap:16px;text-align:center;font-size:15px}
+#ask .btns button{padding:9px 18px}
+#yes{background:#ff3b4e;border-color:#ff3b4e;font-weight:700}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+<div class="head"><span id="dot"></span><span id="state">待机 · IDLE</span></div>
+<canvas id="wave" width="680" height="184"></canvas>
+<div id="time">00:00</div>
+<div class="btns">
+<button id="bRec">● 开始</button>
+<button id="bPause" disabled>⏸ 暂停</button>
+<button id="bStop" disabled>■ 停止</button>
+</div>
+<div id="sum" hidden></div>
+<div id="log"></div>
+</div>
+<div id="mask"><div id="ask">确认停止并保存本次录音？<div class="btns"><button id="yes">确认停止</button><button id="no">继续录制</button></div></div></div>
+<script>
+const $=id=>document.getElementById(id),cv=$("wave"),g=cv.getContext("2d"),N=68,buf=new Array(N).fill(0);
+let st="idle",startAt=0,acc=0,timer=0,takes=0;
+const mmss=s=>`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+function paint(){const w=cv.width,h=cv.height;g.clearRect(0,0,w,h);
+g.fillStyle="#0a0e18";g.fillRect(0,0,w,h);
+for(let i=0;i<N;i++){const v=buf[i],bh=Math.max(2,v*(h-16));
+g.fillStyle=st==="rec"?`hsl(${200+v*90} 90% ${45+v*30}%)`:"#3a465e";
+g.fillRect(i*(w/N)+1,(h-bh)/2,w/N-2,bh)}
+requestAnimationFrame(paint)}
+function gen(){const t=performance.now()/1e3;
+return st==="rec"?Math.abs(Math.sin(t*7.3)+Math.sin(t*17.9)*.5+Math.sin(t*41)*.3)*(.55+Math.random()*.45):0}
+setInterval(()=>{buf.shift();buf.push(gen())},80);
+function show(){const el=$("time");
+if(st==="idle"){el.textContent=mmss(0);return}
+const base=acc+((st==="rec"?performance.now()-startAt:0)/1000|0);el.textContent=mmss(base)}
+setInterval(show,200);
+function setState(txt,cls){$("state").textContent=txt;$("deck").className="deck"+(cls?" "+cls:"")}
+$("bRec").onclick=()=>{if(st!=="idle")return;st="rec";startAt=performance.now();acc=0;takes++;$("sum").hidden=true;
+setState("正在录制 · REC","rec");$("bRec").classList.add("on");$("bRec").textContent="● 录音中";
+$("bPause").disabled=false;$("bStop").disabled=false;$("bRec").disabled=true};
+$("bPause").onclick=()=>{if(st==="rec"){st="pause";acc+=(performance.now()-startAt)/1000;
+setState("已暂停 · PAUSE","pause");$("bPause").textContent="▶ 继续";$("bRec").classList.remove("on")}
+else if(st==="pause"){st="rec";startAt=performance.now();setState("正在录制 · REC","rec");$("bPause").textContent="⏸ 暂停";$("bRec").classList.add("on")}};
+$("bStop").onclick=()=>{if(st==="idle")return;$("mask").style.display="flex"};
+$("yes").onclick=()=>{const dur=acc+((st==="rec"?performance.now()-startAt:0)/1000|0);st="idle";acc=0;
+$("mask").style.display="none";setState("已完成 · DONE","");
+$("bRec").disabled=false;$("bRec").classList.remove("on");$("bRec").textContent="● 开始";
+$("bPause").disabled=true;$("bPause").textContent="⏸ 暂停";$("bStop").disabled=true;
+$("sum").hidden=false;$("sum").innerHTML=`<b>本次录音摘要</b><br>编号：TAKE-${String(takes).padStart(3,"0")} ｜ 状态：已保存<br>时长：<b>${mmss(dur)}</b> ｜ 结束于 ${new Date().toLocaleTimeString("zh-CN")}`;
+$("log").insertAdjacentHTML("afterbegin",`<div><span>TAKE-${String(takes).padStart(3,"0")}</span><span>${mmss(dur)} · 已保存</span></div>`)};
+$("no").onclick=()=>{$("mask").style.display="none";if(st!=="rec"){st="rec";startAt=performance.now();setState("正在录制 · REC","rec");$("bPause").textContent="⏸ 暂停";$("bRec").classList.add("on")}};
+paint();
+</script>
+</body>
+</html>

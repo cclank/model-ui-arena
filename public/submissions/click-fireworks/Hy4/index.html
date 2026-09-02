@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Click Fireworks · Hy4</title>
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;overflow:hidden;background:#05070f}
+body{font:400 13px/1.5 -apple-system,"PingFang SC",system-ui,sans-serif;color:#cfd8ee;cursor:crosshair;-webkit-tap-highlight-color:transparent}
+canvas{display:block;position:fixed;inset:0}
+.hud{position:fixed;left:14px;top:12px;font:12px/1.6 ui-monospace,Menlo,monospace;color:#8b9ac4;pointer-events:none;text-shadow:0 1px 3px #000}
+.hud b{color:#ffe9a8;font-weight:600}
+.hint{position:fixed;left:0;right:0;bottom:34px;text-align:center;font-size:14px;letter-spacing:.14em;color:#b9c6e8;pointer-events:none;animation:breathe 2.6s ease-in-out infinite;transition:opacity .8s}
+.hint.off{opacity:0}
+@keyframes breathe{50%{opacity:.35}}
+.brand{position:fixed;right:14px;bottom:12px;font-size:11px;letter-spacing:.2em;color:#4d5a7d;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="hud">粒子 <b id="pn">0</b><br>烟花 <b id="tn">0</b><br>FPS <b id="fps">60</b></div>
+<div class="hint" id="hint">点击任意位置，点亮夜空</div>
+<div class="brand">CELEBRATION · HY4</div>
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const $=id=>document.getElementById(id);
+let W=0,H=0,DPR=1,stars=[],P=[],R=[],total=0,last=performance.now(),fps=60,acc=0,cnt=0;
+function resize(){
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  W=innerWidth;H=innerHeight;
+  cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+'px';cv.style.height=H+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  stars=[];const n=Math.round(W*H/9000);
+  for(let i=0;i<n;i++)stars.push({x:Math.random()*W,y:Math.random()*H*.72,r:Math.random()*1.3+.2,p:Math.random()*6.28});
+}
+function burst(x,y,big){
+  const hue=Math.random()*360,n=big?132:86;
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2,sp=(.35+Math.pow(Math.random(),.6))*(big?8.2:6);
+    P.push({x,y,px:x,py:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,h:hue+(Math.random()*46-23),
+      l:1,d:.0075+Math.random()*.009,w:1+Math.random()*1.6,c:Math.random()<.13,k:0});
+  }
+  R.push({x,y,r:2,h:hue,a:1});
+  total++;last=performance.now();
+  if(P.length>2200)P.splice(0,P.length-2200);
+}
+function loop(t){
+  const dt=Math.min(2.4,(t-loop.t||16)/16.67);loop.t=t;
+  acc+=t-(loop.p||t);cnt++;loop.p=t;
+  if(acc>400){fps=Math.round(1000/(acc/cnt));acc=0;cnt=0;}
+  ctx.globalCompositeOperation='source-over';
+  ctx.fillStyle='rgba(5,7,15,.2)';ctx.fillRect(0,0,W,H);
+  const glow=ctx.createRadialGradient(W/2,H*1.02,0,W/2,H*1.02,Math.max(W,H)*.7);
+  glow.addColorStop(0,'rgba(90,60,140,.22)');glow.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
+  ctx.globalCompositeOperation='lighter';
+  for(const s of stars){
+    const tw=.35+.65*Math.abs(Math.sin(t/900+s.p));
+    ctx.fillStyle='rgba(200,215,255,'+(tw*.7).toFixed(3)+')';
+    ctx.fillRect(s.x,s.y,s.r,s.r);
+  }
+  for(let i=R.length-1;i>=0;i--){
+    const r=R[i];r.r+=6.2*dt;r.a-=.045*dt;
+    if(r.a<=0){R.splice(i,1);continue;}
+    ctx.strokeStyle='hsla('+r.h+',95%,'+(60+r.a*25)+'%,'+(r.a*.5).toFixed(3)+')';
+    ctx.lineWidth=1+r.a*2.2;ctx.beginPath();ctx.arc(r.x,r.y,r.r,0,6.283);ctx.stroke();
+  }
+  for(let i=P.length-1;i>=0;i--){
+    const p=P[i];
+    p.px=p.x;p.py=p.y;
+    p.vy+=0.048*dt;p.vx*=(1-.012*dt);p.vy*=(1-.012*dt);
+    p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=p.d*dt;
+    if(p.c&&!p.k&&p.l<.38){p.k=1;
+      for(let j=0;j<7;j++){const a=Math.random()*6.283,s=Math.random()*1.8;
+        P.push({x:p.x,y:p.y,px:p.x,py:p.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,h:p.h,l:.85,d:.03,w:1,c:0,k:1});}
+    }
+    if(p.l<=0||p.y>H+40){P.splice(i,1);continue;}
+    const flick=p.k?.7:.55+.45*Math.sin(t/40+p.h);
+    const a=Math.max(0,p.l)*flick;
+    ctx.strokeStyle='hsla('+p.h+',98%,'+(52+p.l*26)+'%,'+a.toFixed(3)+')';
+    ctx.lineWidth=p.w*p.l+.25;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(p.px,p.py);ctx.lineTo(p.x,p.y);ctx.stroke();
+  }
+  if(t-last>5200&&P.length<160)burst(W*(.2+Math.random()*.6),H*(.18+Math.random()*.3),Math.random()<.4);
+  $('pn').textContent=P.length;$('tn').textContent=total;$('fps').textContent=fps;
+  requestAnimationFrame(loop);
+}
+function fire(e){
+  const x=(e.touches?e.touches[0].clientX:e.clientX),y=(e.touches?e.touches[0].clientY:e.clientY);
+  burst(x,y,Math.random()<.32);
+  $('hint').classList.add('off');
+}
+addEventListener('resize',resize);
+addEventListener('pointerdown',fire);
+addEventListener('touchstart',e=>{e.preventDefault();fire(e);},{passive:false});
+resize();burst(W*.5,H*.34,true);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

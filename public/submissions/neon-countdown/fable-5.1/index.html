@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NEON COUNTDOWN · 最炫倒计时</title>
+<style>
+  :root{--c1:#22e6ff;--c2:#ff2fd6;--bg:#05020f}
+  body.urgent{--c1:#ff3355;--c2:#ff9a1f}
+  body.done{--c1:#7dff9b;--c2:#ffe45c}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{background:var(--bg);color:#fff;font-family:ui-sans-serif,system-ui,-apple-system,"PingFang SC","Segoe UI",Roboto,sans-serif;display:grid;place-items:center;position:relative;transition:--c1 .4s}
+  .scene{position:fixed;inset:0;overflow:hidden;perspective:520px;pointer-events:none}
+  .sky{position:absolute;inset:0;background:radial-gradient(70% 55% at 50% 62%,color-mix(in srgb,var(--c2) 38%,transparent),transparent 70%),linear-gradient(#05020f,#140a33 60%,#2a0f4a);transition:background .6s}
+  .sun{position:absolute;left:50%;top:44%;width:min(62vw,340px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:linear-gradient(var(--c2),var(--c1));opacity:.16;filter:blur(24px);animation:breath 2s ease-in-out infinite}
+  @keyframes breath{50%{transform:translate(-50%,-50%) scale(1.12);opacity:.24}}
+  .floor{position:absolute;left:-60%;bottom:-6%;width:220%;height:58%;transform-origin:top;transform:rotateX(66deg);background:linear-gradient(90deg,transparent 0,transparent calc(100% - 2px),color-mix(in srgb,var(--c1) 55%,transparent) calc(100% - 2px)) 0 0/72px 100%,linear-gradient(transparent 0,transparent calc(100% - 2px),color-mix(in srgb,var(--c1) 55%,transparent) calc(100% - 2px)) 0 0/100% 72px;animation:scroll 1.6s linear infinite;mask:linear-gradient(transparent,#000 35%)}
+  body.urgent .floor{animation-duration:.55s}body.done .floor{animation-duration:.3s}
+  @keyframes scroll{to{background-position:0 0,0 72px}}
+  .vignette{position:fixed;inset:0;box-shadow:inset 0 0 160px rgba(0,0,0,.85);pointer-events:none}
+  body.urgent .vignette{animation:heart .5s ease-in-out infinite;box-shadow:inset 0 0 180px color-mix(in srgb,var(--c1) 55%,#000)}
+  @keyframes heart{50%{box-shadow:inset 0 0 90px rgba(255,51,85,.25)}}
+  canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+  .ui{position:relative;z-index:2;display:grid;justify-items:center;gap:14px;width:100%;padding:16px}
+  .label{font-size:13px;font-weight:800;letter-spacing:.42em;color:var(--c1);text-shadow:0 0 12px var(--c1);transition:color .3s}
+  .wrap{position:relative;width:min(76vw,300px);aspect-ratio:1;display:grid;place-items:center}
+  svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+  .track{fill:none;stroke:rgba(255,255,255,.08);stroke-width:10}
+  .prog{fill:none;stroke:var(--c1);stroke-width:10;stroke-linecap:round;filter:url(#glow);transition:stroke .4s}
+  .prog.flash{animation:flash .45s}
+  @keyframes flash{0%{stroke:#fff;stroke-width:16}}
+  .tick{stroke:rgba(255,255,255,.18);stroke-width:3;stroke-linecap:round;transition:stroke .2s}
+  .tick.on{stroke:var(--c2);filter:url(#glow)}
+  .digit{font-size:clamp(96px,30vw,150px);font-weight:900;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums;text-shadow:0 0 8px #fff,0 0 22px var(--c1),0 0 60px var(--c1),0 0 110px var(--c2);transition:text-shadow .4s}
+  .digit.punch{animation:punch .55s cubic-bezier(.2,.9,.25,1)}
+  @keyframes punch{0%{transform:scale(1.32);filter:brightness(2.2)}100%{transform:scale(1)}}
+  body.urgent .digit{animation:punch .55s cubic-bezier(.2,.9,.25,1),shake .18s linear infinite}
+  @keyframes shake{25%{translate:-3px 2px}75%{translate:3px -2px}}
+  body.done .digit{animation:bloom 1.2s ease-out}
+  @keyframes bloom{0%{transform:scale(.4);filter:brightness(4)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
+  .bar{display:flex;gap:5px;width:min(86vw,360px)}
+  .bar i{flex:1;height:8px;border-radius:99px;background:rgba(255,255,255,.1);transition:background .25s,box-shadow .25s}
+  .bar i.on{background:var(--c1);box-shadow:0 0 12px var(--c1)}
+  .status{font-size:15px;font-weight:700;letter-spacing:.06em;color:rgba(255,255,255,.85);min-height:22px;transition:.3s}
+  body.done .status{font-size:clamp(22px,7vw,34px);font-weight:900;letter-spacing:.18em;color:#fff;text-shadow:0 0 18px var(--c1),0 0 40px var(--c2)}
+  button{margin-top:2px;border:2px solid var(--c1);background:transparent;color:#fff;font:900 14px/1 inherit;letter-spacing:.3em;padding:14px 30px 14px 34px;border-radius:999px;cursor:pointer;box-shadow:0 0 18px color-mix(in srgb,var(--c1) 50%,transparent),inset 0 0 18px color-mix(in srgb,var(--c1) 25%,transparent);transition:.25s}
+  button:hover{background:var(--c1);color:#08021a;transform:translateY(-2px)}
+  body.done button{animation:breath 1.4s ease-in-out infinite;background:var(--c1);color:#08021a}
+  .foot{position:fixed;bottom:max(12px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;font-size:11px;color:rgba(255,255,255,.45);letter-spacing:.08em;z-index:2}
+</style>
+</head>
+<body>
+<div class="scene"><div class="sky"></div><div class="sun"></div><div class="floor"></div></div>
+<div class="vignette"></div>
+<canvas id="fx"></canvas>
+<main class="ui">
+  <div class="label" id="label">T-MINUS · 倒计时</div>
+  <div class="wrap">
+    <svg viewBox="0 0 320 320"><defs><filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      <circle class="track" cx="160" cy="160" r="140"/><g id="ticks"></g><circle class="prog" id="prog" cx="160" cy="160" r="140"/></svg>
+    <div class="digit" id="digit">10</div>
+  </div>
+  <div class="bar" id="bar"></div>
+  <div class="status" id="status">准备就绪</div>
+  <button id="restart">RESTART</button>
+</main>
+<div class="foot" id="foot">最后 3 秒进入警戒态 · 点击任意处开启音效</div>
+<script>
+  const $ = (i) => document.getElementById(i), cv = $("fx"), ctx = cv.getContext("2d"), NS = "http://www.w3.org/2000/svg", DUR = 10, C = 2 * Math.PI * 140;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  let start = 0, lastN = -1, done = false, AC = null, W, H, parts = [], rings = [], flash = 0, confetti = false;
+  for (let i = 0; i < 10; i++) {                                    // 10 个刻度 + 10 段进度条
+    const l = document.createElementNS(NS, "line"), a = i / 10 * Math.PI * 2; l.setAttribute("class", "tick");
+    l.setAttribute("x1", 160 + Math.cos(a) * 122); l.setAttribute("y1", 160 + Math.sin(a) * 122); l.setAttribute("x2", 160 + Math.cos(a) * 112); l.setAttribute("y2", 160 + Math.sin(a) * 112); $("ticks").appendChild(l);
+    $("bar").appendChild(document.createElement("i"));
+  }
+  $("prog").style.strokeDasharray = C;
+  const resize = () => { W = cv.width = innerWidth * devicePixelRatio; H = cv.height = innerHeight * devicePixelRatio; }; addEventListener("resize", resize); resize();
+  function tone(f, dur = .09, vol = .09, type = "square") {           // WebAudio 合成节拍音，无外部资源
+    if (!AC) return; const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime; o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + dur);
+  }
+  addEventListener("pointerdown", () => { if (!AC) try { AC = new (window.AudioContext || window.webkitAudioContext)(); $("foot").textContent = "音效已开启 · Restart 可随时重新开始"; } catch (e) {} if (AC && AC.state === "suspended") AC.resume(); }, { capture: true });
+  const punch = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
+  function sparks(n, hueA, hueB, speed) {
+    const cx = W / 2, cy = $("digit").getBoundingClientRect().top * devicePixelRatio + $("digit").offsetHeight * devicePixelRatio / 2;
+    for (let i = 0; i < n; i++) { const a = rnd(0, 6.283), s = speed * rnd(.3, 1) * devicePixelRatio; parts.push({ x: cx, y: cy, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rnd(40, 90), max: 90, hue: Math.random() < .5 ? hueA : hueB, r: rnd(1.5, 3.5) * devicePixelRatio, g: .05 }); }
+    return [cx, cy];
+  }
+  function second(n) {                                             // 每秒节奏反馈：数字冲击、环闪、刻度推进、火花、音效
+    $("digit").textContent = n; punch($("digit"), "punch"); punch($("prog"), "flash");
+    [...$("bar").children].forEach((el, i) => el.classList.toggle("on", i < n)); [...$("ticks").children].forEach((el, i) => el.classList.toggle("on", i < n));
+    const urgent = n <= 3 && n > 0; document.body.classList.toggle("urgent", urgent);
+    $("status").textContent = n === 0 ? "LIFTOFF · 完成！" : urgent ? "警戒 · 最后 " + n + " 秒" : "倒计时进行中";
+    if (n > 0) { sparks(urgent ? 40 : 16, urgent ? 0 : 190, urgent ? 30 : 300, urgent ? 9 : 5); tone(urgent ? 1180 : 880, urgent ? .14 : .08, urgent ? .14 : .08); }
+  }
+  function finish() {
+    done = true; document.body.classList.remove("urgent"); document.body.classList.add("done"); $("label").textContent = "MISSION COMPLETE"; $("prog").style.strokeDashoffset = 0;
+    const [cx, cy] = sparks(320, 130, 50, 16); rings.push({ x: cx, y: cy, r: 10, life: 1 }, { x: cx, y: cy, r: 10, life: 1.4 }); flash = 1; confetti = true;
+    [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => tone(f, .7, .12, "triangle"), i * 90)); tone(60, .5, .3, "sawtooth");
+    for (let i = 0; i < 140; i++) parts.push({ x: rnd(0, W), y: rnd(-H * .3, 0), vx: rnd(-.6, .6) * devicePixelRatio, vy: rnd(1.5, 4) * devicePixelRatio, life: rnd(150, 260), max: 260, hue: rnd(0, 360), r: rnd(2.5, 5) * devicePixelRatio, g: .02, box: true, spin: rnd(0, 6.28) });
+  }
+  function loop(now) {
+    if (!done) {
+      const rem = Math.max(0, DUR - (now - start) / 1000), n = Math.ceil(rem - 1e-9);
+      $("prog").style.strokeDashoffset = C * (1 - rem / DUR);
+      if (n !== lastN) { lastN = n; second(n); if (n === 0) finish(); }
+    }
+    ctx.clearRect(0, 0, W, H);
+    if (flash > 0) { ctx.fillStyle = `rgba(255,255,255,${flash * .8})`; ctx.fillRect(0, 0, W, H); flash -= .05; }
+    ctx.globalCompositeOperation = "lighter";
+    rings.forEach((r) => { r.r += 9 * devicePixelRatio; r.life -= .02; ctx.strokeStyle = `hsla(140,100%,70%,${Math.max(0, r.life) * .8})`; ctx.lineWidth = 6 * devicePixelRatio * r.life; ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, 6.283); ctx.stroke(); });
+    rings = rings.filter((r) => r.life > 0);
+    parts.forEach((p) => {
+      p.life--; p.vy += p.g * devicePixelRatio; p.x += p.vx; p.y += p.vy; if (p.box) { p.vx += Math.sin(p.life * .1 + p.spin) * .15 * devicePixelRatio; p.spin += .08; }
+      const a = Math.min(1, p.life / p.max * 1.6); ctx.fillStyle = `hsla(${p.hue},100%,65%,${a})`;
+      if (p.box) { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.spin); ctx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r); ctx.restore(); }
+      else { ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (0.4 + a * .6), 0, 6.283); ctx.fill(); }
+    });
+    parts = parts.filter((p) => p.life > 0 && p.y < H + 20); ctx.globalCompositeOperation = "source-over";
+    requestAnimationFrame(loop);
+  }
+  function restart() { document.body.className = ""; $("label").textContent = "T-MINUS · 倒计时"; parts = []; rings = []; flash = 0; done = false; lastN = -1; start = performance.now(); }
+  $("restart").onclick = restart; restart(); requestAnimationFrame(loop);
+</script>
+</body>
+</html>

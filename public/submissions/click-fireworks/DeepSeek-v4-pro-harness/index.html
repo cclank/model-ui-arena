@@ -1,0 +1,93 @@
+<!-- 设计说明：点击任意位置绽放烟花 —— 多彩粒子扩散/重力衰减/闪烁余辉，
+     拖尾夜空 + 星光闪烁 + 冲击波光环，粒子池设上限防内存增长，支持连续点击。 -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>烟花大会 · Click Fireworks</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{font-family:system-ui,-apple-system,'Segoe UI','PingFang SC',sans-serif;background:#050714;cursor:crosshair;touch-action:none}
+canvas{display:block;position:fixed;inset:0}
+.vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 45%,transparent 55%,rgba(2,3,10,.75) 100%)}
+.hud{position:fixed;left:16px;top:14px;color:#e8ecff;pointer-events:none;z-index:2}
+.hud .t{font-size:15px;font-weight:700;letter-spacing:.18em}
+.hud .s{font-size:11px;color:#8f9ad0;margin-top:4px;letter-spacing:.08em}
+.hint{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);color:#aeb6e6;font-size:12px;letter-spacing:.22em;pointer-events:none;z-index:2;background:rgba(10,13,34,.55);padding:8px 18px;border-radius:999px;backdrop-filter:blur(4px)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="vig"></div>
+<div class="hud"><div class="t">烟花大会</div><div class="s">FIREWORKS · 点击绽放</div></div>
+<div class="hint">点击任意位置 · 连续点击更绚烂</div>
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+let W=0,H=0,DPR=1;
+const stars=[],parts=[],rings=[];
+const MAXP=2400;
+function resize(){
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  W=window.innerWidth;H=window.innerHeight;
+  cv.width=W*DPR;cv.height=H*DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+for(let i=0;i<130;i++)stars.push({x:Math.random(),y:Math.random()*.8,r:.4+Math.random()*1.3,ph:Math.random()*6.28,sp:.5+Math.random()*2});
+function boom(x,y){
+  rings.push({x,y,r:6,a:.9});
+  const n=70+(Math.random()*80|0),hue=Math.random()*360,hue2=(hue+50+Math.random()*70)%360;
+  for(let i=0;i<n;i++){
+    const ang=Math.random()*6.283,sp=1.5+Math.pow(Math.random(),.6)*7.2;
+    parts.push({x,y,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,life:0,max:55+Math.random()*55,hue:Math.random()<.22?hue2:hue,size:.8+Math.random()*2.4,fl:Math.random()*6.28});
+  }
+}
+function tick(t){
+  ctx.globalCompositeOperation='source-over';
+  ctx.fillStyle='rgba(5,7,20,0.26)';
+  ctx.fillRect(0,0,W,H);
+  ctx.globalCompositeOperation='lighter';
+  for(const s of stars){
+    const a=.28+.5*Math.abs(Math.sin(t*.001*s.sp+s.ph));
+    ctx.fillStyle='rgba(200,210,255,'+a.toFixed(2)+')';
+    ctx.beginPath();ctx.arc(s.x*W,s.y*H,s.r,0,6.283);ctx.fill();
+  }
+  for(let i=parts.length-1;i>=0;i--){
+    const p=parts[i];
+    p.life++;p.x+=p.vx;p.y+=p.vy;
+    p.vy+=.042;p.vx*=.986;p.vy*=.986;
+    const k=p.life/p.max;
+    if(k>=1||p.y>H+40){parts.splice(i,1);continue;}
+    const a=(1-k)*(.78+.22*Math.sin(t*.09+p.fl));
+    ctx.fillStyle='hsla('+p.hue+',95%,62%,'+a.toFixed(3)+')';
+    ctx.beginPath();ctx.arc(p.x,p.y,p.size*(1-k*.55),0,6.283);ctx.fill();
+  }
+  for(let i=rings.length-1;i>=0;i--){
+    const r=rings[i];
+    r.r+=5.5;r.a-=.035;
+    if(r.a<=0){rings.splice(i,1);continue;}
+    ctx.strokeStyle='rgba(255,240,200,'+r.a.toFixed(3)+')';
+    ctx.lineWidth=2.2*r.a+.4;
+    ctx.beginPath();ctx.arc(r.x,r.y,r.r,0,6.283);ctx.stroke();
+  }
+  if(parts.length>MAXP)parts.splice(0,parts.length-MAXP);
+  requestAnimationFrame(tick);
+}
+addEventListener('pointerdown',e=>{
+  boom(e.clientX,e.clientY);
+  if(parts.length>MAXP-400)parts.splice(0,300);
+});
+let lastAuto=0;
+function auto(t){
+  if(t-lastAuto>3400){
+    lastAuto=t;
+    boom(W*(.12+Math.random()*.76),H*(.08+Math.random()*.36));
+  }
+  requestAnimationFrame(auto);
+}
+addEventListener('resize',resize);
+resize();requestAnimationFrame(tick);requestAnimationFrame(auto);
+</script>
+</body>
+</html>

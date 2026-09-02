@@ -1,0 +1,279 @@
+<!-- 设计说明：拟物复刻 · 单反相机（3/4 前侧上视角）
+     全部由内联 SVG 手工绘制（矩形/椭圆/路径/渐变/滤镜），零贴图零素材：
+     机身带右侧面与顶面透视、多层镜筒+镜片反光、军舰头/模式转盘（可点击旋转）/
+     快门/热靴/握把防滑纹理；金属/玻璃/磨砂塑料三种材质在同一光源下区分。 -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>拟物复刻 · 单反相机</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,'Segoe UI','PingFang SC',sans-serif;min-height:100vh;display:grid;place-items:center;background:radial-gradient(120% 100% at 50% 18%,#232733 0%,#12141b 68%,#0b0c11 100%);padding:16px}
+svg{display:block;width:min(96vw,940px);height:auto}
+svg *{transform-box:view-box}
+#dialMark{transition:transform .45s cubic-bezier(.25,.8,.35,1.2);transform-origin:445px 384px;cursor:pointer}
+#lensGlass{transition:transform .16s ease}
+#specStreak{animation:drift 7s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translateX(-9px)}to{transform:translateX(10px)}}
+#vfLed{animation:vfblink 1.6s ease-in-out infinite}
+@keyframes vfblink{0%,100%{opacity:.15}50%{opacity:.9}}
+.hint{color:#7c8496;font-size:11px;letter-spacing:.2em;margin-top:10px;text-align:center}
+</style>
+</head>
+<body>
+<div>
+<svg viewBox="0 0 1200 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="手绘单反相机拟物复刻">
+<defs>
+  <radialGradient id="studio" cx=".5" cy=".32" r=".95">
+    <stop offset="0" stop-color="#2b303c"/><stop offset=".6" stop-color="#171a21"/><stop offset="1" stop-color="#0d0e13"/>
+  </radialGradient>
+  <linearGradient id="bodyGrad" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#3a3e47"/><stop offset=".55" stop-color="#2c2f37"/><stop offset="1" stop-color="#1e2128"/>
+  </linearGradient>
+  <linearGradient id="bodyTop" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#4a4f5a"/><stop offset="1" stop-color="#2b2e36"/>
+  </linearGradient>
+  <linearGradient id="sideGrad" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#2a2d34"/><stop offset="1" stop-color="#15171c"/>
+  </linearGradient>
+  <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#f2f4f7"/><stop offset=".3" stop-color="#b9bfc9"/><stop offset=".55" stop-color="#6f747e"/><stop offset=".8" stop-color="#c3c8d1"/><stop offset="1" stop-color="#8b9099"/>
+  </linearGradient>
+  <linearGradient id="metalDark" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#565b64"/><stop offset=".5" stop-color="#33363d"/><stop offset="1" stop-color="#22242a"/>
+  </linearGradient>
+  <linearGradient id="rubber" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#2e3138"/><stop offset="1" stop-color="#101114"/>
+  </linearGradient>
+  <linearGradient id="redRing" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#d81825"/><stop offset=".5" stop-color="#a50e1a"/><stop offset="1" stop-color="#5e060d"/>
+  </linearGradient>
+  <radialGradient id="glass" cx=".36" cy=".3" r=".95">
+    <stop offset="0" stop-color="#5c6a9c"/><stop offset=".35" stop-color="#2c3556"/><stop offset=".72" stop-color="#141a33"/><stop offset="1" stop-color="#080b18"/>
+  </radialGradient>
+  <radialGradient id="glassInner" cx=".5" cy=".45" r=".6">
+    <stop offset="0" stop-color="#0a0d1c"/><stop offset="1" stop-color="#05070f"/>
+  </radialGradient>
+  <linearGradient id="gripGrad" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#232529"/><stop offset="1" stop-color="#0e0f12"/>
+  </linearGradient>
+  <linearGradient id="wallGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#7a808a"/><stop offset="1" stop-color="#454a53"/>
+  </linearGradient>
+  <filter id="soft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3"/></filter>
+  <filter id="soft8" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="8"/></filter>
+  <filter id="soft18" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="18"/></filter>
+  <filter id="grain">
+    <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" result="n"/>
+    <feColorMatrix in="n" type="matrix" values="0.09 0 0 0 0.58  0 0.09 0 0 0.60  0 0 0.09 0 0.64  0 0 0 0.10 0"/>
+  </filter>
+  <pattern id="ridges" width="8" height="40" patternUnits="userSpaceOnUse">
+    <path d="M4 0 V40" stroke="#2b2d33" stroke-width="2.6"/>
+  </pattern>
+  <clipPath id="bodyClip"><path d="M324 440 Q300 440 300 464 L300 716 Q300 740 324 740 L936 740 Q960 740 960 716 L960 464 Q960 440 936 440 Z"/></clipPath>
+  <clipPath id="gripClip"><path d="M772 458 C 812 450, 848 452, 862 466 L916 704 C 922 722, 912 738, 892 738 L786 738 C 762 738, 748 722, 744 700 L730 486 C 728 464, 746 456, 772 458 Z"/></clipPath>
+</defs>
+
+<!-- 摄影棚背景 -->
+<rect width="1200" height="900" fill="url(#studio)"/>
+<ellipse cx="600" cy="796" rx="315" ry="34" fill="#000" opacity=".5" filter="url(#soft18)"/>
+<ellipse cx="600" cy="788" rx="205" ry="20" fill="#000" opacity=".35" filter="url(#soft8)"/>
+
+<g id="camera">
+  <!-- 机身右侧面 -->
+  <path d="M960 440 L1070 405 Q1076 404 1076 410 L1076 700 Q1076 706 1070 705 L960 740 Z" fill="url(#sideGrad)"/>
+  <path d="M960 440 L1070 405" stroke="#3d424c" stroke-width="2" opacity=".8"/>
+  <g stroke="#0c0d10" stroke-width="1.6" opacity=".75" fill="none">
+    <path d="M988 470 L1048 451"/>
+    <path d="M1000 560 L1060 541"/>
+  </g>
+  <rect x="988" y="500" width="56" height="88" rx="5" fill="none" stroke="#101216" stroke-width="1.6" opacity=".9"/>
+  <rect x="1002" y="614" width="42" height="34" rx="4" fill="#1a1c21" stroke="#0c0d10" stroke-width="1.2"/>
+  <line x1="1012" y1="628" x2="1034" y2="628" stroke="#0c0d10" stroke-width="1.2"/>
+  <rect x="1002" y="662" width="42" height="22" rx="4" fill="#1a1c21" stroke="#0c0d10" stroke-width="1.2"/>
+  <line x1="1010" y1="671" x2="1036" y2="671" stroke="#0c0d10" stroke-width="1.2"/>
+  <circle cx="988" cy="536" r="3" fill="#0c0d10" opacity=".8"/>
+
+  <!-- 机身顶面 -->
+  <path d="M300 440 L960 440 L1070 405 L410 370 Q400 369 395 374 Z" fill="url(#bodyTop)"/>
+  <path d="M300 440 L960 440 L1070 405 L410 370 Z" fill="none" stroke="#565c68" stroke-width="1.6" opacity=".5"/>
+  <path d="M330 425 L1040 390" stroke="#8a91a0" stroke-width="2" opacity=".3"/>
+  <g fill="#1a1c22">
+    <rect x="785" y="404" width="52" height="7" rx="3.5"/>
+    <rect x="855" y="397" width="62" height="7" rx="3.5"/>
+  </g>
+  <rect x="785" y="406" width="18" height="3.4" rx="1.7" fill="#c22"/>
+  <rect x="855" y="399" width="20" height="3.4" rx="1.7" fill="#8b9099"/>
+
+  <!-- 模式转盘（可点击旋转） -->
+  <g id="dial" cursor="pointer">
+    <path d="M391 420 L391 384 A54 13 0 0 1 499 384 L499 420 A54 13 0 0 1 391 420 Z" fill="url(#wallGrad)"/>
+    <ellipse cx="445" cy="420" rx="54" ry="13" fill="#2b2e34"/>
+    <ellipse cx="445" cy="420" rx="54" ry="13" fill="none" stroke="#0e0f12" stroke-width="1.5"/>
+    <g id="dialMark">
+      <ellipse cx="445" cy="384" rx="54" ry="13" fill="url(#metal)"/>
+      <ellipse cx="445" cy="384" rx="48" ry="11" fill="none" stroke="#5a606b" stroke-width="3" stroke-dasharray="2.5 4.5"/>
+      <ellipse cx="445" cy="384" rx="36" ry="8" fill="none" stroke="#4a4f58" stroke-width="1.4"/>
+      <g fill="#3a3e45" font-size="10" font-weight="700" text-anchor="middle">
+        <text x="445" y="370">M</text><text x="415" y="382">A</text><text x="475" y="382">S</text><text x="445" y="394">P</text>
+      </g>
+      <line x1="445" y1="372" x2="445" y2="366" stroke="#d8dce3" stroke-width="2"/>
+      <ellipse cx="445" cy="380" rx="11" ry="2.6" fill="#3c4048"/>
+    </g>
+  </g>
+
+  <!-- 快门按钮 -->
+  <g id="shutter" cursor="pointer">
+    <path d="M290 434 L290 404 A22 7 0 0 1 334 404 L334 434 A22 7 0 0 1 290 434 Z" fill="url(#wallGrad)"/>
+    <ellipse cx="312" cy="434" rx="22" ry="7" fill="#24262c"/>
+    <ellipse cx="312" cy="434" rx="22" ry="7" fill="none" stroke="#0e0f12" stroke-width="1.4"/>
+    <ellipse cx="312" cy="404" rx="22" ry="7" fill="url(#metal)"/>
+    <ellipse cx="312" cy="403" rx="15" ry="4.8" fill="#9aa0aa"/>
+    <ellipse cx="312" cy="402" rx="15" ry="4.8" fill="none" stroke="#dde1e8" stroke-width="1.4" opacity=".7"/>
+  </g>
+
+  <!-- 电源拨杆 -->
+  <g stroke="#8b9099" stroke-width="3.4" stroke-linecap="round" fill="none">
+    <path d="M300 468 A22 22 0 0 1 344 468"/>
+    <line x1="308" y1="462" x2="296" y2="448"/>
+  </g>
+  <text x="322" y="498" text-anchor="middle" fill="#6b7280" font-size="9" letter-spacing="1">ON</text>
+
+  <!-- 军舰头（五棱镜） -->
+  <g id="prism">
+    <path d="M578 368 L722 368 L777 340 L633 340 Z" fill="#565b66"/>
+    <path d="M722 368 L740 440 L795 412 L777 340 Z" fill="#22252b"/>
+    <path d="M560 440 L740 440 L722 368 L578 368 Z" fill="url(#bodyGrad)"/>
+    <path d="M578 368 L722 368" stroke="#6b7280" stroke-width="2" opacity=".55"/>
+    <path d="M560 440 L740 440" stroke="#15171c" stroke-width="2" opacity=".6"/>
+    <text x="650" y="417" text-anchor="middle" fill="#cdd2db" font-size="21" font-weight="700" letter-spacing="7">LANKA</text>
+    <path d="M578 368 L722 368 L777 340 L633 340 Z" fill="none" stroke="#7d8492" stroke-width="1.2" opacity=".6"/>
+  </g>
+
+  <!-- 热靴 -->
+  <g id="hotshoe">
+    <path d="M585 360 L715 360 L770 332 L640 332 Z" fill="#14161a"/>
+    <path d="M588 358 L712 358 L712 351 L588 351 Z" fill="url(#metal)"/>
+    <path d="M644 330 L766 330 L766 323 L644 323 Z" fill="url(#metal)"/>
+    <path d="M591 356 L709 356" stroke="#dde1e8" stroke-width="1.4" opacity=".8"/>
+  </g>
+
+  <!-- 取景器提示灯 -->
+  <circle id="vfLed" cx="808" cy="428" r="3" fill="#ff4d5e" opacity=".3"/>
+
+  <!-- 背带扣 -->
+  <path d="M312 432 Q300 428 296 440 L296 452 Q300 462 312 458 Z" fill="url(#metalDark)"/>
+  <path d="M942 434 Q952 430 956 442 L956 454 Q952 464 942 460 Z" fill="url(#metalDark)"/>
+
+  <!-- 机身正面 -->
+  <path d="M324 440 Q300 440 300 464 L300 716 Q300 740 324 740 L936 740 Q960 740 960 716 L960 464 Q960 440 936 440 Z" fill="url(#bodyGrad)"/>
+  <path d="M324 440 Q300 440 300 464 L300 716 Q300 740 324 740 L936 740 Q960 740 960 716 L960 464 Q960 440 936 440 Z" fill="url(#grain)" opacity=".5"/>
+  <path d="M306 446 L954 446" stroke="#6d7483" stroke-width="2.4" opacity=".35"/>
+  <path d="M306 733 L954 733" stroke="#101114" stroke-width="2" opacity=".5"/>
+  <path d="M348 470 L348 700" stroke="#101114" stroke-width="1.6" opacity=".3"/>
+  <text x="338" y="726" fill="#9298a3" font-size="13" letter-spacing="3">V4 PRO MARK II</text>
+  <g fill="#1a1c22">
+    <rect x="330" y="560" width="30" height="34" rx="6"/>
+    <circle cx="345" cy="577" r="2.6"/>
+  </g>
+  <circle cx="556" cy="452" r="5" fill="#7d1f24"/><circle cx="556" cy="452" r="5" fill="none" stroke="#3a0e11" stroke-width="1.4"/>
+  <circle cx="556" cy="452" r="9" fill="none" stroke="#6d7483" stroke-width="1.4" opacity=".6"/>
+  <g fill="#0d0e12">
+    <circle cx="742" cy="448" r="2.6"/><circle cx="756" cy="448" r="2.6"/><circle cx="770" cy="448" r="2.6"/>
+  </g>
+  <g stroke="#101114" stroke-width="1.6" opacity=".4">
+    <line x1="340" y1="470" x2="340" y2="496"/><line x1="428" y1="448" x2="428" y2="470"/>
+  </g>
+  <circle cx="630" cy="736" r="7" fill="#14161a"/><circle cx="630" cy="736" r="3.4" fill="#3a3e45"/>
+
+  <!-- 握把 -->
+  <path d="M772 458 C 812 450, 848 452, 862 466 L916 704 C 922 722, 912 738, 892 738 L786 738 C 762 738, 748 722, 744 700 L730 486 C 728 464, 746 456, 772 458 Z" fill="url(#gripGrad)"/>
+  <path d="M772 458 C 812 450, 848 452, 862 466 L916 704 C 922 722, 912 738, 892 738 L786 738 C 762 738, 748 722, 744 700 L730 486 C 728 464, 746 456, 772 458 Z" fill="url(#ridges)" clip-path="url(#gripClip)"/>
+  <path d="M772 458 C 812 450, 848 452, 862 466" stroke="#5d636e" stroke-width="3" fill="none" opacity=".55"/>
+  <path d="M862 466 C 890 520, 908 620, 916 704" stroke="#000" stroke-width="3" fill="none" opacity=".4"/>
+
+  <!-- 镜头卡口底板 -->
+  <ellipse cx="630" cy="570" rx="180" ry="164" fill="#22252b"/>
+  <ellipse cx="630" cy="570" rx="180" ry="164" fill="none" stroke="#101114" stroke-width="2.5"/>
+  <g fill="#0f1013">
+    <circle cx="474" cy="500" r="4.6"/><circle cx="786" cy="500" r="4.6"/>
+    <circle cx="474" cy="640" r="4.6"/><circle cx="786" cy="640" r="4.6"/>
+  </g>
+  <g fill="#484d57">
+    <circle cx="474" cy="500" r="2"/><circle cx="786" cy="500" r="2"/>
+    <circle cx="474" cy="640" r="2"/><circle cx="786" cy="640" r="2"/>
+  </g>
+  <path d="M474 500 L786 500 M474 640 L786 640" stroke="#3c4048" stroke-width="1" opacity=".5"/>
+
+  <!-- 镜筒 -->
+  <g id="lens">
+    <ellipse cx="630" cy="598" rx="150" ry="30" fill="#000" opacity=".4" filter="url(#soft8)"/>
+    <path d="M482 570 A148 136 0 1 0 778 570 A148 136 0 1 0 482 570 Z M506 570 A124 113 0 1 1 754 570 A124 113 0 1 1 506 570 Z" fill="url(#rubber)" fill-rule="evenodd"/>
+    <ellipse cx="630" cy="570" rx="136" ry="124.5" fill="none" stroke="#3c4048" stroke-width="9" stroke-dasharray="2.6 5.2" opacity=".85"/>
+    <ellipse cx="630" cy="570" rx="148" ry="136" fill="none" stroke="#000" stroke-width="2.5" opacity=".55"/>
+    <path d="M560 448 A150 138 0 0 1 700 448" stroke="#d8dce3" stroke-width="4" fill="none" opacity=".35"/>
+    <path d="M506 570 A124 113 0 1 0 754 570 A124 113 0 1 0 506 570 Z M520 570 A110 100 0 1 1 740 570 A110 100 0 1 1 520 570 Z" fill="url(#metal)" fill-rule="evenodd"/>
+    <ellipse cx="630" cy="570" rx="115" ry="104.5" fill="none" stroke="#5a606b" stroke-width="2" stroke-dasharray="1.6 6.5"/>
+    <g fill="#d8dce3" font-size="12" text-anchor="middle">
+      <text x="522" y="575">∞</text><text x="567" y="661">2</text><text x="640" y="672">1.2</text><text x="708" y="652">0.8</text>
+    </g>
+    <path d="M630 674 l0 -8" stroke="#d8dce3" stroke-width="2"/>
+    <ellipse cx="630" cy="570" rx="124" ry="113" fill="none" stroke="#101114" stroke-width="2" opacity=".6"/>
+    <path d="M520 570 A110 100 0 1 0 740 570 A110 100 0 1 0 520 570 Z M526 570 A104 94.6 0 1 1 734 570 A104 94.6 0 1 1 526 570 Z" fill="url(#redRing)" fill-rule="evenodd"/>
+    <path d="M544 492 A104 96 0 0 1 630 476" stroke="#ff8892" stroke-width="3.4" fill="none" opacity=".5"/>
+    <path d="M526 570 A104 94.6 0 1 0 734 570 A104 94.6 0 1 0 526 570 Z M538 570 A92 83.7 0 1 1 722 570 A92 83.7 0 1 1 538 570 Z" fill="url(#metal)" fill-rule="evenodd"/>
+    <ellipse cx="630" cy="570" rx="97" ry="88.2" fill="none" stroke="#7c828c" stroke-width="2" stroke-dasharray="1.2 3.6"/>
+    <path d="M538 570 A92 83.7 0 1 0 722 570 A92 83.7 0 1 0 538 570 Z M552 570 A78 71 0 1 1 708 570 A78 71 0 1 1 552 570 Z" fill="url(#metalDark)" fill-rule="evenodd"/>
+    <path d="M552 570 A78 71 0 1 0 708 570 A78 71 0 1 0 552 570 Z M556 570 A74 67.4 0 1 1 704 570 A74 67.4 0 1 1 556 570 Z" fill="url(#metal)" fill-rule="evenodd"/>
+    <ellipse cx="630" cy="570" rx="75" ry="68.3" fill="none" stroke="#9aa0aa" stroke-width="1.4" stroke-dasharray="1 3.4"/>
+
+    <!-- 前组镜片 -->
+    <g id="lensGlass">
+      <ellipse cx="630" cy="570" rx="74" ry="67.4" fill="url(#glass)"/>
+      <ellipse cx="630" cy="570" rx="74" ry="67.4" fill="none" stroke="#0a0c12" stroke-width="3"/>
+      <ellipse cx="630" cy="570" rx="56" ry="51" fill="none" stroke="#7f8ac8" stroke-width="2.4" opacity=".28"/>
+      <ellipse cx="630" cy="570" rx="40" ry="36.4" fill="none" stroke="#6f9f8a" stroke-width="2" opacity=".22"/>
+      <path d="M644 570 L636 596 L602 604 L602 578 Z" fill="#05070f"/>
+      <ellipse cx="624" cy="576" rx="34" ry="30" fill="url(#glassInner)"/>
+      <path d="M630 570 L652 576 L644 604 L610 600 L600 574 Z" fill="#0a0d1a" opacity=".9"/>
+      <path d="M630 570 L638 594 L608 600 L604 576 Z" fill="#04060c"/>
+      <g id="specStreak">
+        <ellipse cx="588" cy="516" rx="52" ry="13" fill="#fff" opacity=".5" transform="rotate(-32 588 516)" filter="url(#soft)"/>
+        <ellipse cx="586" cy="514" rx="30" ry="6.4" fill="#fff" opacity=".65" transform="rotate(-32 586 514)" filter="url(#soft)"/>
+      </g>
+      <circle cx="690" cy="512" r="6.2" fill="#fff" opacity=".85" filter="url(#soft)"/>
+      <path d="M580 622 A74 68 0 0 0 660 630" stroke="#9aa6d8" stroke-width="4" fill="none" opacity=".4"/>
+      <path d="M610 450 A74 68 0 0 1 662 462" stroke="#c8d4f8" stroke-width="3" fill="none" opacity=".3"/>
+    </g>
+
+    <!-- 镜筒明暗crescent -->
+    <path d="M506 570 A124 113 0 0 1 540 462" stroke="#eef1f6" stroke-width="3.4" fill="none" opacity=".4"/>
+    <path d="M520 570 A110 100 0 0 1 545 485" stroke="#0b0c10" stroke-width="2.4" fill="none" opacity=".5"/>
+    <path d="M538 570 A92 83.7 0 0 1 556 496" stroke="#e8ebf0" stroke-width="2.6" fill="none" opacity=".45"/>
+    <path d="M552 570 A78 71 0 0 1 566 508" stroke="#0b0c10" stroke-width="2" fill="none" opacity=".55"/>
+  </g>
+</g>
+
+<!-- 快门闪光遮罩 -->
+<rect id="flash" width="1200" height="900" fill="#fff" opacity="0" pointer-events="none"/>
+</svg>
+<div class="hint">纯手绘 SVG · 点击模式转盘旋转 · 点击快门触发闪光</div>
+</div>
+<script>
+const dialMark=document.getElementById('dialMark');
+let ang=0;
+document.getElementById('dial').addEventListener('click',()=>{
+  ang=(ang+30)%360;
+  dialMark.style.transform='rotate('+ang+'deg)';
+});
+const flash=document.getElementById('flash'),lensGlass=document.getElementById('lensGlass');
+document.getElementById('shutter').addEventListener('click',()=>{
+  lensGlass.style.transform='translate(0,4px)';
+  setTimeout(()=>{lensGlass.style.transform='';},160);
+  flash.animate([{opacity:0},{opacity:.85},{opacity:0}],{duration:340,easing:'ease-out'});
+});
+</script>
+</body>
+</html>

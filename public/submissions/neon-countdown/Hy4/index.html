@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Neon Countdown · Hy4</title>
+<style>
+:root{--c1:#22e1ff;--c2:#b06bff;--hot:#ff3d5e;--bg:#06070f}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{display:grid;place-items:center;background:
+  radial-gradient(60% 50% at 50% 42%,rgba(34,225,255,.13),transparent 70%),
+  radial-gradient(50% 40% at 20% 85%,rgba(176,107,255,.14),transparent 70%),var(--bg);
+  color:#eaf6ff;font:400 14px/1.5 -apple-system,"PingFang SC",system-ui,sans-serif;overflow:hidden}
+body.hot{--c1:#ff3d5e;--c2:#ff9a3d}
+.grid{position:fixed;inset:0;pointer-events:none;opacity:.35;
+  background:linear-gradient(transparent 95%,rgba(34,225,255,.18) 95%) 0 0/100% 34px,
+             linear-gradient(90deg,transparent 95%,rgba(176,107,255,.14) 95%) 0 0/34px 100%;
+  mask-image:radial-gradient(60% 55% at 50% 45%,#000,transparent 78%)}
+.stage{position:relative;text-align:center;transform:translateY(-8px)}
+.ring{position:relative;width:min(80vw,300px);aspect-ratio:1;margin:0 auto}
+svg{width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+.trk{fill:none;stroke:rgba(255,255,255,.07);stroke-width:10}
+.prg{fill:none;stroke:url(#g);stroke-width:10;stroke-linecap:round;filter:drop-shadow(0 0 12px var(--c1))}
+.gh{fill:none;stroke:var(--c1);stroke-width:1;opacity:.35}
+.mid{position:absolute;inset:0;display:grid;place-content:center;gap:2px}
+.num{font:700 clamp(76px,26vw,116px)/1 ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;
+  color:#fff;text-shadow:0 0 18px var(--c1),0 0 46px var(--c2),0 0 90px rgba(34,225,255,.35)}
+.num.tick{animation:kick .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes kick{0%{transform:scale(1.24);filter:brightness(1.9)}60%{transform:scale(.98)}100%{transform:scale(1)}}
+.sub{font:500 13px/1 ui-monospace,Menlo,monospace;letter-spacing:.22em;color:var(--c1);opacity:.85}
+.tag{margin-top:6px;font-size:11px;letter-spacing:.3em;color:rgba(255,255,255,.4)}
+.done{font:700 clamp(30px,9vw,44px)/1 -apple-system,system-ui;letter-spacing:.14em;color:#fff;
+  text-shadow:0 0 22px var(--c1),0 0 60px var(--c2);animation:pop .7s cubic-bezier(.2,1.4,.3,1)}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+.sparks{position:absolute;inset:0;pointer-events:none}
+.spark{position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:50%;background:var(--c1);
+  box-shadow:0 0 12px var(--c1);transform:rotate(var(--a));animation:fly 1s cubic-bezier(.15,.75,.25,1) forwards}
+@keyframes fly{to{transform:rotate(var(--a)) translateY(calc(var(--d)*-1px)) scale(.25);opacity:0}}
+.shock{position:absolute;inset:0;border-radius:50%;border:2px solid var(--c1);animation:sh .9s ease-out forwards}
+@keyframes sh{0%{transform:scale(.55);opacity:.9}100%{transform:scale(1.5);opacity:0}}
+.stage.shake{animation:shk .28s ease-in-out infinite}
+@keyframes shk{25%{transform:translate(2px,-1px)}75%{transform:translate(-2px,1px)}}
+button{margin-top:26px;padding:11px 30px;border-radius:99px;border:1px solid var(--c1);background:transparent;
+  color:var(--c1);font:600 14px/1 inherit;letter-spacing:.16em;cursor:pointer;transition:.22s;
+  box-shadow:0 0 0 rgba(34,225,255,0)}
+button:hover{background:var(--c1);color:#04121a;box-shadow:0 0 28px -4px var(--c1);transform:translateY(-1px)}
+.cap{position:fixed;bottom:16px;left:0;right:0;text-align:center;font-size:11px;letter-spacing:.34em;color:rgba(255,255,255,.28)}
+@media (max-width:390px){.ring{width:min(84vw,258px)}}
+</style>
+</head>
+<body>
+<div class="grid"></div>
+<div class="stage" id="stage">
+  <div class="ring">
+    <svg viewBox="0 0 260 260" aria-label="倒计时进度">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="var(--c1)"/><stop offset="1" stop-color="var(--c2)"/>
+      </linearGradient></defs>
+      <circle class="trk" cx="130" cy="130" r="112"/>
+      <circle class="gh" cx="130" cy="130" r="96" stroke-dasharray="1 9"/>
+      <circle class="prg" id="prg" cx="130" cy="130" r="112"/>
+    </svg>
+    <div class="mid">
+      <div class="num" id="num">10</div>
+      <div class="sub" id="sub">T-10.0s</div>
+    </div>
+    <div class="sparks" id="sp"></div>
+  </div>
+  <button id="rs">RESTART</button>
+</div>
+<div class="cap">NEON COUNTDOWN · HY4</div>
+<script>
+const $=id=>document.getElementById(id),C=2*Math.PI*112,DUR=10000;
+const stage=$('stage'),prg=$('prg'),num=$('num'),sub=$('sub'),sp=$('sp');
+prg.style.strokeDasharray=C;
+let end=0,run=false,shown=-1,fin=false;
+function finish(){
+  fin=true;run=false;
+  $('num').outerHTML='<div class="done" id="num">GO!</div>';
+  sub.textContent='TIME IS UP';
+  stage.classList.remove('shake');
+  $('rs').textContent='RESTART';
+  sp.innerHTML='<i class="shock"></i>'+Array.from({length:34},()=>{
+    const a=Math.random()*360,d=90+Math.random()*90;
+    return '<i class="spark" style="--a:'+a.toFixed(1)+'deg;--d:'+d.toFixed(0)+
+      ';animation-delay:'+(Math.random()*.12).toFixed(2)+'s;background:'+
+      (Math.random()<.5?'var(--c1)':'var(--c2)')+'"></i>';
+  }).join('');
+}
+function start(){
+  end=performance.now()+DUR;run=true;fin=false;shown=-1;sp.innerHTML='';
+  document.body.classList.remove('hot');
+  const n=$('num');n.className='num';n.textContent='10';
+  sub.textContent='T-10.0s';
+  prg.style.strokeDashoffset=C;
+}
+function loop(t){
+  if(run){
+    const left=Math.max(0,(end-t)/1000),sec=Math.ceil(left);
+    prg.style.strokeDashoffset=C*(1-left/DUR);
+    if(sec!==shown){
+      shown=sec;
+      const n=$('num');n.textContent=sec;
+      n.classList.remove('tick');void n.offsetWidth;n.classList.add('tick');
+      document.body.classList.toggle('hot',sec<=3&&sec>0);
+      stage.classList.toggle('shake',sec<=3&&sec>0);
+    }
+    sub.textContent='T-'+left.toFixed(1)+'s';
+    if(left<=0)finish();
+  }
+  requestAnimationFrame(loop);
+}
+$('rs').onclick=()=>{
+  const old=$('num');
+  if(old.className==='done'){const d=document.createElement('div');d.className='num';d.id='num';d.textContent='10';old.replaceWith(d);}
+  start();
+};
+addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();$('rs').click();}});
+start();requestAnimationFrame(loop);
+</script>
+</body>
+</html>

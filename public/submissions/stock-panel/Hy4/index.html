@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stock Panel · Hy4</title>
+<style>
+:root{--bg:#0a0e17;--card:#121826;--line:#222c3d;--ink:#e8eefb;--dim:#7b879e;--up:#ff4d4f;--dn:#16c784;--warn:#ffb020}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;display:grid;place-items:center;background:radial-gradient(120% 90% at 50% -10%,#162032,var(--bg) 70%);color:var(--ink);font:400 14px/1.5 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;padding:14px}
+.app{width:min(94vw,392px);background:var(--card);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 30px 60px -28px #000}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+header b{font-size:15px}
+header span{font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
+.stat{display:flex;gap:10px;font-size:12px}
+.up{color:var(--up)}.dn{color:var(--dn)}
+.idx{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}
+.idx div{padding:10px 12px;text-align:center;border-right:1px solid var(--line)}
+.idx div:last-child{border:0}
+.idx em{display:block;font-style:normal;font-size:11px;color:var(--dim)}
+.idx b{font:600 15px/1.4 ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.idx s{display:block;text-decoration:none;font-size:11px;font-variant-numeric:tabular-nums}
+.row{display:grid;grid-template-columns:1fr 72px auto;gap:8px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);position:relative;transition:background .7s}
+.row.flash-up{animation:fu .7s ease-out}
+.row.flash-dn{animation:fd .7s ease-out}
+@keyframes fu{0%{background:rgba(255,77,79,.18)}100%{background:transparent}}
+@keyframes fd{0%{background:rgba(22,199,132,.16)}100%{background:transparent}}
+.nm b{display:block;font-size:14px;font-weight:600}
+.nm span{font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
+.nm i{position:absolute;left:-1px;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0}
+.sp{width:72px;height:30px;overflow:visible}
+.px{text-align:right;font-variant-numeric:tabular-nums}
+.px b{font:600 17px/1.2 ui-monospace,Menlo,monospace;display:block;transition:color .3s}
+.px span{font-size:11px;display:block;margin-top:2px}
+.tag{position:absolute;right:16px;top:6px;font-size:10px;padding:1px 5px;border-radius:4px;background:rgba(255,176,32,.16);color:var(--warn);border:1px solid rgba(255,176,32,.35)}
+footer{display:flex;justify-content:space-between;padding:10px 16px;font-size:11px;color:var(--dim)}
+.live{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--up);margin-right:5px;animation:bl 1.4s ease-in-out infinite}
+@keyframes bl{50%{opacity:.25;transform:scale(.7)}}
+@media (max-width:390px){.row{grid-template-columns:1fr 60px auto;padding:10px 12px}.sp{width:60px}.px b{font-size:15px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div><b>自选行情</b><br><span id="clock">--:--:--</span></div>
+    <div class="stat"><span class="up">涨 <b id="nu">0</b></span><span class="dn">跌 <b id="nd">0</b></span><span style="color:var(--dim)">平 <b id="nf">0</b></span></div>
+  </header>
+  <div class="idx" id="idx"></div>
+  <div class="list" id="list"></div>
+  <footer><span><i class="live"></i>更新 <span id="upd">--:--:--</span></span><span>数据为本地模拟</span></footer>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const IDX=[{n:'上证指数',p:3214.56},{n:'深证成指',p:10238.90},{n:'创业板指',p:2036.72}];
+const S=[
+ {n:'贵州茅台',c:'600519',p:1682.40,b:1668.10},
+ {n:'宁德时代',c:'300750',p:241.86,b:245.20},
+ {n:'中芯国际',c:'688981',p:92.35,b:90.10},
+ {n:'比亚迪',c:'002594',p:268.70,b:271.40},
+ {n:'紫金矿业',c:'601899',p:19.42,b:19.20}
+];
+const N=26;
+S.forEach(s=>{s.h=[];let v=s.p*(1-(Math.random()-.5)*.02);
+  for(let i=0;i<N;i++){v+=(Math.random()-.5)*s.p*.006;s.h.push(v);}
+  s.h[N-1]=s.p;});
+IDX.forEach(x=>{x.b=x.p*(1-(Math.random()-.5)*.01);});
+const money=v=>'¥'+v.toFixed(2);
+const pctOf=s=>(s.p-s.b)/s.b*100;
+const cls=v=>v>0?'up':v<0?'dn':'';
+const pctTxt=v=>(v>0?'+':'')+v.toFixed(2)+'%';
+function spark(s){
+  const h=s.h,mn=Math.min(...h),mx=Math.max(...h),rng=Math.max(1e-6,mx-mn),c=cls(pctOf(s));
+  const col=c==='up'?'#ff4d4f':c==='dn'?'#16c784':'#7b879e';
+  const pts=h.map((v,i)=>(i/(N-1)*64).toFixed(1)+','+(25-(v-mn)/rng*22).toFixed(1)).join(' ');
+  return '<svg class="sp" viewBox="0 0 64 26" preserveAspectRatio="none">'+
+    '<path d="M0,26 L'+pts.replace(/ /g,' L')+' L64,26 Z" fill="'+col+'" opacity=".13"/>'+
+    '<polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+}
+function drawList(){
+  $('list').innerHTML=S.map((s,i)=>{
+    const d=s.p-s.b,pc=pctOf(s),c=cls(d);
+    return '<div class="row" id="r'+i+'"><i style="background:var(--'+(c==='up'?'up':c==='dn'?'dn':'dim')+')"></i>'+
+      '<div class="nm"><b>'+s.n+'</b><span>'+s.c+'</span></div>'+spark(s)+
+      '<div class="px"><b style="color:var(--'+(c==='up'?'up':c==='dn'?'dn':'ink')+')">'+money(s.p)+'</b>'+
+      '<span class="'+c+'">'+(d>0?'▲ ':d<0?'▼ ':'— ')+(d>0?'+':'')+d.toFixed(2)+'  '+pctTxt(pc)+'</span></div>'+
+      (Math.abs(pc)>=2?'<span class="tag">波动</span>':'')+'</div>';
+  }).join('');
+}
+function drawIdx(){
+  $('idx').innerHTML=IDX.map(x=>{
+    const d=x.p-x.b,pc=d/x.b*100,c=cls(d);
+    return '<div><em>'+x.n+'</em><b>'+x.p.toFixed(2)+'</b><s class="'+c+'">'+(d>0?'+':'')+pc.toFixed(2)+'%</s></div>';
+  }).join('');
+}
+function tick(){
+  let u=0,d=0;
+  S.forEach((s,i)=>{
+    if(Math.random()<0.45)return;
+    const old=s.p;
+    s.p=Math.max(0.1,s.p+(Math.random()-.5)*s.p*0.0075+s.b*0.0004);
+    s.p=Math.round(s.p*100)/100;
+    s.h.push(s.p);if(s.h.length>N)s.h.shift();
+    const row=$('r'+i);if(row&&s.p!==old){
+      row.classList.remove('flash-up','flash-dn');
+      void row.offsetWidth;
+      row.classList.add(s.p>old?'flash-up':'flash-dn');
+    }
+  });
+  IDX.forEach(x=>{x.p=Math.max(1,x.p+(Math.random()-.5)*x.p*0.004);});
+  S.forEach(s=>{const v=s.p-s.b;v>0?u++:v<0?d++:0;});
+  $('nu').textContent=u;$('nd').textContent=d;$('nf').textContent=S.length-u-d;
+  drawList();drawIdx();
+  const t=new Date();
+  $('upd').textContent=t.toTimeString().slice(0,8);
+  $('clock').textContent=t.toLocaleDateString('zh-CN')+' '+t.toTimeString().slice(0,8);
+}
+drawList();drawIdx();tick();
+setInterval(tick,1300);
+</script>
+</body>
+</html>

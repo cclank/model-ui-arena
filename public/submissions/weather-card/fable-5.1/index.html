@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weather · 沉浸式天气卡片</title>
+<style>
+  :root{--ink:#fff;--muted:rgba(255,255,255,.72);--glass:rgba(255,255,255,.14);--line:rgba(255,255,255,.28)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;display:grid;place-items:center;padding:14px;font-family:ui-sans-serif,system-ui,-apple-system,"PingFang SC","Segoe UI",Roboto,sans-serif;color:var(--ink);background:#0f172a;overflow-x:hidden}
+  .bg{position:fixed;inset:0;opacity:0;transition:opacity 1.1s ease}.bg.on{opacity:1}
+  .card{position:relative;width:min(100%,420px);border-radius:30px;overflow:hidden;border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.4);background:rgba(255,255,255,.1);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+  canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .content{position:relative;padding:16px 16px 14px;display:grid;gap:13px}
+  .tabs{display:flex;gap:4px;background:rgba(0,0,0,.2);padding:4px;border-radius:999px}
+  .tabs button{flex:1;border:0;background:transparent;color:var(--muted);font:700 12.5px/1 inherit;padding:9px 0;border-radius:999px;cursor:pointer;transition:.3s}
+  .tabs button.on{background:rgba(255,255,255,.92);color:#1b2a4a;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+  .swap{display:grid;gap:13px;transition:opacity .36s ease,transform .36s ease}.swap.out{opacity:0;transform:translateY(10px)}
+  .head{display:flex;justify-content:space-between;align-items:flex-start}
+  .city{font-size:15px;font-weight:700;display:flex;gap:8px;align-items:center}.city span{font-size:11px;color:var(--muted);font-weight:600}
+  .temp{font-size:clamp(70px,21vw,92px);font-weight:200;line-height:1;letter-spacing:-.045em;display:flex;margin:2px 0 0 -3px}
+  .temp sup{font-size:.3em;font-weight:500;margin-top:.22em}
+  .desc{font-size:18px;font-weight:700}
+  .hilo{color:var(--muted);font-size:12.5px;margin-top:4px;font-variant-numeric:tabular-nums}
+  .right{display:grid;justify-items:end;gap:6px}
+  .pill{border:1px solid var(--line);background:rgba(0,0,0,.18);color:#fff;font:700 12px/1 inherit;padding:7px 10px;border-radius:999px;cursor:pointer;transition:.25s}
+  .pill:hover{background:rgba(255,255,255,.25)}
+  .big svg{width:78px;height:78px;filter:drop-shadow(0 10px 18px rgba(0,0,0,.25));animation:float 4s ease-in-out infinite}
+  @keyframes float{50%{transform:translateY(-7px)}}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .stat{background:var(--glass);border-radius:14px;padding:9px 11px}
+  .stat span{font-size:10.5px;letter-spacing:.08em;color:var(--muted);display:block;font-weight:700;margin-bottom:3px}
+  .stat b{font-size:15.5px;font-weight:700;font-variant-numeric:tabular-nums}
+  .forecast{background:var(--glass);border-radius:18px;padding:11px 4px 4px}
+  .days{display:grid;grid-template-columns:repeat(5,1fr);text-align:center;font-size:11.5px;font-weight:700}
+  .days .d{display:grid;gap:3px;justify-items:center;color:var(--muted)}
+  .days svg{width:26px;height:26px}
+  .chart{width:100%;height:90px;display:block}
+  .note{font-size:10.5px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="bg on" id="bg0"></div><div class="bg" id="bg1"></div>
+<main class="card">
+  <canvas id="fx"></canvas>
+  <div class="content">
+    <nav class="tabs" id="tabs"></nav>
+    <div class="swap" id="swap">
+      <section class="head">
+        <div>
+          <div class="city"><b id="city">—</b><span id="time"></span></div>
+          <div class="temp"><span id="temp">0</span><sup id="unit">°C</sup></div>
+          <div class="desc" id="desc"></div>
+          <div class="hilo" id="hilo"></div>
+        </div>
+        <div class="right"><div><button class="pill" id="nightBtn">夜间</button> <button class="pill" id="unitBtn">°F</button></div><div class="big" id="bigIcon"></div></div>
+      </section>
+      <section class="stats" id="stats"></section>
+      <section class="forecast"><div class="days" id="days"></div><svg class="chart" id="chart"></svg></section>
+      <div class="note">本地模拟数据 · 白天/夜间按本机时间自动切换（6–18 点为白天）</div>
+    </div>
+  </div>
+</main>
+<script>
+  const $ = (i) => document.getElementById(i), cv = $("fx"), ctx = cv.getContext("2d"), d = devicePixelRatio || 1;
+  const CITIES = [
+    { name: "北京", cond: "sunny", t: 31, feel: 33, hi: 33, lo: 22, wind: 12, hum: 38, vis: 24, desc: "晴朗", days: [["sunny", 33, 22], ["sunny", 34, 23], ["cloudy", 30, 21], ["rain", 26, 19], ["sunny", 29, 20]] },
+    { name: "上海", cond: "rain", t: 24, feel: 26, hi: 26, lo: 21, wind: 28, hum: 91, vis: 6, desc: "中雨", days: [["rain", 26, 21], ["rain", 25, 20], ["cloudy", 27, 22], ["sunny", 30, 23], ["sunny", 31, 24]] },
+    { name: "成都", cond: "cloudy", t: 22, feel: 23, hi: 25, lo: 18, wind: 8, hum: 66, vis: 12, desc: "多云", days: [["cloudy", 25, 18], ["cloudy", 24, 18], ["rain", 21, 17], ["cloudy", 26, 19], ["sunny", 28, 20]] },
+    { name: "长白山", cond: "snow", t: -4, feel: -9, hi: -1, lo: -12, wind: 22, hum: 80, vis: 3, desc: "小雪", days: [["snow", -1, -12], ["snow", -3, -14], ["cloudy", 0, -10], ["sunny", 3, -8], ["sunny", 5, -6]] }
+  ];
+  const CLOUD = '<path d="M7 19h10a4.2 4.2 0 0 0 .6-8.35A5.6 5.6 0 0 0 7 10.3 4.4 4.4 0 0 0 7 19z" fill="#eef3fa"/>';
+  const ICON = {
+    sunny: '<circle cx="12" cy="12" r="4.4" fill="#ffd166"/><g stroke="#ffd166" stroke-width="1.9" stroke-linecap="round"><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/></g>',
+    moon: '<path d="M14.5 3a9 9 0 1 0 6.5 13.5A7.5 7.5 0 0 1 14.5 3z" fill="#ffe9a6"/>', cloudy: CLOUD,
+    rain: `<g transform="translate(0 -2.5)">${CLOUD}</g><g stroke="#9ed0ff" stroke-width="1.9" stroke-linecap="round"><path d="M8 19.5l-1 3M12 19.5l-1 3M16 19.5l-1 3"/></g>`,
+    snow: `<g transform="translate(0 -2.5)">${CLOUD}</g><g fill="#fff"><circle cx="8" cy="21" r="1.1"/><circle cx="12" cy="21.8" r="1.1"/><circle cx="16" cy="21" r="1.1"/></g>`
+  };
+  const BG = { sunny: ["#2f7fe6,#79c1ff 55%,#ffd27a", "#070f2b,#1b2a5c 55%,#3a2f5a"], rain: ["#3a4a6a,#5d7194 55%,#93a5c2", "#0a111f,#182238 55%,#2a3550"], snow: ["#6f95c0,#b6cde6 55%,#e6eef7", "#0f1828,#213048 55%,#3a4a68"], cloudy: ["#4f76ab,#88a6cd 55%,#c4d4e8", "#0e1626,#223250 55%,#38486a"] };
+  const hour = new Date().getHours(); let night = hour < 6 || hour >= 18, cur = 0, unit = "C", shown = 0, busy = false, flip = 0, raf = 0;
+  let mode = "", P = [], fade = 0, fadeTo = 1, W = 0, H = 0, tt = 0;
+  const R = (a, b) => a + Math.random() * (b - a), conv = (c) => unit === "C" ? Math.round(c) : Math.round(c * 9 / 5 + 32);
+  const wd = (i) => i === 0 ? "今天" : "周" + "日一二三四五六"[(new Date().getDay() + i) % 7];
+  CITIES.forEach((c, i) => { const b = document.createElement("button"); b.textContent = c.name; b.onclick = () => switchCity(i); $("tabs").appendChild(b); });
+  function render() {
+    const c = CITIES[cur]; [...$("tabs").children].forEach((b, i) => b.classList.toggle("on", i === cur));
+    $("city").textContent = c.name; $("time").textContent = (night ? "夜间" : "白天") + " · " + new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+    $("desc").textContent = c.desc; $("unit").textContent = "°" + unit; $("bigIcon").innerHTML = `<svg viewBox="0 0 24 24">${ICON[c.cond === "sunny" && night ? "moon" : c.cond]}</svg>`;
+    $("hilo").textContent = `最高 ${conv(c.hi)}° · 最低 ${conv(c.lo)}° · 体感 ${conv(c.feel)}°`;
+    $("stats").innerHTML = [["风速", c.wind + " km/h"], ["湿度", c.hum + "%"], ["能见度", c.vis + " km"]].map(([k, v]) => `<div class="stat"><span>${k}</span><b>${v}</b></div>`).join("");
+    $("days").innerHTML = c.days.map((x, i) => `<div class="d"><span>${wd(i)}</span><svg viewBox="0 0 24 24">${ICON[x[0]]}</svg></div>`).join("");
+    chart(c); countUp(c.t);
+    const bg = $("bg" + (flip ^= 1)); bg.style.background = `linear-gradient(160deg,${BG[c.cond][night ? 1 : 0]})`; bg.classList.add("on"); $("bg" + (flip ^ 1)).classList.remove("on");
+    if (mode !== c.cond) spawn(c.cond);
+  }
+  function chart(c) {   // 5 天最高/最低温折线 + 区间面积，按真实像素宽度绘制
+    const svg = $("chart"), Wc = svg.clientWidth || 340, hs = c.days.map((x) => conv(x[1])), ls = c.days.map((x) => conv(x[2]));
+    const max = Math.max(...hs), min = Math.min(...ls), y = (v) => 24 + (max - v) / (max - min || 1) * 40, x = (i) => Wc / 10 + i * Wc / 5, pts = (a) => a.map((v, i) => `${x(i)},${y(v)}`).join(" ");
+    svg.setAttribute("viewBox", `0 0 ${Wc} 90`);
+    svg.innerHTML = `<defs><linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".38"/><stop offset="1" stop-color="#fff" stop-opacity=".02"/></linearGradient></defs>
+      <polygon points="${pts(hs)} ${[...ls].reverse().map((v, i) => `${x(4 - i)},${y(v)}`).join(" ")}" fill="url(#ga)"/>
+      <polyline points="${pts(hs)}" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/><polyline points="${pts(ls)}" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.5" stroke-dasharray="4 4"/>
+      ${hs.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="3.2" fill="#fff"/><text x="${x(i)}" y="${y(v) - 9}" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">${v}°</text>`).join("")}
+      ${ls.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="2.2" fill="rgba(255,255,255,.7)"/><text x="${x(i)}" y="${y(v) + 17}" text-anchor="middle" font-size="11" fill="rgba(255,255,255,.75)">${v}°</text>`).join("")}`;
+  }
+  function countUp(target) {
+    cancelAnimationFrame(raf); const from = shown, to = conv(target), t0 = performance.now();
+    const step = (now) => { const p = Math.min(1, (now - t0) / 800), e = 1 - Math.pow(1 - p, 3); shown = Math.round(from + (to - from) * e); $("temp").textContent = shown; if (p < 1) raf = requestAnimationFrame(step); };
+    raf = requestAnimationFrame(step);
+  }
+  function switchCity(i) { if (busy || i === cur) return; busy = true; cur = i; $("swap").classList.add("out"); fadeTo = 0; setTimeout(() => { render(); $("swap").classList.remove("out"); busy = false; }, 380); }
+  $("unitBtn").onclick = () => { unit = unit === "C" ? "F" : "C"; $("unitBtn").textContent = "°" + (unit === "C" ? "F" : "C"); render(); };
+  $("nightBtn").onclick = () => { night = !night; $("nightBtn").textContent = night ? "白天" : "夜间"; mode = ""; render(); };
+  function resize() { W = cv.width = cv.clientWidth * d; H = cv.height = cv.clientHeight * d; }
+  addEventListener("resize", () => { resize(); chart(CITIES[cur]); });
+  function make(m, init) {
+    if (m === "rain") return { x: R(-W * .1, W * 1.1), y: init ? R(0, H) : R(-H * .2, 0), l: R(10, 22) * d, v: R(9, 15) * d, s: 0 };
+    if (m === "snow") return { x: R(0, W), y: init ? R(0, H) : -10, r: R(1.2, 3.4) * d, v: R(.35, 1.1) * d, ph: R(0, 6.28), a: R(.5, 1) };
+    if (m === "sunny") return night ? { x: R(0, W), y: R(0, H * .8), r: R(.6, 1.8) * d, ph: R(0, 6.28), a: R(.3, 1) } : { x: R(0, W), y: init ? R(0, H) : H + 10, r: R(1, 3) * d, v: R(.25, .7) * d, ph: R(0, 6.28) };
+    return { x: R(-W * .3, W), y: R(H * .02, H * .3), s: R(.45, 1.05) * d, v: R(.15, .45) * d, k: R(.5, .9) };
+  }
+  function spawn(m) { mode = m; P = []; const n = { rain: 150, snow: 90, sunny: night ? 80 : 50, cloudy: 6 }[m]; for (let i = 0; i < n; i++) P.push(make(m, true)); fade = 0; fadeTo = 1; }
+  const dot = (x, y, r, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill(); };
+  function sun() {
+    const x = W * .84, y = H * .1, g = ctx.createRadialGradient(x, y, 0, x, y, 150 * d);
+    g.addColorStop(0, "rgba(255,242,190,.95)"); g.addColorStop(.25, "rgba(255,220,120,.4)"); g.addColorStop(1, "rgba(255,200,80,0)"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.save(); ctx.translate(x, y); ctx.rotate(tt * .12); ctx.fillStyle = "rgba(255,235,170,.13)";
+    for (let i = 0; i < 12; i++) { ctx.rotate(Math.PI / 6); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-14 * d, -260 * d); ctx.lineTo(14 * d, -260 * d); ctx.fill(); } ctx.restore();
+  }
+  function moon() {
+    const x = W * .82, y = H * .12, r = 28 * d, g = ctx.createRadialGradient(x, y, r * .6, x, y, r * 4); g.addColorStop(0, "rgba(255,240,200,.35)"); g.addColorStop(1, "rgba(255,240,200,0)");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); dot(x, y, r, "#fff3c4"); [[-8, -6, 6], [9, 4, 4], [-2, 12, 3]].forEach(([a, b, c]) => dot(x + a * d, y + b * d, c * d, "rgba(200,180,140,.35)"));
+  }
+  function cloud(p) { ctx.fillStyle = night ? `rgba(190,205,230,${.14 * p.k})` : `rgba(255,255,255,${.3 * p.k})`; [[0, 0, 42], [40, -14, 52], [88, -2, 40], [52, 16, 44], [16, 14, 36]].forEach(([ox, oy, r]) => dot(p.x + ox * p.s, p.y + oy * p.s, r * p.s, ctx.fillStyle)); }
+  function tick() {
+    tt += 1 / 60; fade += (fadeTo - fade) * .08; ctx.clearRect(0, 0, W, H); ctx.globalAlpha = fade;
+    if (mode === "sunny" && night) { moon(); P.forEach((p) => { ctx.globalAlpha = fade * p.a * (.55 + .45 * Math.sin(tt * 2.5 + p.ph)); dot(p.x, p.y, p.r, "#fff"); }); }
+    else if (mode === "sunny") { sun(); P.forEach((p) => { p.y -= p.v; p.x += Math.sin(tt + p.ph) * .35 * d; if (p.y < -10) Object.assign(p, make("sunny")); ctx.globalAlpha = fade * (.35 + .4 * Math.sin(tt * 3 + p.ph)); dot(p.x, p.y, p.r, "#fff6c8"); }); }
+    else if (mode === "rain") {
+      ctx.strokeStyle = "rgba(205,228,255,.6)"; ctx.lineWidth = 1.2 * d; ctx.lineCap = "round";
+      P.forEach((p) => {
+        if (p.s > 0) { ctx.globalAlpha = fade * p.s; ctx.beginPath(); ctx.ellipse(p.x, H * .94, (1 - p.s) * 10 * d, (1 - p.s) * 4 * d, 0, 0, 6.2832); ctx.stroke(); p.s -= .08; if (p.s <= 0) Object.assign(p, make("rain")); return; }
+        p.y += p.v; p.x += p.v * .12; if (p.y > H * .93) { p.s = 1; return; }
+        ctx.globalAlpha = fade * .9; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.l * .12, p.y - p.l); ctx.stroke();
+      });
+    } else if (mode === "snow") P.forEach((p) => { p.y += p.v; p.x += Math.sin(tt * .8 + p.ph) * .5 * d; if (p.y > H + 10) Object.assign(p, make("snow")); ctx.globalAlpha = fade * p.a; dot(p.x, p.y, p.r, "#fff"); });
+    else P.forEach((p) => { p.x += p.v; if (p.x > W + 160 * p.s) p.x = -220 * p.s; cloud(p); });
+    ctx.globalAlpha = 1; requestAnimationFrame(tick);
+  }
+  resize(); $("nightBtn").textContent = night ? "白天" : "夜间"; render(); tick();
+</script>
+</body>
+</html>

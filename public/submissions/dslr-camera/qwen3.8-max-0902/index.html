@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>拟物复刻 · 单反相机（3/4 视角）</title>
+<style>
+  *{margin:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{display:grid;place-items:center;min-height:100vh;padding:10px;
+    background:radial-gradient(120% 100% at 50% 20%,#f6f8fb,#d7dde8 60%,#c2c9d6);
+    font-family:-apple-system,"PingFang SC",system-ui,sans-serif}
+  .stage{width:min(96vw,660px)}
+  svg{width:100%;height:auto;display:block}
+  /* 镜片反光缓慢流动（轻微动效，不破坏首帧） */
+  .sheen{animation:sheen 9s ease-in-out infinite}
+  @keyframes sheen{0%,100%{transform:translate(0,0);opacity:.5}50%{transform:translate(7px,-6px);opacity:.85}}
+  .dialKnob{cursor:pointer}
+  .shutter{cursor:pointer}
+  .shutter:active .sbtn{transform:translateY(2px)}
+  .sbtn{transition:transform .08s}
+  @media (prefers-reduced-motion:reduce){.sheen{animation:none}}
+</style>
+</head>
+<body>
+<div class="stage">
+<svg viewBox="0 0 640 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="纯手工 SVG 绘制的单反相机 3/4 视角">
+<defs>
+  <!-- ===== 材质渐变：磨砂塑料机身 ===== -->
+  <linearGradient id="plasticFront" x1="0" y1="0" x2="0.35" y2="1">
+    <stop offset="0" stop-color="#3a3f47"/><stop offset=".45" stop-color="#23272e"/><stop offset="1" stop-color="#12141a"/>
+  </linearGradient>
+  <linearGradient id="plasticTop" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#4a505a"/><stop offset="1" stop-color="#2b303a"/>
+  </linearGradient>
+  <linearGradient id="plasticSide" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#191c22"/><stop offset="1" stop-color="#2c313a"/>
+  </linearGradient>
+  <linearGradient id="gripGrad" x1="0" y1="0" x2="1" y2="0.2">
+    <stop offset="0" stop-color="#2f343c"/><stop offset=".5" stop-color="#20242b"/><stop offset="1" stop-color="#11141a"/>
+  </linearGradient>
+  <!-- ===== 材质渐变：金属（高光条带） ===== -->
+  <linearGradient id="metal" x1="0.1" y1="0" x2="0.9" y2="1">
+    <stop offset="0" stop-color="#fbfcfe"/><stop offset=".18" stop-color="#cfd6e0"/>
+    <stop offset=".38" stop-color="#7c8593"/><stop offset=".55" stop-color="#e7ebf1"/>
+    <stop offset=".75" stop-color="#9aa3b1"/><stop offset="1" stop-color="#5b636f"/>
+  </linearGradient>
+  <linearGradient id="metalDark" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#b9c0cc"/><stop offset=".5" stop-color="#6d7480"/><stop offset="1" stop-color="#3f454e"/>
+  </linearGradient>
+  <!-- ===== 材质渐变：镜头筒 ===== -->
+  <linearGradient id="barrel" x1="0.15" y1="0" x2="0.85" y2="1">
+    <stop offset="0" stop-color="#3c424b"/><stop offset=".4" stop-color="#22262d"/><stop offset="1" stop-color="#0e1015"/>
+  </linearGradient>
+  <linearGradient id="ringFace" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0" stop-color="#343a43"/><stop offset=".5" stop-color="#1c1f25"/><stop offset="1" stop-color="#0c0e12"/>
+  </linearGradient>
+  <!-- ===== 玻璃镜片：多层镀膜 ===== -->
+  <radialGradient id="glass" cx="0.36" cy="0.32" r="0.82">
+    <stop offset="0" stop-color="#1a6d63"/><stop offset=".28" stop-color="#0e4a55"/>
+    <stop offset=".6" stop-color="#08283d"/><stop offset="1" stop-color="#03101c"/>
+  </radialGradient>
+  <radialGradient id="glassCoat" cx="0.62" cy="0.7" r="0.6">
+    <stop offset="0" stop-color="#6b2f8f" stop-opacity=".5"/><stop offset=".55" stop-color="#2a4f9e" stop-opacity=".22"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="glassAO" cx="0.5" cy="0.5" r="0.5">
+    <stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".65"/>
+  </radialGradient>
+  <radialGradient id="spec" cx="0.5" cy="0.5" r="0.5">
+    <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+  </radialGradient>
+  <!-- ===== 背景与阴影 ===== -->
+  <radialGradient id="shadow" cx="0.5" cy="0.5" r="0.5">
+    <stop offset="0" stop-color="#0b1220" stop-opacity=".5"/><stop offset="1" stop-color="#0b1220" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="hotshoe" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#e9edf3"/><stop offset=".5" stop-color="#a7afbb"/><stop offset="1" stop-color="#6c7481"/>
+  </linearGradient>
+  <!-- 手柄防滑纹理（矢量图案，非位图） -->
+  <pattern id="gripTex" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(28)">
+    <rect width="7" height="7" fill="none"/>
+    <circle cx="2" cy="2" r="1.15" fill="#000" opacity=".38"/>
+    <circle cx="5.5" cy="5.5" r="1.15" fill="#000" opacity=".3"/>
+    <circle cx="2" cy="2" r=".5" fill="#5a616c" opacity=".3"/>
+  </pattern>
+  <filter id="soft"><feGaussianBlur stdDeviation="7"/></filter>
+  <filter id="soft3"><feGaussianBlur stdDeviation="3"/></filter>
+  <filter id="soft1"><feGaussianBlur stdDeviation="1.4"/></filter>
+  <clipPath id="glassClip"><ellipse cx="313" cy="309" rx="46" ry="50"/></clipPath>
+  <clipPath id="zoomClip"><path d="M314 308 m-78 0 a78 84 0 1 0 156 0 a78 84 0 1 0 -156 0 M314 308 m-58 0 a58 63 0 1 1 116 0 a58 63 0 1 1 -116 0 Z" clip-rule="evenodd"/></clipPath>
+  <clipPath id="gripClip"><path d="M232 188 C186 196 158 232 154 288 C150 340 166 384 202 396 L246 396 L246 188 Z"/></clipPath>
+</defs>
+
+<!-- ===== 背景 ===== -->
+<rect width="640" height="560" fill="none"/>
+
+<!-- ===== 接触阴影 + 环境遮蔽 ===== -->
+<g id="contactShadow">
+  <ellipse cx="330" cy="452" rx="230" ry="40" fill="url(#shadow)"/>
+  <ellipse cx="330" cy="446" rx="150" ry="24" fill="#0b1220" opacity=".28" filter="url(#soft)"/>
+</g>
+
+<!-- ===== 机身：顶面 + 右侧面（先画，处于后方） ===== -->
+<g id="bodyTopSide">
+  <!-- 顶面 -->
+  <polygon points="175,185 455,185 503,155 223,155" fill="url(#plasticTop)"/>
+  <polygon points="175,185 455,185 503,155 223,155" fill="none" stroke="#565d69" stroke-width="1" opacity=".5"/>
+  <!-- 右侧面 -->
+  <polygon points="455,185 455,395 503,365 503,155" fill="url(#plasticSide)"/>
+  <polygon points="455,185 455,395 503,365 503,155" fill="none" stroke="#0c0e12" stroke-width="1" opacity=".6"/>
+</g>
+
+<!-- ===== 军舰部（取景器凸起）+ 热靴 ===== -->
+<g id="pentaprism">
+  <!-- 右侧面 -->
+  <polygon points="366,186 352,130 400,100 414,156" fill="url(#plasticSide)"/>
+  <!-- 顶面 -->
+  <polygon points="296,130 352,130 400,100 344,100" fill="url(#plasticTop)"/>
+  <!-- 正面（梯形） -->
+  <polygon points="282,186 366,186 352,130 296,130" fill="url(#plasticFront)"/>
+  <polygon points="282,186 366,186 352,130 296,130" fill="none" stroke="#5a616d" stroke-width="1" opacity=".45"/>
+  <!-- 品牌字样（自创，非真实商标） -->
+  <text x="324" y="167" text-anchor="middle" font-size="15" font-weight="700" letter-spacing="2.5" fill="#c9d0db" font-family="system-ui,sans-serif">AXION</text>
+  <!-- 热靴 -->
+  <g id="hotShoe">
+    <polygon points="312,120 356,120 372,108 328,108" fill="url(#hotshoe)"/>
+    <polygon points="316,118 352,118 364,110 328,110" fill="#2a2f38"/>
+    <rect x="330" y="111" width="22" height="5" fill="#15181d" transform="skewX(-38) translate(84,0)"/>
+    <polygon points="312,120 356,120 356,124 312,124" fill="#6c7481"/>
+  </g>
+</g>
+
+<!-- ===== 顶面控件：模式转盘 + 快门按钮 ===== -->
+<g id="topControls">
+  <!-- 模式转盘（可点击转动） -->
+  <g id="modeDial" class="dialKnob">
+    <ellipse cx="447" cy="173" rx="30" ry="14" fill="#1b1e24"/>
+    <ellipse cx="447" cy="170" rx="30" ry="14" fill="url(#metalDark)"/>
+    <ellipse cx="447" cy="169" rx="25" ry="11" fill="#2b303a"/>
+    <g id="dialRibs"></g>
+    <g id="dialMarks" font-family="system-ui,sans-serif" font-size="7.5" font-weight="700" fill="#e7ebf1" text-anchor="middle"></g>
+    <ellipse cx="447" cy="169" rx="9" ry="4" fill="#15181d"/>
+    <!-- 指示点 -->
+    <circle cx="447" cy="181" r="2" fill="#ff7a45"/>
+  </g>
+  <!-- 快门按钮 + 指令拨轮 -->
+  <g class="shutter" id="shutterBtn">
+    <ellipse cx="212" cy="172" rx="20" ry="10" fill="#1b1e24"/>
+    <ellipse cx="212" cy="170" rx="20" ry="10" fill="url(#metal)"/>
+    <g class="sbtn">
+      <ellipse class="scap" cx="212" cy="167" rx="12" ry="6.5" fill="url(#metalDark)"/>
+      <ellipse cx="210" cy="165.5" rx="7" ry="3.4" fill="#dfe4ec" opacity=".7"/>
+    </g>
+  </g>
+</g>
+
+<!-- ===== 机身正面 ===== -->
+<g id="bodyFront">
+  <rect x="175" y="185" width="280" height="210" rx="16" fill="url(#plasticFront)"/>
+  <rect x="175" y="185" width="280" height="210" rx="16" fill="none" stroke="#4d545f" stroke-width="1.2" opacity=".5"/>
+  <!-- 顶部高光（光源左上） -->
+  <path d="M191 186 H439" stroke="#6b7382" stroke-width="2" opacity=".5" stroke-linecap="round"/>
+  <!-- 型号字样（自创） -->
+  <text x="425" y="212" text-anchor="end" font-size="12" font-weight="600" letter-spacing="1.5" fill="#9aa3b1" font-family="system-ui,sans-serif">D&#8209;900</text>
+  <!-- 镜头卡口周围的环境遮蔽暗部 -->
+  <ellipse cx="322" cy="304" rx="92" ry="98" fill="#000" opacity=".35" filter="url(#soft3)"/>
+</g>
+
+<!-- ===== 手柄（握把 + 防滑纹理，前突于左侧） ===== -->
+<g id="grip">
+  <path d="M232 188 C186 196 158 232 154 288 C150 340 166 384 202 396 L246 396 L246 188 Z" fill="url(#gripGrad)"/>
+  <g clip-path="url(#gripClip)"><rect x="150" y="185" width="100" height="215" fill="url(#gripTex)"/></g>
+  <path d="M232 188 C186 196 158 232 154 288 C150 340 166 384 202 396" fill="none" stroke="#585f6b" stroke-width="1.6" opacity=".5"/>
+  <!-- 手柄与机身接缝的暗部（AO） -->
+  <path d="M246 190 L246 394" stroke="#000" stroke-width="6" opacity=".3" filter="url(#soft3)"/>
+  <!-- 手柄顶部高光 -->
+  <path d="M206 194 C186 202 172 220 166 244" stroke="#6b7382" stroke-width="2.4" opacity=".4" fill="none" stroke-linecap="round"/>
+</g>
+
+<!-- ===== 镜头组件（多层镜筒 + 前组镜片） ===== -->
+<g id="lens">
+  <!-- 卡口金属环（在后，偏右上，形成月牙） -->
+  <ellipse cx="322" cy="304" rx="87" ry="93" fill="url(#metalDark)"/>
+  <ellipse cx="322" cy="304" rx="87" ry="93" fill="none" stroke="#2a2f38" stroke-width="1"/>
+  <!-- 镜筒外壁 -->
+  <ellipse cx="314" cy="308" rx="90" ry="96" fill="url(#barrel)"/>
+  <!-- 红色装饰环（加分项） -->
+  <ellipse cx="314" cy="308" rx="83" ry="89" fill="none" stroke="#d8382f" stroke-width="3.4" opacity=".95"/>
+  <ellipse cx="314" cy="308" rx="83" ry="89" fill="none" stroke="#ff8a7a" stroke-width="1" opacity=".4"/>
+  <!-- 变焦环带（含径向防滑肋，JS 生成） -->
+  <ellipse cx="314" cy="308" rx="79" ry="85" fill="url(#ringFace)"/>
+  <g clip-path="url(#zoomClip)"><g id="zoomRibs"></g></g>
+  <ellipse cx="314" cy="308" rx="79" ry="85" fill="none" stroke="#0a0c10" stroke-width="1.4"/>
+  <!-- 对焦距离刻度环 -->
+  <ellipse cx="314" cy="308" rx="60" ry="65" fill="url(#ringFace)"/>
+  <g id="focusScale"></g>
+  <ellipse cx="314" cy="308" rx="60" ry="65" fill="none" stroke="#3d444e" stroke-width="1"/>
+  <!-- 前组金属压圈 -->
+  <ellipse cx="313" cy="309" rx="52" ry="56" fill="url(#metal)"/>
+  <ellipse cx="313" cy="309" rx="52" ry="56" fill="none" stroke="#4a515c" stroke-width=".8"/>
+  <ellipse cx="313" cy="309" rx="48" ry="52" fill="#0a0d12"/>
+  <!-- 镜片文字（自创品牌/规格） -->
+  <text x="313" y="272" text-anchor="middle" font-size="6.6" letter-spacing=".8" fill="#aeb6c2" font-family="system-ui,sans-serif">AXION 24&#8209;70mm 1:2.8</text>
+  <!-- ===== 前组玻璃 ===== -->
+  <g id="glassGroup">
+    <ellipse cx="313" cy="309" rx="46" ry="50" fill="url(#glass)"/>
+    <ellipse cx="313" cy="309" rx="46" ry="50" fill="url(#glassCoat)"/>
+    <!-- 光圈叶片暗示（深处的七边形） -->
+    <polygon points="313,283 331,294 328,315 306,325 291,311 297,290" fill="#04121c" opacity=".55"/>
+    <polygon points="313,283 331,294 328,315 306,325 291,311 297,290" fill="none" stroke="#0e5a55" stroke-width="1" opacity=".35"/>
+    <!-- 同心圆反射 -->
+    <ellipse cx="313" cy="309" rx="34" ry="37" fill="none" stroke="#2ea89a" stroke-width="1" opacity=".28"/>
+    <ellipse cx="313" cy="309" rx="22" ry="24" fill="none" stroke="#7ad4c6" stroke-width=".8" opacity=".22"/>
+    <!-- 镀膜色反射弧（洋红/绿） -->
+    <path d="M283 336 A46 50 0 0 0 345 330" fill="none" stroke="#b64fd6" stroke-width="3" opacity=".3"/>
+    <path d="M292 285 A46 50 0 0 1 340 292" fill="none" stroke="#39d99a" stroke-width="2.4" opacity=".22"/>
+    <!-- 内圈环境遮蔽 -->
+    <ellipse cx="313" cy="309" rx="46" ry="50" fill="url(#glassAO)"/>
+    <!-- 主高光（左上，随动效轻微流动） -->
+    <g clip-path="url(#glassClip)">
+      <ellipse class="sheen" cx="296" cy="288" rx="17" ry="12" fill="url(#spec)" transform="rotate(-32 296 288)"/>
+      <ellipse cx="332" cy="330" rx="7" ry="5" fill="url(#spec)" opacity=".4"/>
+    </g>
+    <!-- 前组压圈高光 -->
+    <path d="M275 292 A48 52 0 0 1 322 262" fill="none" stroke="#fff" stroke-width="2.2" opacity=".5" stroke-linecap="round"/>
+  </g>
+</g>
+
+<!-- ===== 机身正面细节：镜头释放钮 / 对焦辅助灯 / 卡口螺丝 ===== -->
+<g id="frontDetails">
+  <circle cx="410" cy="240" r="9" fill="url(#metalDark)"/><circle cx="410" cy="240" r="4.5" fill="#15181d"/>
+  <circle cx="238" cy="230" r="7" fill="#1b1e24"/><circle cx="238" cy="230" r="3.4" fill="#8a2b2b" opacity=".8"/>
+  <g fill="#6c7481"><circle cx="248" cy="304" r="2.6"/><circle cx="392" cy="360" r="2.6"/><circle cx="360" cy="230" r="2.6"/></g>
+  <!-- 卡口索引点 -->
+  <circle cx="398" cy="268" r="3" fill="#e0574a"/>
+</g>
+
+<!-- ===== 整体统一光：左上柔光 + 右下暗部 ===== -->
+<g id="globalLight" pointer-events="none">
+  <ellipse cx="250" cy="210" rx="200" ry="150" fill="#fff" opacity=".05"/>
+  <rect x="150" y="360" width="360" height="70" fill="#000" opacity=".06" filter="url(#soft)"/>
+</g>
+</svg>
+</div>
+<script>
+(function(){
+  const NS='http://www.w3.org/2000/svg';
+  const CX=314,CY=308;
+  function el(n,a){const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;}
+  // 变焦环径向防滑肋（36 根，静态生成于首帧）
+  const zr=document.getElementById('zoomRibs');
+  for(let i=0;i<72;i++){
+    const a=i*Math.PI/36,ca=Math.cos(a),sa=Math.sin(a);
+    const x1=CX+58*ca,y1=CY+63*sa,x2=CX+79*ca,y2=CY+85*sa;
+    zr.appendChild(el('line',{x1,y1,x2,y2,stroke:i%2?'#0a0c10':'#3a414b','stroke-width':i%2?1.6:1.6,opacity:i%2?.55:.5}));
+  }
+  // 对焦距离刻度：数字 + 刻度线
+  const fs=document.getElementById('focusScale');
+  const nums=['0.38','0.5','0.7','1','1.5','3','∞'];
+  nums.forEach((t,i)=>{
+    const a=Math.PI*(0.15+ i*(0.7/(nums.length-1)));
+    const ca=Math.cos(a),sa=-Math.sin(a);
+    const xr=52,yr=57;
+    fs.appendChild(el('line',{x1:CX+xr*ca*0.9,y1:CY+yr*sa*0.9+34,x2:CX+xr*ca,y2:CY+yr*sa+34,stroke:'#c3cad5','stroke-width':1,opacity:.6}));
+    const tx=el('text',{x:CX+xr*ca*0.72,y:CY+yr*sa*0.72+37,'font-size':6,fill:'#d7dde7','text-anchor':'middle','font-family':'system-ui,sans-serif',opacity:.85});
+    tx.textContent=t;fs.appendChild(tx);
+  });
+  // 模式转盘刻度 + 档位字母
+  const dr=document.getElementById('dialRibs'),dm=document.getElementById('dialMarks');
+  for(let i=0;i<28;i++){
+    const a=i*Math.PI*2/28,ca=Math.cos(a),sa=Math.sin(a);
+    dr.appendChild(el('line',{x1:447+25*ca,y1:169+11*sa,x2:447+30*ca,y2:170+14*sa,stroke:'#0d0f13','stroke-width':1.4,opacity:.6}));
+  }
+  const modes=[['M',90],['A',40],['S',-10],['P',-60],['AUTO',-110]];
+  modes.forEach(m=>{
+    const a=m[1]*Math.PI/180,x=447+16*Math.cos(a),y=169+7*Math.sin(a)+2.5;
+    const t=el('text',{x,y,'font-size':m[0].length>2?5:7,fill:'#eef2f7','text-anchor':'middle','font-family':'system-ui,sans-serif','font-weight':700});
+    t.textContent=m[0];dm.appendChild(t);
+  });
+  // 交互：点击模式转盘转动一档
+  const dial=document.getElementById('modeDial');let ang=0;
+  dial.addEventListener('click',()=>{ang+=50;   // 每点一次转过一档（档位间隔 50°），使下一档对准指示点
+    dm.setAttribute('transform',`rotate(${ang} 447 169)`);});
+  // 交互：点击快门 → 轻微下沉 + 屏幕一闪
+  const sb=document.getElementById('shutterBtn');
+  sb.addEventListener('click',()=>{
+    const f=document.createElementNS(NS,'rect');
+    f.setAttribute('width',640);f.setAttribute('height',560);f.setAttribute('fill','#fff');f.setAttribute('opacity',.5);
+    f.style.transition='opacity .35s';document.querySelector('svg').appendChild(f);
+    requestAnimationFrame(()=>f.setAttribute('opacity',0));
+    setTimeout(()=>f.remove(),380);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>天气卡片</title>
+<style>
+*{margin:0;box-sizing:border-box}
+body{min-height:100dvh;display:flex;align-items:center;justify-content:center;font-family:system-ui,-apple-system,"PingFang SC",sans-serif;color:#f4f8ff;
+background:radial-gradient(120% 100% at 50% 0%,#1a2440,#0a0e1c 60%,#05070f);padding:16px}
+.card{position:relative;width:min(100%,360px);border-radius:26px;overflow:hidden;padding:18px 18px 14px;display:grid;gap:14px;
+background:linear-gradient(160deg,var(--a),var(--b) 60%,var(--c));transition:background 1s;border:1px solid #ffffff26;box-shadow:0 40px 90px -40px #000d}
+.card{--a:#3f7fd6;--b:#2a5ca8;--c:#1d3f7a}
+.rain{--a:#4b6a8c;--b:#33506e;--c:#22374e}
+.snow{--a:#7f9fd8;--b:#5d7fb8;--c:#41608f}
+.night{--a:#141d3e;--b:#0d1430;--c:#080c20}
+canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+header{display:flex;justify-content:space-between;align-items:center;position:relative}
+.cities{display:flex;gap:6px}
+.cities button{font:inherit;font-size:12px;color:#eaf2ffcc;background:#ffffff1f;border:1px solid #ffffff33;border-radius:99px;padding:5px 12px;cursor:pointer;transition:.25s}
+.cities button.on{background:#fff;color:#1c3c6e;font-weight:700;box-shadow:0 4px 14px #0004}
+#unit{font:inherit;font-size:12px;color:#fff;background:#ffffff1f;border:1px solid #ffffff33;border-radius:99px;padding:5px 10px;cursor:pointer}
+#cur{display:flex;justify-content:space-between;align-items:flex-end;transition:opacity .28s,transform .28s;position:relative}
+#cur.out{opacity:0;transform:translateY(8px)}
+#temp{font-size:64px;font-weight:200;line-height:.95;font-variant-numeric:tabular-nums;text-shadow:0 2px 20px #0003}
+#temp sup{font-size:22px;vertical-align:top;font-weight:400}
+#city{font-size:15px;opacity:.9}
+#desc{font-size:14px;opacity:.95;margin-top:2px}
+.meta{font-size:11px;opacity:.78;margin-top:6px;display:grid;gap:2px}
+.days{position:relative;background:#00000024;border:1px solid #ffffff1f;border-radius:16px;padding:8px 10px 6px;backdrop-filter:blur(3px)}
+#chart{width:100%;height:58px;display:block}
+#drow{display:flex;justify-content:space-between;font-size:10px;text-align:center}
+#drow b{display:block;font-weight:400;opacity:.75;margin-top:1px;font-variant-numeric:tabular-nums}
+footer{font-size:9px;opacity:.55;text-align:center;position:relative}
+</style>
+</head>
+<body>
+<div class="card" id="card">
+<canvas id="fx"></canvas>
+<header><div class="cities" id="cities"></div><button id="unit">°C/°F</button></header>
+<div id="cur">
+ <div id="right"><div id="city"></div><div id="desc"></div><div class="meta"><span id="wind"></span><span id="hum"></span></div></div>
+ <div id="temp"></div>
+</div>
+<div class="days"><svg id="chart" viewBox="0 0 300 58" preserveAspectRatio="none"></svg><div id="drow"></div></div>
+<footer>本地 mock 数据 · 粒子随天气变化 · 6-18 点为白天</footer>
+</div>
+<script>
+const D=[
+{c:"上海",w:"晴",t:28,wind:"东南风 3 级",hum:"湿度 45%",f:[[31,34],[28,33],[32,35],[27,30],[29,34]],d:["晴","多云","晴","阵雨","晴"]},
+{c:"成都",w:"雨",t:19,wind:"微风 2 级",hum:"湿度 82%",f:[[20,23],[17,21],[21,24],[18,22],[16,19]],d:["小雨","中雨","阴","多云","小雨"]},
+{c:"哈尔滨",w:"雪",t:-8,wind:"西北风 5 级",hum:"湿度 66%",f:[[-6,-2],[-12,-7],[-4,1],[-9,-4],[-14,-9]],d:["小雪","阵雪","阴","小雪","晴"]}];
+let ci=0,unit="C";
+const $=id=>document.getElementById(id),card=$("card");
+const now=new Date(),NIGHT=now.getHours()<6||now.getHours()>=18;
+D.forEach((x,i)=>{const b=document.createElement("button");b.textContent=x.c;b.onclick=()=>swap(i);$("cities").append(b)});
+const c2f=v=>Math.round(v*9/5+32),T=v=>unit==="C"?v:c2f(v);
+function swap(i){if(i===ci)return;document.querySelectorAll(".cities button")[ci].classList.remove("on");ci=i;
+$("cur").classList.add("out");setTimeout(()=>{$("cur").classList.remove("out");render();initP()},280)}
+function render(){const x=D[ci],cls=NIGHT?"night ":x.w==="雨"?"rain":x.w==="雪"?"snow":"";
+card.className="card "+cls;document.querySelectorAll(".cities button")[ci].classList.add("on");
+$("city").textContent=x.c;$("desc").textContent=x.w+(NIGHT?" · 夜":"");$("wind").textContent=x.wind;$("hum").textContent=x.hum;
+const from=parseInt($("temp").textContent)||0,to=x.t;let s=performance.now();
+(function up(n){const k=Math.min(1,(n-s)/500);$("temp").innerHTML=Math.round(from+(to-from)*(1-Math.pow(1-k,3)))+'<sup>°'+unit+"</sup>";if(k<1)requestAnimationFrame(up)})(s);
+const hs=x.f.map(p=>p[1]),ls=x.f.map(p=>p[0]),mn=Math.min(...ls),mx=Math.max(...hs),rg=(mx-mn)||1;
+const px=i=>20+i*65,py=v=>50-(v-mn)/rg*38;
+$("chart").innerHTML=`<polyline points="${hs.map((v,i)=>px(i)+","+py(v)).join(" ")}" fill="none" stroke="#ffd76a" stroke-width="2"/>
+<polyline points="${ls.map((v,i)=>px(i)+","+py(v)).join(" ")}" fill="none" stroke="#9fd8ff" stroke-width="2" stroke-dasharray="3 3"/>
+${hs.map((v,i)=>`<circle cx="${px(i)}" cy="${py(v)}" r="2.4" fill="#ffd76a"/><text x="${px(i)}" y="${py(v)-6}" font-size="9" text-anchor="middle" fill="#ffe9a8">${T(v)}°</text>`).join("")}
+${ls.map((v,i)=>`<circle cx="${px(i)}" cy="${py(v)}" r="2" fill="#9fd8ff"/>`).join("")}`;
+$("drow").innerHTML=x.f.map((p,i)=>`<div><b style="opacity:.65">${i?"":"今"}</b>${["日","一","二","三","四"][i]}<div style="margin:2px 0">${x.d[i]}</div><b>${T(p[0])}° / ${T(p[1])}°</b></div>`).join("")}
+$("unit").onclick=()=>{unit=unit==="C"?"F":"C";render()};
+const cv=$("fx"),g=cv.getContext("2d");let P=[];
+function initP(){const x=D[ci].w;P=[];const n=x==="雨"?80:x==="雪"?60:26;
+for(let i=0;i<n;i++)P.push({x:Math.random(),y:Math.random(),v:0,s:Math.random(),p:Math.random()*6})}
+function frame(t){const w=cv.width=cv.offsetWidth,h=cv.height=cv.offsetHeight;g.clearRect(0,0,w,h);
+const x=D[ci].w;
+for(const p of P){if(x==="雨"){p.y+=(.018+p.s*.02);p.x+=.002;if(p.y>1){p.y=-.02;p.x=Math.random()}}
+else if(x==="雪"){p.y+=.002+p.s*.004;p.x=Math.sin(t/900+p.p)*.0012+.0004;if(p.y>1){p.y=-.02;p.x=Math.random()}}
+else if(NIGHT){continue}else{p.y-=.0016+p.s*.0012;p.x+=Math.sin(t/700+p.p)*.0006;if(p.y<0){p.y=1.02;p.x=Math.random()}}
+if(x==="雨"){g.strokeStyle="rgba(190,220,255,.5)";g.lineWidth=1;g.beginPath();g.moveTo(p.x*w,p.y*h);g.lineTo((p.x-.006)*w,(p.y-.03)*h);g.stroke()}
+else if(x==="雪"){g.fillStyle="rgba(255,255,255,"+(.4+p.s*.5)+")";g.beginPath();g.arc(p.x*w,p.y*h,1+p.s*2.2,0,7);g.fill()}
+else if(NIGHT){g.fillStyle="rgba(255,255,255,"+(.2+.5*Math.abs(Math.sin(t/600+p.p)))+")";g.fillRect(p.x*w,p.y*h*.6,1.6,1.6)}
+else{g.fillStyle="rgba(255,230,150,"+(.12+p.s*.3)+")";g.beginPath();g.arc(p.x*w,p.y*h,1+p.s*2.6,0,7);g.fill()}}
+requestAnimationFrame(frame)}
+initP();render();requestAnimationFrame(frame);
+document.querySelectorAll(".cities button")[0].classList.add("on");
+</script>
+</body>
+</html>

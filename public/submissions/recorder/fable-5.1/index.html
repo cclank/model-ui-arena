@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recorder · 录音机交互原型</title>
+<style>
+  :root{--bg:#0c0e13;--panel:#151922;--panel2:#1c2230;--line:rgba(255,255,255,.08);--ink:#f2f4f8;--muted:#8b94a7;--rec:#ff3b4a;--amber:#ffb020;--ok:#35d49a;--accent:#6ea8ff}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;background:radial-gradient(90% 55% at 50% 0%,#1d2434,var(--bg) 70%);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"PingFang SC","Segoe UI",Roboto,sans-serif;display:grid;place-items:center;padding:14px}
+  .app{width:min(100%,420px);background:var(--panel);border:1px solid var(--line);border-radius:28px;padding:18px 18px 16px;box-shadow:0 30px 80px rgba(0,0,0,.5);display:grid;gap:14px;position:relative;overflow:hidden}
+  .app::before{content:"";position:absolute;inset:-40% -20% auto;height:70%;background:radial-gradient(50% 50% at 50% 50%,rgba(255,59,74,.28),transparent 70%);opacity:0;transition:opacity .6s;pointer-events:none}
+  .app[data-state="recording"]::before{opacity:1;animation:breathe 2s ease-in-out infinite}
+  .app[data-state="paused"]::before{opacity:.6;background:radial-gradient(50% 50% at 50% 50%,rgba(255,176,32,.25),transparent 70%)}
+  @keyframes breathe{50%{transform:scale(1.15)}}
+  header{display:flex;justify-content:space-between;align-items:center;position:relative}
+  .title{font-size:12px;font-weight:800;letter-spacing:.28em;color:var(--muted)}
+  .badge{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:800;letter-spacing:.12em;padding:6px 11px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);transition:.3s}
+  .badge i{width:8px;height:8px;border-radius:50%;background:var(--muted);transition:.3s}
+  [data-state="recording"] .badge{color:var(--rec);border-color:rgba(255,59,74,.4)}
+  [data-state="recording"] .badge i{background:var(--rec);box-shadow:0 0 12px var(--rec);animation:blink 1s steps(2) infinite}
+  [data-state="paused"] .badge{color:var(--amber)}[data-state="paused"] .badge i{background:var(--amber)}
+  [data-state="stopped"] .badge{color:var(--ok)}[data-state="stopped"] .badge i{background:var(--ok)}
+  @keyframes blink{50%{opacity:.2}}
+  .clock{position:relative;text-align:center;padding:6px 0 0}
+  .time{font-size:clamp(52px,15vw,66px);font-weight:800;letter-spacing:.02em;font-variant-numeric:tabular-nums;line-height:1}
+  .time small{font-size:.38em;color:var(--muted);font-weight:700;margin-left:4px}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px;min-height:16px}
+  .wave{position:relative;height:110px;border-radius:16px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}
+  canvas{width:100%;height:100%;display:block}
+  .wave::after{content:"";position:absolute;top:0;bottom:0;right:14%;width:2px;background:var(--rec);opacity:0;transition:opacity .3s}
+  [data-state="recording"] .wave::after{opacity:.9}
+  .vu{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;font-size:11px;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
+  .vu .track{height:6px;border-radius:99px;background:rgba(255,255,255,.06);position:relative;overflow:hidden}
+  .vu .fill{position:absolute;inset:0 auto 0 0;width:0;border-radius:99px;background:linear-gradient(90deg,var(--ok),var(--amber) 70%,var(--rec));transition:width 80ms linear}
+  .vu .peak{position:absolute;top:0;bottom:0;width:2px;background:#fff;left:0;transition:left .2s}
+  .controls{display:flex;align-items:center;justify-content:center;gap:22px;padding:4px 0 26px}
+  .btn{border:0;cursor:pointer;font:700 13px/1 inherit;color:var(--ink);transition:transform .15s,opacity .2s,background .2s}
+  .btn:active{transform:scale(.94)}
+  .main{width:84px;height:84px;border-radius:50%;background:var(--rec);box-shadow:0 0 0 6px rgba(255,59,74,.15),0 14px 30px rgba(255,59,74,.35);display:grid;place-items:center;position:relative}
+  .main svg{width:30px;height:30px;fill:#fff}
+  [data-state="recording"] .main{background:var(--amber);box-shadow:0 0 0 6px rgba(255,176,32,.15),0 14px 30px rgba(255,176,32,.3)}
+  .side{width:56px;height:56px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);display:grid;place-items:center}
+  .side svg{width:20px;height:20px;fill:var(--ink)}
+  .side:disabled{opacity:.28;cursor:not-allowed}
+  .label{position:absolute;top:100%;margin-top:8px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--muted);white-space:nowrap;font-weight:700}
+  .confirm{display:none;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(255,59,74,.12);border:1px solid rgba(255,59,74,.35);font-size:13px;font-weight:700}
+  .confirm.show{display:flex;animation:pop .2s}
+  @keyframes pop{from{transform:translateY(6px);opacity:0}}
+  .confirm button{padding:8px 14px;border-radius:10px;background:var(--rec);margin-left:6px}.confirm button.ghost{background:transparent;border:1px solid var(--line)}
+  .summary{display:none;background:var(--panel2);border:1px solid rgba(53,212,154,.35);border-radius:18px;padding:14px;gap:10px}
+  .summary.show{display:grid;animation:pop .3s}
+  .summary h3{font-size:13px;letter-spacing:.1em;color:var(--ok);display:flex;justify-content:space-between}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .grid div{background:rgba(255,255,255,.04);border-radius:12px;padding:9px 11px}
+  .grid span{display:block;font-size:10.5px;color:var(--muted);font-weight:700;letter-spacing:.06em}
+  .grid b{font-size:15px;font-variant-numeric:tabular-nums}
+  .summary .btn{padding:11px;border-radius:12px;background:var(--accent);color:#06101f}
+  .history{font-size:12px;color:var(--muted);display:grid;gap:6px}
+  .history div{display:flex;justify-content:space-between;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.03);font-variant-numeric:tabular-nums}
+  .history b{color:var(--ink)}
+  .kbd{text-align:center;font-size:11px;color:var(--muted)}
+  .kbd kbd{font:inherit;padding:2px 6px;border-radius:5px;border:1px solid var(--line);background:rgba(255,255,255,.05)}
+</style>
+</head>
+<body>
+<main class="app" id="app" data-state="idle">
+  <header><div class="title">RECORDER</div><div class="badge"><i></i><span id="badge">待命</span></div></header>
+  <section class="clock"><div class="time"><span id="t">00:00</span><small id="cs">.00</small></div><div class="hint" id="hint">点击红色按钮开始录音</div></section>
+  <section class="wave"><canvas id="wave"></canvas></section>
+  <div class="vu"><span>LEVEL</span><div class="track"><div class="fill" id="fill"></div><div class="peak" id="peak"></div></div><span id="db">-∞ dB</span></div>
+  <div class="confirm" id="confirm"><span>确认停止并生成摘要？<small id="cd">(4s)</small></span><div><button class="btn ghost" id="cancel">取消</button><button class="btn" id="ok">停止</button></div></div>
+  <section class="controls">
+    <button class="btn side" id="reset" title="重置" disabled><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg><span class="label">新录音</span></button>
+    <button class="btn main" id="main" aria-label="开始"><svg id="mainIcon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/></svg><span class="label" id="mainLabel">Start</span></button>
+    <button class="btn side" id="stop" title="停止" disabled><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg><span class="label">Stop</span></button>
+  </section>
+  <section class="summary" id="summary">
+    <h3><span>录音摘要</span><span id="sumState">已完成</span></h3>
+    <div class="grid"><div><span>时长</span><b id="sDur">00:00.00</b></div><div><span>段落 / 暂停</span><b id="sSeg">1 / 0</b></div><div><span>峰值 / 均值</span><b id="sLvl">-∞ / -∞</b></div><div><span>估算大小 · 44.1k/16bit</span><b id="sSize">0 KB</b></div></div>
+    <div class="history" id="history"></div>
+  </section>
+  <div class="kbd"><kbd>Space</kbd> 开始 / 暂停 &nbsp; <kbd>S</kbd> 停止</div>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id), app = $("app"), cv = $("wave"), ctx = cv.getContext("2d");
+  const ICON = { rec: '<circle cx="12" cy="12" r="7"/>', pause: '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>', play: '<path d="M8 5v14l11-7z"/>' };
+  const S = { state: "idle", elapsed: 0, last: 0, pauses: 0, peak: 0, sum: 0, n: 0, bars: [], level: 0, seed: Math.random() * 99 };
+  const takes = []; let confirmTimer = 0, confirmLeft = 0;
+  const pad = (n) => String(n).padStart(2, "0"), fmt = (ms) => pad(Math.floor(ms / 60000)) + ":" + pad(Math.floor(ms / 1000) % 60);
+  const db = (v) => (v < 0.002 ? "-∞" : (20 * Math.log10(v)).toFixed(1)) + " dB";
+  function setState(s, badge, hint) {
+    S.state = s; app.dataset.state = s; $("badge").textContent = badge; $("hint").textContent = hint;
+    const rec = s === "recording"; $("mainIcon").innerHTML = ICON[rec ? "pause" : s === "paused" ? "play" : "rec"];
+    $("mainLabel").textContent = rec ? "Pause" : s === "paused" ? "Resume" : "Start";
+    $("stop").disabled = s === "idle" || s === "stopped"; $("reset").disabled = s === "idle";
+  }
+  function start() { Object.assign(S, { elapsed: 0, pauses: 0, peak: 0, sum: 0, n: 0, bars: [], last: performance.now(), seed: Math.random() * 99 }); $("summary").classList.remove("show"); $("peak").style.left = "0"; setState("recording", "录音中", "正在采集 · 再次点击暂停"); }
+  function pause() { S.pauses++; S.bars.push(-1); setState("paused", "已暂停", "已暂停 · 点击继续录音"); }
+  function resume() { S.last = performance.now(); setState("recording", "录音中", "继续录音中"); }
+  function askStop() {                                   // 二次确认：先静默挂起计时，取消后才计为一次真实暂停
+    if (S.state !== "recording" && S.state !== "paused") return;
+    if (S.state === "recording") { S.pendingPause = true; setState("paused", "待确认", "计时已挂起 · 等待确认停止"); }
+    $("confirm").classList.add("show"); confirmLeft = 4; $("cd").textContent = "(4s)";
+    clearInterval(confirmTimer); confirmTimer = setInterval(() => { if (--confirmLeft <= 0) return cancelStop(); $("cd").textContent = `(${confirmLeft}s)`; }, 1000);
+  }
+  function cancelStop() { clearInterval(confirmTimer); $("confirm").classList.remove("show"); if (S.pendingPause) { S.pendingPause = false; S.pauses++; S.bars.push(-1); } setState("paused", "已暂停", "已取消停止 · 点击继续录音"); }
+  function stop() {
+    clearInterval(confirmTimer); $("confirm").classList.remove("show"); S.pendingPause = false;
+    const avg = S.n ? S.sum / S.n : 0, segs = S.pauses + 1, name = "REC_" + new Date().toTimeString().slice(0, 8).replace(/:/g, "");
+    $("sDur").textContent = fmt(S.elapsed) + "." + pad(Math.floor(S.elapsed / 10) % 100); $("sSeg").textContent = `${segs} / ${S.pauses}`;
+    $("sLvl").textContent = db(S.peak) + " / " + db(avg); $("sSize").textContent = (S.elapsed / 1000 * 88.2).toFixed(0) + " KB";
+    takes.unshift({ name, dur: fmt(S.elapsed), segs }); takes.length = Math.min(takes.length, 4);
+    $("history").innerHTML = takes.map((t, i) => `<div><span>${i === 0 ? "本次" : "历史"} · ${t.name}.wav</span><b>${t.dur} · ${t.segs} 段</b></div>`).join("");
+    $("summary").classList.add("show"); setState("stopped", "已完成", "录音已保存（模拟）· 再次点击红色按钮开始新录音");
+  }
+  function reset() { clearInterval(confirmTimer); $("confirm").classList.remove("show"); $("summary").classList.remove("show"); Object.assign(S, { elapsed: 0, bars: [], level: 0, peak: 0 }); setState("idle", "待命", "点击红色按钮开始录音"); }
+  $("main").onclick = () => (S.state === "recording" ? pause() : S.state === "paused" ? resume() : start());
+  $("stop").onclick = askStop; $("ok").onclick = stop; $("cancel").onclick = cancelStop; $("reset").onclick = reset;
+  addEventListener("keydown", (e) => { if (e.code === "Space") { e.preventDefault(); $("main").click(); } if (e.key.toLowerCase() === "s") askStop(); });
+  const noise = (t) => Math.abs(Math.sin(t * 1.7 + S.seed) * .5 + Math.sin(t * 3.9 + 1.3) * .3 + Math.sin(t * 9.1 + 2.1) * .2); // 模拟人声包络（无麦克风权限）
+  let acc = 0, peakHold = 0;
+  function loop(now) {
+    if (S.state === "recording") {
+      const dt = now - S.last; S.last = now; S.elapsed += dt; acc += dt;
+      const t = S.elapsed / 1000, gate = Math.sin(t * .8) > -0.55 ? 1 : 0.06, target = gate * (0.25 + 0.75 * noise(t * 2)) * (0.85 + 0.15 * Math.random());
+      S.level += (target - S.level) * 0.35; S.sum += S.level; S.n++; S.peak = Math.max(S.peak, S.level); peakHold = Math.max(peakHold * 0.985, S.level);
+      if (acc > 45) { acc = 0; S.bars.push(S.level); if (S.bars.length > 420) S.bars.shift(); }
+      $("t").textContent = fmt(S.elapsed); $("cs").textContent = "." + pad(Math.floor(S.elapsed / 10) % 100);
+    } else S.level *= 0.85;
+    $("fill").style.width = Math.min(100, S.level * 100) + "%"; $("peak").style.left = Math.min(99, peakHold * 100) + "%"; $("db").textContent = db(S.level);
+    draw(); requestAnimationFrame(loop);
+  }
+  function draw() {
+    const W = cv.width = cv.clientWidth * devicePixelRatio, H = cv.height = cv.clientHeight * devicePixelRatio, mid = H / 2, bw = 4 * devicePixelRatio, gap = 2 * devicePixelRatio;
+    ctx.clearRect(0, 0, W, H); ctx.strokeStyle = "rgba(255,255,255,.08)"; ctx.beginPath(); ctx.moveTo(0, mid); ctx.lineTo(W, mid); ctx.stroke();
+    const head = W * 0.86, n = Math.floor(head / (bw + gap)), start = Math.max(0, S.bars.length - n);
+    for (let i = start; i < S.bars.length; i++) {
+      const x = head - (S.bars.length - i) * (bw + gap), v = S.bars[i], age = (S.bars.length - i) / n;
+      if (v < 0) { ctx.fillStyle = "rgba(255,176,32,.8)"; ctx.fillRect(x, mid - H * .35, 2 * devicePixelRatio, H * .7); continue; }
+      const h = Math.max(2 * devicePixelRatio, v * H * 0.8);
+      ctx.fillStyle = `hsla(${350 - v * 40},95%,${62 - age * 18}%,${1 - age * 0.55})`;
+      ctx.beginPath(); ctx.roundRect(x, mid - h / 2, bw, h, bw / 2); ctx.fill();
+    }
+    if (S.state === "idle" && !S.bars.length) { ctx.fillStyle = "rgba(255,255,255,.25)"; ctx.font = `${12 * devicePixelRatio}px sans-serif`; ctx.textAlign = "center"; ctx.fillText("波形将在录音时实时绘制", W / 2, mid - 10 * devicePixelRatio); }
+  }
+  setState("idle", "待命", "点击红色按钮开始录音"); requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>昼夜之钟</title>
+<style>
+*{margin:0;box-sizing:border-box}
+body{min-height:100dvh;display:flex;align-items:center;justify-content:center;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--ink);
+--ink:#e8f0ff;--sub:#8fa3cf;--acc:#7fd4ff;--rim:#ffffff22;--face:#0d1738e6;background:radial-gradient(120% 100% at 50% 0%,#101a44,#070b22 55%,#02030c);transition:background 1.5s,color 1.5s}
+body.day{--ink:#142c4c;--sub:#5b7ba6;--acc:#ff8a3d;--rim:#1c3f6f2a;--face:#ffffffeb;background:radial-gradient(120% 100% at 50% 0%,#a5d8ff,#dff0fb 55%,#f4fbff)}
+.card{display:grid;justify-items:center;gap:clamp(14px,3.5vh,26px);padding:clamp(20px,6vw,38px);border-radius:32px;background:var(--face);border:1px solid var(--rim);box-shadow:0 40px 90px -40px #000a;animation:rise .9s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}}
+svg{display:block;width:min(70vw,296px);height:auto}
+.tick{stroke:var(--sub);stroke-width:1.2}
+.major{stroke:var(--ink);stroke-width:2.4}
+#ring{stroke:var(--acc);fill:none;animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{50%{opacity:.1}}
+#hHand,#mHand{stroke:var(--ink);stroke-linecap:round}
+#sHand{stroke:var(--acc);stroke-width:1.6;stroke-linecap:round;filter:drop-shadow(0 0 5px var(--acc))}
+.dot{fill:var(--acc)}
+#sun{fill:var(--acc);filter:drop-shadow(0 0 6px var(--acc))}
+#moon{fill:var(--ink)}
+.star{position:fixed;width:2px;height:2px;border-radius:50%;background:#fff;animation:tw 2.6s ease-in-out infinite}
+body.day .star{display:none}
+@keyframes tw{50%{opacity:.12}}
+#digi{font-size:clamp(38px,12vw,58px);font-weight:700;letter-spacing:.04em}
+#digi i{font-style:normal;font-size:.36em;color:var(--sub);vertical-align:.95em;margin-left:.5em}
+#sub{color:var(--sub);font-size:12px;letter-spacing:.32em}
+</style>
+</head>
+<body>
+<div class="card">
+<svg viewBox="0 0 200 200">
+<defs><radialGradient id="g1" cx="50%" cy="42%" r="75%"><stop offset="0" stop-color="#0000"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></radialGradient></defs>
+<circle cx="100" cy="100" r="94" fill="url(#g1)" stroke="var(--rim)" stroke-width="1.5"/>
+<circle id="ring" cx="100" cy="100" r="90" stroke-width="1" opacity=".45"/>
+<g id="ticks"></g>
+<g id="orbit"><circle id="sun" r="5.5" cx="-20"/><path id="moon" transform="translate(-20,-20)" d="M0,-6 A6,6 0 1,0 0,6 A4.6,4.6 0 1,1 0,-6 Z"/></g>
+<line id="hHand" x1="100" y1="100" x2="100" y2="58" stroke-width="5"/>
+<line id="mHand" x1="100" y1="100" x2="100" y2="36" stroke-width="3"/>
+<line id="sHand" x1="100" y1="108" x2="100" y2="24"/>
+<circle class="dot" cx="100" cy="100" r="3.4"/>
+</svg>
+<div>
+<div id="digi">--:--:--<i id="ampm"></i></div>
+<div id="sub">正在校准时间</div>
+</div>
+</div>
+<script>
+const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg",pad=n=>String(n).padStart(2,"0");
+for(let i=0;i<60;i++){const l=document.createElementNS(NS,"line"),a=i*6*Math.PI/180,r1=i%5?78:84;
+l.setAttribute("x1",100+Math.sin(a)*r1);l.setAttribute("y1",100-Math.cos(a)*r1);
+l.setAttribute("x2",100+Math.sin(a)*88);l.setAttribute("y2",100-Math.cos(a)*88);
+l.setAttribute("class",i%5?"tick":"tick major");$("ticks").append(l)}
+for(let i=0;i<26;i++){const s=document.createElement("i");s.className="star";
+s.style.left=Math.random()*100+"vw";s.style.top=Math.random()*100+"vh";s.style.animationDelay=Math.random()*3+"s";document.body.append(s)}
+const W=["日","一","二","三","四","五","六"];let lastS=-1;
+function tick(){const n=new Date(),h=n.getHours(),m=n.getMinutes(),t=n.getSeconds()+n.getMilliseconds()/1000;
+$("hHand").setAttribute("transform",`rotate(${(h%12)*30+m/2} 100 100)`);
+$("mHand").setAttribute("transform",`rotate(${m*6+t/10} 100 100)`);
+$("sHand").setAttribute("transform",`rotate(${t*6} 100 100)`);
+const day=h>=6&&h<18;document.body.classList.toggle("day",day);
+$("sun").style.display=day?"":"none";$("moon").style.display=day?"none":"";
+const a=(h*3600+m*60+t)/86400*2*Math.PI-Math.PI/2,R=70;
+$("orbit").setAttribute("transform",`translate(${100+Math.cos(a)*R},${100+Math.sin(a)*R})`);
+$("sun").setAttribute("cx",0);$("moon").setAttribute("transform","translate(-5,-6)");
+if(t|0!==lastS){lastS=t|0;$("digi").firstChild.textContent=`${pad(h)}:${pad(m)}:${pad(t|0)}`;
+$("ampm").textContent=h<12?"AM":"PM";
+$("sub").textContent=`${n.getFullYear()}年${n.getMonth()+1}月${n.getDate()}日 星期${W[n.getDay()]}`}
+requestAnimationFrame(tick)}
+tick();
+</script>
+</body>
+</html>

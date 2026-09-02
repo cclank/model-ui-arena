@@ -1,0 +1,119 @@
+<!-- 设计说明：霓虹倒计时 —— 10 秒自动开跑，大数字 + 环形进度 + 10 个刻度同步点亮，
+     每秒闪光脉冲，最后 3 秒变红紧张加速，结束时爆发式粒子 + 完成文案，可一键重来。 -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>霓虹倒计时 · Neon Countdown</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{--neon:#22e6ff;font-family:system-ui,-apple-system,'Segoe UI','PingFang SC',sans-serif;min-height:100vh;display:grid;place-items:center;background:radial-gradient(120% 110% at 50% 18%,#171a3c 0%,#0a0c22 55%,#05060f 100%);overflow:hidden;transition:background .5s;touch-action:manipulation}
+body.urgent{--neon:#ff3b6b;background:radial-gradient(120% 110% at 50% 18%,#3c0e24 0%,#150a1c 60%,#05060f 100%)}
+.scan{position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.022) 0 1px,transparent 1px 3px)}
+.stage{position:relative;width:min(88vw,420px);aspect-ratio:1;display:grid;place-items:center}
+.stage svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.track{fill:none;stroke:#1d2252;stroke-width:10}
+.prog{fill:none;stroke:var(--neon);stroke-width:10;stroke-linecap:round;stroke-dasharray:741.4;stroke-dashoffset:741.4;filter:drop-shadow(0 0 10px var(--neon))}
+.tick{stroke:#2a3064;stroke-width:5;stroke-linecap:round;transition:stroke .15s}
+.tick.lit{stroke:var(--neon);filter:drop-shadow(0 0 6px var(--neon))}
+.core{display:flex;flex-direction:column;align-items:center;gap:8px;z-index:2}
+.num{font-size:clamp(96px,30vw,158px);font-weight:800;line-height:1;color:#fff;text-shadow:0 0 8px #fff,0 0 22px var(--neon),0 0 46px var(--neon),0 0 90px var(--neon);font-variant-numeric:tabular-nums}
+.sub{font-size:12px;letter-spacing:.5em;color:#9aa6e6}
+.flash{position:fixed;inset:0;pointer-events:none;background:radial-gradient(80% 80% at 50% 50%,rgba(255,255,255,.55),transparent 70%);opacity:0;z-index:5}
+.doneText{display:none;position:absolute;bottom:16%;z-index:3;text-align:center}
+.done .doneText{display:block;animation:rise .6s ease-out}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.doneText .b{font-size:26px;font-weight:800;letter-spacing:.14em;color:#fff;text-shadow:0 0 14px var(--neon),0 0 40px var(--neon)}
+.doneText .s{font-size:12px;color:#b9c2f2;letter-spacing:.3em;margin-top:6px}
+button{position:absolute;bottom:4%;z-index:3;font-size:13px;letter-spacing:.22em;padding:11px 26px;border-radius:999px;border:1px solid var(--neon);background:rgba(10,12,32,.6);color:var(--neon);cursor:pointer;transition:all .2s}
+button:hover{background:var(--neon);color:#071018;box-shadow:0 0 26px var(--neon)}
+.burst{position:fixed;inset:0;pointer-events:none;z-index:4}
+.burst i{position:absolute;left:50%;top:50%;width:9px;height:9px;border-radius:2px;background:hsl(var(--hue),95%,62%);box-shadow:0 0 10px hsl(var(--hue),95%,62%);animation:fly .95s ease-out forwards}
+@keyframes fly{to{transform:translate(var(--dx),var(--dy)) scale(.15) rotate(240deg);opacity:0}}
+@keyframes shake{20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.urgent .core{animation:urg .5s infinite}
+@keyframes urg{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+</style>
+</head>
+<body>
+<div class="scan"></div>
+<div class="stage" id="stage">
+  <svg viewBox="0 0 260 260">
+    <circle class="track" cx="130" cy="130" r="118"/>
+    <circle class="prog" id="prog" cx="130" cy="130" r="118"/>
+    <g id="ticks"></g>
+  </svg>
+  <div class="core">
+    <div class="num" id="num">10</div>
+    <div class="sub">SECONDS</div>
+  </div>
+  <div class="doneText"><div class="b">时间到</div><div class="s">点火升空 · 任务完成</div></div>
+  <button id="restart">重新开始</button>
+</div>
+<div class="flash" id="flash"></div>
+<div class="burst" id="burst"></div>
+<script>
+const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
+const ticks=$('ticks');
+for(let i=0;i<10;i++){
+  const l=document.createElementNS(NS,'line'),a=(i/10)*360;
+  l.setAttribute('x1',130+103*Math.cos(a*Math.PI/180));l.setAttribute('y1',130+103*Math.sin(a*Math.PI/180));
+  l.setAttribute('x2',130+116*Math.cos(a*Math.PI/180));l.setAttribute('y2',130+116*Math.sin(a*Math.PI/180));
+  l.setAttribute('class','tick');l.dataset.i=i;ticks.appendChild(l);
+}
+const C=2*Math.PI*118;
+let dur=10,startT=performance.now(),lastTick=-1,running=true;
+function setTicks(sec){
+  Array.from(ticks.children).forEach((t,i)=>t.classList.toggle('lit',i<10-sec));
+}
+function flash(a){
+  const f=$('flash');
+  f.animate([{opacity:0},{opacity:a},{opacity:0}],{duration:420,easing:'ease-out'});
+}
+function pulse(){
+  const n=$('num');
+  n.animate([{transform:'scale(1.22)'},{transform:'scale(1)'}],{duration:340,easing:'ease-out'});
+}
+function burst(){
+  const b=$('burst');b.innerHTML='';
+  for(let i=0;i<48;i++){
+    const s=document.createElement('i'),ang=Math.random()*6.283,dist=90+Math.random()*240;
+    s.style.setProperty('--dx',Math.cos(ang)*dist+'px');
+    s.style.setProperty('--dy',Math.sin(ang)*dist+'px');
+    s.style.setProperty('--hue',Math.random()*360);
+    s.style.animationDuration=(.8+Math.random()*.7)+'s';
+    b.appendChild(s);
+  }
+}
+function complete(){
+  running=false;
+  document.body.classList.add('done');document.body.classList.remove('urgent');
+  $('num').textContent='0';
+  $('prog').style.strokeDashoffset='0';
+  flash(1);burst();
+  setTimeout(()=>flash(.8),140);
+}
+function loop(t){
+  if(!running)return;
+  const remain=Math.max(0,dur-(t-startT)/1000),sec=Math.ceil(remain);
+  $('prog').style.strokeDashoffset=C*(remain/dur);
+  $('num').textContent=sec;
+  if(sec!==lastTick){
+    lastTick=sec;setTicks(sec);pulse();flash(sec<=3?.5:.28);
+    document.body.classList.toggle('urgent',sec<=3&&sec>0);
+    if(sec<=3&&sec>0)$('stage').animate([{transform:'translateX(-7px)'},{transform:'translateX(7px)'},{transform:'translateX(-5px)'},{transform:'translateX(5px)'},{transform:'none'}],{duration:300});
+    if(sec===0)complete();
+  }
+  requestAnimationFrame(loop);
+}
+$('restart').onclick=()=>{
+  document.body.classList.remove('done','urgent');
+  $('burst').innerHTML='';$('prog').style.strokeDashoffset=C;
+  dur=10;lastTick=-1;setTicks(10);$('num').textContent='10';
+  startT=performance.now();running=true;requestAnimationFrame(loop);
+};
+setTicks(10);requestAnimationFrame(loop);
+</script>
+</body>
+</html>

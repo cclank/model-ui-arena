@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>天气 · SKY CARD</title>
+<style>
+  :root { --ink:#fff; --sub:rgba(255,255,255,.72); --line:rgba(255,255,255,.22); --chip:rgba(255,255,255,.14); }
+  body.day { --ink:#182033; --sub:rgba(24,32,51,.66); --line:rgba(24,32,51,.18); --chip:rgba(255,255,255,.55); }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:18px;
+    font-family:"SF Pro Display",-apple-system,"PingFang SC",system-ui,sans-serif;
+    background:radial-gradient(130% 110% at 50% -10%, #24304d, #0c1120); transition:background 1s; }
+  body.day { background:radial-gradient(130% 110% at 50% -10%, #b8ccec, #7d95c2); }
+  .card { position:relative; width:min(94vw,520px); border-radius:26px; overflow:hidden;
+    box-shadow:0 40px 90px -30px rgba(0,0,0,.65); }
+  .scene { position:absolute; inset:0; transition:opacity .95s ease; }
+  #fx { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  .content { position:relative; padding:22px 22px 20px; color:var(--ink); }
+  header { display:flex; justify-content:space-between; align-items:flex-start; }
+  .city b { font-size:26px; letter-spacing:.04em; display:block; }
+  .city span { font-size:11px; letter-spacing:.3em; opacity:.72; }
+  .tools { display:flex; gap:8px; align-items:center; }
+  .tog { border:1px solid var(--line); background:var(--chip); color:inherit; border-radius:99px;
+    padding:5px 12px; font-size:12px; cursor:pointer; backdrop-filter:blur(6px); font-family:inherit; }
+  .tog:hover { filter:brightness(1.12); }
+  .now { display:flex; align-items:flex-end; gap:18px; margin:14px 0 4px; }
+  .temp { font-size:clamp(58px,17vw,84px); font-weight:250; line-height:.95; letter-spacing:-.02em; }
+  .temp i { font-style:normal; font-size:.42em; vertical-align:.62em; font-weight:300; opacity:.85; }
+  .desc { font-size:15px; padding-bottom:.5em; opacity:.92; line-height:1.5; }
+  .stats { display:flex; gap:10px; margin:12px 0 18px; }
+  .stat { flex:1; border:1px solid var(--line); background:var(--chip); border-radius:14px; padding:9px 12px;
+    backdrop-filter:blur(6px); }
+  .stat small { display:block; font-size:10.5px; letter-spacing:.14em; opacity:.66; margin-bottom:3px; }
+  .stat b { font-size:15px; font-variant-numeric:tabular-nums; }
+  .week { border-top:1px solid var(--line); padding-top:14px; }
+  .days { display:flex; }
+  .day { flex:1; min-width:0; text-align:center; }
+  .day .d { font-size:11px; opacity:.72; letter-spacing:.06em; }
+  .day svg { width:26px; height:26px; margin:7px 0 5px; }
+  .day .t { font-size:12px; font-variant-numeric:tabular-nums; }
+  .day .t em { font-style:normal; opacity:.55; margin-left:4px; }
+  #chart { width:100%; height:56px; display:block; margin-top:8px; }
+  .cities { position:fixed; bottom:16px; left:50%; transform:translateX(-50%); display:flex; gap:8px; }
+  .cities button { border:0; cursor:pointer; font-family:inherit; padding:8px 16px; border-radius:99px;
+    font-size:13px; color:#dfe6ff; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.2);
+    backdrop-filter:blur(8px); transition:all .3s; }
+  body.day .cities button { color:#22304e; background:rgba(255,255,255,.6); border-color:transparent; }
+  .cities button.on { background:#ffd166; color:#241a02; border-color:#ffd166; font-weight:700; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="scene" id="sceneA"></div>
+    <div class="scene" id="sceneB" style="opacity:0"></div>
+    <canvas id="fx"></canvas>
+    <div class="content">
+      <header>
+        <div class="city"><b id="cName">—</b><span id="cEn"></span></div>
+        <div class="tools"><button class="tog" id="unit">°C</button></div>
+      </header>
+      <div class="now">
+        <div class="temp"><span id="temp">--</span><i>°</i></div>
+        <div class="desc" id="desc">—</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><small>风速</small><b id="wind">—</b></div>
+        <div class="stat"><small>湿度</small><b id="hum">—</b></div>
+        <div class="stat"><small>体感</small><b id="feel">—</b></div>
+      </div>
+      <div class="week">
+        <div class="days" id="days"></div>
+        <svg id="chart" viewBox="0 0 300 64" preserveAspectRatio="none"></svg>
+      </div>
+    </div>
+  </div>
+  <div class="cities" id="cityBar"></div>
+<script>
+(function () {
+  "use strict";
+  var WEEK = ["日","一","二","三","四","五","六"];
+  var CITIES = [
+    { name:"杭州", en:"HANGZHOU · CN", type:"sunny", temp:31, desc:"晴 · 天空通透，紫外线强", wind:12, hum:48, feel:33,
+      days:[["sunny",33,25],["sunny",35,26],["cloudy",31,24],["sunny",34,25],["rainy",29,23]],
+      day:"linear-gradient(160deg,#ffd166 0%,#ff9e5e 34%,#5aa7ff 100%)", night:"linear-gradient(160deg,#1b2a52,#0d1430 70%)" },
+    { name:"东京", en:"TOKYO · JP", type:"rainy", temp:26, desc:"小雨 · 空气湿润，记得带伞", wind:18, hum:84, feel:28,
+      days:[["rainy",27,22],["rainy",25,21],["cloudy",28,22],["sunny",30,23],["rainy",26,21]],
+      day:"linear-gradient(160deg,#8aa0b8,#41546e 55%,#2c3a52)", night:"linear-gradient(160deg,#131c2e,#080d18 70%)" },
+    { name:"哈尔滨", en:"HARBIN · CN", type:"snowy", temp:-8, desc:"小雪 · 路面湿滑，注意保暖", wind:22, hum:71, feel:-14,
+      days:[["snowy",-6,-15],["snowy",-9,-18],["cloudy",-5,-13],["sunny",-3,-12],["cloudy",-7,-16]],
+      day:"linear-gradient(160deg,#cfe4f5,#8fb2d4 55%,#5f83a8)", night:"linear-gradient(160deg,#1c2a44,#0a1122 70%)" }
+  ];
+  var ICONS = {
+    sunny:'<circle cx="13" cy="13" r="5.4" fill="#ffd166"/><g stroke="#ffd166" stroke-width="1.8" stroke-linecap="round"><line x1="13" y1="1.6" x2="13" y2="4.6"/><line x1="13" y1="21.4" x2="13" y2="24.4"/><line x1="1.6" y1="13" x2="4.6" y2="13"/><line x1="21.4" y1="13" x2="24.4" y2="13"/><line x1="5" y1="5" x2="7" y2="7"/><line x1="19" y1="19" x2="21" y2="21"/><line x1="5" y1="21" x2="7" y2="19"/><line x1="19" y1="5" x2="21" y2="7"/></g>',
+    rainy:'<path d="M7 15a5 5 0 1 1 1.2-9.87A6 6 0 0 1 20 8.5 4 4 0 0 1 19 15H7z" fill="#c9d6e8"/><g stroke="#7fd0ff" stroke-width="1.8" stroke-linecap="round"><line x1="9" y1="17.5" x2="8" y2="21"/><line x1="14" y1="17.5" x2="13" y2="21"/><line x1="19" y1="17.5" x2="18" y2="21"/></g>',
+    snowy:'<path d="M7 14a5 5 0 1 1 1.2-9.87A6 6 0 0 1 20 7.5 4 4 0 0 1 19 14H7z" fill="#dbe8f6"/><g fill="#eef6ff"><circle cx="9" cy="17.6" r="1.3"/><circle cx="14" cy="20" r="1.3"/><circle cx="19" cy="17.6" r="1.3"/></g>',
+    cloudy:'<path d="M7 15a5 5 0 1 1 1.2-9.87A6 6 0 0 1 20 8.5 4 4 0 0 1 19 15H7z" fill="#e6eef8"/>'
+  };
+  var unit = "C", cur = 0, displayC = null;
+  var el = {
+    name: document.getElementById("cName"), en: document.getElementById("cEn"), temp: document.getElementById("temp"),
+    desc: document.getElementById("desc"), wind: document.getElementById("wind"), hum: document.getElementById("hum"),
+    feel: document.getElementById("feel"), days: document.getElementById("days"), chart: document.getElementById("chart"),
+    unit: document.getElementById("unit"), bar: document.getElementById("cityBar")
+  };
+  var sceneA = document.getElementById("sceneA"), sceneB = document.getElementById("sceneB"), showing = 0;
+  function cv(v) { return unit === "C" ? v : v * 9 / 5 + 32; }
+  function fmtT(v) { return Math.round(cv(v)) + ""; }
+
+  // ---- 天气粒子（晴天光尘 / 雨丝 / 雪花），切换时整层淡出淡入，避免硬切 ----
+  var cv2 = document.getElementById("fx"), ctx = cv2.getContext("2d"), P = [], fxType = "sunny", fxAlpha = 1, fadeUntil = 0;
+  function sizeFx() { var r = cv2.parentElement.getBoundingClientRect(); cv2.width = r.width * devicePixelRatio; cv2.height = r.height * devicePixelRatio; }
+  function seedFx() {
+    P = [];
+    for (var i = 0; i < 70; i++) P.push({ x: Math.random(), y: Math.random(), s: .4 + Math.random() * .9, ph: Math.random() * 7 });
+  }
+  function drawFx(t) {
+    var w = cv2.width, h = cv2.height, dpr = devicePixelRatio;
+    if (fadeUntil && t > fadeUntil) fadeUntil = 0;
+    fxAlpha += ((fadeUntil ? 0 : 1) - fxAlpha) * .06;
+    ctx.clearRect(0, 0, w, h);
+    ctx.globalAlpha = fxAlpha;
+    if (fxType === "sunny") {
+      ctx.fillStyle = "rgba(255,244,200,.9)";
+      P.forEach(function (p, i) {
+        p.y -= .0006 * p.s; p.ph += .01; if (p.y < -0.02) p.y = 1.02;
+        var x = (p.x + Math.sin(p.ph) * .012) * w, y = p.y * h, r = (1 + p.s * 2) * dpr;
+        ctx.globalAlpha = fxAlpha * (.25 + .45 * Math.abs(Math.sin(p.ph * .7)));
+        ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+      });
+    } else if (fxType === "rainy") {
+      ctx.strokeStyle = "rgba(190,225,255,.75)"; ctx.lineWidth = 1.1 * dpr;
+      P.forEach(function (p) {
+        p.y += .014 * p.s * 2.4; p.x -= .0035 * p.s; if (p.y > 1.02) { p.y = -0.02; p.x = Math.random(); }
+        ctx.beginPath(); ctx.moveTo(p.x * w, p.y * h); ctx.lineTo(p.x * w + 4 * dpr, p.y * h + 13 * p.s * dpr); ctx.stroke();
+      });
+    } else {
+      ctx.fillStyle = "rgba(255,255,255,.92)";
+      P.forEach(function (p) {
+        p.y += .0035 * p.s; p.ph += .02; if (p.y > 1.02) { p.y = -0.02; p.x = Math.random(); }
+        var x = (p.x + Math.sin(p.ph) * .02) * w;
+        ctx.globalAlpha = fxAlpha * (.4 + .5 * p.s / 1.3);
+        ctx.beginPath(); ctx.arc(x * w, p.y * h, (0.8 + p.s * 1.6) * dpr, 0, 7); ctx.fill();
+      });
+    }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(drawFx);
+  }
+
+  // ---- 温度 countUp 过渡（displayC 为当前显示值，°C 原始值）----
+  function setTemp(to) {
+    if (displayC === null) { el.temp.textContent = fmtT(to); displayC = to; return; }
+    var from = displayC, t0 = performance.now(), dur = 750;
+    (function step(t) {
+      var k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      el.temp.textContent = fmtT(from + (to - from) * e);
+      if (k < 1) requestAnimationFrame(step); else displayC = to;
+    })(t0);
+  }
+
+  function applyCity(i, first) {
+    var c = CITIES[i]; cur = i;
+    var h = new Date().getHours(), isDay = h >= 6 && h < 18; // 6-18 点白天，其余夜间
+    document.body.classList.toggle("day", isDay);
+    var grad = isDay ? c.day : c.night;
+    var inc = showing ? sceneA : sceneB, out = showing ? sceneB : sceneA;
+    inc.style.background = grad; inc.style.opacity = 1; out.style.opacity = 0; showing = 1 - showing;
+    el.name.textContent = c.name; el.en.textContent = c.en; el.desc.textContent = c.desc;
+    el.wind.textContent = c.wind + " km/h"; el.hum.textContent = c.hum + "%"; el.feel.textContent = fmtT(c.feel) + "°";
+    setTemp(c.temp);
+    // 5 天预报
+    var now = new Date(), html = "", his = [], los = [];
+    c.days.forEach(function (d, k) {
+      var dt = new Date(now.getTime() + k * 864e5);
+      var label = k === 0 ? "今天" : k === 1 ? "明天" : "周" + WEEK[dt.getDay()];
+      his.push(d[1]); los.push(d[2]);
+      html += '<div class="day"><div class="d">' + label + '</div><svg viewBox="0 0 26 26">' + ICONS[d[0]] +
+        '</svg><div class="t">' + fmtT(d[1]) + '<em>' + fmtT(d[2]) + '</em></div></div>';
+    });
+    el.days.innerHTML = html;
+    // 温度折线（高/低两条 + 高温区渐变面积）
+    var min = Math.min.apply(null, los) - 2, max = Math.max.apply(null, his) + 2;
+    var X = function (k) { return 12 + k * (276 / 4); }, Y = function (v) { return 54 - (v - min) / (max - min) * 44; };
+    var line = function (a) { return a.map(function (v, k) { return X(k).toFixed(1) + "," + Y(v).toFixed(1); }).join(" "); };
+    el.chart.innerHTML =
+      '<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(255,209,102,.5)"/><stop offset="1" stop-color="rgba(255,209,102,0)"/></linearGradient></defs>' +
+      '<polygon points="12,58 ' + line(his).replace(/ /g, " ") + ' 288,58 12,58" fill="url(#ag)"/>' +
+      '<polyline points="' + line(his) + '" fill="none" stroke="#ffd166" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<polyline points="' + line(los) + '" fill="none" stroke="rgba(127,208,255,.85)" stroke-width="1.8" stroke-dasharray="3 4" stroke-linecap="round"/>' +
+      his.map(function (v, k) { return '<circle cx="' + X(k).toFixed(1) + '" cy="' + Y(v).toFixed(1) + '" r="3" fill="#ffd166" stroke="rgba(0,0,0,.25)"/>'; }).join("");
+    // 粒子换型：整层淡出→换→淡入
+    if (fxType !== c.type && !first) {
+      fadeUntil = performance.now() + 420;
+      setTimeout(function () { fxType = c.type; seedFx(); }, 430);
+    } else if (first) { fxType = c.type; seedFx(); }
+    Array.prototype.forEach.call(el.bar.children, function (b, k) { b.classList.toggle("on", k === i); });
+  }
+
+  CITIES.forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.textContent = c.name;
+    b.onclick = function () { applyCity(i, false); };
+    el.bar.appendChild(b);
+  });
+  el.unit.onclick = function () {
+    unit = unit === "C" ? "F" : "C";
+    el.unit.textContent = "°" + unit;
+    applyCity(cur, true); // 以新单位重渲染当前城市（温度/体感/预报同步换算）
+  };
+  addEventListener("resize", sizeFx);
+  sizeFx();
+  applyCity(0, true);
+  requestAnimationFrame(drawFx);
+})();
+</script>
+</body>
+</html>

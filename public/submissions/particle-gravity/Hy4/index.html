@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Particle Gravity · Hy4</title>
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;overflow:hidden;background:#05070d}
+body{font:400 12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:#93a4cc;-webkit-tap-highlight-color:transparent}
+canvas{display:block;position:fixed;inset:0}
+.panel{position:fixed;left:14px;top:12px;padding:10px 12px;border:1px solid rgba(125,249,255,.16);
+  border-radius:12px;background:rgba(8,12,22,.62);backdrop-filter:blur(8px);pointer-events:none;min-width:172px}
+.panel div{display:flex;justify-content:space-between;gap:14px}
+.panel b{color:#dff3ff;font-weight:600}
+.bar{height:4px;margin-top:7px;border-radius:9px;background:rgba(255,255,255,.08);overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:9px;background:linear-gradient(90deg,#7df9ff,#b06bff);transition:width .2s}
+.tip{position:fixed;left:0;right:0;bottom:14px;text-align:center;font-size:11px;letter-spacing:.12em;color:#5d6b90}
+.mode{color:#7df9ff}
+.brand{position:fixed;right:14px;bottom:12px;font-size:11px;letter-spacing:.2em;color:#3d4a6b}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="panel">
+  <div><span>粒子数</span><b id="pn">0</b></div>
+  <div><span>平均能量</span><b id="en">0</b></div>
+  <div><span>FPS</span><b id="fps">60</b></div>
+  <div><span>模式</span><b class="mode" id="md">轨道</b></div>
+  <div class="bar"><i id="eb"></i></div>
+</div>
+<div class="tip">移动指针 = 临时引力点 · 点击/触摸 = 冲击波 · 双击 = 反向爆发</div>
+<div class="brand">GRAVITY FIELD · HY4</div>
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d'),$=id=>document.getElementById(id);
+const HUE=[186,214,272,318,158,44],G=1500,SOFT=620;
+let W=0,H=0,cx=0,cy=0,maxR=300,P=[],spr=[],N=0,ptr={x:0,y:0,on:false,down:false},fps=60;
+function sprite(h){
+  const c=document.createElement('canvas');c.width=c.height=32;const g=c.getContext('2d');
+  const rg=g.createRadialGradient(16,16,0,16,16,16);
+  rg.addColorStop(0,'hsla('+h+',100%,88%,1)');
+  rg.addColorStop(.22,'hsla('+h+',100%,68%,.72)');
+  rg.addColorStop(1,'hsla('+h+',100%,60%,0)');
+  g.fillStyle=rg;g.fillRect(0,0,32,32);return c;
+}
+function spawn(p,init){
+  const a=Math.random()*6.283,r=maxR*(init?.12+Math.random()*.86:.42+Math.random()*.62);
+  p.x=cx+Math.cos(a)*r;p.y=cy+Math.sin(a)*r;
+  const v=Math.sqrt(G/r)*(0.78+Math.random()*0.46)*(Math.random()<.5?1:-1);
+  p.vx=-Math.sin(a)*v;p.vy=Math.cos(a)*v;
+  p.z=.45+Math.random()*.55;p.h=HUE[(Math.random()*HUE.length)|0];
+  return p;
+}
+function resize(){
+  const dpr=Math.min(devicePixelRatio||1,2);
+  W=innerWidth;H=innerHeight;cx=W/2;cy=H/2;maxR=Math.min(W,H)*0.46;
+  cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const want=Math.max(280,Math.min(860,Math.round(W*H/1500)));
+  if(!P.length){P=[];for(let i=0;i<want;i++)P.push(spawn({},true));}
+  N=Math.min(want,P.length);
+}
+function shock(x,y,power){
+  for(let i=0;i<N;i++){
+    const p=P[i],dx=p.x-x,dy=p.y-y,d=Math.hypot(dx,dy)||1;
+    if(d<190){const f=power*(1-d/190)*3.2;p.vx+=dx/d*f;p.vy+=dy/d*f;}
+  }
+}
+function step(dt){
+  let sum=0;
+  for(let i=0;i<N;i++){
+    const p=P[i];
+    let dx=cx-p.x,dy=cy-p.y,r2=dx*dx+dy*dy,r=Math.sqrt(r2)+.001;
+    const a=G/(r2+SOFT)*p.z;
+    p.vx+=dx/r*a*dt;p.vy+=dy/r*a*dt;
+    if(ptr.on&&!ptr.down){
+      const bx=ptr.x-p.x,by=ptr.y-p.y,b2=bx*bx+by*by+400,b=Math.sqrt(b2);
+      const ab=1100/(b2)*p.z;
+      p.vx+=bx/b*ab*dt;p.vy+=by/b*ab*dt;
+    }else if(ptr.down){
+      const bx=p.x-ptr.x,by=p.y-ptr.y,b2=bx*bx+by*by+900,b=Math.sqrt(b2);
+      const ab=900/b2*p.z;
+      p.vx+=bx/b*ab*dt;p.vy+=by/b*ab*dt;
+    }
+    p.vx*=(1-.0016*dt);p.vy*=(1-.0016*dt);
+    p.x+=p.vx*dt;p.y+=p.vy*dt;
+    sum+=Math.hypot(p.vx,p.vy);
+    if(r<9||r>maxR*2.4)spawn(p);
+  }
+  return sum/N;
+}
+function draw(t,energy){
+  ctx.globalCompositeOperation='source-over';
+  ctx.fillStyle='rgba(5,7,13,.15)';ctx.fillRect(0,0,W,H);
+  const core=ctx.createRadialGradient(cx,cy,0,cx,cy,54+Math.sin(t/700)*5);
+  core.addColorStop(0,'rgba(190,240,255,.9)');core.addColorStop(.28,'rgba(125,150,255,.35)');
+  core.addColorStop(1,'rgba(80,60,200,0)');
+  ctx.globalCompositeOperation='lighter';
+  ctx.fillStyle=core;ctx.beginPath();ctx.arc(cx,cy,60,0,6.283);ctx.fill();
+  ctx.strokeStyle='rgba(125,249,255,'+(.1+.06*Math.sin(t/500)).toFixed(3)+')';
+  ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx,cy,maxR*.5,0,6.283);ctx.stroke();
+  for(let i=0;i<N;i++){
+    const p=P[i],s=(3.2+p.z*7.5)*(1+Math.min(1.4,Math.hypot(p.vx,p.vy)*.25));
+    ctx.globalAlpha=.30+p.z*.62;
+    ctx.drawImage(spr[p.h],p.x-s/2,p.y-s/2,s,s);
+  }
+  if(ptr.on){
+    ctx.globalAlpha=.9;ctx.strokeStyle=ptr.down?'rgba(255,107,214,.55)':'rgba(125,249,255,.45)';
+    ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(ptr.x,ptr.y,ptr.down?26:18,0,6.283);ctx.stroke();
+    ctx.globalAlpha=1;
+  }
+  ctx.globalAlpha=1;
+  return energy;
+}
+let prev=performance.now(),acc=0,cnt=0,slow=0;
+function loop(t){
+  const dt=Math.min(2.5,(t-prev)/16.67);prev=t;
+  acc+=t-(loop.p||t);cnt++;loop.p=t;
+  if(acc>400){fps=Math.round(1000/(acc/cnt));acc=0;cnt=0;
+    if(fps<38&&slow<3){slow++;N=Math.max(300,Math.round(N*0.85));}
+    else if(fps>55&&slow>0)slow--;
+  }
+  const energy=step(dt);draw(t,energy);
+  $('pn').textContent=N;$('fps').textContent=fps;
+  $('en').textContent=(energy*100).toFixed(0);
+  $('eb').style.width=Math.min(100,energy*46).toFixed(0)+'%';
+  $('md').textContent=ptr.down?'斥力场':(ptr.on?'引力点':'自由轨道');
+  requestAnimationFrame(loop);
+}
+addEventListener('resize',resize);
+addEventListener('pointermove',e=>{ptr.x=e.clientX;ptr.y=e.clientY;ptr.on=true;});
+addEventListener('pointerleave',()=>{ptr.on=false;ptr.down=false;});
+addEventListener('pointerdown',e=>{ptr.x=e.clientX;ptr.y=e.clientY;ptr.on=true;ptr.down=true;shock(e.clientX,e.clientY,1);});
+addEventListener('pointerup',()=>{ptr.down=false;});
+addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+HUE.forEach(h=>spr[h]=sprite(h));
+resize();requestAnimationFrame(loop);
+</script>
+</body>
+</html>

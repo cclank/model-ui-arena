@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Studio - Recorder</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle at center, #18181b, #09090b);
+      color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 16px;
+    }
+    .recorder-box {
+      width: 100%; max-width: 360px; background: rgba(24, 24, 27, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 24px 20px;
+      backdrop-filter: blur(20px); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      display: flex; flex-direction: column; align-items: center; gap: 18px;
+    }
+    .header { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+    .rec-status { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; color: #a1a1aa; }
+    .rec-indicator { width: 10px; height: 10px; border-radius: 50%; background: #71717a; transition: 0.3s; }
+    .rec-indicator.active { background: #ef4444; box-shadow: 0 0 12px #ef4444; animation: blink 1s infinite; }
+    .rec-indicator.paused { background: #eab308; box-shadow: 0 0 8px #eab308; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .timer-display { font-size: 3rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
+    .waveform {
+      width: 100%; height: 60px; background: rgba(0, 0, 0, 0.3); border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; gap: 4px; padding: 0 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05); overflow: hidden;
+    }
+    .bar { width: 4px; height: 6px; background: #3b82f6; border-radius: 4px; transition: height 0.08s ease; }
+    .controls { display: flex; gap: 14px; align-items: center; justify-content: center; width: 100%; margin-top: 6px; }
+    button {
+      border: none; outline: none; cursor: pointer; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-main { width: 64px; height: 64px; background: #ef4444; color: #fff; box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4); }
+    .btn-main:active { transform: scale(0.92); }
+    .btn-sec { width: 46px; height: 46px; background: rgba(255, 255, 255, 0.08); color: #f4f4f5; }
+    .btn-sec:disabled { opacity: 0.3; cursor: not-allowed; }
+    .summary-card {
+      width: 100%; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px; padding: 12px 16px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 4px;
+    }
+    .summary-title { font-weight: 600; color: #38bdf8; display: flex; justify-content: space-between; }
+    .summary-info { color: #a1a1aa; display: flex; justify-content: space-between; }
+  </style>
+</head>
+<body>
+  <div class="recorder-box">
+    <div class="header">
+      <div class="rec-status">
+        <div id="recDot" class="rec-indicator"></div>
+        <span id="statusText">STANDBY</span>
+      </div>
+      <span style="font-size: 0.75rem; color: #71717a;">48kHz · 24bit</span>
+    </div>
+    <div id="timerText" class="timer-display">00:00</div>
+    <div id="waveform" class="waveform"></div>
+    <div class="controls">
+      <button id="btnPause" class="btn-sec" disabled title="Pause / Resume">⏸</button>
+      <button id="btnRecord" class="btn-main" title="Record">●</button>
+      <button id="btnStop" class="btn-sec" disabled title="Stop">⏹</button>
+    </div>
+    <div id="summaryCard" class="summary-card" style="display: none;">
+      <div class="summary-title"><span>录音摘要</span><span id="sumTime">--:--</span></div>
+      <div class="summary-info"><span>状态: 已保存</span><span id="sumSize">-- KB</span></div>
+    </div>
+  </div>
+  <script>
+    const wf = document.getElementById('waveform');
+    const bars = [];
+    for (let i = 0; i < 24; i++) {
+      const b = document.createElement('div');
+      b.className = 'bar';
+      wf.appendChild(b);
+      bars.push(b);
+    }
+    let state = 'idle'; // 'idle' | 'recording' | 'paused'
+    let seconds = 0, timerInterval = null, waveInterval = null;
+    const btnRecord = document.getElementById('btnRecord');
+    const btnPause = document.getElementById('btnPause');
+    const btnStop = document.getElementById('btnStop');
+    const timerText = document.getElementById('timerText');
+    const statusText = document.getElementById('statusText');
+    const recDot = document.getElementById('recDot');
+    const summaryCard = document.getElementById('summaryCard');
+
+    function fmt(s) {
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    }
+
+    function start() {
+      state = 'recording';
+      statusText.textContent = 'RECORDING';
+      recDot.className = 'rec-indicator active';
+      btnRecord.innerHTML = '●';
+      btnPause.disabled = false;
+      btnPause.innerHTML = '⏸';
+      btnStop.disabled = false;
+      summaryCard.style.display = 'none';
+
+      timerInterval = setInterval(() => {
+        seconds++;
+        timerText.textContent = fmt(seconds);
+      }, 1000);
+
+      waveInterval = setInterval(() => {
+        bars.forEach(b => {
+          const h = state === 'recording' ? Math.floor(Math.random() * 46) + 8 : 6;
+          b.style.height = `${h}px`;
+          b.style.background = state === 'recording' ? '#ef4444' : '#71717a';
+        });
+      }, 90);
+    }
+
+    function pause() {
+      state = 'paused';
+      statusText.textContent = 'PAUSED';
+      recDot.className = 'rec-indicator paused';
+      btnPause.innerHTML = '▶';
+      clearInterval(timerInterval);
+    }
+
+    function resume() {
+      state = 'recording';
+      statusText.textContent = 'RECORDING';
+      recDot.className = 'rec-indicator active';
+      btnPause.innerHTML = '⏸';
+      timerInterval = setInterval(() => {
+        seconds++;
+        timerText.textContent = fmt(seconds);
+      }, 1000);
+    }
+
+    function stop() {
+      const finalSec = seconds;
+      clearInterval(timerInterval);
+      clearInterval(waveInterval);
+      state = 'idle';
+      statusText.textContent = 'COMPLETED';
+      recDot.className = 'rec-indicator';
+      btnPause.disabled = true;
+      btnStop.disabled = true;
+      btnRecord.innerHTML = '●';
+      bars.forEach(b => { b.style.height = '6px'; b.style.background = '#3b82f6'; });
+
+      document.getElementById('sumTime').textContent = fmt(finalSec);
+      document.getElementById('sumSize').textContent = `${(finalSec * 32).toFixed(1)} KB`;
+      summaryCard.style.display = 'flex';
+      seconds = 0;
+      timerText.textContent = '00:00';
+    }
+
+    btnRecord.addEventListener('click', () => {
+      if (state === 'idle') start();
+      else if (state === 'recording') pause();
+      else if (state === 'paused') resume();
+    });
+    btnPause.addEventListener('click', () => {
+      if (state === 'recording') pause();
+      else if (state === 'paused') resume();
+    });
+    btnStop.addEventListener('click', stop);
+  </script>
+</body>
+</html>

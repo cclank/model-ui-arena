@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Recorder · Hy4</title>
+<style>
+:root{--bg:#0a0d14;--card:#141922;--line:#242c3a;--ink:#e7ecf5;--dim:#7d879b;--rec:#ff4d5e;--ok:#2fd18b;--idle:#5b6577}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;display:grid;place-items:center;background:radial-gradient(120% 100% at 50% 0,#1a2130,var(--bg) 65%);color:var(--ink);font:400 15px/1.5 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.card{width:min(92vw,384px);padding:22px;border-radius:22px;background:var(--card);border:1px solid var(--line);box-shadow:0 30px 60px -30px #000}
+.hd{display:flex;justify-content:space-between;align-items:flex-start}
+.hd b{display:block;font-size:16px}
+.hd span{font-size:11px;letter-spacing:.18em;color:var(--dim)}
+.pill{font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--dim);white-space:nowrap}
+.pill.rec{color:#fff;background:var(--rec);border-color:var(--rec);animation:blink 1.1s steps(1,end) infinite}
+.pill.pause{color:#ffce6a;border-color:#5a4a24;background:#2a2312}
+.pill.done{color:var(--ok);border-color:#1f4a3a;background:#10231c}
+@keyframes blink{50%{opacity:.35}}
+.time{margin:14px 0 6px;font:600 52px/1 ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.time small{font-size:20px;color:var(--dim)}
+.wave{height:88px;display:flex;align-items:center;gap:2px;padding:0 2px;border-radius:12px;background:#0d1219;border:1px solid var(--line);overflow:hidden}
+.wave i{flex:1;min-width:2px;height:3px;border-radius:2px;background:var(--idle);transition:background .3s}
+.rec .wave i{background:linear-gradient(180deg,#ff8a96,var(--rec))}
+.pause .wave i{background:#6d5a2a}
+.done .wave i{background:linear-gradient(180deg,#7ee7bd,#2fd18b)}
+.row{display:flex;align-items:center;gap:10px;margin:12px 0 16px;font-size:12px;color:var(--dim)}
+.meter{flex:1;height:6px;border-radius:99px;background:#0d1219;border:1px solid var(--line);overflow:hidden}
+.meter b{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--ok),#ffd166 70%,var(--rec));transition:width .08s linear}
+.btns{display:flex;gap:8px}
+button{flex:1;padding:11px 0;border-radius:12px;border:1px solid var(--line);background:#1b222e;color:var(--ink);font-size:14px;cursor:pointer;transition:.18s}
+button:hover:not(:disabled){background:#232c3b;transform:translateY(-1px)}
+button:disabled{opacity:.38;cursor:not-allowed}
+.pri{background:var(--rec);border-color:var(--rec);color:#fff;font-weight:600}
+.pri:hover:not(:disabled){background:#ff6372}
+.dgr{color:#ff8a96}
+.dgr.conf{background:#ff4d5e;border-color:#ff4d5e;color:#fff;font-weight:600;animation:blink .7s steps(1,end) infinite}
+.sum{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px;font-size:13px;color:var(--dim);display:none;grid-template-columns:1fr 1fr;gap:8px 10px}
+.sum.on{display:grid}
+.sum b{display:block;color:var(--ink);font:600 14px/1.4 ui-monospace,Menlo,monospace}
+.tape{margin-top:10px;height:34px;display:flex;align-items:flex-end;gap:1px}
+.tape i{flex:1;background:#2fd18b;opacity:.75;border-radius:1px}
+@media (max-width:390px){.time{font-size:44px}.card{padding:18px}}
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="hd"><div><b>录音机</b><span>RECORDER PROTOTYPE</span></div><span class="pill" id="pill">待机</span></div>
+  <div class="time"><span id="tm">00:00</span><small id="cs">.0</small></div>
+  <div class="wave" id="wave"></div>
+  <div class="row"><span>电平</span><div class="meter"><b id="lvl"></b></div><span id="pk">峰值 -∞</span></div>
+  <div class="btns">
+    <button id="b1" class="pri">开始录音</button>
+    <button id="b2" disabled>暂停</button>
+    <button id="b3" class="dgr" disabled>停止</button>
+  </div>
+  <div class="sum" id="sum">
+    <div>时长<b id="s1">00:00</b></div>
+    <div>状态<b id="s2">已完成</b></div>
+    <div>峰值电平<b id="s3">0%</b></div>
+    <div>采样帧数<b id="s4">0</b></div>
+    <div style="grid-column:1/-1">波形摘要
+      <div class="tape" id="tape"></div>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id),N=44,card=$('card'),wave=$('wave');
+const bars=[],tape=$('tape');
+for(let i=0;i<N;i++){const b=document.createElement('i');wave.appendChild(b);bars.push(b);
+  const t=document.createElement('i');tape.appendChild(t);}
+let st='idle',t0=0,acc=0,lvl=0,peak=0,frames=0,env=[],phase=Math.random()*99;
+const pad=n=>String(n).padStart(2,'0');
+function fmt(ms){const s=Math.floor(ms/1000);return pad(Math.floor(s/60))+':'+pad(s%60);}
+function setState(s){
+  st=s;card.className='card '+(s==='rec'?'rec':s==='pause'?'pause':s==='done'?'done':'');
+  const p=$('pill');p.className='pill '+(s==='rec'?'rec':s==='pause'?'pause':s==='done'?'done':'');
+  p.textContent={idle:'待机',rec:'录音中',pause:'已暂停',done:'已完成'}[s];
+  $('b1').textContent=s==='idle'?'开始录音':s==='pause'?'继续录音':s==='done'?'重新录制':'开始录音';
+  $('b1').disabled=(s==='rec');
+  $('b2').disabled=(s!=='rec');$('b2').textContent='暂停';
+  $('b3').disabled=(s!=='rec'&&s!=='pause');
+  resetStop();
+  if(s!=='done')$('sum').classList.remove('on');
+}
+function resetStop(){$('b3').classList.remove('conf');$('b3').textContent='停止';clearTimeout(resetStop.t);}
+$('b1').onclick=()=>{
+  if(st==='done'){acc=0;peak=0;frames=0;env=[];setState('idle');}
+  if(st==='idle'){acc=0;peak=0;frames=0;env=[];}
+  t0=performance.now();setState('rec');
+};
+$('b2').onclick=()=>{
+  if(st!=='rec')return;
+  acc+=performance.now()-t0;
+  setState('pause');
+};
+$('b3').onclick=()=>{
+  if(st!=='rec'&&st!=='pause')return;
+  if(!$('b3').classList.contains('conf')){
+    $('b3').classList.add('conf');$('b3').textContent='再点一次确认';
+    resetStop.t=setTimeout(resetStop,3000);
+    return;
+  }
+  if(st==='rec')acc+=performance.now()-t0;
+  const ms=acc;
+  $('s1').textContent=fmt(ms);
+  $('s2').textContent=ms<1000?'过短，已丢弃':'已完成';
+  $('s3').textContent=(peak*100).toFixed(0)+'%';
+  $('s4').textContent=frames;
+  const step=Math.max(1,Math.floor(env.length/N));
+  for(let i=0;i<N;i++){const v=env[Math.min(env.length-1,i*step)]||0;tape.children[i].style.height=(3+v*30).toFixed(1)+'px';}
+  setState('done');
+};
+function loop(now){
+  const el=st==='rec'?acc+(now-t0):acc;
+  $('tm').textContent=fmt(el);
+  $('cs').textContent='.'+Math.floor((el%1000)/100);
+  if(st==='rec'){
+    phase+=0.16;
+    let sum=0;
+    for(let i=0;i<N;i++){
+      const voice=Math.abs(Math.sin(phase*1.7+i*0.42))*.5+Math.abs(Math.sin(phase*0.7+i*0.19))*.35;
+      const noise=Math.random()*.18,edge=Math.sin(i/(N-1)*Math.PI);
+      const h=(0.06+voice*edge*(0.7+0.3*Math.sin(phase*0.5))+noise*edge)*78;
+      bars[i].style.height=h.toFixed(1)+'px';sum+=h;
+    }
+    lvl=Math.min(1,sum/(N*46));peak=Math.max(peak,lvl);frames++;
+    if(frames%3===0)env.push(lvl);
+    if(env.length>600)env.shift();
+  }else if(st==='idle'){
+    lvl=0;for(let i=0;i<N;i++)bars[i].style.height=(3+Math.random()*2).toFixed(1)+'px';
+  }
+  $('lvl').style.width=(lvl*100).toFixed(1)+'%';
+  $('pk').textContent='峰值 '+(peak?(peak*100).toFixed(0)+'%':'-∞');
+  requestAnimationFrame(loop);
+}
+setState('idle');requestAnimationFrame(loop);
+</script>
+</body>
+</html>

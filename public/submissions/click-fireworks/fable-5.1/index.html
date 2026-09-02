@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Fireworks · 点击放烟花</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#04050d;color:#fff;font-family:ui-sans-serif,system-ui,-apple-system,"PingFang SC","Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent;user-select:none}
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+  #fx{touch-action:none;cursor:crosshair}
+  .hud{position:fixed;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;z-index:2;pointer-events:none}
+  .hud>*{pointer-events:auto}
+  .card{background:rgba(6,8,20,.45);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:14px;padding:9px 12px}
+  .title{font-size:13px;font-weight:800;letter-spacing:.06em}
+  .title small{display:block;font-size:10.5px;color:rgba(255,255,255,.6);font-weight:600;margin-top:3px;letter-spacing:0}
+  .stats{font:600 11px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:rgba(255,255,255,.75);text-align:right;min-width:118px;font-variant-numeric:tabular-nums}
+  .stats b{color:#ffd66b}
+  .btns{display:flex;gap:6px;justify-content:flex-end;margin-top:7px}
+  .btn{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;font:700 11px/1 inherit;padding:7px 10px;border-radius:999px;cursor:pointer;transition:.2s}
+  .btn.on{background:#ffd66b;color:#2a1a00;border-color:#ffd66b}
+  .hint{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);padding:10px 16px;border-radius:999px;background:rgba(6,8,20,.55);border:1px solid rgba(255,255,255,.14);font-size:12.5px;font-weight:700;letter-spacing:.04em;white-space:nowrap;transition:opacity .8s;animation:bob 2.4s ease-in-out infinite;z-index:2;pointer-events:none}
+  .hint.hide{opacity:0}
+  @keyframes bob{50%{transform:translate(-50%,-6px)}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<canvas id="fx"></canvas>
+<div class="hud">
+  <div class="card title">夜空烟花 FIREWORKS<small>点击 / 触摸任意位置 · 按住拖动可连发</small></div>
+  <div class="card stats"><div>粒子 <b id="pc">0</b></div><div>烟花 <b id="fc">0</b></div><div>FPS <b id="fps">60</b></div>
+    <div class="btns"><button class="btn on" id="auto">自动</button><button class="btn on" id="snd">音效</button><button class="btn" id="clr">清空</button></div></div>
+</div>
+<div class="hint" id="hint">✦ 点击夜空，点亮庆典 ✦</div>
+<script>
+  const $ = (i) => document.getElementById(i), bg = $("bg"), fx = $("fx"), bc = bg.getContext("2d"), fc = fx.getContext("2d");
+  const rnd = (a, b) => a + Math.random() * (b - a), TAU = Math.PI * 2, G = 0.055, MAX = 2600;
+  let W, H, DPR, K, rockets = [], parts = [], pool = [], fwCount = 0, auto = true, sound = true, AC = null, drag = false, lastLaunch = 0, lastInput = 0, lastAuto = 0, frames = 0, fpsT = performance.now(), prev = fpsT;
+  function resize() {
+    W = innerWidth; H = innerHeight; DPR = Math.min(devicePixelRatio || 1, 2); K = Math.min(1.25, Math.max(.6, Math.min(W, H) / 640));
+    [bg, fx].forEach((c) => { c.width = W * DPR; c.height = H * DPR; }); bc.setTransform(DPR, 0, 0, DPR, 0, 0); fc.setTransform(DPR, 0, 0, DPR, 0, 0); drawBg();
+  }
+  function drawBg() {                                        // 静态背景只画一次：夜空、星星、月亮、城市天际线
+    const g = bc.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#02030a"); g.addColorStop(.6, "#0a0f2e"); g.addColorStop(1, "#1d1745"); bc.fillStyle = g; bc.fillRect(0, 0, W, H);
+    for (let i = 0; i < 240; i++) { bc.fillStyle = `rgba(255,255,255,${rnd(.2, .9)})`; bc.beginPath(); bc.arc(Math.random() * W, Math.random() * H * .8, rnd(.2, 1.4), 0, TAU); bc.fill(); }
+    const mx = W * .8, my = H * .13, mg = bc.createRadialGradient(mx, my, 8, mx, my, 120); mg.addColorStop(0, "rgba(255,244,200,.4)"); mg.addColorStop(1, "rgba(255,244,200,0)");
+    bc.fillStyle = mg; bc.fillRect(mx - 130, my - 130, 260, 260); bc.fillStyle = "#fff5d6"; bc.beginPath(); bc.arc(mx, my, 22, 0, TAU); bc.fill();
+    bc.fillStyle = "rgba(200,180,140,.35)"; [[-7, -5, 5], [8, 4, 4], [-1, 10, 3]].forEach(([a, b, r]) => { bc.beginPath(); bc.arc(mx + a, my + b, r, 0, TAU); bc.fill(); });
+    const base = H * .955; let x = -10;
+    while (x < W) {
+      const w = rnd(16, 60), h = rnd(26, 120 + H * .1), y = base - h; bc.fillStyle = "#06071a"; bc.fillRect(x, y, w, H - y);
+      if (Math.random() < .3) bc.fillRect(x + w / 2 - 1, y - rnd(10, 34), 2, 40);
+      for (let wy = y + 7; wy < base - 10; wy += 10) for (let wx = x + 4; wx < x + w - 5; wx += 8) if (Math.random() < .32) { bc.fillStyle = `rgba(255,${rnd(185, 230) | 0},120,${rnd(.35, .95)})`; bc.fillRect(wx, wy, 3.5, 5); }
+      x += w + rnd(2, 9);
+    }
+    const gg = bc.createLinearGradient(0, base - 60, 0, H); gg.addColorStop(0, "rgba(120,80,220,0)"); gg.addColorStop(1, "rgba(120,80,220,.28)"); bc.fillStyle = gg; bc.fillRect(0, base - 60, W, H);
+  }
+  function emit(x, y, vx, vy, hue, life, size, type, light = 62) {   // 对象池，避免无限内存增长
+    if (parts.length >= MAX) return; const p = pool.pop() || {};
+    p.x = x; p.y = y; p.vx = vx; p.vy = vy; p.hue = hue; p.life = p.max = life; p.size = size; p.type = type; p.light = light; p.flick = Math.random() < .25; parts.push(p);
+  }
+  function launch(tx, ty) {
+    if (rockets.length > 14) return; const x = tx + rnd(-40, 40) * K, dy = Math.max(140 * K, H - ty), t = Math.sqrt(2 * dy / G);
+    rockets.push({ x, y: H, vx: (tx - x) / t, vy: -Math.sqrt(2 * G * dy) * rnd(.97, 1.03), hue: rnd(0, 360), ty });
+  }
+  function explode(r) {
+    fwCount++; pop(); const type = ["peony", "ring", "willow", "chrys", "dual", "peony"][Math.random() * 6 | 0], n = (type === "ring" ? 70 : rnd(90, 150)) | 0;
+    const sp = rnd(3.2, 6.8) * K, hue2 = (r.hue + rnd(50, 180)) % 360;
+    emit(r.x, r.y, 0, 0, r.hue, 10, 70 * K, "flash", 90);
+    for (let i = 0; i < n; i++) {
+      const a = type === "ring" ? i / n * TAU + rnd(-.03, .03) : rnd(0, TAU), s = type === "ring" ? sp * rnd(.96, 1.04) : sp * Math.sqrt(rnd(.08, 1));
+      const hue = type === "willow" ? rnd(36, 50) : type === "dual" && i % 2 ? hue2 : r.hue + rnd(-14, 14);
+      emit(r.x, r.y, Math.cos(a) * s, Math.sin(a) * s, hue, type === "willow" ? rnd(110, 160) : rnd(55, 95), rnd(1.5, 2.7) * K, type === "chrys" ? "trail" : type === "willow" ? "willow" : "spark");
+    }
+    for (let i = 0; i < 26; i++) { const a = rnd(0, TAU), s = sp * rnd(.2, 1.15); emit(r.x, r.y, Math.cos(a) * s, Math.sin(a) * s, 50, rnd(70, 120), 1.2 * K, "glitter", 85); }
+  }
+  function pop() {                                         // WebAudio 合成的“砰”声：白噪声 + 低通 + 指数衰减，无外部资源
+    if (!sound || !AC) return;
+    try { const n = AC.sampleRate * .3 | 0, b = AC.createBuffer(1, n, AC.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 4);
+      const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = b; f.type = "lowpass"; f.frequency.value = rnd(500, 1400); g.gain.value = .35; s.connect(f).connect(g).connect(AC.destination); s.start(); } catch (e) {}
+  }
+  function frame(now) {
+    const dt = Math.min(2.2, (now - prev) / 16.67); prev = now; frames++;
+    if (now - fpsT > 500) { $("fps").textContent = Math.round(frames * 1000 / (now - fpsT)); frames = 0; fpsT = now; $("pc").textContent = parts.length; $("fc").textContent = fwCount; }
+    if (auto && now - lastInput > 3200 && now - lastAuto > rnd(500, 1500)) { lastAuto = now; launch(rnd(W * .12, W * .88), rnd(H * .12, H * .48)); }
+    fc.globalCompositeOperation = "destination-out"; fc.fillStyle = "rgba(0,0,0,.2)"; fc.fillRect(0, 0, W, H);   // 尾迹余辉：逐帧擦淡而不是清屏
+    fc.globalCompositeOperation = "lighter";
+    for (let i = rockets.length - 1; i >= 0; i--) {
+      const r = rockets[i]; r.x += r.vx * dt; r.y += r.vy * dt; r.vy += G * dt;
+      for (let k = 0; k < 2; k++) emit(r.x + rnd(-1.5, 1.5), r.y + rnd(0, 6), rnd(-.4, .4), rnd(.5, 1.6), 42, rnd(14, 30), rnd(.8, 1.6) * K, "spark", 75);
+      fc.fillStyle = "#fff4d0"; fc.beginPath(); fc.arc(r.x, r.y, 2.2 * K, 0, TAU); fc.fill();
+      if (r.vy >= -0.6 || r.y <= r.ty) { explode(r); rockets.splice(i, 1); }
+    }
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i], willow = p.type === "willow"; p.life -= dt;
+      if (p.life <= 0) { parts[i] = parts[parts.length - 1]; parts.pop(); pool.push(p); continue; }
+      const drag = willow ? .965 : p.type === "flash" ? 1 : .984; p.vx *= drag; p.vy = p.vy * drag + (p.type === "flash" ? 0 : G * (willow ? 1.35 : 1)) * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+      let a = p.life / p.max; if (p.flick || p.type === "glitter") a *= Math.random() < .55 ? 1 : .15;
+      if (p.type === "trail" && Math.random() < .6) emit(p.x, p.y, rnd(-.25, .25), rnd(-.25, .25), p.hue, rnd(12, 26), p.size * .55, "spark", 55);
+      if (p.type === "flash") { fc.fillStyle = `hsla(${p.hue},100%,${p.light}%,${a * .35})`; fc.beginPath(); fc.arc(p.x, p.y, p.size * (1.4 - a), 0, TAU); fc.fill(); continue; }
+      fc.fillStyle = `hsla(${p.hue},100%,${p.light}%,${a})`; fc.beginPath(); fc.arc(p.x, p.y, p.size * (.45 + a * .55), 0, TAU); fc.fill();
+      if (a > .5 && p.size > 1.4 * K) { fc.fillStyle = `hsla(${p.hue},100%,80%,${(a - .5) * .25})`; fc.beginPath(); fc.arc(p.x, p.y, p.size * 3, 0, TAU); fc.fill(); }
+    }
+    requestAnimationFrame(frame);
+  }
+  fx.addEventListener("pointerdown", (e) => {
+    lastInput = performance.now(); $("hint").classList.add("hide"); drag = true;
+    if (sound && !AC) try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (err) {}
+    if (AC && AC.state === "suspended") AC.resume(); launch(e.clientX, e.clientY);
+  });
+  fx.addEventListener("pointermove", (e) => { if (drag && e.buttons && performance.now() - lastLaunch > 110) { lastLaunch = lastInput = performance.now(); launch(e.clientX, e.clientY); } });
+  addEventListener("pointerup", () => (drag = false)); addEventListener("pointercancel", () => (drag = false));
+  $("auto").onclick = () => { auto = !auto; $("auto").classList.toggle("on", auto); };
+  $("snd").onclick = () => { sound = !sound; $("snd").classList.toggle("on", sound); };
+  $("clr").onclick = () => { pool.push(...parts); parts = []; rockets = []; fc.clearRect(0, 0, W, H); };
+  addEventListener("resize", resize); resize(); requestAnimationFrame(frame);
+</script>
+</body>
+</html>

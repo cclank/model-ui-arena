@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FABLE F51 · 拟物复刻单反相机</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:radial-gradient(90% 70% at 50% 30%,#f2f3f6,#c9ccd4 70%,#a9adb7);display:grid;place-items:center;overflow:hidden;font-family:"Helvetica Neue",Arial,"PingFang SC",sans-serif}
+  svg{width:100%;height:100%;display:block}
+  .sweep{animation:sweep 7s ease-in-out infinite}
+  @keyframes sweep{0%,100%{transform:translateX(-70px)}50%{transform:translateX(70px)}}
+  .dialLabels{transition:transform .6s cubic-bezier(.2,.9,.3,1.1)}
+  .dial{cursor:pointer}
+  @media (prefers-reduced-motion:reduce){.sweep{animation:none}}
+</style>
+</head>
+<body>
+<svg viewBox="0 0 1000 760" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="3/4 视角的单反相机，纯 SVG 手绘">
+  <defs>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d7dae1"/><stop offset="1" stop-color="#aeb2bc"/></linearGradient>
+    <linearGradient id="metalV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f4f6"/><stop offset=".2" stop-color="#b9bac0"/><stop offset=".45" stop-color="#5c5d64"/><stop offset=".6" stop-color="#d6d7dc"/><stop offset=".85" stop-color="#3a3b41"/><stop offset="1" stop-color="#8e8f96"/></linearGradient>
+    <radialGradient id="dialTop" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#8f9098"/><stop offset=".5" stop-color="#4a4b52"/><stop offset="1" stop-color="#1d1e23"/></radialGradient>
+    <radialGradient id="btnTop" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#b7b9c2"/><stop offset="1" stop-color="#5a5c66"/></radialGradient>
+    <radialGradient id="glass" cx=".42" cy=".38" r=".75"><stop offset="0" stop-color="#0b1030"/><stop offset=".45" stop-color="#132a6e"/><stop offset=".75" stop-color="#2a1a5a"/><stop offset=".93" stop-color="#4b2f7a"/><stop offset="1" stop-color="#0b0b16"/></radialGradient>
+    <radialGradient id="lamp" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#ffd9a8"/><stop offset=".5" stop-color="#ff6a2b"/><stop offset="1" stop-color="#7a1d0a"/></radialGradient>
+    <linearGradient id="sweepG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="lcd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3d4a3e"/><stop offset="1" stop-color="#1c241d"/></linearGradient>
+    <pattern id="rubber" width="3.2" height="3.2" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="3.2" height="3.2" fill="#232326"/><rect x=".5" y=".5" width="1.7" height="1.7" rx=".4" fill="#3a3a3f"/></pattern>
+    <filter id="matte" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="7" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .5 0" result="g"/><feComposite in="g" in2="SourceGraphic" operator="in" result="gi"/><feBlend in="gi" in2="SourceGraphic" mode="overlay"/></filter>
+    <filter id="blur18" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur stdDeviation="18"/></filter>
+    <filter id="blur6" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur stdDeviation="6"/></filter>
+    <filter id="blur3" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>
+  </defs>
+  <rect width="1000" height="760" fill="url(#floor)" opacity="0"/>
+  <rect y="560" width="1000" height="200" fill="url(#floor)" opacity=".55"/>
+  <g id="cam"></g>
+  <g font-family="'Helvetica Neue',Arial,sans-serif" fill="#3a3d46">
+    <text x="500" y="708" font-size="15" text-anchor="middle" letter-spacing="6" font-weight="700">FABLE F51 · 24-70mm ƒ/2.8</text>
+    <text x="500" y="732" font-size="11.5" text-anchor="middle" fill="#6c707b">纯 HTML + CSS + 内联 SVG 手绘 · 无位图 · 点击模式转盘可旋转</text>
+  </g>
+</svg>
+<script>
+  /* ===== 斜投影相机坐标系 =====
+     相机自身坐标：X 指向手柄一侧，Y 向上，Z 指向镜头前方。机身绕竖直轴转 35°，观察者略高（仰角系数 e）。
+     所有部件均以相机坐标描述，经 P() 投影为二维 SVG 坐标，保证前面/侧面/顶面与镜头椭圆透视一致。 */
+  const NS = "http://www.w3.org/2000/svg", root = document.getElementById("cam");
+  const s = 3.25, OX = 470, OY = 335, e = 0.45, ang = 35 * Math.PI / 180, cs = Math.cos(ang), sn = Math.sin(ang);
+  const U = [-cs, sn * e], Wd = [sn, cs * e];                      // +X 与 +Z 在屏幕上的方向
+  const LC = [0.644, 0.701, 0.307];                                // 光源方向（相机坐标，左上前方）
+  const P = (X, Y, Z) => [OX + s * (X * U[0] + Z * Wd[0]), OY + s * (X * U[1] - Y + Z * Wd[1])];
+  const f1 = (v) => (+v).toFixed(2);
+  const el = (tag, attrs, parent = root) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); parent.appendChild(n); return n; };
+  const defs = document.querySelector("defs");
+  // 三类平面分组：局部坐标 (x=-X 向右, y=-Y 向下) / 侧面 (z, y) / 顶面 (x=-X, z)
+  const frontG = (Z, parent) => { const [tx, ty] = P(0, 0, Z); return el("g", { transform: `matrix(${f1(cs * s)} ${f1(-sn * e * s)} 0 ${f1(s)} ${f1(tx)} ${f1(ty)})` }, parent); };
+  const sideG = (X, parent) => { const [tx, ty] = P(X, 0, 0); return el("g", { transform: `matrix(${f1(Wd[0] * s)} ${f1(Wd[1] * s)} 0 ${f1(s)} ${f1(tx)} ${f1(ty)})` }, parent); };
+  const topG = (Y, parent) => { const [tx, ty] = P(0, Y, 0); return el("g", { transform: `matrix(${f1(cs * s)} ${f1(-sn * e * s)} ${f1(Wd[0] * s)} ${f1(Wd[1] * s)} ${f1(tx)} ${f1(ty)})` }, parent); };
+  const shade = (rgb, diff, spec = 0) => { const k = 0.34 + 0.95 * Math.max(0, diff); return `rgb(${rgb.map((c) => Math.min(255, Math.round(c * k + spec))).join(",")})`; };
+  let gid = 0;
+  function lin(p1, p2, stops) { const id = "g" + gid++, g = el("linearGradient", { id, gradientUnits: "userSpaceOnUse", x1: f1(p1[0]), y1: f1(p1[1]), x2: f1(p2[0]), y2: f1(p2[1]) }, defs); stops.forEach(([o, c]) => el("stop", { offset: o, "stop-color": c }, g)); return `url(#${id})`; }
+  const poly = (pts, attrs, parent) => el("path", { d: pts.map((p, i) => (i ? "L" : "M") + f1(p[0]) + " " + f1(p[1])).join("") + "Z", ...attrs }, parent);
+  const BODY = [72, 72, 78], RUB = [40, 40, 44];
+
+  /* ---------- 台面接触阴影 ---------- */
+  { const g = topG(-47); el("ellipse", { cx: -6, cy: 30, rx: 120, ry: 60, fill: "#000", opacity: .42, filter: "url(#blur18)" }, g);
+    el("ellipse", { cx: 10, cy: 62, rx: 46, ry: 26, fill: "#000", opacity: .45, filter: "url(#blur6)" }, g); el("ellipse", { cx: -14, cy: 18, rx: 78, ry: 34, fill: "#000", opacity: .5, filter: "url(#blur6)" }, g); }
+
+  /* ---------- 机身：顶面、侧面、正面、手柄 ---------- */
+  const bodyG = el("g", {});
+  { const g = topG(46);                                                    // 顶面 (Y=46)
+    el("rect", { x: -72, y: -44, width: 140, height: 44, rx: 6, fill: shade(BODY, LC[1] * .92), filter: "url(#matte)" }, g);
+    el("rect", { x: -72, y: -44, width: 30, height: 70, rx: 7, fill: shade(BODY, LC[1] * .9), filter: "url(#matte)" }, g);
+    el("path", { d: "M-70 -43 H66", stroke: "#fff", "stroke-opacity": .18, "stroke-width": 1.2, fill: "none" }, g);
+  }
+  { const g = sideG(72);                                                   // 手柄侧面 (X=72)：橡胶纹理
+    const sh = shade(RUB, LC[0]); el("rect", { x: -44, y: -46, width: 70, height: 92, rx: 8, fill: sh }, g);
+    el("rect", { x: -44, y: -46, width: 70, height: 92, rx: 8, fill: "url(#rubber)", opacity: .75 }, g);
+    el("rect", { x: -44, y: -46, width: 70, height: 92, rx: 8, fill: lin([0, -46], [0, 46], [[0, "rgba(255,255,255,.22)"], [.35, "rgba(255,255,255,0)"], [.85, "rgba(0,0,0,.25)"], [1, "rgba(0,0,0,.45)"]]) }, g);
+    el("rect", { x: -38, y: -22, width: 34, height: 56, rx: 3, fill: "none", stroke: "#111", "stroke-opacity": .55, "stroke-width": .8 }, g);    // 存储卡门缝
+    el("circle", { cx: -22, cy: -36, r: 3.6, fill: "none", stroke: "url(#metalV)", "stroke-width": 1.6 }, g);                                     // 背带环
+    el("rect", { x: -25, y: -40, width: 6, height: 5, rx: 1, fill: "#9a9ca4" }, g);
+  }
+  { const g = frontG(0);                                                   // 主机身正面 (Z=0)
+    const fr = el("rect", { x: -42, y: -46, width: 110, height: 92, rx: 6, fill: lin([-42, -46], [68, 46], [[0, shade(BODY, LC[2] + .18)], [.5, shade(BODY, LC[2])], [1, shade(BODY, LC[2] - .12)]]), filter: "url(#matte)" }, g);
+    el("rect", { x: 6, y: -34, width: 34, height: 10, rx: 2, fill: "#1a1a1e", opacity: .35 }, g);                                                   // 卡口右侧散热/防滑饰面
+    el("text", { x: 60, y: -33, "font-size": 6.2, "font-weight": 700, fill: "#d8d9de", "letter-spacing": .6, "text-anchor": "end", "font-family": "'Helvetica Neue',Arial,sans-serif" }, g).textContent = "F51";
+    el("circle", { cx: 41, cy: 15, r: 3.2, fill: "url(#btnTop)", stroke: "#111", "stroke-width": .5 }, g);                                          // 景深预览键
+    el("circle", { cx: -22, cy: -3, r: 4.2, fill: "url(#btnTop)", stroke: "#111", "stroke-width": .6 }, g);                                         // 镜头释放钮
+    el("circle", { cx: -22, cy: -3, r: 2.2, fill: "#2a2a2e" }, g);
+    el("rect", { x: -40, y: -46, width: 12, height: 5, fill: "#151518" }, g); [-38, -35, -32].forEach((x) => el("rect", { x, y: -46, width: 1.2, height: 5, fill: "#5a5a60" }, g));  // 前拨盘
+  }
+  { const g = frontG(26);                                                  // 手柄正面 (Z=26)：橡胶
+    el("rect", { x: -72, y: -46, width: 30, height: 92, rx: 9, fill: shade(RUB, LC[2] + .1) }, g);
+    el("rect", { x: -72, y: -46, width: 30, height: 92, rx: 9, fill: "url(#rubber)", opacity: .7 }, g);
+    el("rect", { x: -72, y: -46, width: 30, height: 92, rx: 9, fill: lin([-72, 0], [-42, 0], [[0, "rgba(255,255,255,.16)"], [.5, "rgba(255,255,255,0)"], [1, "rgba(0,0,0,.35)"]]) }, g);
+    el("circle", { cx: -52, cy: -26, r: 3.4, fill: "url(#lamp)", stroke: "#3a1408", "stroke-width": .6 }, g);                                       // 自拍指示灯
+  }
+  { // 手柄前缘圆角：按法线逐段着色的窄面
+    const N = 7, R = 10, cx = 72 - R, cz = 26 - R;
+    for (let i = 0; i < N; i++) { const a0 = i / N * Math.PI / 2, a1 = (i + 1) / N * Math.PI / 2, am = (a0 + a1) / 2;
+      const n = [Math.cos(am), 0, Math.sin(am)], diff = n[0] * LC[0] + n[2] * LC[2];
+      const q = [[cx + R * Math.cos(a0), cz + R * Math.sin(a0)], [cx + R * Math.cos(a1), cz + R * Math.sin(a1)]];
+      poly([P(q[0][0], 46, q[0][1]), P(q[1][0], 46, q[1][1]), P(q[1][0], -46, q[1][1]), P(q[0][0], -46, q[0][1])], { fill: shade(RUB, diff + .05) }); }
+  }
+  /* ---------- 军舰头（五棱镜罩）+ 热靴 ---------- */
+  { const t = topG(74); el("path", { d: "M-32 -40 H18 V2 H-32 Z", fill: shade(BODY, LC[1] * .95), filter: "url(#matte)" }, t); el("path", { d: "M-30 -14 H16", stroke: "#111", "stroke-opacity": .5, "stroke-width": .8 }, t);
+    const sd = sideG(26); el("path", { d: "M-40 -46 L-40 -74 L2 -74 L2 -46 Z", fill: shade(BODY, LC[0] * .8) }, sd);
+    const f = frontG(2); el("path", { d: "M-26 -46 L-18 -74 L32 -74 L40 -46 Z", fill: lin([-26, -74], [40, -46], [[0, shade(BODY, LC[2] + .22)], [1, shade(BODY, LC[2] - .05)]]), filter: "url(#matte)" }, f);
+    el("text", { x: 7, y: -56, "font-size": 8.5, "font-weight": 800, fill: "#e6e7ec", "letter-spacing": 1.4, "text-anchor": "middle", "font-family": "'Helvetica Neue',Arial,sans-serif" }, f).textContent = "FABLE";
+    el("path", { d: "M-22 -47 L-15 -73", stroke: "#fff", "stroke-opacity": .16, "stroke-width": 1 }, f);
+    const hs = topG(77); el("rect", { x: -16, y: -34, width: 24, height: 24, rx: 1.5, fill: "#2b2c31" }, hs);
+    el("rect", { x: -16, y: -34, width: 3.5, height: 24, fill: "url(#metalV)" }, hs); el("rect", { x: 4.5, y: -34, width: 3.5, height: 24, fill: "url(#metalV)" }, hs);
+    el("circle", { cx: -4, cy: -22, r: 1.6, fill: "#c9c9cf" }, hs); [-6.5, -1.5].forEach((x) => el("circle", { cx: x, cy: -27, r: .9, fill: "#c9a24a" }, hs));
+    poly([P(16, 74, -34), P(-8, 74, -34), P(-8, 77, -34), P(16, 77, -34)], { fill: "#3a3b41" });
+  }
+  /* ---------- 模式转盘（可点击旋转） ---------- */
+  function cylinder(gY0, gY1, cx, cz, r, fillWall, knurl) {           // 竖直圆柱：底/顶为顶面圆，壁为竖直拉伸
+    const pt = (Y, a) => P(-(cx + r * Math.cos(a)), Y, cz + r * Math.sin(a)); const N = 72, top = [], bot = [];
+    for (let i = 0; i < N; i++) { const a = i / N * 2 * Math.PI; top.push(pt(gY1, a)); bot.push(pt(gY0, a)); }
+    let iL = 0, iR = 0; top.forEach((p, i) => { if (p[0] < top[iL][0]) iL = i; if (p[0] > top[iR][0]) iR = i; });
+    const arc = (arr, a, b) => { const out = []; for (let i = a; ; i = (i + 1) % N) { out.push(arr[i]); if (i === b) break; } return out; };
+    const upper = arc(top, iR, iL), lowerB = arc(bot, iL, iR), meanY = (a) => a.reduce((t, p) => t + p[1], 0) / a.length;
+    const wall = meanY(upper) < meanY(arc(top, iL, iR)) ? [...upper, ...lowerB] : [...arc(top, iL, iR), ...arc(bot, iR, iL)];
+    poly(wall, { fill: fillWall });
+    if (knurl) for (let i = 0; i < N; i += 2) { const a = i / N * 2 * Math.PI, pb = bot[i], pt2 = top[i]; if (pb[1] > bot[(i + N / 4) % N][1] - 999 && Math.sin(a) > -0.15) { const diff = Math.max(0, -Math.cos(a) * LC[0] * .6 + Math.sin(a) * .9); el("line", { x1: f1(pb[0]), y1: f1(pb[1]), x2: f1(pt2[0]), y2: f1(pt2[1]), stroke: `rgba(255,255,255,${(.08 + diff * .28).toFixed(2)})`, "stroke-width": .9 }); } }
+  }
+  { const cx = -54, cz = -22, r = 14.5;
+    cylinder(46, 52.5, cx, cz, r, lin(P(-cx - r, 49, cz), P(-cx + r, 49, cz), [[0, "#9a9ba3"], [.35, "#3c3d44"], [.7, "#1b1c21"], [1, "#4a4b52"]]), true);
+    const top = topG(52.5), lx = -cx, lz = cz; el("circle", { cx: lx, cy: lz, r, fill: "url(#dialTop)", class: "dial" }, top);
+    el("circle", { cx: lx, cy: lz, r: r - 2.2, fill: "none", stroke: "#0f0f12", "stroke-width": .7, opacity: .8 }, top);
+    const labels = el("g", { class: "dialLabels", style: `transform-origin:${lx}px ${lz}px` }, top);
+    ["M", "Av", "Tv", "P", "A+", "SCN", "C1", "C2"].forEach((txt, i) => { const a = -Math.PI / 2 + i * Math.PI / 4; el("text", { x: lx + Math.cos(a) * 9.2, y: lz + Math.sin(a) * 9.2 + 1.3, "font-size": 3.6, "font-weight": 700, fill: i ? "#e3e4ea" : "#ffd166", "text-anchor": "middle", "font-family": "Arial,sans-serif" }, labels).textContent = txt; });
+    el("circle", { cx: lx, cy: lz, r: 3.2, fill: "#111114", stroke: "#6a6b72", "stroke-width": .6 }, top);
+    const idx = topG(46.6); el("path", { d: `M${lx - 1.6} ${lz + 18.5} L${lx + 1.6} ${lz + 18.5} L${lx} ${lz + 15.6} Z`, fill: "#f2f2f5" }, idx);    // 白色指示标
+    let k = 0; top.querySelector(".dial").addEventListener("click", () => { k++; labels.style.transform = `rotate(${k * 45}deg)`; });
+  }
+  /* ---------- 快门按钮、电源拨杆、肩屏 ---------- */
+  { cylinder(46, 48.5, 60, 12, 9.5, "#2c2d33", false); const pl = topG(48.5); el("circle", { cx: -60, cy: 12, r: 9.5, fill: "#3a3b41" }, pl); el("circle", { cx: -60, cy: 12, r: 9.5, fill: "none", stroke: "#000", "stroke-opacity": .5, "stroke-width": .6 }, pl);
+    el("path", { d: `M${-60 + 12.5 * Math.cos(2.4)} ${12 + 12.5 * Math.sin(2.4)} A12.5 12.5 0 0 1 ${-60 + 12.5 * Math.cos(4.4)} ${12 + 12.5 * Math.sin(4.4)}`, fill: "none", stroke: "#4a4b52", "stroke-width": 2.4 }, pl);
+    el("rect", { x: -66, y: -2.5, width: 3, height: 5, rx: 1, fill: "#d8d9de", transform: `rotate(-30 -64 0)` }, pl);
+    cylinder(48.5, 51.5, 60, 12, 6, "#9c9da5", false); const bt = topG(51.5); el("circle", { cx: -60, cy: 12, r: 6, fill: "url(#btnTop)" }, bt); el("circle", { cx: -60, cy: 12, r: 6, fill: "none", stroke: "#26272c", "stroke-width": .6 }, bt);
+    const lcd = topG(46.4); el("rect", { x: -70, y: -38, width: 40, height: 28, rx: 2, fill: "url(#lcd)", stroke: "#101114", "stroke-width": .8 }, lcd);
+    el("text", { x: -50, y: -26, "font-size": 5.2, "font-weight": 700, fill: "#dfe9d8", "text-anchor": "middle", "font-family": "ui-monospace,Menlo,monospace" }, lcd).textContent = "1/250 F2.8";
+    el("text", { x: -50, y: -16, "font-size": 4.4, fill: "#b9c8b3", "text-anchor": "middle", "font-family": "ui-monospace,Menlo,monospace" }, lcd).textContent = "ISO 100  [ 128 ]";
+    [-64, -56, -48, -40].forEach((x) => { el("circle", { cx: x, cy: -5, r: 2.2, fill: "#2a2b30", stroke: "#000", "stroke-opacity": .5, "stroke-width": .5 }, lcd); });
+  }
+  /* ---------- 镜头：同轴圆柱段（卡口 → 变焦环 → 对焦环 → 前组镜片） ---------- */
+  const LX = -8, LY = 2;                                                  // 镜头光轴在正面的位置
+  const rp = (Z, r, t) => P(LX + r * Math.cos(t), LY + r * Math.sin(t), Z);
+  function visRange() {                                                   // 圆柱轮廓切线角与可见弧段
+    const a = U[0], b = U[1], d = -1, det = a * d, inv = [[d / det, 0], [-b / det, a / det]], dp = [inv[0][0] * Wd[0], inv[1][0] * Wd[0] + inv[1][1] * Wd[1]];
+    let t1 = Math.atan2(-dp[0], dp[1]), t2 = t1 + Math.PI; const mid = (t1 + t2) / 2, q = rp(0, 1, mid), c = P(LX, LY, 0);
+    return ((q[0] - c[0]) * Wd[0] + (q[1] - c[1]) * Wd[1]) < 0 ? [t1, t2] : [t2, t1 + 2 * Math.PI];
+  }
+  const [TA, TB] = visRange(), NUP = (() => { const q = rp(0, 1, TA + (TB - TA) * .52), c = P(LX, LY, 0), v = [q[0] - c[0], q[1] - c[1]], l = Math.hypot(...v); return [v[0] / l, v[1] / l]; })();
+  function ring(Z1, Z2, r, kind, opts = {}) {
+    const N = 26, back = [], front = []; for (let i = 0; i <= N; i++) back.push(rp(Z1, r, TA + (TB - TA) * i / N)); for (let i = 0; i <= N; i++) front.push(rp(Z2, r, TB + (2 * Math.PI - (TB - TA)) * i / N));
+    const c = P(LX, LY, (Z1 + Z2) / 2), rpx = r * s, gp1 = [c[0] + NUP[0] * rpx, c[1] + NUP[1] * rpx], gp2 = [c[0] - NUP[0] * rpx, c[1] - NUP[1] * rpx];
+    const stops = kind === "metal" ? [[0, "#f2f2f4"], [.12, "#b4b5bb"], [.3, "#63646b"], [.5, "#d2d3d8"], [.72, "#3b3c42"], [.92, "#17181c"], [1, "#7d7e85"]]
+      : kind === "red" ? [[0, "#ff6b5e"], [.25, "#e0281f"], [.6, "#8d1210"], [.9, "#3f0806"], [1, "#a8231b"]]
+      : [[0, "#7a7a80"], [.16, "#3b3b40"], [.5, "#1d1d21"], [.88, "#0c0c0e"], [1, "#2d2d32"]];
+    poly([...back, ...front], { fill: lin(gp1, gp2, stops) });
+    if (kind === "rubber") { const n = opts.ribs || 44, w = opts.w || .56, seg = (TB - TA) / n;
+      for (let i = 0; i < n; i++) { const t0 = TA + seg * i, t1 = t0 + seg * w, tm = (t0 + t1) / 2, diff = Math.cos(tm) * LC[0] + Math.sin(tm) * LC[1];
+        poly([rp(Z1 + .4, r + .5, t0), rp(Z1 + .4, r + .5, t1), rp(Z2 - .4, r + .5, t1), rp(Z2 - .4, r + .5, t0)], { fill: shade([46, 46, 50], diff, Math.pow(Math.max(0, diff), 10) * 70) }); } }
+    const cap = []; for (let i = 0; i < 48; i++) cap.push(rp(Z2, r, i / 48 * 2 * Math.PI));
+    poly(cap, { fill: opts.cap || (kind === "metal" ? lin([c[0] - rpx, c[1] - rpx], [c[0] + rpx, c[1] + rpx], [[0, "#e9e9ec"], [.4, "#8a8b92"], [.6, "#2a2b30"], [1, "#6e6f76"]]) : kind === "red" ? "#b41a12" : "#111114") });
+  }
+  ring(0, 3, 32, "metal");                                                // 卡口法兰（金属）
+  { const g = frontG(3.1); el("circle", { cx: -LX, cy: -LY, r: 32, fill: "none", stroke: "#2a2b30", "stroke-width": 1.2 }, g); el("circle", { cx: -LX + 19, cy: -LY - 25, r: 1.6, fill: "#e0281f" }, g); }   // 卡口红点
+  ring(3, 14, 33.5, "black");
+  { // 距离刻度窗（镜筒顶部）与 AF/MF 拨钮（可见侧）
+    const w0 = 78 * Math.PI / 180, w1 = 106 * Math.PI / 180; poly([rp(5, 33.6, w0), rp(5, 33.6, w1), rp(12.5, 33.6, w1), rp(12.5, 33.6, w0)], { fill: "#0d0d10", stroke: "#3c3d44", "stroke-width": .6 });
+    ["∞", "3", "1.5", "0.7", "0.38"].forEach((t, i) => { const a = w0 + (w1 - w0) * (i + .5) / 5, p = rp(8.5, 33.9, a); el("text", { x: f1(p[0]), y: f1(p[1] + 1.2), "font-size": 4.8, fill: i === 0 ? "#fff" : "#d5d6da", "text-anchor": "middle", "font-family": "Arial,sans-serif" }, root).textContent = t; });
+    const a0 = 14 * Math.PI / 180, a1 = 34 * Math.PI / 180; poly([rp(5.5, 34.6, a0), rp(5.5, 34.6, a1), rp(12, 34.6, a1), rp(12, 34.6, a0)], { fill: "#2f3036", stroke: "#000", "stroke-width": .6 });
+    poly([rp(6.5, 35.3, a0 + .05), rp(6.5, 35.3, a0 + .18), rp(11, 35.3, a0 + .18), rp(11, 35.3, a0 + .05)], { fill: "#d9dadf" });
+    const pa = rp(8.7, 36.5, a1 - .06); el("text", { x: f1(pa[0]), y: f1(pa[1]), "font-size": 3.6, fill: "#fff", "font-family": "Arial,sans-serif" }, root).textContent = "AF";
+  }
+  ring(14, 17.5, 35, "red");                                              // 红色装饰环
+  ring(17.5, 44, 36.5, "rubber", { ribs: 40, w: .58 });                   // 变焦环
+  ring(44, 50, 33.5, "black");
+  { const p = (t) => rp(46.8, 34.2, t); ["70", "50", "35", "24"].forEach((t, i) => { const q = p((38 + i * 20) * Math.PI / 180); el("text", { x: f1(q[0]), y: f1(q[1] + 1.4), "font-size": 4.2, "font-weight": 700, fill: "#fff", "text-anchor": "middle", "font-family": "Arial,sans-serif" }, root).textContent = t; }); const q = rp(51, 34.6, 58 * Math.PI / 180); el("circle", { cx: f1(q[0]), cy: f1(q[1]), r: 1.1, fill: "#fff" }, root); }
+  ring(50, 70, 35.5, "rubber", { ribs: 62, w: .5 });                      // 对焦环（细纹）
+  ring(70, 80, 33.5, "black");
+  ring(80, 88, 34.5, "black", { cap: "#0f0f12" });                        // 滤镜螺纹前缘
+  { const g = frontG(88.2); const cx = -LX, cy = -LY;                       // 前缘刻字环 + 螺纹线
+    el("circle", { cx, cy, r: 34.5, fill: "none", stroke: "#6a6b72", "stroke-width": .5 }, g); el("circle", { cx, cy, r: 33.2, fill: "none", stroke: "#3a3b41", "stroke-width": .5 }, g);
+    el("path", { id: "ringTxt", d: `M${cx - 30.5} ${cy} A30.5 30.5 0 0 1 ${cx + 30.5} ${cy}`, fill: "none" }, g);
+    const tx = el("text", { "font-size": 3.9, "font-weight": 700, fill: "#e8e9ee", "letter-spacing": .9, "font-family": "'Helvetica Neue',Arial,sans-serif" }, g); const tp = el("textPath", { href: "#ringTxt", startOffset: "50%", "text-anchor": "middle" }, tx); tp.textContent = "FABLE  ZOOM  24-70mm  1:2.8  Ø77";
+    const p2 = el("path", { id: "ringTxt2", d: `M${cx + 29} ${cy + 3} A29 29 0 0 1 ${cx - 29} ${cy + 3}`, fill: "none" }, g); const t2 = el("text", { "font-size": 3.2, fill: "#b9bac0", "letter-spacing": 1.2, "font-family": "Arial,sans-serif" }, g); el("textPath", { href: "#ringTxt2", startOffset: "50%", "text-anchor": "middle" }, t2).textContent = "NANO COATING · ULTRASONIC";
+  }
+  { const g = frontG(86.5), cx = -LX, cy = -LY;                             // 前组镜片：多层同心结构 + 镀膜反光 + 流动高光
+    el("circle", { cx, cy, r: 28, fill: "#08080c" }, g); el("circle", { cx, cy, r: 27, fill: "url(#glass)" }, g);
+    [[24.5, "rgba(120,200,255,.35)", .8], [19.5, "rgba(210,120,255,.32)", .7], [13, "rgba(80,255,190,.28)", .6], [7.5, "rgba(255,170,90,.35)", .6]].forEach(([r, c, w]) => el("circle", { cx, cy, r, fill: "none", stroke: c, "stroke-width": w }, g));
+    el("circle", { cx, cy, r: 6, fill: "#05050a" }, g); el("circle", { cx, cy, r: 6, fill: "none", stroke: "rgba(150,190,255,.4)", "stroke-width": .5 }, g);
+    const clip = el("clipPath", { id: "glassClip" }, defs); el("circle", { cx, cy, r: 27 }, clip);
+    const cg = el("g", { "clip-path": "url(#glassClip)" }, g);
+    el("ellipse", { cx: cx - 9, cy: cy - 11, rx: 13, ry: 8, fill: "#fff", opacity: .55, transform: `rotate(-32 ${cx - 9} ${cy - 11})`, filter: "url(#blur3)" }, cg);
+    el("ellipse", { cx: cx - 12, cy: cy - 14, rx: 5, ry: 2.8, fill: "#fff", opacity: .9, transform: `rotate(-32 ${cx - 12} ${cy - 14})` }, cg);
+    el("ellipse", { cx: cx + 11, cy: cy + 13, rx: 6, ry: 2.2, fill: "#9fd6ff", opacity: .35, transform: `rotate(-32 ${cx + 11} ${cy + 13})` }, cg);
+    el("rect", { class: "sweep", x: cx - 18, y: cy - 40, width: 36, height: 80, fill: "url(#sweepG)", transform: `rotate(28 ${cx} ${cy})` }, cg);
+    el("circle", { cx, cy, r: 27, fill: "none", stroke: "rgba(255,255,255,.35)", "stroke-width": .6 }, g);
+  }
+  { const g = topG(-45); el("ellipse", { cx: -LX + 30, cy: 60, rx: 44, ry: 14, fill: "#000", opacity: .35, filter: "url(#blur6)" }, g); root.insertBefore(g, bodyG.nextSibling); }   // 镜头下方环境光遮蔽
+</script>
+</body>
+</html>

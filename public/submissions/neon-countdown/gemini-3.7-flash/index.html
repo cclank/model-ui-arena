@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyber Neon Countdown</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle at center, #11052C, #050110);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 16px; color: #fff; overflow: hidden;
+    }
+    .container {
+      width: 100%; max-width: 360px; display: flex; flex-direction: column;
+      align-items: center; gap: 24px; position: relative;
+    }
+    .ring-wrap { position: relative; width: 240px; height: 240px; }
+    .ring-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .ring-track { fill: none; stroke: rgba(255, 255, 255, 0.08); stroke-width: 8; }
+    .ring-progress {
+      fill: none; stroke: #f43f5e; stroke-width: 8; stroke-linecap: round;
+      stroke-dasharray: 691; stroke-dashoffset: 0; filter: drop-shadow(0 0 10px #f43f5e);
+      transition: stroke-dashoffset 0.1s linear, stroke 0.3s;
+    }
+    .center-content {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .num {
+      font-size: 5rem; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 25px #f43f5e; transition: transform 0.1s, color 0.3s;
+    }
+    .num.pulse { transform: scale(1.15); }
+    .num.urgent { color: #ff0055; text-shadow: 0 0 35px #ff0055; }
+    .unit { font-size: 0.85rem; letter-spacing: 3px; color: #a855f7; font-weight: 700; margin-top: 4px; }
+    .status-text {
+      font-size: 1.1rem; font-weight: 700; letter-spacing: 2px;
+      color: #38bdf8; text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+    }
+    .restart-btn {
+      padding: 12px 28px; background: linear-gradient(135deg, #f43f5e, #a855f7);
+      border: none; border-radius: 20px; color: #fff; font-size: 0.95rem; font-weight: 700;
+      letter-spacing: 1px; cursor: pointer; box-shadow: 0 0 20px rgba(244, 63, 94, 0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .restart-btn:active { transform: scale(0.94); }
+    .burst-overlay {
+      position: absolute; inset: -40px; border-radius: 50%; pointer-events: none;
+      background: radial-gradient(circle, rgba(244,63,94,0.4) 0%, transparent 70%);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .burst-overlay.active { opacity: 1; animation: burst 0.8s ease-out; }
+    @keyframes burst { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(1.4); opacity: 0; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="ring-wrap">
+      <div id="burstOverlay" class="burst-overlay"></div>
+      <svg class="ring-svg" viewBox="0 0 240 240">
+        <circle class="ring-track" cx="120" cy="120" r="110" />
+        <circle id="ringProgress" class="ring-progress" cx="120" cy="120" r="110" />
+      </svg>
+      <div class="center-content">
+        <div id="numDisplay" class="num">10</div>
+        <div id="unitDisplay" class="unit">SECONDS</div>
+      </div>
+    </div>
+    <div id="statusText" class="status-text">COUNTDOWN RUNNING</div>
+    <button class="restart-btn" onclick="startTimer()">RESTART ↺</button>
+  </div>
+  <script>
+    const total = 10;
+    let timeLeft = total;
+    let timer = null;
+    const circumference = 2 * Math.PI * 110;
+    const numEl = document.getElementById('numDisplay');
+    const ring = document.getElementById('ringProgress');
+    const statusEl = document.getElementById('statusText');
+    const burst = document.getElementById('burstOverlay');
+    const unitEl = document.getElementById('unitDisplay');
+
+    function updateView() {
+      numEl.textContent = timeLeft;
+      const progress = (timeLeft / total);
+      const offset = circumference * (1 - progress);
+      ring.style.strokeDashoffset = offset;
+
+      numEl.classList.remove('pulse');
+      void numEl.offsetWidth;
+      numEl.classList.add('pulse');
+
+      if (timeLeft <= 3 && timeLeft > 0) {
+        numEl.classList.add('urgent');
+        ring.style.stroke = '#ff0055';
+        statusEl.textContent = 'FINAL WARNING';
+        statusEl.style.color = '#ff0055';
+      } else {
+        numEl.classList.remove('urgent');
+        ring.style.stroke = '#f43f5e';
+        statusEl.textContent = 'COUNTDOWN RUNNING';
+        statusEl.style.color = '#38bdf8';
+      }
+    }
+
+    function startTimer() {
+      clearInterval(timer);
+      timeLeft = total;
+      unitEl.textContent = 'SECONDS';
+      burst.classList.remove('active');
+      updateView();
+
+      timer = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          timeLeft = 0;
+          updateView();
+          statusEl.textContent = 'MISSION LAUNCHED! 🚀';
+          statusEl.style.color = '#22c55e';
+          unitEl.textContent = 'COMPLETED';
+          burst.classList.add('active');
+        } else {
+          updateView();
+        }
+      }, 1000);
+    }
+
+    startTimer();
+  </script>
+</body>
+</html>

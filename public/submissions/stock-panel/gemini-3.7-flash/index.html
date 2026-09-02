@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlphaPulse - Stock Terminal</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: #090d16; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 16px; color: #f8fafc;
+    }
+    .panel {
+      width: 100%; max-width: 360px; background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 14px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+    .header { display: flex; justify-content: space-between; align-items: center; }
+    .title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+    .live-tag {
+      font-size: 0.7rem; color: #22c55e; background: rgba(34, 197, 94, 0.1);
+      padding: 2px 6px; border-radius: 6px; display: flex; align-items: center; gap: 4px;
+    }
+    .dot { width: 5px; height: 5px; background: #22c55e; border-radius: 50%; animation: blink 1s infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .stock-list { display: flex; flex-direction: column; gap: 10px; }
+    .stock-card {
+      background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 14px; padding: 12px; display: flex; align-items: center; justify-content: space-between;
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+    .stock-card.flash-up { background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.4); }
+    .stock-card.flash-down { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); }
+    .stock-left { display: flex; flex-direction: column; }
+    .stock-symbol { font-size: 0.95rem; font-weight: 700; }
+    .stock-name { font-size: 0.75rem; color: #64748b; }
+    .sparkline-svg { width: 68px; height: 26px; }
+    .stock-right { display: flex; flex-direction: column; align-items: flex-end; }
+    .stock-price { font-size: 1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .stock-change {
+      font-size: 0.75rem; font-weight: 600; padding: 2px 6px; border-radius: 6px;
+      display: inline-flex; align-items: center; gap: 2px;
+    }
+    .up { color: #22c55e; }
+    .badge-up { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+    .down { color: #ef4444; }
+    .badge-down { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .footer-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.75rem; color: #475569; border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <div class="header">
+      <div class="title">📈 核心自选监控</div>
+      <div class="live-tag"><span class="dot"></span>实时更新</div>
+    </div>
+    <div id="stockList" class="stock-list"></div>
+    <div class="footer-bar">
+      <span>纳斯达克 / 美股实时行情</span>
+      <span id="updateTime">16:00:00</span>
+    </div>
+  </div>
+  <script>
+    const stocks = [
+      { sym: 'NVDA', name: '英伟达', price: 128.45, base: 126.10, history: [124, 125, 127, 126, 128.45] },
+      { sym: 'AAPL', name: '苹果公司', price: 224.80, base: 226.50, history: [227, 226, 225, 226, 224.80] },
+      { sym: 'TSLA', name: '特斯拉', price: 218.60, base: 212.00, history: [210, 214, 212, 216, 218.60] }
+    ];
+
+    function createSparkline(pts, isUp) {
+      const min = Math.min(...pts);
+      const max = Math.max(...pts);
+      const range = max - min || 1;
+      const w = 68, h = 26;
+      const points = pts.map((p, idx) => {
+        const x = (idx / (pts.length - 1)) * w;
+        const y = h - ((p - min) / range) * (h - 6) - 3;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ');
+      const stroke = isUp ? '#22c55e' : '#ef4444';
+      return `<svg class="sparkline-svg"><polyline fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="${points}"/></svg>`;
+    }
+
+    function render(flashIndex = -1, isUp = true) {
+      const list = document.getElementById('stockList');
+      list.innerHTML = stocks.map((s, idx) => {
+        const diff = s.price - s.base;
+        const pct = ((diff / s.base) * 100).toFixed(2);
+        const up = diff >= 0;
+        const sign = up ? '+' : '';
+        const flashClass = flashIndex === idx ? (isUp ? 'flash-up' : 'flash-down') : '';
+
+        return `
+          <div class="stock-card ${flashClass}">
+            <div class="stock-left">
+              <span class="stock-symbol">${s.sym}</span>
+              <span class="stock-name">${s.name}</span>
+            </div>
+            ${createSparkline(s.history, up)}
+            <div class="stock-right">
+              <span class="stock-price ${up ? 'up' : 'down'}">$${s.price.toFixed(2)}</span>
+              <span class="stock-change ${up ? 'badge-up' : 'badge-down'}">${sign}${pct}%</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    render();
+
+    setInterval(() => {
+      const idx = Math.floor(Math.random() * stocks.length);
+      const delta = (Math.random() * 1.2 - 0.55);
+      const isUp = delta >= 0;
+      stocks[idx].price = Math.max(10, +(stocks[idx].price + delta).toFixed(2));
+      stocks[idx].history.push(stocks[idx].price);
+      if (stocks[idx].history.length > 7) stocks[idx].history.shift();
+
+      render(idx, isUp);
+      document.getElementById('updateTime').textContent = new Date().toLocaleTimeString();
+    }, 1500);
+  </script>
+</body>
+</html>

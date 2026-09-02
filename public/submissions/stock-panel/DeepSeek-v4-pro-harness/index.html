@@ -1,0 +1,147 @@
+<!-- 设计说明：股票监控面板 —— 5 支股票列表 + 主图分时曲线（面积渐变/网格/脉冲点），
+     假流式 tick 每 1.6s 更新制造实时感，红涨绿跌 + ▲▼ 符号，波动加剧自动风险提示。 -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>股票监控 · Stock Panel</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,'Segoe UI','PingFang SC',sans-serif;min-height:100vh;display:grid;place-items:center;background:radial-gradient(120% 90% at 50% 0%,#161d33 0%,#0a0e1c 62%,#060812 100%);padding:16px;color:#dfe6ff}
+.card{width:min(92vw,430px);background:linear-gradient(180deg,#12182c,#0c1120);border:1px solid #242e4e;border-radius:22px;padding:18px 16px 14px;box-shadow:0 26px 60px rgba(0,0,0,.5)}
+.head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.brand{font-size:15px;font-weight:700;letter-spacing:.05em}
+.live{display:flex;align-items:center;gap:6px;font-size:11px;color:#7f8cc0}
+.live i{width:7px;height:7px;border-radius:50%;background:#ff4d5e;animation:liv 1.2s infinite}
+@keyframes liv{0%,100%{opacity:1}50%{opacity:.25}}
+.main{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+.name{font-size:17px;font-weight:650}
+.code{font-size:12px;color:#7f8cc0;margin-left:6px}
+.price{font-size:34px;font-weight:750;font-variant-numeric:tabular-nums}
+.chg{font-size:14px;font-weight:650}
+.up{color:#ff4d5e}.down{color:#16c784}.flat{color:#8a97c4}
+.tag{font-size:11px;padding:2px 8px;border-radius:6px;font-weight:700}
+.tag.up{background:#ff4d5e22}.tag.down{background:#16c78422}
+.chart{position:relative;margin:6px 0 4px;border-radius:12px;background:#0b1020;border:1px solid #1c2440;height:170px}
+.chart svg{position:absolute;inset:0;width:100%;height:100%}
+.chart .lbl{position:absolute;font-size:10px;color:#5d6a9c;font-variant-numeric:tabular-nums}
+.stats{display:flex;gap:16px;font-size:11px;color:#8a97c4;padding:2px 2px 10px;flex-wrap:wrap}
+.stats b{color:#dfe6ff;font-weight:650}
+.banner{display:none;margin:0 0 10px;padding:8px 12px;border-radius:10px;background:#ff4d5e18;border:1px solid #ff4d5e55;color:#ff8a94;font-size:12px;letter-spacing:.04em}
+.banner.show{display:flex;align-items:center;gap:8px;animation:shk .4s}
+@keyframes shk{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.list{display:flex;flex-direction:column}
+.row{display:grid;grid-template-columns:1.5fr .9fr .8fr 1fr;align-items:center;gap:6px;padding:9px 8px;border-radius:12px;cursor:pointer;transition:background .2s;border:1px solid transparent}
+.row:hover{background:#151d36}
+.row.on{background:#1a2444;border-color:#33427a}
+.rn{min-width:0}.rn .n{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rn .c{font-size:10px;color:#6d7aad}
+.spark{width:56px;height:22px}
+.rp{font-size:13px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.rc{font-size:11px;text-align:right;font-variant-numeric:tabular-nums}
+.flashU{animation:fu .6s}.flashD{animation:fd .6s}
+@keyframes fu{30%{background:#ff4d5e2e}}@keyframes fd{30%{background:#16c7842e}}
+.legend{font-size:10px;color:#5d6a9c;margin-top:8px;text-align:right}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="head">
+    <div class="brand">市场监控台 · 模拟行情</div>
+    <div class="live"><i></i>LIVE <span id="clock"></span></div>
+  </div>
+  <div class="main">
+    <span class="name" id="sName">贵州茅台</span><span class="code" id="sCode">600519</span>
+    <span class="price" id="sPrice">--</span>
+    <span class="chg" id="sChg">--</span>
+    <span class="tag" id="sTag">--</span>
+  </div>
+  <div class="chart" id="chart">
+    <span class="lbl" id="hiLbl" style="top:6px;left:10px"></span>
+    <span class="lbl" id="loLbl" style="bottom:6px;left:10px"></span>
+    <svg viewBox="0 0 320 140" preserveAspectRatio="none">
+      <defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#4d7cff" stop-opacity=".34"/>
+        <stop offset="1" stop-color="#4d7cff" stop-opacity="0"/>
+      </linearGradient></defs>
+      <path id="grid" stroke="#1c2440" stroke-width="1" d="M0 35H320M0 70H320M0 105H320" vector-effect="non-scaling-stroke"/>
+      <path id="area" fill="url(#area)" d=""/>
+      <path id="line" fill="none" stroke="#4d7cff" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke" d=""/>
+      <circle id="dot" r="3.6" fill="#4d7cff" stroke="#0b1020" stroke-width="1.5"/>
+    </svg>
+  </div>
+  <div class="stats">
+    <span>今开 <b id="open">--</b></span>
+    <span>最高 <b id="high">--</b></span>
+    <span>最低 <b id="low">--</b></span>
+    <span>更新时间 <b id="tick">--:--:--</b></span>
+  </div>
+  <div class="banner" id="banner">! 波动加剧：该股振幅已超过 3%，请留意风险</div>
+  <div class="list" id="list"></div>
+  <div class="legend">红涨 · 绿跌 · 数据为本地模拟流</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const BASE=[['600519','贵州茅台',1542.3],['300750','宁德时代',213.6],['002594','比亚迪',246.1],['688981','中芯国际',89.4],['600276','恒瑞医药',47.2]];
+const STOCKS=BASE.map(b=>({code:b[0],name:b[1],price:b[2],open:b[2],hist:[]}));
+STOCKS.forEach(s=>{for(let i=0;i<40;i++)s.hist.push(+(s.price*(0.965+0.055*i/39)+(Math.random()-.5)*s.price*.016).toFixed(2));s.hist[39]=s.price;});
+let sel=0;
+const fmt2=v=>(v<0?'':'+')+v.toFixed(2);
+function pathOf(h,w,H){const min=Math.min.apply(null,h),max=Math.max.apply(null,h),pad=(max-min||1)*.12;
+  return h.map((v,i)=>{const x=i/(h.length-1)*w,y=H-6-(v-(min-pad))/(max-min+2*pad)*(H-12);
+    return (i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}).join(' ');}
+function chart(){
+  const s=STOCKS[sel],h=s.hist;
+  const min=Math.min.apply(null,h),max=Math.max.apply(null,h);
+  $('line').setAttribute('d',pathOf(h,320,140));
+  $('area').setAttribute('d',pathOf(h,320,140)+' L320 140 L0 140 Z');
+  const last=h[h.length-1],x=320,y=140-6-(last-(min-(max-min||1)*.12))/(max-min+2*(max-min||1)*.12)*(128);
+  $('dot').setAttribute('cx',x);$('dot').setAttribute('cy',y);
+  $('hiLbl').textContent=max.toFixed(2);$('loLbl').textContent=min.toFixed(2);
+  $('sPrice').textContent=last.toFixed(2);
+  const chg=last-s.open,pct=chg/s.open*100,cls=pct>0?'up':pct<0?'down':'flat';
+  $('sChg').textContent=fmt2(chg);$('sChg').className='chg '+cls;
+  $('sTag').textContent=fmt2(pct)+'%';$('sTag').className='tag '+cls;
+  $('open').textContent=s.open.toFixed(2);
+  $('high').textContent=Math.max.apply(null,h).toFixed(2);
+  $('low').textContent=Math.min.apply(null,h).toFixed(2);
+  $('banner').classList.toggle('show',Math.abs(pct)>3);
+}
+function rows(){
+  $('list').innerHTML=STOCKS.map((s,i)=>{
+    const chg=s.price-s.open,pct=chg/s.open*100,cls=pct>0?'up':pct<0?'down':'flat';
+    const min=Math.min.apply(null,s.hist),max=Math.max.apply(null,s.hist);
+    return '<div class="row'+(i===sel?' on':'')+'" data-i="'+i+'">'+
+      '<div class="rn"><div class="n">'+s.name+'</div><div class="c">'+s.code+'</div></div>'+
+      '<svg class="spark" viewBox="0 0 56 22" preserveAspectRatio="none"><path fill="none" stroke="'+(pct>=0?'#ff4d5e':'#16c784')+'" stroke-width="1.4" d="'+pathOf(s.hist,56,22)+'" vector-effect="non-scaling-stroke"/></svg>'+
+      '<div class="rp '+cls+'">'+s.price.toFixed(2)+'</div>'+
+      '<div class="rc '+cls+'">'+(pct>0?'▲':'▼')+' '+Math.abs(pct).toFixed(2)+'%</div></div>';
+  }).join('');
+}
+$('list').addEventListener('click',e=>{
+  const r=e.target.closest('.row');if(!r)return;
+  sel=+r.dataset.i;$('sName').textContent=STOCKS[sel].name;$('sCode').textContent=STOCKS[sel].code;
+  rows();chart();
+});
+setInterval(()=>{
+  const s=STOCKS[sel],last=s.price;
+  s.price=+(last+(Math.random()-.5)*last*.0036).toFixed(2);
+  s.hist.push(s.price);s.hist.shift();
+  if(Math.random()<.4){
+    const o=STOCKS[(sel+1+Math.floor(Math.random()*4))%5];
+    o.price=+(o.price+(Math.random()-.5)*o.price*.0028).toFixed(2);
+    o.hist.push(o.price);o.hist.shift();
+  }
+  const chg=s.price-s.open,pct=chg/s.open*100;
+  $('sPrice').className='price '+(pct>0?'up':pct<0?'down':'flat');
+  $('sPrice').classList.remove('flashU','flashD');
+  void $('sPrice').offsetWidth;
+  $('sPrice').classList.add(pct>0?'flashU':'flashD');
+  const t=new Date();$('tick').textContent=t.toTimeString().slice(0,8);
+  rows();chart();
+},1600);
+function clock(){const t=new Date();$('clock').textContent=t.toTimeString().slice(0,8);}
+setInterval(clock,1000);clock();rows();chart();
+</script>
+</body>
+</html>

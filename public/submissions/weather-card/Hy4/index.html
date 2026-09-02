@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Weather Card · Hy4</title>
+<style>
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;display:grid;place-items:center;background:#0b0f17;color:#eaf0fb;font:400 15px/1.5 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;padding:16px}
+.card{position:relative;width:min(94vw,376px);border-radius:26px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:linear-gradient(160deg,var(--g1,#2b3a5c),var(--g2,#121a2b));box-shadow:0 30px 60px -26px #000;transition:background .8s ease}
+.fx{position:absolute;inset:0;pointer-events:none}
+.in{position:relative;padding:18px 18px 14px;backdrop-filter:blur(1px)}
+.chips{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.chips button{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#dfe8f7;padding:6px 12px;border-radius:99px;font-size:13px;cursor:pointer;transition:.25s}
+.chips button.on{background:#fff;color:#16203a;font-weight:600;box-shadow:0 6px 16px -6px #fff}
+.chips button:hover{transform:translateY(-1px)}
+.now.swap{animation:swap .5s cubic-bezier(.2,.7,.2,1)}
+@keyframes swap{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:none}}
+.city{font-size:13px;letter-spacing:.06em;color:rgba(255,255,255,.72)}
+.tmp{font:600 74px/1 -apple-system,system-ui;font-variant-numeric:tabular-nums;margin:2px 0 0;text-shadow:0 6px 24px rgba(0,0,0,.35)}
+.tmp i{font-size:24px;font-style:normal;vertical-align:super;opacity:.8}
+.desc{font-size:16px;margin-top:2px;font-weight:500}
+.kv{display:flex;gap:16px;margin-top:10px;font-size:12px;color:rgba(255,255,255,.7)}
+.fc{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.14)}
+#chart{width:100%;height:66px;display:block;overflow:visible}
+#line{stroke-dasharray:400;stroke-dashoffset:400;animation:draw 1s cubic-bezier(.3,.8,.3,1) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+#area{opacity:0;animation:fade .8s .3s forwards}
+@keyframes fade{to{opacity:1}}
+.days{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:6px;text-align:center}
+.days div{font-size:12px;color:rgba(255,255,255,.72)}
+.days b{display:block;color:#fff;font-size:13px;margin-top:2px}
+.days s{display:block;text-decoration:none;opacity:.6;font-size:11px}
+.ft{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:12px;color:rgba(255,255,255,.6)}
+.ft button{border:1px solid rgba(255,255,255,.2);background:transparent;color:inherit;border-radius:8px;padding:4px 10px;cursor:pointer}
+.drop{position:absolute;top:-14%;width:2px;height:18px;border-radius:2px;background:linear-gradient(transparent,#9ecdff);animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(560px);opacity:0}}
+.flake{position:absolute;top:-10%;width:6px;height:6px;border-radius:50%;background:#fff;animation:fall2 linear infinite}
+@keyframes fall2{to{transform:translate(34px,560px);opacity:0}}
+.mote{position:absolute;bottom:-8%;width:5px;height:5px;border-radius:50%;background:#ffd98a;animation:rise linear infinite}
+@keyframes rise{to{transform:translate(-12px,-500px);opacity:0}}
+.glow{position:absolute;right:-50px;top:-70px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(255,209,102,.5),transparent 62%);animation:beat 4.5s ease-in-out infinite}
+@keyframes beat{50%{transform:scale(1.12);opacity:.75}}
+.cl{position:absolute;background:rgba(255,255,255,.22);border-radius:99px;filter:blur(7px);animation:drift linear infinite}
+@keyframes drift{from{transform:translateX(-160px)}to{transform:translateX(420px)}}
+@media (max-width:390px){.tmp{font-size:62px}.days div{font-size:11px}}
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="fx" id="fx"></div>
+  <div class="in">
+    <div class="chips" id="chips"></div>
+    <div class="now" id="now">
+      <div class="city" id="city">—</div>
+      <div class="tmp"><span id="t">0</span><i id="u">°C</i></div>
+      <div class="desc" id="desc">—</div>
+      <div class="kv"><span>风速 <b id="w">0</b> m/s</span><span>湿度 <b id="h">0</b>%</span><span>体感 <b id="f">0</b>°</span></div>
+    </div>
+    <div class="fc">
+      <svg id="chart" viewBox="0 0 300 70" preserveAspectRatio="none">
+        <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd166" stop-opacity=".5"/><stop offset="1" stop-color="#ffd166" stop-opacity="0"/></linearGradient></defs>
+        <path id="area" fill="url(#ag)"/>
+        <polyline id="line" fill="none" stroke="#ffd166" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <g id="dots" fill="#fff"></g>
+      </svg>
+      <div class="days" id="days"></div>
+    </div>
+    <div class="ft"><span id="nt">—</span><button id="ub">切换 °F</button></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id),WD=['周日','周一','周二','周三','周四','周五','周六'];
+const DATA=[
+ {n:'上海',t:28,d:'多云转晴',w:3.2,h:64,ty:'cloud',f:[[29,22],[31,23],[27,21],[26,20],[28,22]]},
+ {n:'北京',t:33,d:'晴',w:2.1,h:36,ty:'sun',f:[[34,24],[35,25],[32,23],[30,21],[31,22]]},
+ {n:'广州',t:25,d:'小雨',w:5.4,h:88,ty:'rain',f:[[27,23],[26,22],[25,22],[27,23],[28,24]]},
+ {n:'哈尔滨',t:6,d:'小雪',w:1.4,h:72,ty:'snow',f:[[7,-2],[5,-4],[6,-3],[8,-1],[4,-5]]}
+];
+const BG={sun:['#3a6ea8','#8fc0e8'],rain:['#3a4a63','#1b2534'],snow:['#5b6f8c','#c6d6e8'],cloud:['#54627d','#28324a']};
+const NG={sun:['#12203c','#2b3a5c'],rain:['#151c2b','#0c111b'],snow:['#1d2740','#3a4a68'],cloud:['#1a2233','#0e1420']};
+let cur=0,celsius=true,shown=0,raf=0;
+const conv=v=>celsius?v:Math.round(v*9/5+32);
+function icon(t,s){s=s||20;const c='viewBox="0 0 24 24" width="'+s+'" height="'+s+'"';
+ return t==='sun'?'<svg '+c+'><circle cx="12" cy="12" r="5" fill="#ffd166"/><g stroke="#ffd166" stroke-width="2" stroke-linecap="round"><path d="M12 1v3M12 20v3M1 12h3M20 12h3M4 4l2 2M18 18l2 2M20 4l-2 2M6 18l-2 2"/></g></svg>'
+ :t==='rain'?'<svg '+c+'><path d="M6 13a4 4 0 010-8 5 5 0 019.6-1.4A3.6 3.6 0 1117 13z" fill="#c3d2e8"/><g stroke="#8fc4ff" stroke-width="2" stroke-linecap="round"><path d="M8 16l-1 4M12 16l-1 4M16 16l-1 4"/></g></svg>'
+ :t==='snow'?'<svg '+c+'><path d="M6 13a4 4 0 010-8 5 5 0 019.6-1.4A3.6 3.6 0 1117 13z" fill="#e2edfa"/><g stroke="#a8d4ff" stroke-width="1.7" stroke-linecap="round"><path d="M8 17v4M6.4 18l3.2 2M9.6 18l-3.2 2M15 17v4M13.4 18l3.2 2M16.6 18l-3.2 2"/></g></svg>'
+ :'<svg '+c+'><path d="M6 14a4 4 0 010-8 5 5 0 019.6-1.4A3.6 3.6 0 1117 14z" fill="#c9d6e8"/><path d="M9 18h7" stroke="#9db0c9" stroke-width="2" stroke-linecap="round"/></svg>';}
+function fx(t){
+  const f=$('fx');f.innerHTML='';
+  const add=(cls,css,tag)=>{const e=document.createElement(tag||'i');e.className=cls;e.style.cssText=css;f.appendChild(e);};
+  if(t==='rain')for(let i=0;i<46;i++)add('drop','left:'+(Math.random()*100).toFixed(1)+'%;animation-duration:'+(0.5+Math.random()*0.5).toFixed(2)+'s;animation-delay:-'+(Math.random()*1.4).toFixed(2)+'s;opacity:'+(0.35+Math.random()*0.5).toFixed(2));
+  else if(t==='snow')for(let i=0;i<34;i++)add('flake','left:'+(Math.random()*100).toFixed(1)+'%;animation-duration:'+(3+Math.random()*3).toFixed(2)+'s;animation-delay:-'+(Math.random()*6).toFixed(2)+'s;opacity:'+(0.5+Math.random()*0.5).toFixed(2)+';transform:scale('+(0.5+Math.random()*0.9).toFixed(2)+')');
+  else if(t==='sun'){add('glow','','div');for(let i=0;i<20;i++)add('mote','left:'+(Math.random()*100).toFixed(1)+'%;animation-duration:'+(4+Math.random()*4).toFixed(2)+'s;animation-delay:-'+(Math.random()*7).toFixed(2)+'s;opacity:'+(0.3+Math.random()*0.6).toFixed(2));}
+  else for(let i=0;i<5;i++)add('cl','top:'+(6+i*13+Math.random()*6).toFixed(1)+'%;width:'+(70+Math.random()*90).toFixed(0)+'px;height:'+(16+Math.random()*14).toFixed(0)+'px;animation-duration:'+(14+Math.random()*14).toFixed(1)+'s;animation-delay:-'+(Math.random()*20).toFixed(1)+'s','div');
+}
+function countUp(to){
+  cancelAnimationFrame(raf);const from=shown,t0=performance.now(),D=480;
+  const step=n=>{const k=Math.min(1,(n-t0)/D),e=1-Math.pow(1-k,3);
+    shown=from+(to-from)*e;$('t').textContent=Math.round(conv(shown));
+    if(k<1)raf=requestAnimationFrame(step);};
+  raf=requestAnimationFrame(step);
+}
+function render(i,first){
+  const d=DATA[i],night=!(new Date().getHours()>=6&&new Date().getHours()<18),key=d.ty;
+  const g=(night?NG:BG)[key];
+  $('card').style.setProperty('--g1',g[0]);$('card').style.setProperty('--g2',g[1]);
+  $('city').textContent=d.n+' · '+(night?'夜间':'白天');
+  $('desc').innerHTML=icon(d.ty,18)+' '+d.d;
+  $('w').textContent=d.w;$('h').textContent=d.h;$('f').textContent=conv(d.t+(d.h>70?2:-1));
+  countUp(d.t);fx(d.ty);
+  $('nt').textContent=(night?'夜间':'白天')+'模式 · 本地时间 '+new Date().getHours()+' 点';
+  const hi=d.f.map(x=>x[0]),lo=d.f.map(x=>x[1]),mx=Math.max(...hi),mn=Math.min(...lo);
+  const X=k=>34+k*58,Y=v=>14+(mx-v)/Math.max(1,mx-mn)*44;
+  $('line').setAttribute('points',hi.map((v,k)=>X(k)+','+Y(v)).join(' '));
+  $('area').setAttribute('d','M'+X(0)+',64 L'+hi.map((v,k)=>X(k)+','+Y(v)).join(' L')+' L'+X(4)+',64 Z');
+  $('dots').innerHTML=hi.map((v,k)=>'<circle cx="'+X(k)+'" cy="'+Y(v)+'" r="3"><title>'+v+'°</title></circle>').join('');
+  const today=new Date();
+  $('days').innerHTML=d.f.map((x,k)=>{const dt=new Date(today.getTime()+(k+1)*864e5);
+    return '<div>'+WD[dt.getDay()]+icon(key,16)+'<b>'+conv(x[0])+'°</b><s>'+conv(x[1])+'°</s></div>';}).join('');
+  if(!first){const n=$('now');n.classList.remove('swap');void n.offsetWidth;n.classList.add('swap');
+    const l=$('line');l.style.animation='none';void l.offsetWidth;l.style.animation='';}
+}
+DATA.forEach((d,i)=>{const b=document.createElement('button');b.textContent=d.n;
+  b.onclick=()=>{cur=i;[...$('chips').children].forEach((c,k)=>c.classList.toggle('on',k===i));render(i);};
+  $('chips').appendChild(b);});
+$('ub').onclick=()=>{celsius=!celsius;$('u').textContent=celsius?'°C':'°F';$('ub').textContent='切换 '+(celsius?'°F':'°C');render(cur,true);};
+$('chips').children[0].classList.add('on');render(0,true);
+</script>
+</body>
+</html>

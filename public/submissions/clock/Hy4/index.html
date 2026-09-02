@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN" data-page-node-id="oHBQS7yRuNBiUpP3Agg4Jw">
+<head data-page-node-id="i9PCOly3R31dFo5hkrT8Ni">
+<meta charset="utf-8" data-page-node-id="csH9Q3p0s0RqOEnDSE2rfb">
+<meta name="viewport" content="width=device-width,initial-scale=1" data-page-node-id="uaiPrfnTATia26zkjAX5cR">
+<title>Clock · Hy4</title>
+<style>
+:root{--bg:#070b16;--card:#111a30;--ink:#e9eefc;--dim:#8895c0;--acc:#7aa2ff;--tick:#4a5a8c;--ring:#223055;--sh:rgba(0,0,0,.6)}
+body.light{--bg:#eef1f8;--card:#fff;--ink:#1a2340;--dim:#7884a8;--acc:#2f6bff;--tick:#c6d0e8;--ring:#e3e9f7;--sh:rgba(31,45,89,.18)}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;display:grid;place-items:center;background:radial-gradient(120% 110% at 50% -10%,var(--card),var(--bg) 70%);color:var(--ink);font:400 15px/1.5 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;transition:background .9s ease,color .9s ease}
+.card{width:min(92vw,372px);padding:24px 22px 26px;border-radius:26px;background:var(--card);border:1px solid var(--ring);box-shadow:0 34px 70px -34px var(--sh);text-align:center}
+.top{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase}
+.phase{display:flex;gap:6px;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);box-shadow:0 0 10px var(--acc);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.3;transform:scale(.75)}}
+svg{display:block;width:100%;height:auto;margin:8px 0 2px}
+.tick{stroke:var(--tick);stroke-linecap:round;animation:brea 4s ease-in-out infinite}
+@keyframes brea{0%,100%{opacity:.4}50%{opacity:1}}
+.maj{stroke:var(--ink);opacity:.8}
+.hh{stroke:var(--ink);stroke-width:6;stroke-linecap:round}
+.mm{stroke:var(--ink);stroke-width:4;stroke-linecap:round;opacity:.85}
+.ss{stroke:var(--acc);stroke-width:2;stroke-linecap:round}
+.pin{fill:var(--acc)}
+.plate{fill:none;stroke:var(--ring)}
+.trk{fill:none;stroke:var(--ring);stroke-width:3}
+.prg{fill:none;stroke:var(--acc);stroke-width:3;stroke-linecap:round;filter:drop-shadow(0 0 6px var(--acc))}
+.dig{font:600 46px/1 ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.dig small{font-size:20px;color:var(--acc);margin-left:2px}
+.meta{margin-top:10px;font-size:13px;color:var(--dim);display:flex;justify-content:center;gap:14px}
+@media (max-width:390px){.dig{font-size:40px}.card{padding:20px 16px 22px}}
+</style>
+</head>
+<body data-page-node-id="nfEQNhN8sdypD0CMoLcf1A">
+<div class="card" data-page-node-id="aK49Oe6LJlAKJrasSbDHp5">
+  <div class="top" data-page-node-id="fEZ7lfHfLXDMQ2bUoxVBYz"><span id="tz" data-page-node-id="ChnzWSrxMyDA7ZoT8wcdhz">LOCAL</span><span class="phase" data-page-node-id="7Kg2hISbhq2iqDOB4PVZDV"><i class="dot" data-page-node-id="cLXGrcz2HNRiixR0SJgTU7"></i><span id="ph" data-page-node-id="2rFkFXq1aGQHy7U0aULvAB">白天</span></span></div>
+  <svg viewBox="0 0 200 200" aria-label="模拟时钟" data-page-node-id="PWs9AKCEZ678DWbgSadKMU">
+    <circle class="plate" cx="100" cy="100" r="92" data-page-node-id="wFuMXbtunv5n2V09UnbaVQ"/>
+    <g id="tk" data-page-node-id="JMqEa39puBHeHUH4zuxlv5"></g>
+    <circle class="trk" cx="100" cy="100" r="80" data-page-node-id="1mNXHTfUBHr4AUsdSeaQsR"/>
+    <circle class="prg" id="prg" cx="100" cy="100" r="80" transform="rotate(-90 100 100)" data-page-node-id="9vGI051lUeTyDpFhgdzN8m"/>
+    <line class="hh" id="hh" x1="100" y1="100" x2="100" y2="58" data-page-node-id="DUPuQ2blN2em2GIGZcS4eo"/>
+    <line class="mm" id="mm" x1="100" y1="100" x2="100" y2="42" data-page-node-id="nFq6Uu9CSmJLw4cop0DToA"/>
+    <line class="ss" id="ss" x1="100" y1="100" x2="100" y2="36" data-page-node-id="7QIdO1oVq3hiwf0vVenjWP"/>
+    <circle class="pin" cx="100" cy="100" r="4" data-page-node-id="z0D5DUA6trBfbW4WpIiIYO"/>
+  </svg>
+  <div class="dig" data-page-node-id="bHnfgLaA3v7PhD6whcCXok"><span id="dh" data-page-node-id="uI7YJIOfFqCAkvruZ01DxU">00</span>:<span id="dm" data-page-node-id="uM58loH0OADoRjSW0fmaiL">00</span><small data-page-node-id="UJFeE2kTDYzfZ3KURYOKiK">.<span id="ds" data-page-node-id="2EMPPcFqWEcNsFTwcC4E7o">00</span></small></div>
+  <div class="meta" data-page-node-id="NDZUjwTrUB0CfCpcRdKrwW"><span id="md" data-page-node-id="2xYSVQzy06jvLgBsgvIBLB">1月1日</span><span id="mw" data-page-node-id="EBSGGFGn1xjO0EbDEpuxBQ">星期一</span><span id="ap" data-page-node-id="IKeeew8G99uaUbr1fptdWf">AM</span></div>
+</div>
+<script>
+const $=id=>document.getElementById(id),C=2*Math.PI*80,tk=$('tk');
+$('prg').style.strokeDasharray=C;
+for(let i=0;i<60;i++){
+  const a=i*6*Math.PI/180,maj=i%5===0,r1=maj?70:76,ns='http://www.w3.org/2000/svg';
+  const l=document.createElementNS(ns,'line');
+  l.setAttribute('x1',100+Math.sin(a)*r1);l.setAttribute('y1',100-Math.cos(a)*r1);
+  l.setAttribute('x2',100+Math.sin(a)*78);l.setAttribute('y2',100-Math.cos(a)*78);
+  l.setAttribute('class',maj?'tick maj':'tick');l.setAttribute('stroke-width',maj?2.4:1);
+  l.style.animationDelay=(i*0.06).toFixed(2)+'s';
+  tk.appendChild(l);
+}
+const W=['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+function paint(){
+  const n=new Date(),h=n.getHours(),m=n.getMinutes(),s=n.getSeconds(),sf=s+n.getMilliseconds()/1000;
+  const light=h>=6&&h<18;
+  document.body.classList.toggle('light',light);
+  $('ph').textContent=light?'白天':'夜晚';
+  $('tz').textContent='UTC'+(-n.getTimezoneOffset()/60>=0?'+':'')+(-n.getTimezoneOffset()/60);
+  $('hh').setAttribute('transform','rotate('+((h%12)*30+m*0.5)+' 100 100)');
+  $('mm').setAttribute('transform','rotate('+(m*6+sf*0.1)+' 100 100)');
+  $('ss').setAttribute('transform','rotate('+(sf*6)+' 100 100)');
+  $('prg').style.strokeDashoffset=C*(1-sf/60);
+  $('dh').textContent=String(h).padStart(2,'0');
+  $('dm').textContent=String(m).padStart(2,'0');
+  $('ds').textContent=String(s).padStart(2,'0');
+  $('md').textContent=(n.getMonth()+1)+'月'+n.getDate()+'日';
+  $('mw').textContent=W[n.getDay()];
+  $('ap').textContent=h<12?'AM':'PM';
+  requestAnimationFrame(paint);
+}
+paint();
+</script>
+</body>
+</html>

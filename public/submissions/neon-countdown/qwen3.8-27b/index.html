@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEON COUNTDOWN · 10s</title>
+<style>
+  :root {
+    --bg:#04040c; --ink:#f4f6ff; --sub:#8b93c8;
+    --neon:#00e5ff; --neon2:#ff2d78; --hot:#ff3b30;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:clamp(24px,5vh,44px); padding:24px; overflow:hidden; position:relative;
+    font-family:"SF Pro Display",-apple-system,"PingFang SC",system-ui,sans-serif; color:var(--ink);
+    background:
+      radial-gradient(60% 44% at 50% 52%, rgba(0,229,255,.10), transparent 70%),
+      radial-gradient(120% 120% at 50% 0%, #0a0d24, var(--bg));
+  }
+  body.tense { --neon:var(--hot); }
+  body.done { --neon:var(--neon2); }
+  body::before {
+    content:""; position:fixed; inset:-40%; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(120,140,255,.05) 0 1px, transparent 1px 3px);
+    animation:scan 7s linear infinite; opacity:.5;
+  }
+  @keyframes scan { to { transform:translateY(34px); } }
+  .pulse { position:fixed; left:50%; top:44%; width:560px; height:560px; margin:-280px 0 0 -280px;
+    pointer-events:none; border-radius:50%; opacity:0;
+    background:radial-gradient(closest-side, transparent 62%, var(--neon) 78%, transparent 84%); }
+  .pulse.go { animation:ringOut .85s cubic-bezier(.2,.7,.3,1); }
+  @keyframes ringOut { 0%{opacity:.55; transform:scale(.62)} 100%{opacity:0; transform:scale(1.18)} }
+  .stage { position:relative; width:min(76vw,380px); aspect-ratio:1; display:flex; align-items:center; justify-content:center; }
+  svg.ring { position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); }
+  .ring .track { fill:none; stroke:rgba(140,150,220,.18); stroke-width:3; }
+  .ring .bar {
+    fill:none; stroke:var(--neon); stroke-width:6; stroke-linecap:round;
+    filter:drop-shadow(0 0 8px var(--neon)) drop-shadow(0 0 26px var(--neon));
+    transition:stroke .5s;
+  }
+  .ticks { position:absolute; inset:6%; }
+  .ticks i { position:absolute; left:50%; top:50%; width:2px; height:50%; transform-origin:0 0; }
+  .ticks i::after { content:""; position:absolute; top:0; left:0; width:100%; height:9%; background:var(--sub); opacity:.5; border-radius:2px; }
+  .ticks i.passed::after { background:var(--neon); opacity:1; box-shadow:0 0 6px var(--neon); }
+  .num {
+    font-size:clamp(96px,26vw,168px); font-weight:800; line-height:1; font-variant-numeric:tabular-nums;
+    text-shadow:0 0 18px var(--neon), 0 0 60px var(--neon); transition:text-shadow .5s, color .5s;
+  }
+  .num.tick { animation:numPulse .5s cubic-bezier(.2,.9,.3,1.4); }
+  @keyframes numPulse { 0%{transform:scale(1.14)} 100%{transform:scale(1)} }
+  body.tense .num { animation:shake .3s linear infinite; }
+  @keyframes shake { 25%{transform:translateX(1.5px)} 75%{transform:translateX(-1.5px)} }
+  .label { letter-spacing:.5em; color:var(--sub); font-size:13px; margin-left:-.5em; }
+  .final { position:absolute; inset:0; display:flex; flex-direction:column; gap:10px; align-items:center;
+    justify-content:center; opacity:0; pointer-events:none; transition:opacity .4s .15s; }
+  body.done .final { opacity:1; }
+  body.done .num, body.done .ticks { opacity:0; }
+  .final h1 {
+    font-size:clamp(34px,9vw,52px); font-weight:800; letter-spacing:.3em; margin-left:.3em;
+    text-shadow:0 0 20px var(--neon2), 0 0 70px var(--neon2);
+    animation:finalIn .7s cubic-bezier(.2,1.4,.3,1);
+  }
+  @keyframes finalIn { 0%{transform:scale(.4); opacity:0} 100%{transform:scale(1); opacity:1} }
+  .final p { color:var(--sub); letter-spacing:.28em; font-size:12px; }
+  .restart {
+    margin-top:14px; padding:12px 34px; border-radius:99px; border:1px solid var(--neon);
+    background:rgba(0,229,255,.08); color:var(--ink); font-size:15px; letter-spacing:.3em; cursor:pointer;
+    font-family:inherit; transition:all .25s;
+  }
+  .restart:hover { background:rgba(0,229,255,.2); box-shadow:0 0 30px rgba(0,229,255,.4); transform:translateY(-2px); }
+  .sparks { position:fixed; inset:0; pointer-events:none; }
+  .sparks b { position:absolute; width:7px; height:7px; border-radius:50%; background:var(--neon2);
+    box-shadow:0 0 14px var(--neon2); animation:sparkFly 1.1s cubic-bezier(.15,.8,.3,1) forwards; }
+  @keyframes sparkFly { 0%{transform:translate(0,0) scale(1); opacity:1} 100%{transform:translate(var(--dx),var(--dy)) scale(.2); opacity:0} }
+</style>
+</head>
+<body>
+  <div class="pulse" id="pulse"></div>
+  <div class="stage">
+    <svg class="ring" viewBox="0 0 100 100">
+      <circle class="track" cx="50" cy="50" r="46"/>
+      <circle class="bar" id="bar" cx="50" cy="50" r="46"/>
+    </svg>
+    <div class="ticks" id="ticks"></div>
+    <div class="num" id="num">10</div>
+    <div class="final">
+      <h1>COMPLETE</h1>
+      <p>10 秒倒计时结束</p>
+      <button class="restart" id="restart">Restart</button>
+    </div>
+  </div>
+  <div class="label" id="label">GET READY</div>
+  <div class="sparks" id="sparks"></div>
+<script>
+(function () {
+  "use strict";
+  var TOTAL = 10, C = 2 * Math.PI * 46;
+  var num = document.getElementById("num"), bar = document.getElementById("bar"),
+      pulse = document.getElementById("pulse"), label = document.getElementById("label"),
+      ticks = document.getElementById("ticks"), sparks = document.getElementById("sparks"),
+      restart = document.getElementById("restart");
+  bar.style.strokeDasharray = C;
+  for (var i = 0; i < 20; i++) {
+    var t = document.createElement("i");
+    t.style.transform = "rotate(" + i * 18 + "deg)";
+    ticks.appendChild(t);
+  }
+  var tickEls = ticks.children;
+  var state = { end: 0, lastWhole: 10, running: false };
+
+  function tickFX() {
+    // 每秒节拍：全屏脉冲环 + 数字缩放 + 刻度推进
+    pulse.classList.remove("go"); void pulse.offsetWidth; pulse.classList.add("go");
+    num.classList.remove("tick"); void num.offsetWidth; num.classList.add("tick");
+  }
+  function explode() {
+    // 完成态爆发：霓虹粒子从中心炸开
+    for (var i = 0; i < 26; i++) {
+      var s = document.createElement("b"), a = Math.random() * 6.283, d = 90 + Math.random() * 220;
+      s.style.setProperty("--dx", Math.cos(a) * d + "px");
+      s.style.setProperty("--dy", Math.sin(a) * d + "px");
+      s.style.left = "50%"; s.style.top = "42%";
+      s.style.background = i % 3 ? "var(--neon2)" : "var(--neon)";
+      sparks.appendChild(s);
+      setTimeout(function (el) { return function () { el.remove(); }; }(s), 1200);
+    }
+  }
+  function start() {
+    state.end = performance.now() + TOTAL * 1000;
+    state.lastWhole = TOTAL; state.running = true;
+    document.body.classList.remove("done");
+    label.textContent = "GET READY";
+    paint(performance.now());
+  }
+  function paint(now) {
+    if (state.running) {
+      var left = Math.max(0, state.end - now);
+      var frac = left / (TOTAL * 1000);
+      bar.style.strokeDashoffset = C * (1 - frac);
+      var whole = Math.ceil(left / 1000);
+      if (whole !== state.lastWhole) {
+        state.lastWhole = whole;
+        num.textContent = Math.max(0, whole);
+        tickFX();
+        // 最后 3 秒：切红色紧张态
+        document.body.classList.toggle("tense", whole <= 3);
+        label.textContent = whole <= 3 ? "FINAL COUNT" : "GET READY";
+      }
+      // 20 刻度随进度点亮
+      var lit = Math.round((1 - frac) * 20);
+      for (var i = 0; i < 20; i++) tickEls[i].classList.toggle("passed", i < lit);
+      if (left <= 0) {
+        state.running = false;
+        num.textContent = "0";
+        bar.style.strokeDashoffset = C;
+        document.body.classList.add("done");
+        label.textContent = "MISSION DONE";
+        explode();
+      }
+    }
+    requestAnimationFrame(paint);
+  }
+  restart.onclick = start;
+  start(); // 页面加载自动运行
+  requestAnimationFrame(paint);
+})();
+</script>
+</body>
+</html>

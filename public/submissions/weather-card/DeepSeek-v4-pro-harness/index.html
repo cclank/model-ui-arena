@@ -1,0 +1,154 @@
+<!-- 设计说明：沉浸式天气卡片 —— 4 城切换（过渡动画）+ 晴/雨/雪/云四种动态粒子视觉，
+     5 天预报柱状+折线对比、°C/°F 切换、温度 countUp、按本地时间自动日夜模式。 -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>天气卡片 · Weather</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,'Segoe UI','PingFang SC',sans-serif;min-height:100vh;display:grid;place-items:center;background:#10182e;padding:16px;transition:background .6s}
+body.night{background:#070b1a}
+.card{width:min(92vw,400px);border-radius:28px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.45);background:#0d1426}
+.sky{position:relative;padding:26px 22px 18px;background:linear-gradient(180deg,var(--a),var(--b));color:var(--t);transition:background .6s,color .6s,opacity .24s,transform .24s}
+.card.switching .sky{opacity:0;transform:translateY(12px)}
+.sky.type-sun{--a:#3f9bff;--b:#bfe3ff;--t:#0e2c55}
+.sky.type-rain{--a:#55647f;--b:#9fb0c8;--t:#141c36}
+.sky.type-snow{--a:#6f83a8;--b:#dfe8f6;--t:#182036}
+.sky.type-cloud{--a:#5d8fc4;--b:#b9cfe6;--t:#132a4e}
+body.night .sky{--a:#0b1230;--b:#26305a;--t:#eaf0ff}
+.fx{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.city{font-size:20px;font-weight:700;letter-spacing:.08em;position:relative}
+.tempRow{display:flex;align-items:center;gap:10px;position:relative}
+.temp{font-size:64px;font-weight:750;line-height:1.05;font-variant-numeric:tabular-nums}
+.unitBtn{font-size:13px;padding:3px 9px;border-radius:8px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer}
+.desc{font-size:16px;font-weight:600;opacity:.92;position:relative}
+.meta{display:flex;gap:10px;margin-top:10px;position:relative;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:5px;font-size:12px;background:rgba(255,255,255,.28);padding:5px 10px;border-radius:999px;backdrop-filter:blur(4px)}
+body.night .chip{background:rgba(255,255,255,.1)}
+.forecast{position:relative;margin-top:18px;background:rgba(255,255,255,.24);border-radius:18px;padding:14px 10px 10px;backdrop-filter:blur(6px)}
+body.night .forecast{background:rgba(10,16,40,.45)}
+.fhead{font-size:11px;letter-spacing:.2em;opacity:.75;margin:0 0 10px 6px}
+.days{position:relative;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;z-index:1}
+.day{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}
+.day .w{font-size:11px;opacity:.85}
+.day .hi{font-size:12px;font-weight:700}
+.day .lo{font-size:10px;opacity:.6}
+.bar{width:12px;border-radius:6px 6px 2px 2px;min-height:8px}
+.chart{position:absolute;left:10px;right:10px;bottom:26px;width:calc(100% - 20px);height:70px;pointer-events:none;z-index:0}
+.bar2{display:flex;gap:6px;padding:12px 14px;background:#0b1222;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.cities{display:flex;gap:6px;flex-wrap:wrap}
+.cBtn{font-size:12px;padding:6px 12px;border-radius:999px;border:1px solid #2c3a63;background:transparent;color:#8fa0cf;cursor:pointer;transition:all .2s}
+.cBtn.on{background:#3d6bff;border-color:#3d6bff;color:#fff}
+.nightTag{font-size:11px;color:#5a6a9d}
+.sun{position:absolute;top:26px;right:22px;width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 38% 35%,#fff6d8,#ffd34d 55%,#ffb703);box-shadow:0 0 46px 14px rgba(255,205,80,.55)}
+.rays{position:absolute;top:-26px;right:-26px;width:116px;height:116px;background:repeating-conic-gradient(rgba(255,240,190,.5) 0 5deg,transparent 5deg 22deg);border-radius:50%;animation:spin 16s linear infinite;-webkit-mask:radial-gradient(circle,#000 30%,transparent 62%);mask:radial-gradient(circle,#000 30%,transparent 62%)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.drop{position:absolute;top:-30px;width:2px;height:16px;border-radius:2px;background:linear-gradient(rgba(210,230,255,0),rgba(210,230,255,.9));animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(520px);opacity:0}}
+.flake{position:absolute;top:-14px;width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.95);box-shadow:0 0 6px rgba(255,255,255,.8);animation:fall 5s linear infinite}
+@keyframes flakeSway{to{transform:translate(14px,520px) rotate(200deg);opacity:.2}}
+.cloud{position:absolute;top:30%;width:86px;height:26px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:26px -10px 0 8px rgba(255,255,255,.85),56px 4px 0 4px rgba(255,255,255,.85);animation:drift linear infinite}
+body.night .cloud{background:rgba(255,255,255,.35);box-shadow:26px -10px 0 8px rgba(255,255,255,.35),56px 4px 0 4px rgba(255,255,255,.35)}
+@keyframes drift{from{transform:translateX(-120px)}to{transform:translateX(460px)}}
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="sky type-sun" id="sky">
+    <div class="fx" id="fx"></div>
+    <div class="city" id="cityName">北京</div>
+    <div class="tempRow"><div class="temp" id="temp">29°</div><button class="unitBtn" id="unitBtn">°F</button></div>
+    <div class="desc" id="desc">晴</div>
+    <div class="meta">
+      <span class="chip" id="wind"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M3 9h9a2.6 2.6 0 1 0-2.6-2.6M3 12h12a2.4 2.4 0 1 1-2.4 2.4M3 15h7" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg><span id="windTxt">东南风 3 级</span></span>
+      <span class="chip"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 3.2c3 4.2 5.4 7 5.4 10a5.4 5.4 0 0 1-10.8 0c0-3 2.4-5.8 5.4-10z" fill="currentColor"/></svg><span id="hum">湿度 38%</span></span>
+    </div>
+    <div class="forecast">
+      <div class="fhead">未来 5 天 · 温度对比</div>
+      <div class="days" id="days"></div>
+      <svg class="chart" id="chart" viewBox="0 0 100 50" preserveAspectRatio="none">
+        <path id="line" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="2.4" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+  <div class="bar2">
+    <div class="cities" id="cities"></div>
+    <div class="nightTag" id="nightTag">白天</div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const DATA=[
+{name:'北京',temp:29,desc:'晴',wind:'东南风 3 级',hum:38,type:'sun',days:[['周一',31,22,'sun'],['周二',33,23,'sun'],['周三',28,21,'cloud'],['周四',26,19,'rain'],['周五',30,20,'sun']]},
+{name:'上海',temp:24,desc:'中雨',wind:'东风 4 级',hum:82,type:'rain',days:[['周一',25,21,'rain'],['周二',27,22,'cloud'],['周三',29,23,'sun'],['周四',26,21,'rain'],['周五',24,19,'rain']]},
+{name:'哈尔滨',temp:-6,desc:'小雪',wind:'西北风 5 级',hum:64,type:'snow',days:[['周一',-4,-14,'snow'],['周二',-2,-12,'cloud'],['周三',1,-10,'sun'],['周四',-3,-13,'snow'],['周五',-5,-15,'snow']]},
+{name:'成都',temp:21,desc:'多云',wind:'微风 2 级',hum:55,type:'cloud',days:[['周一',22,16,'cloud'],['周二',24,17,'cloud'],['周三',23,18,'rain'],['周四',25,17,'sun'],['周五',21,15,'rain']]}];
+const ICON={sun:'<svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="4.2" fill="#ffb703"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8" stroke="#ffb703" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>',
+rain:'<svg viewBox="0 0 24 24" width="16" height="16"><path d="M6.6 9.3a4.5 4.5 0 0 1-.5-9A5.4 5.4 0 0 1 16.5 5.5 3.8 3.8 0 0 1 17.3 13H6.8z" fill="#7fa8d9"/><path d="M7.5 15l-1.2 2.4M12 15l-1.2 2.4M16.5 15l-1.2 2.4M9.8 18.6l-1.2 2.4M14.3 18.6l-1.2 2.4" stroke="#3f6fb0" stroke-width="1.6" stroke-linecap="round"/></svg>',
+snow:'<svg viewBox="0 0 24 24" width="16" height="16"><path d="M6.9 9.7a4.4 4.4 0 0 1-.5-8.8A5.3 5.3 0 0 1 16.5 6a3.7 3.7 0 0 1 .8 7.3" fill="#cfd8ea"/><g stroke="#5c6f9e" stroke-width="1.5" stroke-linecap="round"><path d="M8 14v6M8 15.5l-1.8 1M8 15.5l1.8 1M8 17l-1.8 1M8 17l1.8 1"/><path d="M12 15v6M12 16.5l-1.8 1M12 16.5l1.8 1M12 18l-1.8 1M12 18l1.8 1"/></g></svg>',
+cloud:'<svg viewBox="0 0 24 24" width="16" height="16"><path d="M6.6 9.8a4.5 4.5 0 0 1 8.8-.7A3.8 3.8 0 0 1 17.2 16.6H7.2a3.7 3.7 0 0 1-.6-6.8z" fill="#8fa3c7"/></svg>'};
+let idx=0,unit='C',cuRaf=0;
+const toU=v=>unit==='C'?v:Math.round(v*9/5+32);
+function countUp(el,target){
+  const from=isNaN(+el.dataset.v)?Math.round(target*.55):+el.dataset.v,t0=performance.now();
+  cancelAnimationFrame(cuRaf);
+  const step=t=>{
+    const k=Math.min(1,(t-t0)/600),e=1-Math.pow(1-k,3),v=Math.round(from+(target-from)*e);
+    el.textContent=v+'°';el.dataset.v=v;
+    if(k<1)cuRaf=requestAnimationFrame(step);
+  };
+  cuRaf=requestAnimationFrame(step);
+}
+function hue(t){return 'hsl('+Math.max(8,Math.min(225,225-(t+12)*8))+',75%,58%)';}
+function buildDays(c){
+  const his=c.days.map(d=>toU(d[1])),min=Math.min.apply(null,his),max=Math.max.apply(null,his);
+  $('days').innerHTML=c.days.map((d,i)=>{
+    const hh=18+(toU(d[1])-min)/(max-min||1)*34;
+    return '<div class="day" title="'+d[3]+'"><div class="w">'+d[0]+'</div>'+ICON[d[3]]+
+      '<div class="hi">'+toU(d[1])+'°</div><div class="bar" style="height:'+hh+'px;background:'+hue(d[1])+'"></div><div class="lo">'+toU(d[2])+'°</div></div>';
+  }).join('');
+  $('line').setAttribute('d',his.map((v,i)=>{
+    const y=48-(v-min)/(max-min||1)*36;
+    return (i?'L':'M')+(10+i*20)+' '+y.toFixed(1);
+  }).join(' '));
+}
+function buildFX(c){
+  const fx=$('fx');fx.innerHTML='';let html='',i;
+  if(c.type==='sun')html='<div class="sun"></div><div class="rays"></div>';
+  if(c.type==='rain')for(i=0;i<26;i++)html+='<i class="drop" style="left:'+(Math.random()*100)+'%;animation-duration:'+(0.7+Math.random()*0.5)+'s;animation-delay:'+(-Math.random()*2)+'s"></i>';
+  if(c.type==='snow')for(i=0;i<26;i++)html+='<i class="flake" style="left:'+(Math.random()*100)+'%;animation-duration:'+(3+Math.random()*4)+'s;animation-delay:'+(-Math.random()*5)+'s;animation-name:flakeSway"></i>';
+  if(c.type==='cloud')for(i=0;i<4;i++)html+='<i class="cloud" style="top:'+(8+Math.random()*46)+'%;animation-duration:'+(26+Math.random()*20)+'s;animation-delay:'+(-Math.random()*30)+'s"></i>';
+  fx.innerHTML=html;
+}
+function buildCities(){
+  $('cities').innerHTML=DATA.map((c,i)=>'<button class="cBtn'+(i===idx?' on':'')+'" data-i="'+i+'">'+c.name+'</button>').join('');
+}
+function render(anim){
+  const c=DATA[idx];
+  const show=()=>{
+    $('card').classList.remove('switching');checkNight();
+    $('sky').className='sky type-'+c.type;
+    $('cityName').textContent=c.name;$('desc').textContent=c.desc;
+    $('windTxt').textContent=c.wind;$('hum').textContent='湿度 '+c.hum+'%';
+    $('unitBtn').textContent=unit==='C'?'°F':'°C';
+    countUp($('temp'),toU(c.temp));buildDays(c);buildFX(c);buildCities();
+  };
+  if(anim){$('card').classList.add('switching');setTimeout(show,240);}else show();
+}
+$('cities').addEventListener('click',e=>{
+  const b=e.target.closest('.cBtn');if(!b)return;
+  if(+b.dataset.i===idx)return;
+  idx=+b.dataset.i;render(true);
+});
+$('unitBtn').onclick=()=>{unit=unit==='C'?'F':'C';render(false);};
+function checkNight(){
+  const h=new Date().getHours(),night=h<6||h>=18;
+  document.body.classList.toggle('night',night);
+  $('nightTag').textContent=night?'夜间':'白天';
+}
+checkNight();render(false);
+</script>
+</body>
+</html>

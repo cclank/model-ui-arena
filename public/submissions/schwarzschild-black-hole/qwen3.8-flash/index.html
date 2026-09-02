@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>施瓦西黑洞 · 实时测地线渲染器</title>
+<style>
+:root{--cy:#5fd7ff;--am:#ffb454;--dim:#5f7391;--txt:#dfe9f7}
+*{margin:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#02030a;color:var(--txt);
+font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas:active{cursor:grabbing}
+.panel{position:fixed;top:14px;left:14px;background:#050a14d9;border:1px solid #ffffff1c;border-radius:14px;
+padding:12px 14px;font-size:11px;backdrop-filter:blur(6px);letter-spacing:.04em;user-select:none;z-index:3;max-width:calc(100vw - 28px)}
+.panel h1{font-size:13px;letter-spacing:.22em;color:#fff;margin-bottom:2px}
+.panel .sub{color:var(--dim);font-size:9.5px;margin-bottom:10px}
+.tel{display:grid;grid-template-columns:auto auto;gap:3px 14px;font-size:11px}
+.tel b{color:var(--cy);font-weight:600;font-variant-numeric:tabular-nums;justify-self:end}
+.tel span{color:#93a7c4}
+.sep{height:1px;background:#ffffff17;margin:10px 0}
+.ctl{display:grid;grid-template-columns:74px 1fr 42px;align-items:center;gap:8px;margin:6px 0;font-size:10px;color:#93a7c4}
+input[type=range]{width:100%;accent-color:var(--cy);height:16px}
+.val{color:var(--txt);text-align:right;font-variant-numeric:tabular-nums}
+.seg{display:flex;gap:4px}
+.seg button{font:inherit;font-size:10px;padding:4px 10px;border-radius:8px;cursor:pointer;
+border:1px solid #ffffff26;background:transparent;color:#93a7c4;transition:.15s}
+.seg button.on{background:var(--cy);color:#03202c;border-color:var(--cy);font-weight:700}
+#fps{color:var(--am)}
+#hint{position:fixed;bottom:12px;left:0;right:0;text-align:center;font-size:10px;color:#4c5f7d;
+letter-spacing:.3em;pointer-events:none;z-index:2}
+#toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-70px);opacity:0;transition:.5s;
+background:#1b1206ee;border:1px solid var(--am);color:var(--am);font-size:11px;padding:8px 16px;border-radius:99px;z-index:4;white-space:nowrap}
+#toast.show{transform:translateX(-50%);opacity:1}
+#err{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+background:radial-gradient(80% 70% at 50% 40%,#0a1226,#02030a);z-index:9;text-align:center;padding:24px}
+#err h2{font-size:15px;letter-spacing:.2em;color:#ff7a8a}
+#err p{font-size:11.5px;color:#93a7c4;line-height:1.9;max-width:430px}
+#err code{color:var(--am);font-size:10px;background:#ffffff0d;padding:2px 6px;border-radius:5px}
+#err button{font:inherit;font-size:12px;padding:9px 22px;border-radius:99px;border:1px solid var(--cy);color:var(--cy);background:transparent;cursor:pointer}
+@media (max-width:520px){.panel{font-size:10px;padding:10px}.ctl{grid-template-columns:60px 1fr 36px}}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div class="panel">
+ <h1>SCHWARZSCHILD · 施瓦西黑洞</h1>
+ <div class="sub">r_s = 1 · 片元级光子测地线数值积分 · 实时遥测</div>
+ <div class="tel">
+  <span>相机半径 r</span><b id="tR">–</b>
+  <span>时间膨胀 √(1-r_s/r)</span><b id="tD">–</b>
+  <span>圆轨道速度 β=√(r_s/2r)</span><b id="tB">–</b>
+  <span>帧率 · 测地步数</span><b><span id="fps">–</span> · <span id="tS">–</span></b>
+ </div>
+ <div class="sep"></div>
+ <div class="ctl">吸积盘亮度<input id="sDisk" type="range" min="0" max="300" value="110"><span class="val" id="vDisk">1.10</span></div>
+ <div class="ctl">曝光 EV<input id="sExp" type="range" min="10" max="300" value="90"><span class="val" id="vExp">0.90</span></div>
+ <div class="ctl">Bloom<input id="sBloom" type="range" min="0" max="150" value="55"><span class="val" id="vBloom">0.55</span></div>
+ <div class="ctl" style="grid-template-columns:74px 1fr">画质<div class="seg"><button data-q="0">流畅</button><button data-q="1">均衡</button><button data-q="2" class="on">真实</button></div></div>
+</div>
+<div id="hint">拖拽旋转 · 滚轮 / 双指捏合缩放 · 最近缩至 r = 4.05</div>
+<div id="toast"></div>
+<div id="err"><h2>⚠ 渲染器不可用</h2><p id="errmsg"></p><button onclick="location.reload()">重试</button></div>
+<script>
+"use strict";
+/* ============================================================================
+ * 施瓦西黑洞实时渲染器 —— 单文件 / 零外部依赖 / 离线可运行
+ *
+ * [积分方案] 片元着色器内对光子零测地线做数值积分（几何单位 r_s=1）。
+ *   运动方程采用守恒角动量形式：a = -1.5 · h² · x / |x|⁵，h² = |x×v|² 严格守恒。
+ *   积分器：辛欧拉 kick-drift；步长自适应 dt = clamp((r-1)·0.12, 0.035, 3.0)，
+ *   近视界自动细分（光子球 r≈1.5 处 dt≈0.06），远场大步长。步数由画质档位决定。
+ * [视界/光子球] r < 1.002 判为落入视界返回纯黑；绕黑洞回旋的射线在阴影边缘
+ *   自然形成细亮环（光子球缠绕）。
+ * [相对论吸积盘] 赤道面薄盘，ISCO r_in=3，r_out=12，垂直光学厚度 h=0.14r。射线在
+ *   slab 内按步长连续采样发射（非平面硬穿越，消除同心环混叠）并带自遮蔽；同一条光线
+ *   可反复进出 slab（正面像 + 绕过黑洞上/下的次级像），多重像从积分中自然产生。着色包含：
+ *     - 多普勒集束 δ=1/[γ(1-β·n̂)]，强度 ∝ δ³（diskColor 内 pow(dop,3.0)）
+ *     - 引力红移 grav=√(1-1/r)：色温与亮度同时乘入（T_obs = T·δ·grav）
+ *     - 黑体近似：T ∝ r^(-3/4)，内 12000K → 外 2400K 颜色 ramp
+ *     - 差速旋转条纹：相位 spin = φ + t·(r/3)^(-1.5)，内快外慢
+ * [HDR 后期管线] 场景 → RGBA16F 浮点 FBO → 1/2 分辨率亮度阈值提取 →
+ *   可分离高斯模糊（H/V 独立 pass，迭代次数随画质）→ 合成 pass：
+ *   exposure → ACES 色调映射 → gamma 2.2 → 暗角。不支持浮点附件时自动降级
+ *   为 LDR 直接映射路径（无 Bloom）并提示用户，绝不黑屏。
+ * ========================================================================== */
+const cvs=document.getElementById("gl"),$=id=>document.getElementById(id);
+function fail(msg){$("err").style.display="flex";$("errmsg").innerHTML=msg;document.querySelector(".panel").style.display="none"}
+let gl=null;
+try{gl=cvs.getContext("webgl2",{antialias:false,alpha:false,powerPreference:"high-performance"})}catch(e){}
+if(!gl){fail("此设备/浏览器不支持 <code>WebGL2</code>。请使用较新的 Chrome / Edge / Firefox / Safari 并确认已启用硬件加速。");throw new Error("no webgl2")}
+cvs.addEventListener("webglcontextlost",e=>{e.preventDefault();fail("GPU 上下文丢失（context lost），通常由驱动重置或显存回收引起，请点击重试。")});
+const HDR_OK=!!gl.getExtension("EXT_color_buffer_float");
+let toastTimer=0;
+function toast(m){$("toast").textContent=m;$("toast").classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("toast").classList.remove("show"),4500)}
+if(!HDR_OK)setTimeout(()=>toast("设备不支持浮点帧缓冲：已自动降级为 LDR 直接映射（无 Bloom）"),600);
+
+/* ---------------- GLSL ---------------- */
+const VS=`#version 300 es
+void main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));gl_Position=vec4(p*2.0-1.0,0.0,1.0);}`;
+const FS_SCENE=`#version 300 es
+precision highp float;
+out vec4 fragColor;
+uniform vec3 uCam,uRight,uUp,uFwd;
+uniform vec2 uRes;
+uniform float uFocal,uTime,uDisk,uLDR,uExp;
+uniform int uSteps;
+float hash21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+vec3 starfield(vec3 d){
+ vec2 g=vec2(atan(d.z,d.x),asin(clamp(d.y,-1.0,1.0)))*vec2(46.0,26.0);
+ vec2 id=floor(g),f=fract(g);float h=hash21(id);float s=0.0;
+ if(h>0.955){vec2 c=vec2(hash21(id+1.3),hash21(id+7.7));
+  s=exp(-dot(f-c,f-c)*90.0)*(h-0.955)*22.0;}
+ vec3 tint=mix(vec3(0.75,0.82,1.0),vec3(1.0,0.78,0.55),hash21(id+3.3));
+ return tint*s*0.55+vec3(0.0016,0.0025,0.006);}
+vec3 diskColor(vec3 hp,vec3 vel){
+ const float rIn=3.0,rOut=12.0;
+ float rc=length(hp);
+ if(rc<rIn||rc>rOut)return vec3(0.0);
+ float tin=pow(rIn/rc,0.75);                    /* 黑体温度 T ∝ r^(-3/4) */
+ float T=mix(2400.0,12000.0,tin);
+ float grav=sqrt(max(1.0-1.0/rc,0.0));          /* 引力红移因子 √(1-r_s/r) */
+ float beta=min(sqrt(1.0/(2.0*rc)),0.985);      /* 当地圆轨道速度 */
+ vec3 ovel=normalize(cross(vec3(0.0,1.0,0.0),normalize(hp)));
+ vec3 toObs=normalize(-vel);                    /* 后向积分：光子实际去向 = -v */
+ float gam=1.0/sqrt(max(1.0-beta*beta,1e-4));
+ float dop=1.0/(gam*(1.0-beta*dot(ovel,toObs)));/* 相对论多普勒 δ */
+ float inten=pow(dop,3.0)*grav*grav;            /* 集束 I∝δ³ × 红移衰减 */
+ float Tobs=T*dop*grav;
+ float u=clamp((Tobs-1800.0)/10200.0,0.0,1.0);
+ float phi=atan(hp.z,hp.x);
+ float spin=phi+uTime*1.4*pow(rc/rIn,-1.5);    /* 差速旋转 Ω∝r^-1.5 条纹 */
+ float dens=smoothstep(rIn*0.7,rIn,rc)*(1.0-smoothstep(rOut*0.55,rOut,rc));
+ dens*=pow(rIn/rc,1.1);                          /* 内缘更亮、整体更薄 */
+ dens*=0.78+0.22*sin(spin*2.0+rc*0.35);
+ vec3 c=mix(vec3(1.0,0.30,0.04),vec3(1.0,0.82,0.55),smoothstep(0.0,0.42,u));
+ c=mix(c,vec3(1.0,1.0,1.0),smoothstep(0.42,0.62,u));
+ c=mix(c,vec3(0.62,0.78,1.35),smoothstep(0.62,1.0,u));
+ return c*inten*dens*uDisk*0.55;}
+vec3 aces(vec3 x){return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.0,1.0);}
+vec3 trace(vec3 ro,vec3 rd){
+ vec3 pos=ro,vel=rd;
+ vec3 cx=cross(pos,vel);float h2=dot(cx,cx);    /* 守恒角动量² h²=|x×v|² */
+ vec3 col=vec3(0.0),op=vec3(1.0);float esc=0.0;
+ for(int i=0;i<640;i++){
+  if(i>=uSteps)break;
+  float r=length(pos);
+  if(r<1.002)return col;                        /* 落入视界 → 纯黑阴影 */
+  if(r>44.0&&dot(pos,vel)>0.0){esc=1.0;break;}  /* 已向外逃逸 */
+  float dt=clamp((r-1.0)*0.12,0.035,3.0);       /* 自适应步长 */
+  vel+=(-1.5*h2*pos/(r*r*r*r*r))*dt;            /* kick  a=-1.5h²x/r⁵ */
+  vec3 np=pos+vel*dt;                           /* drift */
+  /* 薄盘以“垂直 slab 连续采样”代替平面硬穿越（消除同心环混叠），
+     多条光线反复进出 slab → 正面像/上弧/下弧次级像仍由积分自然产生 */
+  if(r>2.6&&r<13.0&&abs(pos.y)<0.14*r){
+   vec3 em=diskColor(pos,vel)*(1.0-abs(pos.y)/(0.14*r));
+   col+=em*op*dt*1.35;op*=exp(-length(em)*dt*0.12);}
+  pos=np;}
+ col+=starfield(normalize(vel))*op.x*0.5*esc;
+ return col;}
+void main(){
+ vec2 ndc=(gl_FragCoord.xy/uRes)*2.0-1.0;
+ vec3 rd=normalize(uFwd*uFocal+uRight*(ndc.x*uRes.x/uRes.y)+uUp*ndc.y);
+ vec3 col=trace(uCam,rd);
+ if(uLDR>0.5){col=pow(aces(col*uExp),vec3(1.0/2.2));}  /* 无浮点时的降级直出 */
+ fragColor=vec4(col,1.0);}`;
+const FS_BRIGHT=`#version 300 es
+precision highp float;out vec4 o;
+uniform sampler2D uTex;uniform vec2 uRes;
+void main(){vec3 c=texture(uTex,gl_FragCoord.xy/uRes).rgb;
+ float l=max(c.r,max(c.g,c.b));float k=smoothstep(1.6,3.0,l);o=vec4(c*k,1.0);}`;
+const FS_BLUR=`#version 300 es
+precision highp float;out vec4 o;
+uniform sampler2D uTex;uniform vec2 uRes;uniform vec2 uDir;uniform float uRadius;
+void main(){vec2 px=uDir*uRadius/uRes;vec2 uv=gl_FragCoord.xy/uRes;
+ vec3 c=texture(uTex,uv).rgb*0.227027;
+ c+=(texture(uTex,uv+px*1.3846154).rgb+texture(uTex,uv-px*1.3846154).rgb)*0.3162162;
+ c+=(texture(uTex,uv+px*3.2307692).rgb+texture(uTex,uv-px*3.2307692).rgb)*0.0702702;
+ o=vec4(c,1.0);}`;
+const FS_COMP=`#version 300 es
+precision highp float;out vec4 o;
+uniform sampler2D uScene,uBloom;uniform vec2 uRes;
+uniform float uExp,uBloomAmt;
+vec3 aces(vec3 x){return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.0,1.0);}
+void main(){vec2 uv=gl_FragCoord.xy/uRes;
+ vec3 c=texture(uScene,uv).rgb+texture(uBloom,uv).rgb*uBloomAmt;
+ c=aces(c*uExp);
+ c=pow(c,vec3(1.0/2.2));
+ vec2 v=uv*2.0-1.0;c*=1.0-dot(v,v)*0.16;
+ o=vec4(c,1.0);}`;
+function mkProg(fs){
+ const compile=(type,src)=>{const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){throw new Error(gl.getShaderInfoLog(s)+"\n"+src.split("\n").slice(0,4).join("\n"))}return s};
+ try{
+  const p=gl.createProgram();gl.attachShader(p,compile(gl.VERTEX_SHADER,VS));gl.attachShader(p,compile(gl.FRAGMENT_SHADER,fs));
+  gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p));
+  const cache={};
+  return{use(){gl.useProgram(p);return this},u(n){if(!(n in cache))cache[n]=gl.getUniformLocation(p,n);return cache[n]}};
+ }catch(e){fail("着色器编译失败（shader compile error），GPU 驱动可能过于陈旧。<br><code>"+String(e.message).slice(0,220).replace(/</g,"&lt;")+"</code>");throw e}}
+const pScene=mkProg(FS_SCENE),pBright=mkProg(FS_BRIGHT),pBlur=mkProg(FS_BLUR),pComp=mkProg(FS_COMP);
+gl.bindVertexArray(gl.createVertexArray());
+
+/* ---------------- framebuffers ---------------- */
+function mkFBO(w,h,float){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);
+ gl.texImage2D(gl.TEXTURE_2D,0,float?gl.RGBA16F:gl.RGBA8,w,h,0,gl.RGBA,float?gl.HALF_FLOAT:gl.UNSIGNED_BYTE,null);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+ const f=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,f);
+ gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);
+ return{f,t,w,h}}
+function tex(fb){gl.bindTexture(gl.TEXTURE_2D,fb.t)}
+let sceneF=null,halfA=null,halfB=null,dW=0,dH=0;
+const TIERS=[{scale:0.55,steps:280,blur:1,radius:5},{scale:0.75,steps:420,blur:2,radius:9},{scale:0.95,steps:620,blur:2,radius:14}];
+let tier=HDR_OK?2:0,lowStart=0,lastAuto=0;
+function resize(){const dpr=Math.min(devicePixelRatio||1,1.75),s=TIERS[tier].scale;
+ dW=Math.max(2,Math.round(innerWidth*dpr*s));dH=Math.max(2,Math.round(innerHeight*dpr*s));
+ cvs.width=dW;cvs.height=dH;
+ const del=fb=>{if(fb){gl.deleteTexture(fb.t);gl.deleteFramebuffer(fb.f)}};
+ del(sceneF);del(halfA);del(halfB);
+ sceneF=mkFBO(dW,dH,HDR_OK);halfA=mkFBO(dW>>1||1,dH>>1||1,HDR_OK);halfB=mkFBO(dW>>1||1,dH>>1||1,HDR_OK);}
+addEventListener("resize",resize);resize();
+
+/* ---------------- camera & interaction ---------------- */
+const cam={dist:20,az:0.9,el:0.26,vAz:0,vEl:0};
+const pointers=new Map();let pinchD=0;
+cvs.addEventListener("pointerdown",e=>{cvs.setPointerCapture(e.pointerId);pointers.set(e.pointerId,[e.clientX,e.clientY]);
+ if(pointers.size===2){const a=[...pointers.values()];pinchD=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])}});
+cvs.addEventListener("pointermove",e=>{const p=pointers.get(e.pointerId);if(!p)return;
+ if(pointers.size===1){const dx=e.clientX-p[0],dy=e.clientY-p[1];
+  cam.vAz=-dx*0.00045;cam.vEl=dy*0.00045;
+  cam.az+= -dx*0.005;cam.el=Math.max(-1.45,Math.min(1.45,cam.el+dy*0.005));}
+ else if(pointers.size===2){p[0]=e.clientX;p[1]=e.clientY;
+  const a=[...pointers.values()],d=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);
+  if(pinchD>0){cam.dist=Math.max(4.05,Math.min(40,cam.dist*pinchD/d))}pinchD=d;return}
+ p[0]=e.clientX;p[1]=e.clientY});
+const drop=e=>{pointers.delete(e.pointerId);if(pointers.size<2)pinchD=0};
+cvs.addEventListener("pointerup",drop);cvs.addEventListener("pointercancel",drop);
+addEventListener("wheel",e=>{cam.dist=Math.max(4.05,Math.min(40,cam.dist*Math.exp(e.deltaY*0.0009)))},{passive:true});
+
+/* ---------------- controls ---------------- */
+const st={disk:1.10,exp:0.90,bloom:0.55};
+function bind(id,valId,key,scale){const el=$(id);el.addEventListener("input",()=>{st[key]=el.value*scale;$(valId).textContent=st[key].toFixed(2)})}
+bind("sDisk","vDisk","disk",0.01);bind("sExp","vExp","exp",0.01);bind("sBloom","vBloom","bloom",0.01);
+function setTier(t){tier=t;document.querySelectorAll(".seg button").forEach(b=>b.classList.toggle("on",+b.dataset.q===t));
+ $("tS").textContent=TIERS[t].steps;resize()}
+document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{setTier(+b.dataset.q);lastAuto=performance.now()});
+
+/* ---------------- render loop ---------------- */
+let fpsEMA=60,lastT=performance.now();
+function frame(now){
+ const dt=Math.min(now-lastT,100);lastT=now;fpsEMA+=((1000/Math.max(dt,1))-fpsEMA)*0.06;
+ /* inertia */
+ if(pointers.size===0){cam.az+=cam.vAz*16;cam.el=Math.max(-1.45,Math.min(1.45,cam.el+cam.vEl*16));
+  cam.vAz*=0.94;cam.vEl*=0.94}
+ /* adaptive degrade: sustained low fps → lower tier */
+ if(HDR_OK&&fpsEMA<24){if(!lowStart)lowStart=now;
+  if(now-lowStart>2500&&tier>0&&now-lastAuto>6000){setTier(tier-1);toast("帧率过低，已自动降档画质 → "+["流畅","均衡","真实"][tier]);lastAuto=now;lowStart=0}}
+ else lowStart=0;
+ /* camera basis: fwd=normalize(-eye); right=normalize(cross(fwd,worldUp)); up=cross(right,fwd) */
+ const ce=Math.cos(cam.el),se=Math.sin(cam.el),ca=Math.cos(cam.az),sa=Math.sin(cam.az);
+ const ex=cam.dist*ce*ca,ey=cam.dist*se,ez=cam.dist*ce*sa;
+ const fl=cam.dist||1;
+ const ux=-ex/fl,uy=-ey/fl,uz=-ez/fl;
+ let RX=-uz,RZ=ux;{const rl=Math.hypot(RX,RZ)||1;RX/=rl;RZ/=rl}
+ const UPX=-RZ*uy,UPY=RZ*ux-RX*uz,UPZ=RX*uy;
+ const T=now*0.001;
+ if(HDR_OK){
+  /* pass 1: geodesic scene → RGBA16F */
+  gl.bindFramebuffer(gl.FRAMEBUFFER,sceneF.f);gl.viewport(0,0,dW,dH);
+  pScene.use();gl.uniform3f(pScene.u("uCam"),ex,ey,ez);gl.uniform3f(pScene.u("uRight"),RX,0,RZ);
+  gl.uniform3f(pScene.u("uUp"),UPX,UPY,UPZ);gl.uniform3f(pScene.u("uFwd"),ux,uy,uz);
+  gl.uniform2f(pScene.u("uRes"),dW,dH);gl.uniform1f(pScene.u("uFocal"),1.55);
+  gl.uniform1f(pScene.u("uTime"),T);gl.uniform1f(pScene.u("uDisk"),st.disk);
+  gl.uniform1i(pScene.u("uSteps"),TIERS[tier].steps);gl.uniform1f(pScene.u("uLDR"),0);gl.uniform1f(pScene.u("uExp"),1);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+  /* pass 2: bright extract (half res) */
+  gl.bindFramebuffer(gl.FRAMEBUFFER,halfA.f);gl.viewport(0,0,halfA.w,halfA.h);
+  pBright.use();gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,sceneF.t);
+  gl.uniform1i(pBright.u("uTex"),0);gl.uniform2f(pBright.u("uRes"),halfA.w,halfA.h);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+  /* pass 3+: separable gaussian ping-pong */
+  pBlur.use();gl.uniform1i(pBlur.u("uTex"),0);
+  for(let i=0;i<TIERS[tier].blur;i++){
+   const r=TIERS[tier].radius*(1+i*0.9);
+   gl.bindFramebuffer(gl.FRAMEBUFFER,halfB.f);gl.viewport(0,0,halfB.w,halfB.h);
+   gl.bindTexture(gl.TEXTURE_2D,halfA.t);gl.uniform2f(pBlur.u("uRes"),halfB.w,halfB.h);
+   gl.uniform2f(pBlur.u("uDir"),1,0);gl.uniform1f(pBlur.u("uRadius"),r);gl.drawArrays(gl.TRIANGLES,0,3);
+   gl.bindFramebuffer(gl.FRAMEBUFFER,halfA.f);gl.viewport(0,0,halfA.w,halfA.h);
+   gl.bindTexture(gl.TEXTURE_2D,halfB.t);gl.uniform2f(pBlur.u("uRes"),halfA.w,halfA.h);
+   gl.uniform2f(pBlur.u("uDir"),0,1);gl.uniform1f(pBlur.u("uRadius"),r);gl.drawArrays(gl.TRIANGLES,0,3);}
+  /* pass 4: composite → canvas */
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,dW,dH);
+  pComp.use();gl.bindTexture(gl.TEXTURE_2D,sceneF.t);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,halfA.t);
+  gl.uniform1i(pComp.u("uScene"),0);gl.uniform1i(pComp.u("uBloom"),1);
+  gl.uniform2f(pComp.u("uRes"),dW,dH);gl.uniform1f(pComp.u("uExp"),st.exp);gl.uniform1f(pComp.u("uBloomAmt"),st.bloom*1.6);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+ }else{
+  /* LDR fallback: scene shader tonemaps in-place, direct to canvas */
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,dW,dH);
+  pScene.use();gl.uniform3f(pScene.u("uCam"),ex,ey,ez);gl.uniform3f(pScene.u("uRight"),RX,0,RZ);
+  gl.uniform3f(pScene.u("uUp"),UPX,UPY,UPZ);gl.uniform3f(pScene.u("uFwd"),ux,uy,uz);
+  gl.uniform2f(pScene.u("uRes"),dW,dH);gl.uniform1f(pScene.u("uFocal"),1.55);
+  gl.uniform1f(pScene.u("uTime"),T);gl.uniform1f(pScene.u("uDisk"),st.disk);
+  gl.uniform1i(pScene.u("uSteps"),TIERS[tier].steps);gl.uniform1f(pScene.u("uLDR"),1);gl.uniform1f(pScene.u("uExp"),st.exp);
+  gl.drawArrays(gl.TRIANGLES,0,3);}
+ /* telemetry (human-verifiable): dilation=√(1-r_s/r), beta=√(r_s/2r) */
+ $("tR").textContent=cam.dist.toFixed(2);
+ $("tD").textContent=Math.sqrt(1-1/cam.dist).toFixed(4);
+ $("tB").textContent=Math.sqrt(1/(2*cam.dist)).toFixed(4);
+ $("fps").textContent=fpsEMA.toFixed(0);
+ requestAnimationFrame(frame)}
+$("tS").textContent=TIERS[tier].steps;
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

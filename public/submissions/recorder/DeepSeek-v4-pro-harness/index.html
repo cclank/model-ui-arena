@@ -1,0 +1,123 @@
+<!-- 设计说明：录音机交互原型 —— Start / Pause / Stop 三态机，
+     红点呼吸 + 波形律动 + 环形进度，停止需二次确认防误触，结束后给出录音摘要。 -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>录音机 · Recorder</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,'Segoe UI','PingFang SC',sans-serif;min-height:100vh;display:grid;place-items:center;background:radial-gradient(120% 120% at 50% 0%,#1b2340 0%,#0b0f20 60%,#070a16 100%);padding:16px;color:#e8ecff}
+.card{width:min(92vw,380px);background:linear-gradient(180deg,#151b33,#0e1326);border:1px solid #2a3354;border-radius:26px;padding:26px 24px 22px;box-shadow:0 26px 60px rgba(0,0,0,.5)}
+.head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.title{font-size:17px;font-weight:650;letter-spacing:.05em}
+.state{font-size:12px;padding:5px 12px;border-radius:999px;background:#1d2544;color:#8f9ac9;transition:all .3s}
+.state.rec{background:#ff3b4d22;color:#ff5d6e;border:1px solid #ff3b4d55}
+.state.paused{background:#ffb02e22;color:#ffc96b;border:1px solid #ffb02e55}
+.state.done{background:#19c37d22;color:#4be3a8;border:1px solid #19c37d55}
+.stage{display:flex;flex-direction:column;align-items:center;gap:16px}
+.ringWrap{position:relative;width:172px;height:172px}
+.ringWrap svg{transform:rotate(-90deg)}
+.track{fill:none;stroke:#222b4c;stroke-width:8}
+.prog{fill:none;stroke:#ff3b4d;stroke-width:8;stroke-linecap:round;stroke-dasharray:402;stroke-dashoffset:402;transition:stroke-dashoffset .3s linear}
+.btn{position:absolute;inset:24px;border-radius:50%;border:none;background:radial-gradient(circle at 34% 30%,#3a4b83,#1c2547);box-shadow:inset 0 2px 6px rgba(255,255,255,.25),0 10px 24px rgba(0,0,0,.45);display:grid;place-items:center;cursor:pointer;color:#dfe6ff;font-size:15px;font-weight:600;letter-spacing:.06em;transition:transform .12s}
+.btn:active{transform:scale(.95)}
+.btn.rec{background:radial-gradient(circle at 34% 30%,#ff7a87,#c8182c)}
+.dot{width:10px;height:10px;border-radius:50%;background:#ff3b4d;box-shadow:0 0 12px #ff3b4d;opacity:0;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(.72)}}
+.rec .dot{opacity:1}
+.timer{font-size:40px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.06em}
+.wave{display:flex;align-items:center;gap:5px;height:46px}
+.wave i{width:5px;border-radius:3px;background:linear-gradient(180deg,#5c6dc9,#39488c);transform-origin:center;transform:scaleY(.3);transition:transform .25s}
+.rec .wave i{animation:wa 1s ease-in-out infinite}
+.paused .wave i{animation-play-state:paused}
+@keyframes wa{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+.row{display:flex;gap:12px;width:100%;margin-top:4px}
+.secBtn{flex:1;padding:13px;border-radius:14px;border:1px solid #2a3354;background:#161d3a;color:#9aa6d6;font-size:14px;cursor:pointer;letter-spacing:.05em;transition:all .2s}
+.secBtn:active{transform:scale(.97)}
+.secBtn.warn{border-color:#ff3b4d66;color:#ff7d89}
+.secBtn.confirm{background:#ff3b4d;color:#fff;border-color:#ff3b4d;animation:throb .5s infinite alternate}
+@keyframes throb{from{box-shadow:0 0 0 rgba(255,59,77,0)}to{box-shadow:0 0 18px rgba(255,59,77,.55)}}
+.summary{display:none;width:100%;margin-top:6px;padding:14px 16px;border-radius:16px;background:#101a2e;border:1px solid #22304f;font-size:13px;line-height:1.9;color:#9fb0d8}
+.done .summary{display:block}
+.summary b{color:#4be3a8}
+.hint{font-size:11px;color:#5d6a9c;margin-top:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="head">
+    <div class="title">录音机 · REC-01</div>
+    <div class="state" id="state">准备就绪</div>
+  </div>
+  <div class="stage">
+    <div class="ringWrap">
+      <svg width="172" height="172" viewBox="0 0 172 172">
+        <circle class="track" cx="86" cy="86" r="64"/>
+        <circle class="prog" id="prog" cx="86" cy="86" r="64"/>
+      </svg>
+      <button class="btn" id="main">开始录音</button>
+      <div class="dot"></div>
+    </div>
+    <div class="timer" id="timer">00:00</div>
+    <div class="wave" id="wave"></div>
+    <div class="row">
+      <button class="secBtn" id="pauseBtn" disabled>暂停</button>
+      <button class="secBtn warn" id="stopBtn" disabled>停止</button>
+    </div>
+    <div class="summary" id="summary"></div>
+  </div>
+  <div class="hint">原型演示 · 不调用真实麦克风权限</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const card=$('card'),state=$('state'),main=$('main'),timer=$('timer'),prog=$('prog');
+const pauseBtn=$('pauseBtn'),stopBtn=$('stopBtn'),summary=$('summary'),wave=$('wave');
+for(let i=0;i<24;i++){
+  const b=document.createElement('i');
+  const h=.35+Math.abs(Math.sin(i*2.7))*0.6;
+  b.style.height=(h*100)+'%';
+  b.style.animationDelay=(-Math.abs(Math.sin(i*1.7))*0.9)+'s';
+  b.style.animationDuration=(0.7+((i*37)%50)/100)+'s';
+  wave.appendChild(b);
+}
+let mode='idle',sec=0,tick=null,confirmUntil=0,confirmTimer=null;
+const fmt=s=>(Math.floor(s/60)<10?'0':'')+Math.floor(s/60)+':'+(s%60<10?'0':'')+(s%60);
+function paint(){
+  state.textContent=mode==='idle'?'准备就绪':mode==='rec'?'录音中':'已暂停';
+  state.className='state'+(mode==='rec'?' rec':mode==='paused'?' paused':'');
+  card.className='card'+(mode==='rec'?' rec':mode==='paused'?' paused':'');
+  timer.textContent=fmt(sec);
+  prog.style.strokeDashoffset=402-402*((sec%60)/60);
+  main.textContent=mode==='rec'?'录音中':mode==='paused'?'继续录音':mode==='idle'?'开始录音':'再次录制';
+  main.classList.toggle('rec',mode==='rec');
+  pauseBtn.disabled=mode!=='rec';
+  pauseBtn.textContent=mode==='paused'?'恢复':'暂停';
+  stopBtn.disabled=(mode!=='rec'&&mode!=='paused');
+}
+function clearConfirm(){
+  if(confirmTimer){clearInterval(confirmTimer);confirmTimer=null;}
+  stopBtn.classList.remove('confirm');stopBtn.textContent='停止';
+}
+function start(){card.classList.remove('done');summary.innerHTML='';mode='rec';sec=0;tick=setInterval(()=>{sec++;paint();},1000);paint();}
+function pause(){mode='paused';clearInterval(tick);paint();}
+function stop(){
+  if(stopBtn.classList.contains('confirm')){
+    clearConfirm();mode='done';clearInterval(tick);card.classList.add('done');
+    state.textContent='已保存';state.className='state done';
+    summary.innerHTML='<b>录音摘要</b><br>时长：'+fmt(sec)+'<br>状态：已保存（模拟）<br>波形峰值：'+Math.min(97,38+sec*3%60)+' / 100';pauseBtn.disabled=true;
+    main.textContent='再次录制';prog.style.strokeDashoffset=402;
+    return;
+  }
+  clearConfirm();stopBtn.classList.add('confirm');
+  confirmUntil=3;stopBtn.textContent='再点一次确认停止 ('+confirmUntil+'s)';
+  confirmTimer=setInterval(()=>{confirmUntil--;if(confirmUntil<=0){clearConfirm();}else{stopBtn.textContent='再点一次确认停止 ('+confirmUntil+'s)';}},1000);
+}
+main.onclick=()=>{mode==='idle'||mode==='done'?start():mode==='paused'?pause():void 0;};
+pauseBtn.onclick=()=>{mode==='rec'?pause():mode==='paused'?start():void 0;};
+stopBtn.onclick=stop;
+paint();
+</script>
+</body>
+</html>

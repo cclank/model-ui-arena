@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CHRONO · 时钟</title>
+<style>
+  :root {
+    --bg1:#070b1d; --bg2:#1b1440; --dial:#0e1330; --rim:#2a3260;
+    --ink:#eef1ff; --sub:#8f97c4; --accent:#ffb454; --glow:rgba(255,180,84,.5);
+    --hand:#f2f5ff; --sec:#ffb454; --pulse:0;
+  }
+  body.day {
+    --bg1:#dfe9ff; --bg2:#f6efff; --dial:#ffffff; --rim:#c9d4f5;
+    --ink:#1b2242; --sub:#5c6690; --accent:#ff6d00; --glow:rgba(255,109,0,.35);
+    --hand:#232a4d; --sec:#ff6d00;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:clamp(20px,4vh,40px); padding:24px; overflow:hidden;
+    font-family:"SF Pro Display",-apple-system,"PingFang SC","Segoe UI",system-ui,sans-serif;
+    background:radial-gradient(130% 100% at 50% -10%, var(--bg2) 0%, var(--bg1) 62%);
+    color:var(--ink); transition:background 1.4s ease, color .8s ease;
+  }
+  body::before {
+    content:""; position:fixed; inset:0; pointer-events:none;
+    background:radial-gradient(42% 34% at 50% 44%, var(--glow), transparent 70%);
+    opacity:calc(.25 + var(--pulse)*.5); transform:scale(calc(1 + var(--pulse)*.06));
+    transition:opacity .12s linear, transform .12s linear;
+  }
+  .stage { position:relative; width:min(74vw,340px); aspect-ratio:1; }
+  .stage::before {
+    content:""; position:absolute; inset:-7%; border-radius:50%;
+    background:radial-gradient(closest-side, transparent 62%, var(--glow) 78%, transparent 82%);
+    opacity:.5; animation:breathe 4s ease-in-out infinite;
+  }
+  @keyframes breathe { 0%,100%{opacity:.35; transform:scale(1)} 50%{opacity:.7; transform:scale(1.03)} }
+  .face {
+    position:absolute; inset:0; border-radius:50%;
+    background:radial-gradient(circle at 32% 26%, color-mix(in srgb, var(--dial) 78%, #fff) 0%, var(--dial) 58%);
+    border:2px solid var(--rim);
+    box-shadow:0 30px 70px -20px rgba(0,0,0,.55), inset 0 2px 14px rgba(255,255,255,.06), inset 0 -18px 40px rgba(0,0,0,.35);
+  }
+  .tick { position:absolute; left:50%; top:50%; width:2px; height:50%; transform-origin:0 0; }
+  .tick::after {
+    content:""; position:absolute; left:0; top:88%;
+    width:100%; height:9%; background:var(--sub); border-radius:2px; opacity:.75;
+  }
+  .tick.major::after { width:3px; left:-0.5px; height:13%; background:var(--ink); opacity:.95; }
+  .tick.major { animation:tickBreathe 2s ease-in-out infinite; }
+  @keyframes tickBreathe { 0%,100%{opacity:.9} 50%{opacity:.55} }
+  .num { position:absolute; left:50%; top:50%; font-weight:700; font-size:clamp(13px,4.4vw,19px);
+    letter-spacing:.02em; color:var(--ink); opacity:.92; transform:translate(-50%,-50%); }
+  .hand { position:absolute; left:50%; top:50%; transform-origin:50% 100%; border-radius:99px; will-change:transform; }
+  .hand.hour { width:6px; height:24%; background:linear-gradient(var(--hand), color-mix(in srgb,var(--hand) 80%, var(--accent))); }
+  .hand.min  { width:4px; height:34%; background:var(--hand); opacity:.95; }
+  .hand.sec  { width:2px; height:39%; background:var(--sec); box-shadow:0 0 8px var(--glow); }
+  .hand.sec::after { content:""; position:absolute; left:50%; bottom:-7%; width:26px; height:26px; margin-left:-13px;
+    background:var(--sec); border-radius:50%; box-shadow:0 0 12px var(--glow); }
+  .hub { position:absolute; left:50%; top:50%; width:16px; height:16px; margin:-8px 0 0 -8px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff, var(--sec) 55%); box-shadow:0 0 10px var(--glow); }
+  .digital { text-align:center; }
+  .digital .time {
+    font-size:clamp(40px,11vw,64px); font-weight:800; line-height:1; letter-spacing:.04em;
+    font-variant-numeric:tabular-nums; text-shadow:0 0 24px var(--glow);
+  }
+  .digital .time .colon { animation:blink 1s steps(1) infinite; color:var(--accent); }
+  @keyframes blink { 50%{opacity:.25} }
+  .digital .meta { margin-top:10px; display:flex; gap:14px; justify-content:center; align-items:center;
+    color:var(--sub); font-size:clamp(12px,3.4vw,15px); letter-spacing:.12em; }
+  .badge { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border:1px solid var(--rim);
+    border-radius:99px; font-size:clamp(11px,3vw,12.5px); }
+  .badge i { width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--glow); }
+</style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <div class="face"></div>
+    <div id="hands">
+      <div class="hand hour" id="hHour"></div>
+      <div class="hand min"  id="hMin"></div>
+      <div class="hand sec"  id="hSec"></div>
+      <div class="hub"></div>
+    </div>
+  </div>
+  <div class="digital">
+    <div class="time" id="dTime">--<span class="colon">:</span>--<span class="colon">:</span>--</div>
+    <div class="meta">
+      <span id="dDate">—</span>
+      <span class="badge"><i></i><span id="dMode">夜间</span></span>
+    </div>
+  </div>
+<script>
+(function () {
+  "use strict";
+  var stage = document.getElementById("stage");
+  var hH = document.getElementById("hHour"), hM = document.getElementById("hMin"), hS = document.getElementById("hSec");
+  var dTime = document.getElementById("dTime"), dDate = document.getElementById("dDate"), dMode = document.getElementById("dMode");
+  var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+  var WEEK = ["日","一","二","三","四","五","六"];
+
+  // 60 刻度：12 大刻度带呼吸动画，其余细刻度
+  var ticks = document.createDocumentFragment();
+  var nums = document.createDocumentFragment();
+  for (var i = 0; i < 60; i++) {
+    var t = document.createElement("div");
+    t.className = "tick" + (i % 5 === 0 ? " major" : "");
+    t.style.transform = "rotate(" + i * 6 + "deg)";
+    if (i % 5 === 0) t.style.animationDelay = (i / 12) + "s";
+    ticks.appendChild(t);
+  }
+  for (var n = 1; n <= 12; n++) {
+    var el = document.createElement("div");
+    el.className = "num"; el.textContent = n;
+    var a = (n * 30 - 90) * Math.PI / 180;
+    el.style.left = (50 + Math.cos(a) * 37).toFixed(2) + "%";
+    el.style.top = (50 + Math.sin(a) * 37).toFixed(2) + "%";
+    nums.appendChild(el);
+  }
+  stage.insertBefore(ticks, document.getElementById("hands"));
+  stage.insertBefore(nums, document.getElementById("hands"));
+
+  var lastSec = -1, lastDate = "", dayMode = null;
+  function paint() {
+    var now = new Date();
+    var ms = now.getMilliseconds();
+    var s = now.getSeconds() + ms / 1000;
+    var m = now.getMinutes() + s / 60;
+    var h = (now.getHours() % 12) + m / 60;
+    // 平滑走针：rAF 每帧驱动，秒针连续扫动不跳格
+    hS.style.transform = "translate(-50%,-100%) rotate(" + (s * 6) + "deg)";
+    hM.style.transform = "translate(-50%,-100%) rotate(" + (m * 6) + "deg)";
+    hH.style.transform = "translate(-50%,-100%) rotate(" + (h * 30) + "deg)";
+
+    if (now.getSeconds() !== lastSec) {
+      lastSec = now.getSeconds();
+      dTime.innerHTML = pad(now.getHours()) + '<span class="colon">:</span>' + pad(now.getMinutes()) +
+        '<span class="colon">:</span>' + pad(now.getSeconds());
+    }
+    var dateKey = now.toDateString();
+    if (dateKey !== lastDate) {
+      lastDate = dateKey;
+      dDate.textContent = now.getFullYear() + "年" + (now.getMonth() + 1) + "月" + now.getDate() + "日 · 星期" + WEEK[now.getDay()];
+    }
+    // 白天 / 夜间自动换肤（6:00 - 18:00 为白天）
+    var isDay = now.getHours() >= 6 && now.getHours() < 18;
+    if (isDay !== dayMode) {
+      dayMode = isDay;
+      document.body.classList.toggle("day", isDay);
+      dMode.textContent = isDay ? "日间" : "夜间";
+    }
+    // 整秒脉冲：背景随秒针节拍呼吸
+    document.body.style.setProperty("--pulse", (1 - ms / 1000).toFixed(3));
+    requestAnimationFrame(paint);
+  }
+  requestAnimationFrame(paint);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,330 @@
+<!-- 设计说明：猎豹托举大力神杯冲刺 · 冠军之夜海报
+     纯内联 SVG：拟人猎豹（泪痕/斑点/长尾/流线身形）双爪高举金杯，
+     绿色底座+双人托举+地球球体奖杯结构，球场草皮、聚光灯、观众席、
+     金色彩带、速度残影与 90+7' 3:2 比分牌构成补时绝杀夺冠叙事。 -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>猎豹举杯冲刺 · Cheetah Trophy Run</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#0a0e22;height:100%}
+body{font-family:system-ui,-apple-system,'Segoe UI','PingFang SC',sans-serif;display:grid;place-items:center}
+svg{display:block;width:100%;height:auto;max-height:100vh}
+svg *{transform-box:view-box}
+#tail{animation:sway .7s ease-in-out infinite alternate;transform-origin:672px 586px}
+@keyframes sway{from{transform:rotate(-3deg)}to{transform:rotate(4deg)}}
+.streak{animation:shim 1.6s ease-in-out infinite}
+@keyframes shim{0%,100%{opacity:.15}50%{opacity:.6}}
+.streak.s2{animation-delay:.4s}.streak.s3{animation-delay:.8s}.streak.s4{animation-delay:1.2s}
+.conf{animation:fall linear infinite}
+@keyframes fall{0%{transform:translateY(-60px) rotate(0deg);opacity:0}8%{opacity:1}100%{transform:translateY(1060px) rotate(540deg);opacity:.9}}
+.dust{animation:dpuff 1.1s ease-out infinite}
+@keyframes dpuff{0%{transform:scale(.5);opacity:.55}100%{transform:scale(1.6);opacity:0}}
+.sheen{animation:sheen 3.6s ease-in-out infinite}
+@keyframes sheen{0%,100%{opacity:.25}50%{opacity:.75}}
+#scoreMin{filter:drop-shadow(0 0 14px #ff4d5e)}
+#scoreVal{filter:drop-shadow(0 0 12px #ffd34d)}
+@media (max-width:640px){svg{width:100vw;height:100vh;max-height:none}}
+</style>
+</head>
+<body>
+<svg id="poster" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="猎豹托举大力神杯冲刺夺冠海报">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#05081f"/><stop offset=".55" stop-color="#131a44"/><stop offset="1" stop-color="#2a1d52"/>
+  </linearGradient>
+  <linearGradient id="standGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#1a2250"/><stop offset="1" stop-color="#0b102c"/>
+  </linearGradient>
+  <linearGradient id="dim" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="rgba(4,7,24,.92)"/><stop offset="1" stop-color="rgba(4,7,24,.25)"/>
+  </linearGradient>
+  <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="rgba(255,250,215,.85)"/><stop offset="1" stop-color="rgba(255,250,215,0)"/>
+  </linearGradient>
+  <linearGradient id="pitchGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#1e7f41"/><stop offset="1" stop-color="#0d5227"/>
+  </linearGradient>
+  <linearGradient id="fur" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#f8c04b"/><stop offset="1" stop-color="#d4891f"/>
+  </linearGradient>
+  <linearGradient id="furDark" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#d9a03a"/><stop offset="1" stop-color="#a86a14"/>
+  </linearGradient>
+  <linearGradient id="belly" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ffe9b0"/><stop offset="1" stop-color="#ecc983"/>
+  </linearGradient>
+  <linearGradient id="gold1" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff6cd"/><stop offset=".45" stop-color="#ffd34d"/><stop offset="1" stop-color="#9c6a08"/>
+  </linearGradient>
+  <linearGradient id="gold2" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#e9c878"/><stop offset=".5" stop-color="#c8952e"/><stop offset="1" stop-color="#7d5406"/>
+  </linearGradient>
+  <linearGradient id="baseGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#1f7a4d"/><stop offset=".5" stop-color="#145c37"/><stop offset="1" stop-color="#0a3a21"/>
+  </linearGradient>
+  <radialGradient id="tglow" cx=".5" cy=".5" r=".5">
+    <stop offset="0" stop-color="rgba(255,214,90,.5)"/><stop offset="1" stop-color="rgba(255,214,90,0)"/>
+  </radialGradient>
+  <radialGradient id="globeG" cx=".38" cy=".32" r=".75">
+    <stop offset="0" stop-color="#f7e9b8"/><stop offset=".6" stop-color="#e8c25a"/><stop offset="1" stop-color="#8f5d08"/>
+  </radialGradient>
+  <radialGradient id="pitchGlow" cx=".5" cy=".5" r=".5">
+    <stop offset="0" stop-color="rgba(255,240,170,.28)"/><stop offset="1" stop-color="rgba(255,240,170,0)"/>
+  </radialGradient>
+  <filter id="soft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="13"/></filter>
+  <filter id="soft2" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="5"/></filter>
+  <filter id="soft3" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.5"/></filter>
+  <pattern id="crowd" width="36" height="32" patternUnits="userSpaceOnUse">
+    <circle cx="4" cy="5" r="2.6" fill="#e6b8a2"/><circle cx="14" cy="8" r="2.6" fill="#f0d68a"/>
+    <circle cx="26" cy="4" r="2.6" fill="#9fb8e8"/><circle cx="9" cy="17" r="2.6" fill="#d8d8e8"/>
+    <circle cx="21" cy="18" r="2.6" fill="#f2c07a"/><circle cx="32" cy="16" r="2.6" fill="#b8d8c0"/>
+    <circle cx="4" cy="27" r="2.6" fill="#e0a0a8"/><circle cx="17" cy="28" r="2.6" fill="#c8c0f0"/>
+    <circle cx="29" cy="27" r="2.6" fill="#e8d0a0"/><circle cx="7" cy="12" r="2" fill="#8a9ac0"/>
+  </pattern>
+  <clipPath id="standClip"><path d="M0 570 C 380 520, 1220 520, 1600 570 L1600 860 L0 860 Z"/></clipPath>
+  <clipPath id="pitchClip"><rect x="0" y="838" width="1600" height="162"/></clipPath>
+  <clipPath id="globeClip"><circle cx="0" cy="-208" r="40"/></clipPath>
+</defs>
+
+<!-- 夜空与球场氛围 -->
+<rect width="1600" height="1000" fill="url(#sky)"/>
+<g fill="#dfe6ff">
+  <circle cx="180" cy="120" r="1.6" opacity=".7"/><circle cx="420" cy="70" r="1.2" opacity=".5"/>
+  <circle cx="660" cy="150" r="1.5" opacity=".6"/><circle cx="1420" cy="110" r="1.4" opacity=".6"/>
+  <circle cx="1260" cy="60" r="1.1" opacity=".5"/><circle cx="1020" cy="180" r="1.3" opacity=".4"/>
+  <circle cx="300" cy="240" r="1.2" opacity=".4"/><circle cx="1520" cy="260" r="1.4" opacity=".5"/>
+</g>
+
+<!-- 观众席 -->
+<path d="M0 570 C 380 520, 1220 520, 1600 570 L1600 860 L0 860 Z" fill="url(#standGrad)"/>
+<path d="M0 570 C 380 520, 1220 520, 1600 570 L1600 860 L0 860 Z" fill="url(#crowd)" opacity=".8" clip-path="url(#standClip)"/>
+<path d="M0 570 C 380 520, 1220 520, 1600 570 L1600 860 L0 860 Z" fill="url(#dim)" clip-path="url(#standClip)"/>
+<g stroke="#050a1e" stroke-width="7" fill="none" opacity=".85">
+  <path d="M0 636 C 400 590, 1200 590, 1600 636"/>
+  <path d="M0 712 C 400 664, 1200 664, 1600 712"/>
+  <path d="M0 788 C 400 738, 1200 738, 1600 788"/>
+</g>
+<path d="M0 570 C 380 520, 1220 520, 1600 570" stroke="#3a4a8c" stroke-width="4" fill="none" opacity=".7"/>
+
+<!-- 聚光灯 -->
+<g opacity=".55" filter="url(#soft)">
+  <polygon points="120,0 360,0 800,540 560,540" fill="url(#beam)"/>
+  <polygon points="1480,0 1240,0 800,540 1040,540" fill="url(#beam)"/>
+</g>
+<g fill="#fff6d8">
+  <circle cx="240" cy="14" r="10" filter="url(#soft2)"/><circle cx="1360" cy="14" r="10" filter="url(#soft2)"/>
+</g>
+
+<!-- 比分牌 -->
+<g transform="translate(1190 70)">
+  <rect width="370" height="180" rx="20" fill="#0c1030" stroke="#2c3a70" stroke-width="2.5"/>
+  <rect x="10" y="10" width="350" height="160" rx="14" fill="none" stroke="#1d2548" stroke-width="2"/>
+  <text x="185" y="44" text-anchor="middle" fill="#8fa0d8" font-size="19" letter-spacing="8">决赛 · FINAL</text>
+  <text id="scoreMin" x="185" y="112" text-anchor="middle" fill="#ff4d5e" font-size="60" font-weight="800">90+7'</text>
+  <text id="scoreVal" x="185" y="160" text-anchor="middle" fill="#ffd34d" font-size="46" font-weight="800">3 : 2</text>
+</g>
+
+<!-- 速度残影 -->
+<g class="streaks">
+  <rect class="streak" x="60" y="330" width="330" height="5" rx="2.5" fill="#dfe8ff" opacity=".4" transform="rotate(-6 60 330)"/>
+  <rect class="streak s2" x="130" y="400" width="270" height="4" rx="2" fill="#ffd88a" opacity=".45" transform="rotate(-6 130 400)"/>
+  <rect class="streak s3" x="40" y="480" width="380" height="6" rx="3" fill="#dfe8ff" opacity=".35" transform="rotate(-7 40 480)"/>
+  <rect class="streak s4" x="160" y="560" width="240" height="4" rx="2" fill="#ffd88a" opacity=".4" transform="rotate(-5 160 560)"/>
+  <rect class="streak s2" x="90" y="640" width="300" height="5" rx="2.5" fill="#b9c8ff" opacity=".3" transform="rotate(-7 90 640)"/>
+</g>
+
+<!-- 草皮 -->
+<g clip-path="url(#pitchClip)">
+  <rect x="0" y="838" width="1600" height="162" fill="url(#pitchGrad)"/>
+  <g fill="rgba(255,255,255,.045)">
+    <rect x="0" y="838" width="160" height="162"/><rect x="320" y="838" width="160" height="162"/>
+    <rect x="640" y="838" width="160" height="162"/><rect x="960" y="838" width="160" height="162"/>
+    <rect x="1280" y="838" width="160" height="162"/>
+  </g>
+  <rect x="0" y="838" width="1600" height="6" fill="#e8f0e8" opacity=".85"/>
+  <circle cx="800" cy="926" r="88" fill="none" stroke="#e8f0e8" stroke-width="5" opacity=".28"/>
+  <line x1="800" y1="838" x2="800" y2="1000" stroke="#e8f0e8" stroke-width="5" opacity=".22"/>
+  <ellipse cx="950" cy="840" rx="520" ry="120" fill="url(#pitchGlow)"/>
+</g>
+
+<!-- 草痕草屑 -->
+<g stroke="#0a4a20" stroke-width="4" stroke-linecap="round" opacity=".8">
+  <path d="M1120 880 l22 -14"/><path d="M1090 912 l26 -10"/><path d="M1350 872 l24 -12"/>
+  <path d="M1390 950 l20 -16"/><path d="M760 900 l18 -12"/><path d="M980 862 l20 -10"/>
+</g>
+<g fill="#7fe0a0" opacity=".8">
+  <rect x="1126" y="866" width="10" height="4" rx="2" transform="rotate(-24 1126 866)"/>
+  <rect x="1102" y="902" width="9" height="4" rx="2" transform="rotate(-16 1102 902)"/>
+  <rect x="1356" y="858" width="10" height="4" rx="2" transform="rotate(-20 1356 858)"/>
+  <rect x="990" y="852" width="9" height="4" rx="2" transform="rotate(-18 990 852)"/>
+</g>
+
+<!-- 滚动足球 -->
+<g transform="translate(1240 900)">
+  <path d="M-120 14 Q -70 2, -24 14" stroke="#d9f0e0" stroke-width="5" fill="none" opacity=".5"/>
+  <path d="M-96 26 Q -60 16, -34 26" stroke="#d9f0e0" stroke-width="3.5" fill="none" opacity=".35"/>
+  <circle r="36" fill="#f2f4f6"/>
+  <circle r="36" fill="none" stroke="#5d6670" stroke-width="2.5"/>
+  <path d="M0 -10 L9.5 -3 L5.9 6.1 L-5.9 6.1 L-9.5 -3 Z" fill="#23262c"/>
+  <path d="M0 -10 L12 -14 L18 -4 L6 2 Z" fill="#23262c" opacity=".92"/>
+  <path d="M0 -10 L-12 -14 L-18 -4 L-6 2 Z" fill="#23262c" opacity=".92"/>
+  <path d="M9.5 -3 L16 4 L10 12 L2 8 Z" fill="#23262c" opacity=".9"/>
+  <path d="M-9.5 -3 L-16 4 L-10 12 L-2 8 Z" fill="#23262c" opacity=".9"/>
+  <path d="M5.9 6.1 L8 16 L-8 16 L-5.9 6.1 Z" fill="#23262c" opacity=".85"/>
+  <path d="M-14 10 A 20 20 0 0 0 -8 20" stroke="#9aa4ae" stroke-width="3" fill="none" opacity=".5"/>
+  <ellipse cx="-13" cy="-14" rx="9" ry="5" fill="#ffffff" opacity=".8" transform="rotate(-32 -13 -14)"/>
+</g>
+
+<!-- 大力神杯 -->
+<g transform="translate(950 320)">
+  <ellipse cx="0" cy="-90" rx="130" ry="170" fill="url(#tglow)"/>
+  <path d="M-95 -10 L95 -10 L88 -52 L-88 -52 Z" fill="url(#baseGrad)"/>
+  <path d="M-70 -52 L70 -52 L62 -84 L-62 -84 Z" fill="url(#baseGrad)"/>
+  <path d="M-95 -10 L95 -10 L95 -4 L-95 -4 Z" fill="#0a2e1c"/>
+  <text x="0" y="-64" text-anchor="middle" fill="#e8c25a" font-size="15" letter-spacing="5">CHAMPIONS</text>
+  <path d="M-34 -80 C -42 -130, -30 -165, -10 -186 C -2 -196, 8 -198, 14 -192 L 8 -168 C -6 -176, -18 -170, -24 -152 C -28 -138, -30 -108, -28 -80 Z" fill="url(#gold2)"/>
+  <path d="M30 -80 C 38 -128, 26 -162, 8 -184 C 0 -194, -8 -196, -14 -190 L -8 -166 C 4 -174, 16 -168, 22 -150 C 26 -136, 28 -106, 26 -80 Z" fill="url(#gold1)"/>
+  <path d="M-16 -178 C -10 -186, 2 -190, 8 -186" stroke="#fff2c0" stroke-width="3" fill="none" opacity=".6" stroke-linecap="round"/>
+  <path d="M16 -172 C 22 -164, 26 -150, 28 -134" stroke="#fff2c0" stroke-width="3.4" fill="none" opacity=".5" stroke-linecap="round"/>
+  <g clip-path="url(#globeClip)">
+    <circle cx="0" cy="-208" r="40" fill="url(#globeG)"/>
+    <ellipse cx="0" cy="-208" rx="16" ry="40" fill="none" stroke="#8f5d08" stroke-width="2" opacity=".65"/>
+    <ellipse cx="0" cy="-208" rx="32" ry="40" fill="none" stroke="#8f5d08" stroke-width="2" opacity=".5"/>
+    <ellipse cx="0" cy="-208" rx="40" ry="11" fill="none" stroke="#8f5d08" stroke-width="2" opacity=".5"/>
+    <ellipse cx="0" cy="-208" rx="40" ry="25" fill="none" stroke="#8f5d08" stroke-width="2" opacity=".45"/>
+    <path d="M-30 -230 A 34 34 0 0 1 -8 -238" stroke="#fff8dc" stroke-width="7" fill="none" opacity=".75" stroke-linecap="round"/>
+  </g>
+  <circle cx="0" cy="-208" r="40" fill="none" stroke="#ffd34d" stroke-width="3"/>
+  <path class="sheen" d="M-24 -160 L 26 -136" stroke="#fff8dc" stroke-width="5" fill="none" opacity=".5" stroke-linecap="round"/>
+</g>
+
+<!-- 猎豹主体 -->
+<g id="cheetah">
+  <!-- 尾巴 -->
+  <g id="tail">
+    <path d="M672 588 C 610 566, 528 514, 470 436 C 444 402, 428 356, 438 320 C 444 300, 462 292, 476 304 C 486 314, 484 334, 470 352 C 444 390, 402 420, 372 442 C 424 472, 512 520, 598 562 C 632 582, 658 594, 680 598 Z" fill="url(#fur)"/>
+    <path d="M470 336 C 458 322, 450 310, 448 300 C 456 296, 468 298, 478 306 C 474 318, 470 328, 470 336 Z" fill="#1d140c"/>
+    <path d="M455 372 C 443 366, 432 362, 426 360 C 434 352, 448 348, 460 354 C 458 360, 457 366, 455 372 Z" fill="#3a2812"/>
+    <ellipse cx="620" cy="574" rx="7" ry="4" fill="#4a2b10" opacity=".85" transform="rotate(-24 620 574)"/>
+    <ellipse cx="582" cy="548" rx="6" ry="3.6" fill="#4a2b10" opacity=".85" transform="rotate(-32 582 548)"/>
+    <ellipse cx="536" cy="500" rx="5.4" ry="3.2" fill="#4a2b10" opacity=".85" transform="rotate(-42 536 500)"/>
+    <path d="M600 566 C 540 540, 480 486, 448 428" stroke="#e9a52c" stroke-width="7" fill="none" opacity=".55" stroke-linecap="round"/>
+  </g>
+  <!-- 后伸后腿 -->
+  <path d="M666 590 C 640 636, 612 674, 584 704 C 556 732, 528 758, 502 782 C 480 802, 462 818, 450 830 L 436 844 C 432 848, 428 850, 424 852 C 444 856, 464 854, 482 846 C 508 834, 530 816, 550 796 C 592 758, 630 710, 652 650 C 662 626, 666 606, 666 590 Z" fill="url(#furDark)"/>
+  <path d="M640 640 C 612 676, 580 706, 548 732" stroke="#b87918" stroke-width="6" fill="none" opacity=".5" stroke-linecap="round"/>
+  <ellipse cx="604" cy="664" rx="7" ry="4.2" fill="#4a2b10" opacity=".8" transform="rotate(-40 604 664)"/>
+  <ellipse cx="560" cy="720" rx="6" ry="3.6" fill="#4a2b10" opacity=".8" transform="rotate(-46 560 720)"/>
+  <!-- 远侧手臂 -->
+  <path d="M822 538 C 846 496, 866 456, 876 416 C 882 390, 884 352, 878 322 C 866 330, 856 344, 852 362 C 848 400, 844 470, 830 512 C 818 530, 810 540, 806 550 Z" fill="url(#furDark)"/>
+  <ellipse cx="872" cy="430" rx="4.4" ry="3" fill="#4a2b10" opacity=".8" transform="rotate(-60 872 430)"/>
+  <ellipse cx="858" cy="362" rx="4" ry="3" fill="#4a2b10" opacity=".8" transform="rotate(-50 858 362)"/>
+  <!-- 躯干 -->
+  <path d="M700 560 C 748 528, 806 524, 852 548 C 866 556, 872 572, 864 588 C 838 622, 776 638, 730 630 C 706 626, 692 608, 690 586 C 688 572, 692 564, 700 560 Z" fill="url(#fur)"/>
+  <path d="M712 618 C 758 634, 822 626, 852 596" stroke="#e9b45c" stroke-width="9" fill="none" opacity=".5" stroke-linecap="round"/>
+  <path d="M700 560 C 748 528, 806 524, 852 548" stroke="#fff0c0" stroke-width="6" fill="none" opacity=".55" stroke-linecap="round"/>
+  <ellipse cx="740" cy="558" rx="6" ry="3.8" fill="#4a2b10" opacity=".85" transform="rotate(-12 740 558)"/>
+  <ellipse cx="772" cy="546" rx="5.4" ry="3.4" fill="#4a2b10" opacity=".85" transform="rotate(-8 772 546)"/>
+  <ellipse cx="806" cy="546" rx="6" ry="3.6" fill="#4a2b10" opacity=".85" transform="rotate(4 806 546)"/>
+  <ellipse cx="836" cy="556" rx="5" ry="3.2" fill="#4a2b10" opacity=".85" transform="rotate(10 836 556)"/>
+  <ellipse cx="764" cy="578" rx="7" ry="4" fill="#4a2b10" opacity=".85" transform="rotate(14 764 578)"/>
+  <ellipse cx="796" cy="590" rx="5.4" ry="3.2" fill="#4a2b10" opacity=".85" transform="rotate(18 796 590)"/>
+  <ellipse cx="826" cy="598" rx="5" ry="3" fill="#4a2b10" opacity=".85" transform="rotate(22 826 598)"/>
+  <ellipse cx="726" cy="590" rx="5.4" ry="3.4" fill="#4a2b10" opacity=".85" transform="rotate(24 726 590)"/>
+  <ellipse cx="702" cy="578" rx="4.6" ry="3" fill="#4a2b10" opacity=".85" transform="rotate(30 702 578)"/>
+  <!-- 颈部 -->
+  <path d="M982 528 C 950 548, 900 560, 852 566 L 852 592 C 910 588, 968 566, 1004 544 Z" fill="url(#furDark)"/>
+  <ellipse cx="912" cy="556" rx="4.4" ry="3" fill="#4a2b10" opacity=".8" transform="rotate(-8 912 556)"/>
+  <ellipse cx="948" cy="546" rx="4.2" ry="2.8" fill="#4a2b10" opacity=".8" transform="rotate(-4 948 546)"/>
+  <!-- 头部 -->
+  <g id="head">
+    <ellipse cx="1000" cy="492" rx="46" ry="38" fill="url(#fur)" transform="rotate(-8 1000 492)"/>
+    <path d="M972 470 C 978 458, 990 452, 1002 456 L 998 442 C 986 438, 972 444, 964 456 Z" fill="url(#fur)"/>
+    <path d="M1006 456 C 1016 452, 1028 456, 1032 466 L 1036 454 C 1026 444, 1012 442, 1002 448 Z" fill="url(#fur)"/>
+    <path d="M974 468 C 980 460, 990 458, 998 460 L 996 450 C 986 448, 974 452, 966 462 Z" fill="#e89a6a" opacity=".9"/>
+    <path d="M1008 458 C 1016 456, 1026 460, 1030 468 L 1034 460 C 1026 450, 1012 448, 1004 452 Z" fill="#e89a6a" opacity=".9"/>
+    <path d="M1030 478 C 1060 482, 1090 494, 1116 508 C 1124 512, 1128 518, 1126 524 L 1120 530 C 1100 522, 1070 514, 1044 510 C 1034 508, 1028 502, 1024 492 Z" fill="#f2d9a0"/>
+    <path d="M1124 526 C 1130 528, 1134 532, 1132 537 C 1126 542, 1118 542, 1112 540 C 1116 534, 1120 530, 1124 526 Z" fill="#241811"/>
+    <path d="M1042 528 C 1060 534, 1078 536, 1096 536 C 1102 536, 1106 540, 1104 546 C 1098 552, 1088 554, 1078 553 C 1062 551, 1048 546, 1040 538 Z" fill="#7c1f28"/>
+    <path d="M1068 543 C 1076 544, 1084 546, 1090 550 C 1086 554, 1078 556, 1070 554 C 1064 552, 1062 548, 1068 543 Z" fill="#d84a5a"/>
+    <ellipse cx="1044" cy="488" rx="8" ry="5.5" fill="#1c1408" transform="rotate(-6 1044 488)"/>
+    <circle cx="1047" cy="486" r="1.9" fill="#fff"/>
+    <path d="M1038 490 C 1046 498, 1054 508, 1062 522 L 1052 528 C 1044 512, 1036 500, 1030 492 Z" fill="#241811"/>
+    <path d="M1046 512 C 1052 518, 1058 524, 1064 530" stroke="#e8dcc0" stroke-width="1.6" fill="none" opacity=".8"/>
+    <path d="M1040 520 C 1044 526, 1048 530, 1052 534" stroke="#e8dcc0" stroke-width="1.4" fill="none" opacity=".7"/>
+    <path d="M1034 526 C 1036 530, 1038 534, 1040 538" stroke="#e8dcc0" stroke-width="1.2" fill="none" opacity=".6"/>
+    <path d="M1000 456 C 1016 452, 1032 460, 1038 476" stroke="#fff0c0" stroke-width="5" fill="none" opacity=".5" stroke-linecap="round"/>
+  </g>
+  <!-- 前伸支撑后腿 -->
+  <path d="M694 572 C 712 618, 724 668, 732 716 C 738 752, 752 786, 778 812 C 806 840, 836 854, 866 860 L 898 864 C 906 866, 912 868, 916 870 C 894 876, 862 874, 834 868 C 800 860, 772 844, 750 822 C 720 792, 704 748, 696 700 C 690 660, 692 610, 694 572 Z" fill="url(#fur)"/>
+  <path d="M724 656 C 738 704, 760 756, 790 800" stroke="#fff0c0" stroke-width="6" fill="none" opacity=".45" stroke-linecap="round"/>
+  <path d="M702 620 C 716 670, 732 722, 754 772" stroke="#c98a24" stroke-width="6" fill="none" opacity=".5" stroke-linecap="round"/>
+  <ellipse cx="726" cy="680" rx="6.4" ry="3.8" fill="#4a2b10" opacity=".85" transform="rotate(52 726 680)"/>
+  <ellipse cx="742" cy="732" rx="5.6" ry="3.4" fill="#4a2b10" opacity=".85" transform="rotate(56 742 732)"/>
+  <path d="M896 862 l14 4 M890 866 l12 6 M902 864 l12 5" stroke="#1d140c" stroke-width="3" stroke-linecap="round"/>
+  <!-- 近侧手臂 -->
+  <path d="M806 544 C 836 502, 866 462, 902 430 C 938 400, 968 376, 1002 352 C 1018 340, 1032 330, 1044 322 C 1040 336, 1030 350, 1018 362 C 990 388, 956 412, 922 440 C 886 470, 852 500, 824 526 C 812 538, 806 548, 806 558 Z" fill="url(#fur)"/>
+  <path d="M906 424 C 938 398, 970 374, 1004 350" stroke="#fff0c0" stroke-width="5" fill="none" opacity=".45" stroke-linecap="round"/>
+  <ellipse cx="902" cy="436" rx="4.4" ry="3" fill="#4a2b10" opacity=".8" transform="rotate(-56 902 436)"/>
+  <ellipse cx="950" cy="392" rx="4.2" ry="2.8" fill="#4a2b10" opacity=".8" transform="rotate(-44 950 392)"/>
+  <!-- 双爪 -->
+  <g>
+    <ellipse cx="858" cy="316" rx="17" ry="11" fill="url(#fur)" transform="rotate(-18 858 316)"/>
+    <path d="M850 310 l-6 6 M858 308 l-8 6 M866 308 l-8 4" stroke="#1d140c" stroke-width="2.4" stroke-linecap="round"/>
+    <ellipse cx="1042" cy="316" rx="17" ry="11" fill="url(#furDark)" transform="rotate(18 1042 316)"/>
+    <path d="M1050 310 l6 6 M1042 308 l8 6 M1034 308 l8 4" stroke="#1d140c" stroke-width="2.4" stroke-linecap="round"/>
+  </g>
+  <!-- 脚边尘土 -->
+  <g fill="#d9c9a0">
+    <ellipse class="dust" cx="938" cy="862" rx="16" ry="8"/>
+    <ellipse class="dust" cx="470" cy="846" rx="13" ry="6" style="animation-delay:.35s"/>
+    <ellipse class="dust" cx="896" cy="880" rx="11" ry="5" style="animation-delay:.6s"/>
+  </g>
+</g>
+
+<!-- 金色彩带 -->
+<g>
+  <g class="conf" style="animation-duration:5.2s;animation-delay:-1.2s"><rect x="140" y="-20" width="12" height="22" rx="3" fill="#ffd34d" transform="rotate(24 140 -20)"/></g>
+  <g class="conf" style="animation-duration:4.4s;animation-delay:-2.6s"><rect x="360" y="-20" width="11" height="20" rx="3" fill="#ff7a5c" transform="rotate(-18 360 -20)"/></g>
+  <g class="conf" style="animation-duration:6s;animation-delay:-.8s"><rect x="560" y="-20" width="12" height="24" rx="3" fill="#fff" transform="rotate(32 560 -20)"/></g>
+  <g class="conf" style="animation-duration:4.8s;animation-delay:-3.4s"><rect x="760" y="-20" width="10" height="18" rx="3" fill="#7ee2ff" transform="rotate(-26 760 -20)"/></g>
+  <g class="conf" style="animation-duration:5.6s;animation-delay:-2s"><rect x="960" y="-20" width="12" height="22" rx="3" fill="#ffd34d" transform="rotate(16 960 -20)"/></g>
+  <g class="conf" style="animation-duration:4.2s;animation-delay:-3.8s"><rect x="1150" y="-20" width="11" height="20" rx="3" fill="#c9a6ff" transform="rotate(-30 1150 -20)"/></g>
+  <g class="conf" style="animation-duration:5s;animation-delay:-1.6s"><rect x="1330" y="-20" width="12" height="22" rx="3" fill="#ff7a5c" transform="rotate(28 1330 -20)"/></g>
+  <g class="conf" style="animation-duration:5.8s;animation-delay:-4.2s"><rect x="1510" y="-20" width="10" height="18" rx="3" fill="#fff" transform="rotate(-14 1510 -20)"/></g>
+  <g class="conf" style="animation-duration:4.6s;animation-delay:-2.9s"><circle cx="260" cy="-20" r="6" fill="#ffd34d"/></g>
+  <g class="conf" style="animation-duration:5.4s;animation-delay:-.5s"><circle cx="660" cy="-20" r="6" fill="#ff7a5c"/></g>
+  <g class="conf" style="animation-duration:4.4s;animation-delay:-3s"><circle cx="1060" cy="-20" r="6" fill="#7ee2ff"/></g>
+  <g class="conf" style="animation-duration:5.2s;animation-delay:-1.8s"><circle cx="1440" cy="-20" r="6" fill="#ffd34d"/></g>
+  <g class="conf" style="animation-duration:5s;animation-delay:-2.2s"><circle cx="470" cy="-20" r="5" fill="#c9a6ff"/></g>
+  <g class="conf" style="animation-duration:4.8s;animation-delay:-3.6s"><circle cx="860" cy="-20" r="5" fill="#fff"/></g>
+  <g class="conf" style="animation-duration:5.6s;animation-delay:-1s"><circle cx="1250" cy="-20" r="5" fill="#ff7a5c"/></g>
+  <g class="conf" style="animation-duration:4.2s;animation-delay:-4s"><path d="M180 -20 l6 12 l6 -12 z" fill="#ffd34d"/></g>
+  <g class="conf" style="animation-duration:5.4s;animation-delay:-2.4s"><path d="M720 -20 l6 12 l6 -12 z" fill="#fff"/></g>
+  <g class="conf" style="animation-duration:4.6s;animation-delay:-1.4s"><path d="M1380 -20 l6 12 l6 -12 z" fill="#c9a6ff"/></g>
+</g>
+
+<!-- 底部文案 -->
+<g opacity=".9">
+  <line x1="60" y1="946" x2="330" y2="946" stroke="#ffd34d" stroke-width="3"/>
+  <text x="60" y="966" fill="#e8ecff" font-size="24" letter-spacing="8">冠军之夜</text>
+  <text x="60" y="990" fill="#8fa0d8" font-size="14" letter-spacing="4">CHAMPIONS NIGHT · 补时绝杀夺冠时刻</text>
+</g>
+</svg>
+<script>
+const svg=document.getElementById('poster');
+document.querySelectorAll('.conf,.dust').forEach(el=>{
+  const b=el.getBBox();
+  el.style.transformOrigin=(b.x+b.width/2)+'px '+(b.y+b.height/2)+'px';
+});
+function fit(){
+  svg.setAttribute('viewBox',innerWidth<640?'560 20 1000 960':'0 0 1600 1000');
+}
+addEventListener('resize',fit);fit();
+</script>
+</body>
+</html>

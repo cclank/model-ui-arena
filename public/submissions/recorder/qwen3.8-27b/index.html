@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>录音机 · REC STUDIO</title>
+<style>
+  :root {
+    --bg1:#0d1117; --bg2:#161d2b; --card:#151c29; --line:#27324a;
+    --ink:#e9eef8; --sub:#7f8ba6; --rec:#ff4d4f; --ok:#3ddc97; --warn:#ffb454;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+    font-family:"SF Pro Display",-apple-system,"PingFang SC",system-ui,sans-serif; color:var(--ink);
+    background:radial-gradient(120% 120% at 20% 0%, var(--bg2), var(--bg1));
+  }
+  body.rec::before {
+    content:""; position:fixed; inset:0; pointer-events:none;
+    background:radial-gradient(60% 50% at 50% 30%, rgba(255,77,79,.14), transparent 70%);
+    animation:redBreathe 1.6s ease-in-out infinite;
+  }
+  @keyframes redBreathe { 0%,100%{opacity:.5} 50%{opacity:1} }
+  .card {
+    width:min(92vw,420px); background:var(--card); border:1px solid var(--line); border-radius:24px;
+    padding:26px 26px 30px; box-shadow:0 34px 80px -30px rgba(0,0,0,.7); position:relative; overflow:hidden;
+    transition:box-shadow .4s, border-color .4s;
+  }
+  body.rec .card { border-color:rgba(255,77,79,.5); box-shadow:0 34px 90px -24px rgba(255,77,79,.35); }
+  .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; }
+  .brand { font-size:12px; letter-spacing:.34em; color:var(--sub); }
+  .state { font-size:12px; letter-spacing:.14em; padding:4px 12px; border-radius:99px; border:1px solid var(--line);
+    color:var(--sub); transition:all .3s; }
+  .state.on { color:#fff; background:var(--rec); border-color:var(--rec); box-shadow:0 0 16px rgba(255,77,79,.5); }
+  .state.pause { color:var(--warn); border-color:var(--warn); }
+  .prog { height:4px; border-radius:4px; background:var(--line); overflow:hidden; margin-bottom:8px; }
+  .prog i { display:block; height:100%; width:0%; border-radius:4px;
+    background:linear-gradient(90deg, var(--rec), #ff8a5c); transition:width .3s linear; }
+  .progLabel { display:flex; justify-content:space-between; font-size:11px; color:var(--sub); margin-bottom:20px;
+    font-variant-numeric:tabular-nums; }
+  .wave { display:flex; align-items:center; justify-content:center; gap:3px; height:84px; margin-bottom:20px; }
+  .wave b { width:5px; height:100%; background:var(--rec); border-radius:3px; opacity:.9;
+    transform:scaleY(.08); transform-origin:center; will-change:transform; }
+  .time { text-align:center; font-size:clamp(46px,13vw,60px); font-weight:800; letter-spacing:.06em;
+    font-variant-numeric:tabular-nums; line-height:1.1; }
+  .time .dot { color:var(--sub); }
+  body.rec .time { text-shadow:0 0 30px rgba(255,77,79,.4); }
+  .transport { display:flex; gap:12px; justify-content:center; margin-top:22px; }
+  .btn {
+    flex:1; max-width:120px; padding:13px 0; border-radius:14px; border:1px solid var(--line); background:#1d2637;
+    color:var(--ink); font-size:14px; font-weight:600; cursor:pointer; transition:all .25s; font-family:inherit;
+  }
+  .btn:disabled { opacity:.32; cursor:not-allowed; }
+  .btn:not(:disabled):hover { transform:translateY(-2px); border-color:#3b4a6b; }
+  .btn.rec { background:var(--rec); border-color:var(--rec); color:#fff; }
+  .btn.rec:not(:disabled):hover { box-shadow:0 8px 24px -6px rgba(255,77,79,.6); }
+  .btn.confirm { background:var(--warn); border-color:var(--warn); color:#201503; animation:confirmPulse 1s ease-in-out infinite; }
+  @keyframes confirmPulse { 50%{box-shadow:0 0 0 8px rgba(255,180,84,.15)} }
+  .hint { text-align:center; margin-top:14px; font-size:12px; color:var(--sub); min-height:16px; }
+  .summary {
+    position:absolute; inset:0; background:var(--card); display:flex; flex-direction:column; gap:14px;
+    align-items:center; justify-content:center; padding:30px; text-align:center;
+    transform:translateY(102%); transition:transform .5s cubic-bezier(.22,1,.36,1);
+  }
+  .summary.show { transform:translateY(0); }
+  .summary .icon { width:64px; height:64px; border-radius:50%; background:rgba(61,220,151,.12);
+    border:1px solid rgba(61,220,151,.5); display:flex; align-items:center; justify-content:center; }
+  .summary .icon svg { width:28px; height:28px; }
+  .summary h2 { font-size:20px; letter-spacing:.06em; }
+  .summary .meta { display:flex; gap:10px; }
+  .chip { padding:6px 14px; border-radius:99px; border:1px solid var(--line); font-size:13px; color:var(--sub);
+    font-variant-numeric:tabular-nums; }
+  .chip strong { color:var(--ink); font-weight:700; }
+  .summary .btn { max-width:160px; margin-top:8px; flex:none; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="top">
+      <span class="brand">REC STUDIO</span>
+      <span class="state" id="stateTag">待机</span>
+    </div>
+    <div class="prog"><i id="progBar"></i></div>
+    <div class="progLabel"><span id="progNow">00:00</span><span>目标 05:00</span></div>
+    <div class="wave" id="wave"></div>
+    <div class="time" id="time">00<span class="dot">:</span>00</div>
+    <div class="transport">
+      <button class="btn rec" id="btnStart">开始</button>
+      <button class="btn" id="btnPause" disabled>暂停</button>
+      <button class="btn" id="btnStop" disabled>停止</button>
+    </div>
+    <div class="hint" id="hint">按下“开始”进入录音</div>
+
+    <div class="summary" id="summary">
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="#3ddc97" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <h2>录音已保存</h2>
+      <div class="meta">
+        <span class="chip">时长 <strong id="sumDur">00:00</strong></span>
+        <span class="chip">状态 <strong style="color:var(--ok)">已停止</strong></span>
+      </div>
+      <button class="btn rec" id="btnAgain">重新录制</button>
+    </div>
+  </div>
+<script>
+(function () {
+  "use strict";
+  var TARGET = 300; // 目标 5 分钟
+  var BARS = 28;
+  var wave = document.getElementById("wave");
+  var bars = [], vals = [];
+  for (var i = 0; i < BARS; i++) {
+    var b = document.createElement("b");
+    wave.appendChild(b); bars.push(b); vals.push(0.08);
+  }
+  var el = {
+    time: document.getElementById("time"), tag: document.getElementById("stateTag"),
+    prog: document.getElementById("progBar"), progNow: document.getElementById("progNow"),
+    start: document.getElementById("btnStart"), pause: document.getElementById("btnPause"),
+    stop: document.getElementById("btnStop"), hint: document.getElementById("hint"),
+    summary: document.getElementById("summary"), sumDur: document.getElementById("sumDur"),
+    again: document.getElementById("btnAgain")
+  };
+  var state = "idle"; // idle | rec | pause | done
+  var elapsed = 0, recStart = 0, confirmTimer = null;
+  var fmt = function (ms) {
+    var t = Math.floor(ms / 1000);
+    return (t / 60 | 0 < 10 ? "0" : "") + (t / 60 | 0) + ":" + (t % 60 < 10 ? "0" : "") + t % 60;
+  };
+
+  // 计时基于墙钟（performance.now 差值），不依赖 rAF 帧间隔，节流环境也准确
+  function curElapsed() { return state === "rec" ? elapsed + (performance.now() - recStart) : elapsed; }
+  function bankElapsed() { if (state === "rec" && recStart) { elapsed += performance.now() - recStart; recStart = 0; } }
+  function render() {
+    var ms = curElapsed();
+    el.time.innerHTML = fmt(ms).split(":").join('<span class="dot">:</span>');
+    el.progNow.textContent = fmt(ms);
+    el.prog.style.width = Math.min(100, ms / 1000 / TARGET * 100) + "%";
+  }
+  function setState(s) {
+    state = s;
+    document.body.classList.toggle("rec", s === "rec");
+    el.tag.className = "state" + (s === "rec" ? " on" : s === "pause" ? " pause" : "");
+    el.tag.textContent = { idle: "待机", rec: "● 录音中", pause: "已暂停", done: "已完成" }[s];
+    el.start.disabled = (s === "rec" || s === "done");
+    el.start.textContent = s === "pause" ? "继续" : "开始";
+    el.pause.disabled = (s !== "rec" && s !== "pause");
+    el.pause.textContent = s === "pause" ? "继续" : "暂停";
+    el.stop.disabled = (s === "idle" || s === "done");
+    el.hint.textContent = {
+      idle: "按下“开始”进入录音", rec: "红点呼吸 = 录音进行中", pause: "已暂停，继续或停止",
+      done: ""
+    }[s];
+    if (s === "done") {
+      el.sumDur.textContent = fmt(elapsed);
+      el.summary.classList.add("show");
+    } else el.summary.classList.remove("show");
+    render();
+  }  function resetArm() {
+    if (!confirmTimer) return;
+    clearTimeout(confirmTimer); confirmTimer = null;
+    el.stop.textContent = "停止"; el.stop.classList.remove("confirm");
+    el.hint.textContent = state === "rec" ? "红点呼吸 = 录音进行中" : "已暂停，继续或停止";
+  }
+  el.start.onclick = function () {
+    if (state === "done") { elapsed = 0; }
+    bankElapsed();
+    recStart = performance.now();
+    setState("rec");
+  };
+  el.pause.onclick = function () {
+    if (state === "rec") { bankElapsed(); setState("pause"); }
+    else if (state === "pause") { recStart = performance.now(); setState("rec"); }
+  };
+  el.stop.onclick = function () {
+    if (state === "idle" || state === "done") return;
+    if (!confirmTimer) { // 误操作防护：二次确认
+      el.stop.textContent = "再按确认"; el.stop.classList.add("confirm");
+      el.hint.textContent = "2.5 秒内再按一次以停止并保存";
+      confirmTimer = setTimeout(resetArm, 2500);
+      return;
+    }
+    clearTimeout(confirmTimer); confirmTimer = null;
+    bankElapsed();
+    setState("done");
+  };
+  el.again.onclick = function () { elapsed = 0; recStart = 0; vals = vals.map(function () { return 0.08; }); setState("idle"); };
+
+  // 单一持久帧循环：仅驱动波形动画与显示（计时走墙钟）
+  function frame() {
+    for (var i = 0; i < BARS; i++) {
+      var target = state === "rec" ? 0.12 + Math.random() * 0.88 * (0.55 + 0.45 * Math.sin(i / 3.1)) : vals[i];
+      vals[i] += (target - vals[i]) * 0.3;
+      bars[i].style.transform = "scaleY(" + Math.max(0.06, Math.min(1, vals[i])).toFixed(3) + ")";
+      bars[i].style.opacity = (0.45 + vals[i] * 0.55).toFixed(2);
+    }
+    render();
+    requestAnimationFrame(frame);
+  }
+  render();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

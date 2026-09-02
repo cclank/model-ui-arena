@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>拟物复刻 · 单反相机 3/4</title>
+<style>
+*{margin:0;box-sizing:border-box}
+html,body{height:100%}
+body{min-height:100dvh;display:flex;align-items:center;justify-content:center;
+font-family:"Helvetica Neue",system-ui,"PingFang SC",sans-serif;
+background:radial-gradient(120% 90% at 50% 12%,#2b3242 0%,#161a24 46%,#0a0c12 100%)}
+.wrap{width:min(94vw,660px);display:grid;justify-items:center;gap:10px}
+svg{width:100%;height:auto;display:block;filter:drop-shadow(0 24px 40px #0008)}
+.cap{font-size:11px;letter-spacing:.32em;color:#7c8aa5;text-transform:uppercase}
+#spec{mix-blend-mode:screen}
+#lensSweep{animation:sweep 6.5s ease-in-out infinite}
+@keyframes sweep{0%,100%{transform:translate(0,0);opacity:.35}45%{transform:translate(26px,20px);opacity:.85}55%{transform:translate(30px,22px);opacity:.85}}
+#dial{cursor:pointer;transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<svg viewBox="0 0 1000 720" role="img" aria-label="3/4 视角的拟物单反相机，含多层镜头、军舰头取景器、模式转盘、快门、热靴与防滑手柄">
+<defs>
+ <linearGradient id="matte" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#34383f"/><stop offset=".5" stop-color="#20232a"/><stop offset="1" stop-color="#0f1114"/>
+ </linearGradient>
+ <linearGradient id="matteSide" x1="0" y1="0" x2="1" y2="0">
+  <stop offset="0" stop-color="#0c0e11"/><stop offset="1" stop-color="#23262c"/>
+ </linearGradient>
+ <linearGradient id="topplate" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#4a4f58"/><stop offset="1" stop-color="#2a2d33"/>
+ </linearGradient>
+ <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#e9edf3"/><stop offset=".35" stop-color="#8b94a1"/><stop offset=".6" stop-color="#c8cfda"/><stop offset="1" stop-color="#5c636e"/>
+ </linearGradient>
+ <linearGradient id="metalDark" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#5b626d"/><stop offset="1" stop-color="#1b1e23"/>
+ </linearGradient>
+ <linearGradient id="redRing" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5a4a"/><stop offset="1" stop-color="#a01812"/></linearGradient>
+ <radialGradient id="glass" cx="38%" cy="34%" r="72%">
+  <stop offset="0" stop-color="#4a6f7d"/><stop offset="35%" stop-color="#173040"/><stop offset="70%" stop-color="#0a1622"/><stop offset="100%" stop-color="#04070c"/>
+ </radialGradient>
+ <radialGradient id="coat" cx="62%" cy="70%" r="60%">
+  <stop offset="0" stop-color="#7a4fd0" stop-opacity=".55"/><stop offset="60%" stop-color="#2b7a8f" stop-opacity=".2"/><stop offset="100%" stop-color="#000" stop-opacity="0"/>
+ </radialGradient>
+ <radialGradient id="specG" cx="50%" cy="50%" r="50%">
+  <stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="60%" stop-color="#cfe8ff" stop-opacity=".25"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+ </radialGradient>
+ <linearGradient id="grip" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#2c2f36"/><stop offset="1" stop-color="#101216"/>
+ </linearGradient>
+ <radialGradient id="shadow" cx="50%" cy="50%" r="50%">
+  <stop offset="0" stop-color="#000" stop-opacity=".6"/><stop offset="70%" stop-color="#000" stop-opacity=".28"/><stop offset="100%" stop-color="#000" stop-opacity="0"/>
+ </radialGradient>
+ <linearGradient id="prism" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b3f47"/><stop offset="1" stop-color="#14161a"/></linearGradient>
+</defs>
+
+<!-- ground contact shadow + AO -->
+<ellipse cx="486" cy="612" rx="330" ry="46" fill="url(#shadow)"/>
+<ellipse cx="430" cy="600" rx="150" ry="24" fill="#000" opacity=".35"/>
+
+<!-- ============ BODY (3/4) ============ -->
+<!-- right side plane (thickness) -->
+<path d="M690,250 L768,232 Q788,228 788,250 L788,470 Q788,492 768,490 L690,505 Z" fill="url(#matteSide)" stroke="#000" stroke-width="1.5"/>
+<!-- top plane -->
+<path d="M300,250 L378,232 Q398,227 418,232 L768,232 Q788,228 788,250 L690,250 Q680,240 660,242 L330,258 Q305,255 300,250 Z" fill="url(#topplate)" stroke="#000" stroke-width="1" opacity=".95"/>
+<!-- front face -->
+<path d="M300,250 Q280,252 280,272 L280,522 Q280,548 306,551 L660,566 Q690,568 692,540 L700,258 Q700,240 675,242 L330,258 Q305,256 300,250 Z"
+  fill="url(#matte)" stroke="#000" stroke-width="1.5"/>
+<!-- front bevel highlight -->
+<path d="M306,262 L672,246" stroke="#5a6068" stroke-width="2" opacity=".5" fill="none"/>
+<!-- seam between front and side -->
+<path d="M690,252 L694,540" stroke="#000" stroke-width="2" opacity=".55"/>
+
+<!-- ============ HAND GRIP (front-right bulge) ============ -->
+<path d="M560,560 Q640,556 700,540 Q742,527 748,470 L748,300 Q748,258 706,256 Q660,255 620,262 L620,540 Q600,560 560,560 Z" fill="url(#grip)" stroke="#000" stroke-width="1.5"/>
+<path d="M700,256 Q748,258 748,300 L748,470 Q742,527 700,540 Z" fill="#000" opacity=".18"/>
+<g id="gripTex"></g>
+
+<!-- ============ PENTAPRISM hump ============ -->
+<g id="prism">
+ <path d="M410,232 L430,178 Q436,166 452,166 L560,166 Q576,166 582,178 L604,232 Z" fill="url(#prism)" stroke="#000" stroke-width="1.5"/>
+ <path d="M430,178 Q436,166 452,166 L560,166 Q576,166 582,178 L590,200 L422,200 Z" fill="#4a4f57" opacity=".6"/>
+ <rect x="415" y="200" width="184" height="10" rx="3" fill="#000" opacity=".35"/>
+</g>
+<!-- hot shoe -->
+<rect x="470" y="156" width="74" height="12" rx="2" fill="url(#metal)" stroke="#000" stroke-width="1"/>
+<rect x="482" y="160" width="50" height="6" rx="1" fill="#15181d"/>
+<!-- brand on prism -->
+<text x="507" y="216" text-anchor="middle" font-size="17" font-weight="800" fill="#e7ebf1" letter-spacing="3">AXION</text>
+
+<!-- ============ TOP PLATE controls ============ -->
+<!-- mode dial -->
+<g id="dialWrap" transform="translate(350,238)">
+ <ellipse cx="0" cy="0" rx="46" ry="20" fill="url(#metalDark)" stroke="#000" stroke-width="1.5"/>
+ <g id="dial" transform="scale(1,.44)">
+  <circle r="44" fill="#23262d" stroke="#0a0c10" stroke-width="1"/>
+  <g id="dialTicks"></g>
+  <text x="0" y="-14" text-anchor="middle" font-size="15" font-weight="700" fill="#cfd6df">M</text>
+ </g>
+ <ellipse cx="0" cy="-2" rx="46" ry="20" fill="none" stroke="#8b94a1" stroke-width="1" opacity=".4"/>
+ <path d="M0,-24 l7,-9 l-14,0 Z" fill="#ff5a4a"/>
+</g>
+<!-- shutter button -->
+<g transform="translate(632,236)">
+ <ellipse cx="0" cy="0" rx="30" ry="13" fill="url(#metalDark)" stroke="#000" stroke-width="1.2"/>
+ <ellipse cx="0" cy="-3" rx="22" ry="9" fill="url(#metal)"/>
+ <ellipse cx="-4" cy="-5" rx="9" ry="3" fill="#fff" opacity=".5"/>
+</g>
+<!-- command dial + small LCD -->
+<rect x="500" y="226" width="70" height="14" rx="3" fill="#0c1a12" stroke="#000"/>
+<text x="535" y="237" text-anchor="middle" font-size="11" fill="#7dffb0" font-family="ui-monospace,monospace">f/2.8</text>
+
+<!-- ============ LENS BARREL (receding cylinder) ============ -->
+<!-- mount collar -->
+<ellipse cx="486" cy="408" rx="150" ry="150" fill="url(#metalDark)" stroke="#000" stroke-width="1.5"/>
+<!-- red accent ring -->
+<circle cx="480" cy="414" r="146" fill="none" stroke="url(#redRing)" stroke-width="9"/>
+<!-- zoom ring -->
+<circle cx="472" cy="420" r="140" fill="#20242b" stroke="#000" stroke-width="1.5"/>
+<g id="zoomRibs"></g>
+<!-- focus ring -->
+<circle cx="464" cy="426" r="120" fill="#181b21" stroke="#000" stroke-width="1.5"/>
+<g id="focusRibs"></g>
+<!-- filter/front ring -->
+<circle cx="458" cy="431" r="104" fill="url(#metalDark)" stroke="#000" stroke-width="1.5"/>
+<circle cx="458" cy="431" r="104" fill="none" stroke="#c8cfda" stroke-width="2" opacity=".5"/>
+<!-- distance scale window -->
+<rect x="374" y="326" width="70" height="16" rx="6" transform="rotate(-14 409 334)" fill="#0c1014" stroke="#3a3f47"/>
+<text x="409" y="338" text-anchor="middle" font-size="10" fill="#d8b45a" font-family="ui-monospace,monospace" transform="rotate(-14 409 334)">∞ 3 1.5</text>
+
+<!-- front glass element -->
+<circle cx="454" cy="434" r="92" fill="url(#glass)" stroke="#0a0d11" stroke-width="2"/>
+<circle cx="454" cy="434" r="92" fill="url(#coat)"/>
+<circle cx="454" cy="434" r="70" fill="none" stroke="#0a1a24" stroke-width="1" opacity=".7"/>
+<circle cx="454" cy="434" r="52" fill="none" stroke="#0a1a24" stroke-width="1" opacity=".55"/>
+<circle cx="454" cy="434" r="30" fill="#04070c" opacity=".7"/>
+<!-- inner aperture reflection -->
+<circle cx="454" cy="434" r="20" fill="none" stroke="#2a5a6a" stroke-width="1.5" opacity=".5"/>
+<!-- static specular -->
+<ellipse id="spec" cx="420" cy="402" rx="42" ry="26" transform="rotate(-30 420 402)" fill="url(#specG)"/>
+<!-- moving sweep highlight -->
+<g id="lensSweep"><ellipse cx="470" cy="452" rx="30" ry="66" transform="rotate(28 470 452)" fill="url(#specG)" opacity=".4"/></g>
+
+<!-- lens brand -->
+<text x="454" y="360" text-anchor="middle" font-size="13" fill="#c8cfda" letter-spacing="1" font-style="italic">AXION 35mm f/1.4 ASPH</text>
+
+<!-- AF/MF switch on barrel side -->
+<g transform="translate(356,470)">
+ <rect x="0" y="0" width="34" height="52" rx="6" fill="#12141a" stroke="#000"/>
+ <rect x="5" y="6" width="24" height="18" rx="3" fill="url(#metal)"/>
+ <text x="17" y="19" text-anchor="middle" font-size="9" fill="#20242b" font-weight="700">AF</text>
+ <rect x="5" y="28" width="24" height="18" rx="3" fill="#2a2e35"/>
+ <text x="17" y="41" text-anchor="middle" font-size="9" fill="#8b94a1" font-weight="700">MF</text>
+</g>
+
+<!-- lens release button -->
+<circle cx="596" cy="470" r="12" fill="url(#metalDark)" stroke="#000" stroke-width="1"/>
+<circle cx="596" cy="468" r="7" fill="#3a3f47"/>
+
+<!-- strap lugs -->
+<path d="M300,286 l-18,4 l6,16 l16,-4 Z" fill="url(#metal)" stroke="#000"/>
+<path d="M748,300 l16,4 l-6,16 l-16,-4 Z" fill="url(#metal)" stroke="#000"/>
+
+<!-- model plate on front -->
+<text x="316" y="512" font-size="15" fill="#c8cfda" letter-spacing="4" font-weight="700">DX-1</text>
+<!-- bottom AO line -->
+<path d="M300,551 L660,566" stroke="#000" stroke-width="6" opacity=".5"/>
+<!-- front body edge AO under lens -->
+<circle cx="458" cy="431" r="112" fill="none" stroke="#000" stroke-width="14" opacity=".25"/>
+</svg>
+<div class="cap">AXION DX-1 · hand-drawn SVG / CSS · 3/4 view</div>
+</div>
+<script>
+const NS="http://www.w3.org/2000/svg";
+function ring(host,cx,cy,r,from,to,step,w,color,op){const g=document.getElementById(host);
+ for(let a=from;a<=to;a+=step){const x=cx+Math.cos(a*Math.PI/180)*r,y=cy+Math.sin(a*Math.PI/180)*r;
+  const x2=cx+Math.cos(a*Math.PI/180)*(r-10),y2=cy+Math.sin(a*Math.PI/180)*(r-10);
+  const l=document.createElementNS(NS,"line");l.setAttribute("x1",x);l.setAttribute("y1",y);
+  l.setAttribute("x2",x2);l.setAttribute("y2",y2);l.setAttribute("stroke",color);l.setAttribute("stroke-width",w);l.setAttribute("opacity",op);g.append(l)}}
+// rubber ribs on the visible lower-left arcs of each barrel ring
+ring("zoomRibs",472,420,140,80,265,4,7,"#0a0c10",.9);
+ring("zoomRibs",472,420,140,80,265,4,1.5,"#3a3f47",.5);
+ring("focusRibs",464,426,120,80,270,6,5,"#05070a",.9);
+// mode dial tick marks
+(function(){const g=document.getElementById("dialTicks");
+ for(let i=0;i<8;i++){const a=i*45;const x=Math.cos(a*Math.PI/180),y=Math.sin(a*Math.PI/180);
+  const l=document.createElementNS(NS,"line");l.setAttribute("x1",x*38);l.setAttribute("y1",y*38);
+  l.setAttribute("x2",x*44);l.setAttribute("y2",y*44);l.setAttribute("stroke","#8b94a1");l.setAttribute("stroke-width","2");g.append(l);
+  const t=document.createElementNS(NS,"text");t.setAttribute("x",x*27);t.setAttribute("y",y*27+5);
+  t.setAttribute("text-anchor","middle");t.setAttribute("font-size","9");t.setAttribute("fill","#cfd6df");
+  t.textContent=["M","A","S","P","Au","C1","C2","B"][i];g.append(t)}})();
+// grip rubber texture (stippled)
+(function(){const g=document.getElementById("gripTex");
+ for(let row=0;row<12;row++)for(let col=0;col<3;col++){
+  const x=650+col*18+(row%2?9:0),y=300+row*20;
+  const c=document.createElementNS(NS,"circle");c.setAttribute("cx",x);c.setAttribute("cy",y);
+  c.setAttribute("r",2.4);c.setAttribute("fill","#454a52");c.setAttribute("opacity",".8");
+  const c2=document.createElementNS(NS,"circle");c2.setAttribute("cx",x);c2.setAttribute("cy",y-1.4);
+  c2.setAttribute("r",1.4);c2.setAttribute("fill","#0a0c10");c2.setAttribute("opacity",".7");g.append(c,c2)}})();
+// mode dial rotates on click
+let dr=0;document.getElementById("dialWrap").addEventListener("click",()=>{dr+=45;
+ document.getElementById("dial").setAttribute("transform",`scale(1,.44) rotate(${dr})`)});
+</script>
+</body>
+</html>

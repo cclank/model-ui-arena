@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Gravity Field · 粒子引力场</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#03040a;color:#e8ecf7;font-family:ui-sans-serif,system-ui,-apple-system,"PingFang SC","Segoe UI",Roboto,sans-serif;user-select:none;-webkit-tap-highlight-color:transparent}
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+  .hud{position:fixed;top:12px;left:12px;z-index:2;background:rgba(6,9,20,.55);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:14px;padding:10px 12px;pointer-events:none;min-width:170px}
+  .hud h1{font-size:12px;font-weight:800;letter-spacing:.2em;color:#9fd0ff;margin-bottom:6px}
+  .grid{display:grid;grid-template-columns:auto auto;gap:3px 12px;font:600 11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:rgba(232,236,247,.7);font-variant-numeric:tabular-nums}
+  .grid b{color:#fff;text-align:right}
+  .grid b.warn{color:#ffb020}
+  .bar{position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:2;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .btn{border:1px solid rgba(255,255,255,.16);background:rgba(6,9,20,.6);backdrop-filter:blur(10px);color:#fff;font:700 12px/1 inherit;padding:10px 14px;border-radius:999px;cursor:pointer;transition:.2s;letter-spacing:.04em}
+  .btn:hover{border-color:#9fd0ff}.btn.on{background:#9fd0ff;color:#04101f;border-color:#9fd0ff}
+  .hint{position:fixed;top:12px;right:12px;z-index:2;font-size:11px;color:rgba(232,236,247,.6);text-align:right;line-height:1.6;pointer-events:none;background:rgba(6,9,20,.45);padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.08)}
+  @media (max-width:480px){.hint{display:none}.hud{min-width:0}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud"><h1>GRAVITY FIELD</h1><div class="grid"><span>粒子</span><b id="n">0</b><span>FPS</span><b id="fps">60</b><span>平均动能</span><b id="e">0</b><span>模式</span><b id="m">引力点</b><span>冲击波</span><b id="w">0</b></div></div>
+<div class="hint">移动 / 拖动：施加当前模式的场<br>点击 / 轻触：释放冲击波<br>帧率过低时自动缩减粒子数</div>
+<div class="bar"><button class="btn on" id="mode">模式：引力点</button><button class="btn" id="dens">密度：中</button><button class="btn" id="reset">重置轨道</button></div>
+<script>
+  const $ = (i) => document.getElementById(i), cv = $("c"), ctx = cv.getContext("2d"), rnd = (a, b) => a + Math.random() * (b - a), TAU = Math.PI * 2;
+  const MODES = ["引力点", "排斥场", "仅冲击波"], DENS = [["低", 420], ["中", 900], ["高", 1600]];
+  const GM = 2300, EPS2 = 38 * 38, GP = 1500, MAXV = 9.5, LAYER = [[.9, .45], [1.4, .7], [2.1, 1]];      // 中心引力常数、软化项、指针场强度、速度上限、三层景深
+  let W, H, cx, cy, N = 900, P = [], mode = 0, dens = 1, waves = [], t = 0, frames = 0, fpsT = performance.now(), prev = fpsT, fps = 60, lowSince = 0, shocks = 0, energy = 0;
+  const ptr = { x: 0, y: 0, on: false };
+  function resize() { const d = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight; cv.width = W * d; cv.height = H * d; ctx.setTransform(d, 0, 0, d, 0, 0); cx = W / 2; cy = H / 2; if (!P.length) spawnAll(); }
+  function spawn(p = {}) {                                   // 近圆轨道初始化：切向速度 = sqrt(GM / r)，加 ±15% 扰动形成椭圆轨道
+    const r = rnd(70, Math.min(W, H) * .5), a = rnd(0, TAU), v = Math.sqrt(GM / r) * rnd(.85, 1.15), dir = Math.random() < .88 ? 1 : -1, L = Math.random() * 3 | 0;
+    p.x = cx + Math.cos(a) * r; p.y = cy + Math.sin(a) * r; p.vx = -Math.sin(a) * v * dir; p.vy = Math.cos(a) * v * dir; p.L = L; p.s = LAYER[L][0]; p.al = LAYER[L][1]; return p;
+  }
+  function spawnAll() { P = Array.from({ length: N }, () => spawn()); }
+  function shock(x, y) {
+    shocks++; waves.push({ x, y, r: 0, life: 1 });
+    for (const p of P) { const dx = p.x - x, dy = p.y - y, d = Math.hypot(dx, dy) || 1; if (d < 340) { const k = 15 * (1 - d / 340); p.vx += dx / d * k; p.vy += dy / d * k; } }
+  }
+  function step(dt) {
+    let ke = 0; const fieldOn = ptr.on && mode < 2, sgn = mode === 1 ? -1 : 1;
+    for (const p of P) {
+      let dx = cx - p.x, dy = cy - p.y, r2 = dx * dx + dy * dy + EPS2, inv = GM / (r2 * Math.sqrt(r2)), ax = dx * inv, ay = dy * inv;
+      if (fieldOn) { const ex = ptr.x - p.x, ey = ptr.y - p.y, e2 = ex * ex + ey * ey + 3600, f = sgn * GP / (e2 * Math.sqrt(e2)); ax += ex * f; ay += ey * f; }
+      p.vx += ax * dt; p.vy += ay * dt;
+      const sp = Math.hypot(p.vx, p.vy); if (sp > MAXV) { p.vx *= MAXV / sp; p.vy *= MAXV / sp; }
+      p.x += p.vx * dt; p.y += p.vy * dt; ke += sp * sp;
+      if (Math.abs(p.x - cx) > W * 1.2 || Math.abs(p.y - cy) > H * 1.2) spawn(p);       // 逃逸粒子回收，粒子总数恒定
+    }
+    energy = ke / 2 / P.length;
+  }
+  function draw() {
+    ctx.globalCompositeOperation = "destination-out"; ctx.fillStyle = "rgba(0,0,0,.26)"; ctx.fillRect(0, 0, W, H);   // 尾迹：逐帧擦淡
+    ctx.globalCompositeOperation = "lighter";
+    const pulse = 1 + Math.sin(t * .08) * .08, g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 90 * pulse);
+    g.addColorStop(0, "rgba(255,255,255,.95)"); g.addColorStop(.12, "rgba(160,220,255,.8)"); g.addColorStop(.35, "rgba(80,120,255,.25)"); g.addColorStop(1, "rgba(60,80,255,0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, 90 * pulse, 0, TAU); ctx.fill();
+    for (let i = 0; i < 2; i++) { ctx.strokeStyle = `rgba(160,210,255,${.35 - i * .15})`; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(cx, cy, 34 + i * 18, 12 + i * 6, t * (i ? -.02 : .03), 0, TAU); ctx.stroke(); }
+    for (const p of P) {
+      const sp = Math.hypot(p.vx, p.vy), hue = 205 + Math.min(1, sp / 7) * 120, lit = 55 + p.L * 8;
+      ctx.fillStyle = `hsla(${hue},95%,${lit}%,${p.al})`;
+      if (p.L === 0) ctx.fillRect(p.x, p.y, 1.4, 1.4); else { ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, TAU); ctx.fill(); }
+      if (p.L === 2 && sp > 4) { ctx.strokeStyle = `hsla(${hue},95%,70%,.35)`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * 2.2, p.y - p.vy * 2.2); ctx.stroke(); }
+    }
+    for (const w of waves) { w.r += 7; w.life -= .022; ctx.strokeStyle = `rgba(255,220,150,${Math.max(0, w.life) * .9})`; ctx.lineWidth = 3 * w.life + .5; ctx.beginPath(); ctx.arc(w.x, w.y, w.r, 0, TAU); ctx.stroke(); }
+    waves = waves.filter((w) => w.life > 0);
+    if (ptr.on && mode < 2) { ctx.strokeStyle = mode ? "rgba(255,120,120,.7)" : "rgba(150,230,255,.7)"; ctx.lineWidth = 1.5; ctx.setLineDash([4, 6]); ctx.beginPath(); ctx.arc(ptr.x, ptr.y, 22 + Math.sin(t * .2) * 4, 0, TAU); ctx.stroke(); ctx.setLineDash([]); }
+    ctx.globalCompositeOperation = "source-over";
+  }
+  function loop(now) {
+    const dt = Math.min(2, Math.max(.5, (now - prev) / 16.67)); prev = now; t++; frames++;
+    if (now - fpsT > 500) {                                    // 自适应：FPS 连续 2s 低于 38 则缩减 18% 粒子
+      fps = Math.round(frames * 1000 / (now - fpsT)); frames = 0; fpsT = now;
+      if (fps < 38) { if (!lowSince) lowSince = now; if (now - lowSince > 2000 && P.length > 240) { P.length = Math.floor(P.length * .82); N = P.length; lowSince = 0; $("n").className = "warn"; } } else lowSince = 0;
+      $("n").textContent = P.length; $("fps").textContent = fps; $("e").textContent = energy.toFixed(1); $("w").textContent = shocks;
+    }
+    step(dt); draw(); requestAnimationFrame(loop);
+  }
+  let downAt = 0, moved = false;
+  cv.addEventListener("pointerdown", (e) => { ptr.x = e.clientX; ptr.y = e.clientY; ptr.on = true; downAt = performance.now(); moved = false; });
+  cv.addEventListener("pointermove", (e) => { ptr.x = e.clientX; ptr.y = e.clientY; if (e.pointerType === "mouse" || e.buttons) ptr.on = true; if (e.buttons && Math.hypot(e.movementX, e.movementY) > 2) moved = true; });
+  const up = (e) => { if (performance.now() - downAt < 260 && !moved) shock(e.clientX, e.clientY); if (e.pointerType !== "mouse") ptr.on = false; };
+  cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", () => (ptr.on = false)); cv.addEventListener("pointerleave", () => (ptr.on = false));
+  $("mode").onclick = () => { mode = (mode + 1) % 3; $("mode").textContent = "模式：" + MODES[mode]; $("m").textContent = MODES[mode]; $("mode").classList.toggle("on", mode < 2); };
+  $("dens").onclick = () => { dens = (dens + 1) % 3; N = DENS[dens][1]; $("dens").textContent = "密度：" + DENS[dens][0]; $("n").className = ""; spawnAll(); };
+  $("reset").onclick = () => { spawnAll(); waves = []; shocks = 0; };
+  addEventListener("resize", resize); resize(); requestAnimationFrame(loop);
+</script>
+</body>
+</html>

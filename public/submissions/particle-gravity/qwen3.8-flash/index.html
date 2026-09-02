@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>粒子引力场</title>
+<style>
+*{margin:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#03040a}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+#hud{position:fixed;top:14px;left:14px;font:11px/1.8 ui-monospace,Menlo,monospace;color:#8fa7d8;
+background:#0a102099;border:1px solid #ffffff14;border-radius:12px;padding:8px 12px;pointer-events:none;backdrop-filter:blur(4px)}
+#hud b{color:#dfeaff}
+#mode{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);font:11px ui-monospace,monospace;letter-spacing:.3em;color:#4dd8ff;
+border:1px solid #4dd8ff44;background:#04121eaa;border-radius:99px;padding:8px 16px;cursor:pointer;user-select:none}
+#tip{position:fixed;top:14px;right:14px;font:11px ui-monospace,monospace;color:#5f7398;text-align:right;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">粒子 <b id="np">0</b><br>FPS <b id="fps">60</b><br>能量 <b id="ke">0</b></div>
+<div id="mode">模式：引力井</div>
+<div id="tip">拖拽 = 临时引力点<br>点击 = 冲击波 · 切换模式</div>
+<script>
+const cv=document.getElementById("c"),g=cv.getContext("2d"),DPR=Math.min(devicePixelRatio||1,2);
+let W,H;function fit(){W=cv.width=innerWidth*DPR;H=cv.height=innerHeight*DPR;g.fillStyle="#03040a";g.fillRect(0,0,W,H)}fit();addEventListener("resize",fit);
+const N=260,P=[],R=[];let mode=0;const MODES=["引力井","排斥井","环绕井"];
+const GM=900*30;
+for(let i=0;i<N;i++){const a=Math.random()*6.283,r=(120+Math.random()*Math.min(innerWidth,innerHeight)*.42)*DPR;
+const z=.4+Math.random(),cx=innerWidth/2*DPR,cy=innerHeight/2*DPR;
+const v=Math.sqrt(GM*DPR*z/r)*(.9+Math.random()*.25);/* 近圆轨道初速，方向一致形成流场 */
+P.push({x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,vx:-Math.sin(a)*v,vy:Math.cos(a)*v,z,h:180+Math.random()*120})}
+const ptr={x:0,y:0,on:false};
+addEventListener("pointerdown",e=>{ptr.on=true;ptr.x=e.clientX*DPR;ptr.y=e.clientY*DPR;
+const cx=innerWidth/2*DPR,cy=innerHeight/2*DPR;R.push({x:e.clientX*DPR,y:e.clientY*DPR,r:0,l:1});
+for(const p of P){const dx=p.x-e.clientX*DPR,dy=p.y-e.clientY*DPR,d=Math.hypot(dx,dy)+1,imp=Math.min(26,4200*DPR/d);
+p.vx+=dx/d*imp*.35;p.vy+=dy/d*imp*.35}});
+addEventListener("pointermove",e=>{ptr.x=e.clientX*DPR;ptr.y=e.clientY*DPR});
+addEventListener("pointerup",()=>ptr.on=false);
+const $=id=>document.getElementById(id);
+$("mode").onclick=()=>{mode=(mode+1)%3;$("mode").textContent="模式："+MODES[mode]};
+let last=performance.now(),fps=60;
+function step(now){const fdt=now-last;last=now;const dt=Math.min(fdt/16.7,2.2);fps+=(1000/Math.max(fdt,1)-fps)*.05;
+const cx=innerWidth/2*DPR,cy=innerHeight/2*DPR;
+g.globalCompositeOperation="source-over";g.fillStyle="rgba(3,4,10,0.16)";g.fillRect(0,0,W,H);
+g.globalCompositeOperation="lighter";
+// core
+const pu=.5+.5*Math.sin(now/400);
+g.fillStyle=`rgba(90,160,255,${.05+.03*pu})`;g.beginPath();g.arc(cx,cy,(30+10*pu)*DPR,0,7);g.fill();
+g.fillStyle="#bfe2ff";g.beginPath();g.arc(cx,cy,3.4*DPR,0,7);g.fill();
+let ke=0;
+for(const p of P){
+ const pull=(q,mu,sg)=>{const dx=q.x-p.x,dy=q.y-p.y,d2=dx*dx+dy*dy,d=Math.sqrt(d2)+8*DPR;
+  const f=sg*mu*DPR/d2*p.z*30;  p.vx+=dx/d*f*dt;p.vy+=dy/d*f*dt};
+ pull({x:cx,y:cy},mode?520:900,mode===1?-1:1);
+ if(ptr.on)pull(ptr,760,1);
+ if(mode===2){p.vx+=-(p.y-cy)*.00035*dt;p.vy+=(p.x-cx)*.00035*dt}
+ p.vx*=.998;p.vy*=.998;p.x+=p.vx*dt;p.y+=p.vy*dt;
+ if(p.x<0||p.x>W){p.vx*=-.82;p.x=Math.max(0,Math.min(W,p.x))}
+ if(p.y<0||p.y>H){p.vy*=-.82;p.y=Math.max(0,Math.min(H,p.y))}
+ const sp=Math.hypot(p.vx,p.vy);ke+=sp*sp*p.z;
+ const al=Math.min(1,.18+p.z*.6);
+ g.fillStyle=`hsla(${p.h+sp*.5} 90% ${55+sp*.8}% /${al})`;
+ g.beginPath();g.arc(p.x,p.y,(.7+p.z*1.5)*DPR,0,7);g.fill()}
+for(let i=R.length-1;i>=0;i--){const r=R[i];r.r+=7*DPR*r.l+2;r.l-=.02*dt;
+if(r.l<=0){R.splice(i,1);continue}
+g.strokeStyle=`rgba(140,220,255,${r.l*.6})`;g.lineWidth=2*DPR*r.l;g.beginPath();g.arc(r.x,r.y,r.r,0,7);g.stroke()}
+$("np").textContent=N;$("fps").textContent=fps.toFixed(0);$("ke").textContent=(ke/1e5).toFixed(1);
+requestAnimationFrame(step)}
+requestAnimationFrame(step);
+</script>
+</body>
+</html>

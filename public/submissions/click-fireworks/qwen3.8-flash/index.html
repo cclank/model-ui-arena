@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>点击放烟花</title>
+<style>
+*{margin:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#04050e}
+canvas{display:block;width:100%;height:100%}
+#hint{position:fixed;top:20px;left:0;right:0;text-align:center;color:#fff;font-family:system-ui,sans-serif;
+letter-spacing:.28em;font-size:13px;opacity:.72;text-shadow:0 0 16px #7aa7ff;pointer-events:none;animation:p 2.4s ease-in-out infinite}
+#cnt{position:fixed;bottom:16px;right:18px;color:#8ea0c8;font:12px ui-monospace,Menlo,monospace;opacity:.7;pointer-events:none}
+@keyframes p{50%{opacity:.35}}
+</style>
+</head>
+<body>
+<div id="hint">点击任意处 · 绽放烟花</div>
+<div id="cnt"></div>
+<canvas id="c"></canvas>
+<script>
+const cv=document.getElementById("c"),x=cv.getContext("2d"),DPR=Math.min(devicePixelRatio||1,2);
+let W,H;function fit(){W=cv.width=innerWidth*DPR;H=cv.height=innerHeight*DPR;x.fillStyle="#04050e";x.fillRect(0,0,W,H)}fit();addEventListener("resize",fit);
+const PAL=[[255,90,120],[255,200,90],[120,220,255],[180,140,255],[120,255,180],[255,120,220]];
+const P=[],S=[];let last=performance.now(),fps=60;
+// stars
+const stars=Array.from({length:90},()=>({x:Math.random()*1,y:Math.random()*.7,r:Math.random()*1.4+.3,a:Math.random()*.6+.2,t:Math.random()*6}));
+function boom(px,py,n,base){const col=PAL[base%PAL.length],ring=1+(Math.random()*1.4|0);
+for(let r=0;r<ring;r++){const cnt=n,r0=(70+Math.random()*110)*DPR*(r?1.35:1),sp=r0*(.03+Math.random()*.018);
+for(let i=0;i<cnt;i++){const a=Math.PI*2*i/cnt+Math.random()*.25,v=sp*(.55+Math.random()*.65);
+P.push({x:px,y:py,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:1,dec:.007+Math.random()*.009,
+g:.035*DPR,col,sz:(Math.random()*1.8+1)*DPR,flick:Math.random()<.35})}}}
+function launch(px,py){const t=Math.max(py,H*.08);
+S.push({x0:px,y0:H-10,x1:px,t:0,dur:620+Math.random()*300,ty:t,decoy:0});
+for(let i=0;i<2;i++)S.push({x0:px,y0:H-10,x1:px+(Math.random()-.5)*60*DPR,t:0,dur:700+Math.random()*280,ty:t*(.92+Math.random()*.1),decoy:1})}
+function frame(now){const dt=Math.min(now-last,50);last=now;fps+=(1000/Math.max(dt,1)-fps)*.1;
+x.globalCompositeOperation="source-over";x.fillStyle="rgba(4,5,14,0.16)";x.fillRect(0,0,W,H);
+x.globalCompositeOperation="lighter";
+for(const s of stars){s.t+=dt/700;const a=s.a*(.6+.4*Math.sin(s.t));x.fillStyle=`rgba(255,255,255,${a})`;x.beginPath();x.arc(s.x*W,s.y*H,s.r*DPR,0,7);x.fill()}
+for(let i=S.length-1;i>=0;i--){const p=S[i];p.t+=dt;const k=Math.min(p.t/p.dur,1),e=1-(1-k)*(1-k);
+p.x=p.x0+(p.x1-p.x0)*e+Math.sin(k*14)*4*DPR;p.y=p.y0+(p.ty-p.y0)*e;
+const r=(p.decoy?1:1.8)*DPR;x.fillStyle="rgba(255,240,200,.95)";x.beginPath();x.arc(p.x,p.y,r,0,7);x.fill();
+x.fillStyle="rgba(255,170,90,.35)";x.beginPath();x.arc(p.x,p.y+r*3*DPR,r*2.2,0,7);x.fill();
+if(k>=1){boom(p.x,p.y,p.decoy?14:(46+Math.random()*30|0),i);S.splice(i,1)}}
+for(let i=P.length-1;i>=0;i--){const p=P[i];p.x+=p.vx;p.y+=p.vy;p.vx*=.985;p.vy=p.vy*.985+p.g;
+p.life-=p.dec*(dt/16.7);if(p.life<=0){P.splice(i,1);continue}
+const al=p.life*(p.flick?(.4+.6*Math.abs(Math.sin(p.life*20))):1);
+const[c0,c1,c2]=p.col;x.fillStyle=`rgba(${c0},${c1},${c2},${al})`;
+x.beginPath();x.arc(p.x,p.y,p.sz*p.life+.4,0,7);x.fill();
+if(p.flick){x.fillStyle=`rgba(255,255,255,${al*.5})`;x.beginPath();x.arc(p.x,p.y,p.sz*.6*p.life,0,7);x.fill()}}
+if(P.length>1500)P.splice(0,P.length-1500);
+document.getElementById("cnt").textContent=`particles ${P.length} · ${fps.toFixed(0)}fps`;
+requestAnimationFrame(frame)}
+addEventListener("pointerdown",e=>{const px=e.clientX*DPR,py=e.clientY*DPR;if(py>H*.9)py=H*.9;launch(px,py)});
+// auto opening salvo
+setTimeout(()=>{for(let i=0;i<3;i++)setTimeout(()=>launch(W*(.25+.25*i)+Math.random()*40,H*(.2+Math.random()*.2)),i*400)},350);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

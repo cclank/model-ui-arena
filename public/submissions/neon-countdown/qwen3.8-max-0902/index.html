@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>最炫倒计时</title>
+<style>
+  *{margin:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{display:grid;place-items:center;background:#06060e;overflow:hidden;
+    font-family:-apple-system,"PingFang SC",system-ui,sans-serif;color:#fff}
+  #bg{position:fixed;inset:0;background:radial-gradient(60% 60% at 50% 45%,#141433,#06060e 75%);transition:background .4s}
+  #bg.hot{background:radial-gradient(60% 60% at 50% 45%,#3a0d1e,#0e0407 75%)}
+  #bg.done{background:radial-gradient(60% 60% at 50% 45%,#0d3a2a,#04120c 75%)}
+  canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+  .stage{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:26px}
+  .ring{position:relative;width:min(72vw,280px);aspect-ratio:1}
+  svg{width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+  .trk{fill:none;stroke:rgba(255,255,255,.07);stroke-width:8}
+  .prg{fill:none;stroke:#22d3ee;stroke-width:8;stroke-linecap:round;
+    filter:drop-shadow(0 0 8px #22d3ee);transition:stroke .4s}
+  .hot .prg{stroke:#ff3b5c;filter:drop-shadow(0 0 12px #ff3b5c)}
+  .num{position:absolute;inset:0;display:grid;place-items:center;font-size:min(30vw,120px);font-weight:900;
+    font-variant-numeric:tabular-nums;text-shadow:0 0 26px rgba(34,211,238,.8),0 0 60px rgba(34,211,238,.4)}
+  .hot .num{text-shadow:0 0 26px rgba(255,59,92,.9),0 0 60px rgba(255,59,92,.5);animation:shake .32s infinite}
+  .done .num{font-size:min(24vw,96px);color:#4ade80;text-shadow:0 0 30px rgba(74,222,128,.9)}
+  @keyframes shake{0%,100%{transform:translate(0,0)}25%{transform:translate(-3px,2px)}50%{transform:translate(3px,-2px)}75%{transform:translate(-2px,-2px)}}
+  .pop{animation:pop .5s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes pop{0%{transform:scale(1.5);opacity:.4;filter:blur(3px)}100%{transform:scale(1);opacity:1}}
+  .lbl{font-size:14px;letter-spacing:4px;color:#8be9ff;text-transform:uppercase;min-height:20px;text-align:center}
+  .hot .lbl{color:#ff8095}.done .lbl{color:#86efac}
+  .ticks{position:absolute;inset:-6px}
+  .tick{position:absolute;left:50%;top:50%;width:3px;height:50%;transform-origin:bottom center}
+  .tick i{position:absolute;top:0;left:0;width:3px;height:11px;border-radius:2px;background:rgba(255,255,255,.14);transition:.3s}
+  .tick.on i{background:#22d3ee;box-shadow:0 0 8px #22d3ee}
+  .hot .tick.on i{background:#ff3b5c;box-shadow:0 0 8px #ff3b5c}
+  button{z-index:2;border:1px solid rgba(34,211,238,.5);background:rgba(34,211,238,.1);color:#a5f3fc;
+    padding:12px 34px;border-radius:999px;font-size:15px;font-weight:700;letter-spacing:2px;cursor:pointer;
+    transition:.2s;font-family:inherit;backdrop-filter:blur(4px)}
+  button:hover{background:rgba(34,211,238,.22);box-shadow:0 0 22px rgba(34,211,238,.4)}
+  button:active{transform:scale(.95)}
+  .done button{border-color:rgba(74,222,128,.5);background:rgba(74,222,128,.1);color:#bbf7d0}
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<canvas id="cv"></canvas>
+<div class="stage" id="stage">
+  <div class="ring" id="ring">
+    <div class="ticks" id="ticks"></div>
+    <svg viewBox="0 0 200 200"><circle class="trk" cx="100" cy="100" r="88"/><circle class="prg" id="prg" cx="100" cy="100" r="88"/></svg>
+    <div class="num" id="num">10</div>
+  </div>
+  <div class="lbl" id="lbl">倒计时进行中</div>
+  <button id="btn" style="visibility:hidden">重新开始</button>
+</div>
+<script>
+const TOTAL=10,C=2*Math.PI*88;
+const prg=document.getElementById('prg'),num=document.getElementById('num'),lbl=document.getElementById('lbl');
+const stage=document.getElementById('stage'),bg=document.getElementById('bg'),btn=document.getElementById('btn'),ring=document.getElementById('ring');
+prg.style.strokeDasharray=C;
+const ticksEl=document.getElementById('ticks');
+for(let i=0;i<10;i++){const t=document.createElement('div');t.className='tick';
+  t.style.transform=`translate(-50%,-100%) rotate(${i*36}deg)`;t.innerHTML='<i></i>';ticksEl.appendChild(t);}
+const ticks=[...ticksEl.children];
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');let W,H,pts=[];
+function rs(){W=cv.width=innerWidth;H=cv.height=innerHeight;}rs();addEventListener('resize',rs);
+function burst(){const cx=W/2,cy=H/2;for(let i=0;i<120;i++){const a=Math.random()*7,v=2+Math.random()*7;
+  pts.push({x:cx,y:cy,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c:['#4ade80','#22d3ee','#a78bfa','#facc15'][i%4]});}}
+function fx(){ctx.clearRect(0,0,W,H);ctx.globalCompositeOperation='lighter';
+  for(let i=pts.length-1;i>=0;i--){const p=pts[i];p.x+=p.vx;p.y+=p.vy;p.vy+=0.06;p.vx*=0.98;p.vy*=0.98;p.l-=0.014;
+    if(p.l<=0){pts.splice(i,1);continue;}ctx.globalAlpha=p.l;ctx.fillStyle=p.c;
+    ctx.beginPath();ctx.arc(p.x,p.y,2.6*p.l+0.6,0,7);ctx.fill();}
+  ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';requestAnimationFrame(fx);}fx();
+let left=TOTAL,timer=null,started=false;
+function paint(){const k=left/TOTAL;prg.style.strokeDashoffset=C*(1-k);
+  ticks.forEach((t,i)=>t.classList.toggle('on',i<left));}
+function setNum(v){num.textContent=v;num.classList.remove('pop');void num.offsetWidth;num.classList.add('pop');}
+function finish(){clearInterval(timer);stage.classList.add('done');bg.className='done';
+  setNum(0);lbl.textContent='倒计时完成 ✓';btn.style.visibility='visible';burst();
+  setTimeout(burst,260);setTimeout(burst,520);}
+function tick(){left--;setNum(Math.max(0,left));paint();
+  if(left<=3&&left>0){stage.classList.add('hot');bg.className='hot';lbl.textContent='最后冲刺 · '+left;}
+  if(left<=0){finish();}}
+function start(){left=TOTAL;pts=[];started=true;stage.classList.remove('done','hot');bg.className='';
+  setNum(left);paint();lbl.textContent='倒计时进行中';btn.style.visibility='hidden';
+  clearInterval(timer);timer=setInterval(tick,1000);}
+btn.onclick=start;
+setNum(TOTAL);paint();start();
+</script>
+</body>
+</html>

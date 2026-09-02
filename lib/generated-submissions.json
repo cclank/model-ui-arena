@@ -1,5 +1,39 @@
 [
   {
+    "id": "clock:fable-5.1",
+    "theme": "clock",
+    "model": "fable-5.1",
+    "filename": "index.html",
+    "path": "/submissions/clock/fable-5.1/",
+    "publicPath": "/submissions/clock/fable-5.1/index.html",
+    "renderKind": "html",
+    "linesTotal": 133,
+    "linesCss": 40,
+    "linesJs": 48,
+    "sizeBytes": 10674,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T04:53:40.237Z"
+  },
+  {
+    "id": "clock:ox-alpha",
+    "theme": "clock",
+    "model": "ox-alpha",
+    "filename": "index.html",
+    "path": "/submissions/clock/ox-alpha/",
+    "publicPath": "/submissions/clock/ox-alpha/index.html",
+    "renderKind": "html",
+    "linesTotal": 131,
+    "linesCss": 49,
+    "linesJs": 37,
+    "sizeBytes": 6693,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-21T13:15:52.145Z"
+  },
+  {
     "id": "clock:glm-5.3",
     "theme": "clock",
     "model": "glm-5.3",
@@ -14,7 +48,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T14:04:24.594Z"
+    "updatedAt": "2026-08-14T14:57:34.673Z"
   },
   {
     "id": "clock:claude-opus-5",
@@ -31,7 +65,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.616Z"
+    "updatedAt": "2026-07-25T06:00:05.089Z"
   },
   {
     "id": "clock:gpt-5.6-sol",
@@ -48,7 +82,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:44.281Z"
+    "updatedAt": "2026-07-09T23:43:24.121Z"
   },
   {
     "id": "clock:grok-4.6",
@@ -65,7 +99,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.617Z"
+    "updatedAt": "2026-08-13T10:09:00.039Z"
   },
   {
     "id": "clock:kimi-k3",
@@ -82,7 +116,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:44.318Z"
+    "updatedAt": "2026-07-16T14:18:01.337Z"
   },
   {
     "id": "clock:gpt-5.5",
@@ -99,7 +133,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-23T22:36:06.452Z"
+    "updatedAt": "2026-05-20T00:00:26.624Z"
   },
   {
     "id": "clock:gpt-5.4",
@@ -116,7 +150,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T04:24:56.771Z"
+    "updatedAt": "2026-05-20T00:00:26.623Z"
   },
   {
     "id": "clock:gpt-5.4-mini",
@@ -133,7 +167,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.027Z"
+    "updatedAt": "2026-05-20T00:00:26.623Z"
   },
   {
     "id": "clock:gpt-5.3-codex",
@@ -150,7 +184,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T10:33:43.139Z"
+    "updatedAt": "2026-05-20T00:00:26.623Z"
   },
   {
     "id": "clock:claude-opus-4-8",
@@ -167,7 +201,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-28T22:31:26.146Z"
+    "updatedAt": "2026-06-08T06:30:31.825Z"
   },
   {
     "id": "clock:claude-opus-4.6",
@@ -184,7 +218,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T14:50:38.828Z"
+    "updatedAt": "2026-05-20T00:00:26.622Z"
   },
   {
     "id": "clock:opus-4.7",
@@ -201,7 +235,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:56:33.345Z"
+    "updatedAt": "2026-05-20T00:00:26.624Z"
   },
   {
     "id": "clock:claude-sonnet-4-6",
@@ -218,7 +252,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:50:15.019Z"
+    "updatedAt": "2026-05-20T00:00:26.623Z"
   },
   {
     "id": "clock:Gemini-3.1-Pro-High",
@@ -235,7 +269,24 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:27:07.811Z"
+    "updatedAt": "2026-05-20T00:00:26.622Z"
+  },
+  {
+    "id": "clock:gemini-3.7-flash",
+    "theme": "clock",
+    "model": "gemini-3.7-flash",
+    "filename": "index.html",
+    "path": "/submissions/clock/gemini-3.7-flash/",
+    "publicPath": "/submissions/clock/gemini-3.7-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 134,
+    "linesCss": 56,
+    "linesJs": 38,
+    "sizeBytes": 5955,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-16T14:01:41.334Z"
   },
   {
     "id": "clock:gemini-3.5-flash-high",
@@ -252,7 +303,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-21T13:57:11.214Z"
+    "updatedAt": "2026-05-20T00:01:49.612Z"
   },
   {
     "id": "clock:gemini-3.1-flash-lite-preview-high",
@@ -269,7 +320,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.988Z"
+    "updatedAt": "2026-05-20T00:00:26.623Z"
   },
   {
     "id": "clock:gemini-3.1-flash-lite-preview",
@@ -286,7 +337,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.988Z"
+    "updatedAt": "2026-05-20T00:00:26.623Z"
   },
   {
     "id": "clock:gemini-3.0-flash",
@@ -303,7 +354,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:43:26.598Z"
+    "updatedAt": "2026-05-20T00:00:26.623Z"
   },
   {
     "id": "clock:qwen3.8-max-new",
@@ -320,7 +371,24 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.617Z"
+    "updatedAt": "2026-08-02T12:54:53.067Z"
+  },
+  {
+    "id": "clock:qwen3.8-max-0902",
+    "theme": "clock",
+    "model": "qwen3.8-max-0902",
+    "filename": "index.html",
+    "path": "/submissions/clock/qwen3.8-max-0902/",
+    "publicPath": "/submissions/clock/qwen3.8-max-0902/index.html",
+    "renderKind": "html",
+    "linesTotal": 104,
+    "linesCss": 36,
+    "linesJs": 37,
+    "sizeBytes": 5267,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T04:28:56.902Z"
   },
   {
     "id": "clock:qwen3.8-max",
@@ -337,7 +405,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.617Z"
+    "updatedAt": "2026-08-02T07:37:20.661Z"
   },
   {
     "id": "clock:qwen3.8-max-pre",
@@ -354,7 +422,41 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-25T09:51:18.063Z"
+    "updatedAt": "2026-07-20T09:20:46.191Z"
+  },
+  {
+    "id": "clock:qwen3.8-flash",
+    "theme": "clock",
+    "model": "qwen3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/clock/qwen3.8-flash/",
+    "publicPath": "/submissions/clock/qwen3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 76,
+    "linesCss": 22,
+    "linesJs": 22,
+    "sizeBytes": 4578,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T12:25:00.309Z"
+  },
+  {
+    "id": "clock:qwen3.8-27b",
+    "theme": "clock",
+    "model": "qwen3.8-27b",
+    "filename": "index.html",
+    "path": "/submissions/clock/qwen3.8-27b/",
+    "publicPath": "/submissions/clock/qwen3.8-27b/index.html",
+    "renderKind": "html",
+    "linesTotal": 162,
+    "linesCss": 67,
+    "linesJs": 64,
+    "sizeBytes": 7932,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T23:48:39.895Z"
   },
   {
     "id": "clock:qwen-3.7-max",
@@ -371,7 +473,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-21T13:40:37.526Z"
+    "updatedAt": "2026-06-08T06:30:31.825Z"
   },
   {
     "id": "clock:qwen-3.6-plus",
@@ -388,7 +490,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:36:40.369Z"
+    "updatedAt": "2026-05-20T00:00:26.624Z"
   },
   {
     "id": "clock:qwen3.7-plus",
@@ -405,7 +507,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-02T00:10:48.547Z"
+    "updatedAt": "2026-06-08T06:30:31.826Z"
   },
   {
     "id": "clock:qwen3.6-max-preview",
@@ -422,7 +524,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-23T22:33:01.014Z"
+    "updatedAt": "2026-05-20T00:00:26.625Z"
   },
   {
     "id": "clock:qwen3.5-397b-a17b",
@@ -439,7 +541,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:19:08.623Z"
+    "updatedAt": "2026-05-20T00:00:26.625Z"
   },
   {
     "id": "clock:qwen3.5-122b-a10b",
@@ -456,7 +558,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.989Z"
+    "updatedAt": "2026-05-20T00:00:26.624Z"
   },
   {
     "id": "clock:qwen3.5-35b-a3b",
@@ -473,7 +575,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.989Z"
+    "updatedAt": "2026-05-20T00:00:26.625Z"
   },
   {
     "id": "clock:qwen3.5-plus",
@@ -490,7 +592,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:02:44.142Z"
+    "updatedAt": "2026-05-20T00:00:26.625Z"
   },
   {
     "id": "clock:deepseek-v4-pro-GA",
@@ -507,7 +609,24 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.617Z"
+    "updatedAt": "2026-08-13T12:33:39.600Z"
+  },
+  {
+    "id": "clock:DeepSeek-v4-pro-harness",
+    "theme": "clock",
+    "model": "DeepSeek-v4-pro-harness",
+    "filename": "index.html",
+    "path": "/submissions/clock/DeepSeek-v4-pro-harness/",
+    "publicPath": "/submissions/clock/DeepSeek-v4-pro-harness/index.html",
+    "renderKind": "html",
+    "linesTotal": 85,
+    "linesCss": 16,
+    "linesJs": 30,
+    "sizeBytes": 4755,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-13T14:22:15.402Z"
   },
   {
     "id": "clock:deepseek-v4-flash",
@@ -524,7 +643,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.617Z"
+    "updatedAt": "2026-07-31T15:15:05.600Z"
   },
   {
     "id": "clock:kimi-k2.7",
@@ -541,7 +660,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.263Z"
+    "updatedAt": "2026-06-16T02:29:45.362Z"
   },
   {
     "id": "clock:kimi-k2.6",
@@ -558,7 +677,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-23T22:33:01.014Z"
+    "updatedAt": "2026-05-20T00:00:26.624Z"
   },
   {
     "id": "clock:glm-5.2",
@@ -575,7 +694,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.263Z"
+    "updatedAt": "2026-06-17T04:08:17.700Z"
   },
   {
     "id": "clock:glm-5.1",
@@ -592,7 +711,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:36:40.368Z"
+    "updatedAt": "2026-05-20T00:00:26.623Z"
   },
   {
     "id": "clock:glm-5",
@@ -609,7 +728,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T16:02:42.718Z"
+    "updatedAt": "2026-05-20T00:00:26.623Z"
   },
   {
     "id": "clock:grok-4.5",
@@ -626,7 +745,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:44.308Z"
+    "updatedAt": "2026-07-08T23:30:26.888Z"
   },
   {
     "id": "clock:grok-4.3",
@@ -643,7 +762,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-16T02:07:00.749Z"
+    "updatedAt": "2026-06-08T06:33:54.891Z"
   },
   {
     "id": "clock:Seed-2.0-Pro",
@@ -660,7 +779,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:36:40.368Z"
+    "updatedAt": "2026-05-20T00:00:26.622Z"
   },
   {
     "id": "clock:minimax-m2.7",
@@ -677,7 +796,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.027Z"
+    "updatedAt": "2026-05-20T00:00:26.624Z"
   },
   {
     "id": "clock:minimax-portal-MiniMax-M2.5",
@@ -694,7 +813,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T16:02:42.719Z"
+    "updatedAt": "2026-05-20T00:00:26.624Z"
   },
   {
     "id": "clock:fable-5",
@@ -711,7 +830,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-16T02:07:01.654Z"
+    "updatedAt": "2026-06-16T02:23:52.807Z"
   },
   {
     "id": "clock:healer-alpha",
@@ -728,7 +847,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.027Z"
+    "updatedAt": "2026-05-20T00:00:26.624Z"
   },
   {
     "id": "clock:hunter-alpha",
@@ -745,7 +864,58 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.027Z"
+    "updatedAt": "2026-05-20T00:00:26.624Z"
+  },
+  {
+    "id": "clock:Hy4",
+    "theme": "clock",
+    "model": "Hy4",
+    "filename": "index.html",
+    "path": "/submissions/clock/Hy4/",
+    "publicPath": "/submissions/clock/Hy4/index.html",
+    "renderKind": "html",
+    "linesTotal": 86,
+    "linesCss": 25,
+    "linesJs": 31,
+    "sizeBytes": 6105,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T14:41:10.434Z"
+  },
+  {
+    "id": "recorder:fable-5.1",
+    "theme": "recorder",
+    "model": "fable-5.1",
+    "filename": "index.html",
+    "path": "/submissions/recorder/fable-5.1/",
+    "publicPath": "/submissions/recorder/fable-5.1/index.html",
+    "renderKind": "html",
+    "linesTotal": 151,
+    "linesCss": 56,
+    "linesJs": 62,
+    "sizeBytes": 14684,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T05:06:22.930Z"
+  },
+  {
+    "id": "recorder:ox-alpha",
+    "theme": "recorder",
+    "model": "ox-alpha",
+    "filename": "index.html",
+    "path": "/submissions/recorder/ox-alpha/",
+    "publicPath": "/submissions/recorder/ox-alpha/index.html",
+    "renderKind": "html",
+    "linesTotal": 166,
+    "linesCss": 58,
+    "linesJs": 59,
+    "sizeBytes": 9412,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-21T13:16:59.489Z"
   },
   {
     "id": "recorder:glm-5.3",
@@ -762,7 +932,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T14:04:55.441Z"
+    "updatedAt": "2026-08-14T14:57:34.674Z"
   },
   {
     "id": "recorder:claude-opus-5",
@@ -779,7 +949,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.622Z"
+    "updatedAt": "2026-07-25T06:00:28.158Z"
   },
   {
     "id": "recorder:gpt-5.6-sol",
@@ -796,7 +966,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:45.518Z"
+    "updatedAt": "2026-07-09T23:28:21.063Z"
   },
   {
     "id": "recorder:grok-4.6",
@@ -813,7 +983,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.622Z"
+    "updatedAt": "2026-08-13T10:10:22.072Z"
   },
   {
     "id": "recorder:kimi-k3",
@@ -830,7 +1000,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:45.683Z"
+    "updatedAt": "2026-07-16T14:17:45.860Z"
   },
   {
     "id": "recorder:gpt-5.5",
@@ -847,7 +1017,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-23T22:36:06.452Z"
+    "updatedAt": "2026-05-20T00:00:26.626Z"
   },
   {
     "id": "recorder:gpt-5.4",
@@ -864,7 +1034,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:58:41.604Z"
+    "updatedAt": "2026-05-20T00:00:26.626Z"
   },
   {
     "id": "recorder:gpt-5.4-mini",
@@ -881,7 +1051,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.027Z"
+    "updatedAt": "2026-05-20T00:00:26.626Z"
   },
   {
     "id": "recorder:gpt-5.3-codex",
@@ -898,7 +1068,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T10:29:55.657Z"
+    "updatedAt": "2026-05-20T00:00:26.626Z"
   },
   {
     "id": "recorder:claude-opus-4-8",
@@ -915,7 +1085,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-28T22:32:02.329Z"
+    "updatedAt": "2026-06-08T06:30:31.827Z"
   },
   {
     "id": "recorder:claude-opus-4.6",
@@ -932,7 +1102,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T14:51:17.188Z"
+    "updatedAt": "2026-05-20T00:00:26.625Z"
   },
   {
     "id": "recorder:opus-4.7",
@@ -949,7 +1119,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:57:26.513Z"
+    "updatedAt": "2026-05-20T00:00:26.627Z"
   },
   {
     "id": "recorder:claude-sonnet-4-6",
@@ -966,7 +1136,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:50:20.823Z"
+    "updatedAt": "2026-05-20T00:00:26.625Z"
   },
   {
     "id": "recorder:Gemini-3.1-Pro-High",
@@ -983,7 +1153,24 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:27:10.077Z"
+    "updatedAt": "2026-05-20T00:00:26.625Z"
+  },
+  {
+    "id": "recorder:gemini-3.7-flash",
+    "theme": "recorder",
+    "model": "gemini-3.7-flash",
+    "filename": "index.html",
+    "path": "/submissions/recorder/gemini-3.7-flash/",
+    "publicPath": "/submissions/recorder/gemini-3.7-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 172,
+    "linesCss": 41,
+    "linesJs": 96,
+    "sizeBytes": 7368,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-16T14:01:57.255Z"
   },
   {
     "id": "recorder:gemini-3.5-flash-high",
@@ -1000,7 +1187,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-21T13:57:11.214Z"
+    "updatedAt": "2026-05-20T00:01:57.813Z"
   },
   {
     "id": "recorder:gemini-3.1-flash-lite-preview-high",
@@ -1017,7 +1204,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.989Z"
+    "updatedAt": "2026-05-20T00:00:26.626Z"
   },
   {
     "id": "recorder:gemini-3.1-flash-lite-preview",
@@ -1034,7 +1221,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.989Z"
+    "updatedAt": "2026-05-20T00:00:26.626Z"
   },
   {
     "id": "recorder:gemini-3.0-flash",
@@ -1051,7 +1238,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:45:46.610Z"
+    "updatedAt": "2026-05-20T00:00:26.625Z"
   },
   {
     "id": "recorder:qwen3.8-max-new",
@@ -1068,7 +1255,24 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.623Z"
+    "updatedAt": "2026-08-02T12:55:50.681Z"
+  },
+  {
+    "id": "recorder:qwen3.8-max-0902",
+    "theme": "recorder",
+    "model": "qwen3.8-max-0902",
+    "filename": "index.html",
+    "path": "/submissions/recorder/qwen3.8-max-0902/",
+    "publicPath": "/submissions/recorder/qwen3.8-max-0902/index.html",
+    "renderKind": "html",
+    "linesTotal": 115,
+    "linesCss": 34,
+    "linesJs": 50,
+    "sizeBytes": 7079,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T05:50:23.780Z"
   },
   {
     "id": "recorder:qwen3.8-max",
@@ -1085,7 +1289,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.623Z"
+    "updatedAt": "2026-08-02T07:37:47.872Z"
   },
   {
     "id": "recorder:qwen3.8-max-pre",
@@ -1102,7 +1306,41 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-25T09:51:18.065Z"
+    "updatedAt": "2026-07-20T09:19:04.268Z"
+  },
+  {
+    "id": "recorder:qwen3.8-flash",
+    "theme": "recorder",
+    "model": "qwen3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/recorder/qwen3.8-flash/",
+    "publicPath": "/submissions/recorder/qwen3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 87,
+    "linesCss": 27,
+    "linesJs": 32,
+    "sizeBytes": 5950,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T12:25:20.451Z"
+  },
+  {
+    "id": "recorder:qwen3.8-27b",
+    "theme": "recorder",
+    "model": "qwen3.8-27b",
+    "filename": "index.html",
+    "path": "/submissions/recorder/qwen3.8-27b/",
+    "publicPath": "/submissions/recorder/qwen3.8-27b/index.html",
+    "renderKind": "html",
+    "linesTotal": 205,
+    "linesCss": 67,
+    "linesJs": 97,
+    "sizeBytes": 10369,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-28T00:10:13.663Z"
   },
   {
     "id": "recorder:qwen-3.7-max",
@@ -1119,7 +1357,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-21T13:41:25.110Z"
+    "updatedAt": "2026-06-08T06:30:31.828Z"
   },
   {
     "id": "recorder:qwen-3.6-plus",
@@ -1136,7 +1374,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:36:40.370Z"
+    "updatedAt": "2026-05-20T00:00:26.627Z"
   },
   {
     "id": "recorder:qwen3.7-plus",
@@ -1153,7 +1391,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-01T23:28:39.378Z"
+    "updatedAt": "2026-06-08T06:30:31.828Z"
   },
   {
     "id": "recorder:qwen3.6-max-preview",
@@ -1170,7 +1408,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-23T22:33:01.015Z"
+    "updatedAt": "2026-05-20T00:00:26.628Z"
   },
   {
     "id": "recorder:qwen3.5-397b-a17b",
@@ -1187,7 +1425,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:19:43.856Z"
+    "updatedAt": "2026-05-20T00:00:26.627Z"
   },
   {
     "id": "recorder:qwen3.5-122b-a10b",
@@ -1204,7 +1442,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.989Z"
+    "updatedAt": "2026-05-20T00:00:26.627Z"
   },
   {
     "id": "recorder:qwen3.5-35b-a3b",
@@ -1221,7 +1459,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.990Z"
+    "updatedAt": "2026-05-20T00:00:26.627Z"
   },
   {
     "id": "recorder:qwen3.5-plus",
@@ -1238,7 +1476,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:03:24.057Z"
+    "updatedAt": "2026-05-20T00:00:26.627Z"
   },
   {
     "id": "recorder:deepseek-v4-pro-GA",
@@ -1255,7 +1493,24 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.622Z"
+    "updatedAt": "2026-08-13T12:50:08.937Z"
+  },
+  {
+    "id": "recorder:DeepSeek-v4-pro-harness",
+    "theme": "recorder",
+    "model": "DeepSeek-v4-pro-harness",
+    "filename": "index.html",
+    "path": "/submissions/recorder/DeepSeek-v4-pro-harness/",
+    "publicPath": "/submissions/recorder/DeepSeek-v4-pro-harness/index.html",
+    "renderKind": "html",
+    "linesTotal": 124,
+    "linesCss": 36,
+    "linesJs": 47,
+    "sizeBytes": 7282,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-13T14:22:56.911Z"
   },
   {
     "id": "recorder:deepseek-v4-flash",
@@ -1272,7 +1527,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.622Z"
+    "updatedAt": "2026-07-31T15:22:07.885Z"
   },
   {
     "id": "recorder:kimi-k2.7",
@@ -1289,7 +1544,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.270Z"
+    "updatedAt": "2026-06-16T02:30:17.251Z"
   },
   {
     "id": "recorder:kimi-k2.6",
@@ -1306,7 +1561,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-23T22:33:01.015Z"
+    "updatedAt": "2026-05-20T00:00:26.627Z"
   },
   {
     "id": "recorder:glm-5.2",
@@ -1323,7 +1578,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.270Z"
+    "updatedAt": "2026-06-17T04:09:15.118Z"
   },
   {
     "id": "recorder:glm-5.1",
@@ -1340,7 +1595,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:36:40.370Z"
+    "updatedAt": "2026-05-20T00:00:26.626Z"
   },
   {
     "id": "recorder:glm-5",
@@ -1357,7 +1612,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T16:02:42.719Z"
+    "updatedAt": "2026-05-20T00:00:26.626Z"
   },
   {
     "id": "recorder:grok-4.5",
@@ -1374,7 +1629,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:45.564Z"
+    "updatedAt": "2026-07-08T23:30:26.888Z"
   },
   {
     "id": "recorder:grok-4.3",
@@ -1391,7 +1646,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-16T02:07:00.761Z"
+    "updatedAt": "2026-06-08T06:34:12.193Z"
   },
   {
     "id": "recorder:Seed-2.0-Pro",
@@ -1408,7 +1663,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:36:40.369Z"
+    "updatedAt": "2026-05-20T00:00:26.625Z"
   },
   {
     "id": "recorder:minimax-m2.7",
@@ -1425,7 +1680,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.028Z"
+    "updatedAt": "2026-05-20T00:00:26.627Z"
   },
   {
     "id": "recorder:minimax-portal-MiniMax-M2.5",
@@ -1442,7 +1697,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T16:02:42.719Z"
+    "updatedAt": "2026-05-20T00:00:26.627Z"
   },
   {
     "id": "recorder:fable-5",
@@ -1459,7 +1714,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-16T02:07:01.657Z"
+    "updatedAt": "2026-06-16T02:23:52.809Z"
   },
   {
     "id": "recorder:healer-alpha",
@@ -1476,7 +1731,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.028Z"
+    "updatedAt": "2026-05-20T00:00:26.626Z"
   },
   {
     "id": "recorder:hunter-alpha",
@@ -1493,7 +1748,58 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.028Z"
+    "updatedAt": "2026-05-20T00:00:26.626Z"
+  },
+  {
+    "id": "recorder:Hy4",
+    "theme": "recorder",
+    "model": "Hy4",
+    "filename": "index.html",
+    "path": "/submissions/recorder/Hy4/",
+    "publicPath": "/submissions/recorder/Hy4/index.html",
+    "renderKind": "html",
+    "linesTotal": 142,
+    "linesCss": 37,
+    "linesJs": 70,
+    "sizeBytes": 7396,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T13:28:22.774Z"
+  },
+  {
+    "id": "weather-card:fable-5.1",
+    "theme": "weather-card",
+    "model": "fable-5.1",
+    "filename": "index.html",
+    "path": "/submissions/weather-card/fable-5.1/",
+    "publicPath": "/submissions/weather-card/fable-5.1/index.html",
+    "renderKind": "html",
+    "linesTotal": 154,
+    "linesCss": 32,
+    "linesJs": 86,
+    "sizeBytes": 14596,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T05:08:27.514Z"
+  },
+  {
+    "id": "weather-card:ox-alpha",
+    "theme": "weather-card",
+    "model": "ox-alpha",
+    "filename": "index.html",
+    "path": "/submissions/weather-card/ox-alpha/",
+    "publicPath": "/submissions/weather-card/ox-alpha/index.html",
+    "renderKind": "html",
+    "linesTotal": 177,
+    "linesCss": 40,
+    "linesJs": 95,
+    "sizeBytes": 10142,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-21T13:18:59.087Z"
   },
   {
     "id": "weather-card:glm-5.3",
@@ -1510,7 +1816,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T14:18:53.970Z"
+    "updatedAt": "2026-08-14T14:57:34.676Z"
   },
   {
     "id": "weather-card:claude-opus-5",
@@ -1527,7 +1833,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.626Z"
+    "updatedAt": "2026-07-25T05:52:50.450Z"
   },
   {
     "id": "weather-card:gpt-5.6-sol",
@@ -1544,7 +1850,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:47.307Z"
+    "updatedAt": "2026-07-10T00:03:55.815Z"
   },
   {
     "id": "weather-card:grok-4.6",
@@ -1561,7 +1867,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.627Z"
+    "updatedAt": "2026-08-13T10:10:22.070Z"
   },
   {
     "id": "weather-card:kimi-k3",
@@ -1578,7 +1884,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:47.378Z"
+    "updatedAt": "2026-07-16T14:24:14.068Z"
   },
   {
     "id": "weather-card:gpt-5.5",
@@ -1595,7 +1901,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-23T22:36:06.452Z"
+    "updatedAt": "2026-05-20T00:00:26.631Z"
   },
   {
     "id": "weather-card:gpt-5.4",
@@ -1612,7 +1918,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:58:04.563Z"
+    "updatedAt": "2026-05-20T00:00:26.631Z"
   },
   {
     "id": "weather-card:gpt-5.4-mini",
@@ -1629,7 +1935,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.029Z"
+    "updatedAt": "2026-05-20T00:00:26.631Z"
   },
   {
     "id": "weather-card:gpt-5.3-codex",
@@ -1646,7 +1952,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T10:29:55.683Z"
+    "updatedAt": "2026-05-20T00:00:26.631Z"
   },
   {
     "id": "weather-card:claude-opus-4-8",
@@ -1663,7 +1969,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-01T16:03:51.854Z"
+    "updatedAt": "2026-06-08T06:30:31.828Z"
   },
   {
     "id": "weather-card:claude-opus-4.6",
@@ -1680,7 +1986,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T14:52:00.481Z"
+    "updatedAt": "2026-05-20T00:00:26.630Z"
   },
   {
     "id": "weather-card:opus-4.7",
@@ -1697,7 +2003,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:58:22.054Z"
+    "updatedAt": "2026-05-20T00:00:26.632Z"
   },
   {
     "id": "weather-card:claude-sonnet-4-6",
@@ -1714,7 +2020,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:52:13.793Z"
+    "updatedAt": "2026-05-20T00:00:26.630Z"
   },
   {
     "id": "weather-card:Gemini-3.1-Pro-High",
@@ -1731,7 +2037,24 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:28:38.671Z"
+    "updatedAt": "2026-05-20T00:00:26.630Z"
+  },
+  {
+    "id": "weather-card:gemini-3.7-flash",
+    "theme": "weather-card",
+    "model": "gemini-3.7-flash",
+    "filename": "index.html",
+    "path": "/submissions/weather-card/gemini-3.7-flash/",
+    "publicPath": "/submissions/weather-card/gemini-3.7-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 138,
+    "linesCss": 38,
+    "linesJs": 39,
+    "sizeBytes": 7257,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-16T14:02:15.317Z"
   },
   {
     "id": "weather-card:gemini-3.5-flash-high",
@@ -1748,7 +2071,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-21T13:57:11.216Z"
+    "updatedAt": "2026-05-20T00:02:06.198Z"
   },
   {
     "id": "weather-card:gemini-3.1-flash-lite-preview-high",
@@ -1765,7 +2088,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.991Z"
+    "updatedAt": "2026-05-20T00:00:26.631Z"
   },
   {
     "id": "weather-card:gemini-3.1-flash-lite-preview",
@@ -1782,7 +2105,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.991Z"
+    "updatedAt": "2026-05-20T00:00:26.631Z"
   },
   {
     "id": "weather-card:gemini-3.0-flash",
@@ -1799,7 +2122,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:45:48.570Z"
+    "updatedAt": "2026-05-20T00:00:26.631Z"
   },
   {
     "id": "weather-card:qwen3.8-max-new",
@@ -1816,7 +2139,24 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.627Z"
+    "updatedAt": "2026-08-02T12:57:19.714Z"
+  },
+  {
+    "id": "weather-card:qwen3.8-max-0902",
+    "theme": "weather-card",
+    "model": "qwen3.8-max-0902",
+    "filename": "index.html",
+    "path": "/submissions/weather-card/qwen3.8-max-0902/",
+    "publicPath": "/submissions/weather-card/qwen3.8-max-0902/index.html",
+    "renderKind": "html",
+    "linesTotal": 136,
+    "linesCss": 32,
+    "linesJs": 61,
+    "sizeBytes": 9600,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T04:30:20.398Z"
   },
   {
     "id": "weather-card:qwen3.8-max",
@@ -1833,7 +2173,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.627Z"
+    "updatedAt": "2026-08-02T07:38:31.600Z"
   },
   {
     "id": "weather-card:qwen3.8-max-pre",
@@ -1850,7 +2190,41 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-25T09:51:18.067Z"
+    "updatedAt": "2026-07-20T09:19:02.885Z"
+  },
+  {
+    "id": "weather-card:qwen3.8-flash",
+    "theme": "weather-card",
+    "model": "qwen3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/weather-card/qwen3.8-flash/",
+    "publicPath": "/submissions/weather-card/qwen3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 90,
+    "linesCss": 27,
+    "linesJs": 39,
+    "sizeBytes": 6910,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T12:29:06.121Z"
+  },
+  {
+    "id": "weather-card:qwen3.8-27b",
+    "theme": "weather-card",
+    "model": "qwen3.8-27b",
+    "filename": "index.html",
+    "path": "/submissions/weather-card/qwen3.8-27b/",
+    "publicPath": "/submissions/weather-card/qwen3.8-27b/index.html",
+    "renderKind": "html",
+    "linesTotal": 218,
+    "linesCss": 42,
+    "linesJs": 136,
+    "sizeBytes": 13352,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T23:37:02.888Z"
   },
   {
     "id": "weather-card:qwen-3.7-max",
@@ -1867,7 +2241,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-21T13:42:11.339Z"
+    "updatedAt": "2026-06-08T06:30:31.828Z"
   },
   {
     "id": "weather-card:qwen-3.6-plus",
@@ -1884,7 +2258,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:36:40.373Z"
+    "updatedAt": "2026-05-20T00:00:26.632Z"
   },
   {
     "id": "weather-card:qwen3.7-plus",
@@ -1901,7 +2275,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-02T00:14:20.994Z"
+    "updatedAt": "2026-06-08T06:30:31.828Z"
   },
   {
     "id": "weather-card:qwen3.6-max-preview",
@@ -1918,7 +2292,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-23T22:33:01.017Z"
+    "updatedAt": "2026-05-20T00:00:26.633Z"
   },
   {
     "id": "weather-card:qwen3.5-397b-a17b",
@@ -1935,7 +2309,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:20:20.317Z"
+    "updatedAt": "2026-05-20T00:00:26.632Z"
   },
   {
     "id": "weather-card:qwen3.5-122b-a10b",
@@ -1952,7 +2326,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.991Z"
+    "updatedAt": "2026-05-20T00:00:26.632Z"
   },
   {
     "id": "weather-card:qwen3.5-35b-a3b",
@@ -1969,7 +2343,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.991Z"
+    "updatedAt": "2026-05-20T00:00:26.632Z"
   },
   {
     "id": "weather-card:qwen3.5-plus",
@@ -1986,7 +2360,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:04:03.308Z"
+    "updatedAt": "2026-05-20T00:00:26.633Z"
   },
   {
     "id": "weather-card:deepseek-v4-pro-GA",
@@ -2003,7 +2377,24 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.627Z"
+    "updatedAt": "2026-08-13T12:35:25.808Z"
+  },
+  {
+    "id": "weather-card:DeepSeek-v4-pro-harness",
+    "theme": "weather-card",
+    "model": "DeepSeek-v4-pro-harness",
+    "filename": "index.html",
+    "path": "/submissions/weather-card/DeepSeek-v4-pro-harness/",
+    "publicPath": "/submissions/weather-card/DeepSeek-v4-pro-harness/index.html",
+    "renderKind": "html",
+    "linesTotal": 155,
+    "linesCss": 45,
+    "linesJs": 70,
+    "sizeBytes": 11406,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-13T16:07:04.671Z"
   },
   {
     "id": "weather-card:deepseek-v4-flash",
@@ -2020,7 +2411,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.626Z"
+    "updatedAt": "2026-07-31T15:16:37.538Z"
   },
   {
     "id": "weather-card:kimi-k2.7",
@@ -2037,7 +2428,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.271Z"
+    "updatedAt": "2026-06-16T02:30:58.215Z"
   },
   {
     "id": "weather-card:kimi-k2.6",
@@ -2054,7 +2445,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-23T22:33:01.017Z"
+    "updatedAt": "2026-05-20T00:00:26.632Z"
   },
   {
     "id": "weather-card:glm-5.2",
@@ -2071,7 +2462,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.271Z"
+    "updatedAt": "2026-06-17T04:09:50.914Z"
   },
   {
     "id": "weather-card:glm-5.1",
@@ -2088,7 +2479,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:36:40.373Z"
+    "updatedAt": "2026-05-20T00:00:26.631Z"
   },
   {
     "id": "weather-card:glm-5",
@@ -2105,7 +2496,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T16:02:42.721Z"
+    "updatedAt": "2026-05-20T00:00:26.631Z"
   },
   {
     "id": "weather-card:grok-4.5",
@@ -2122,7 +2513,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:47.356Z"
+    "updatedAt": "2026-07-08T23:30:26.888Z"
   },
   {
     "id": "weather-card:grok-4.3",
@@ -2139,7 +2530,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-16T02:07:00.766Z"
+    "updatedAt": "2026-06-08T06:34:33.491Z"
   },
   {
     "id": "weather-card:Seed-2.0-Pro",
@@ -2156,7 +2547,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:36:40.372Z"
+    "updatedAt": "2026-05-20T00:00:26.630Z"
   },
   {
     "id": "weather-card:minimax-m2.7",
@@ -2173,7 +2564,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.029Z"
+    "updatedAt": "2026-05-20T00:00:26.632Z"
   },
   {
     "id": "weather-card:minimax-portal-MiniMax-M2.5",
@@ -2190,7 +2581,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T16:02:42.721Z"
+    "updatedAt": "2026-05-20T00:00:26.632Z"
   },
   {
     "id": "weather-card:fable-5",
@@ -2207,7 +2598,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-16T02:07:01.658Z"
+    "updatedAt": "2026-06-16T02:23:52.809Z"
   },
   {
     "id": "weather-card:healer-alpha",
@@ -2224,7 +2615,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.029Z"
+    "updatedAt": "2026-05-20T00:00:26.631Z"
   },
   {
     "id": "weather-card:hunter-alpha",
@@ -2241,7 +2632,58 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.029Z"
+    "updatedAt": "2026-05-20T00:00:26.631Z"
+  },
+  {
+    "id": "weather-card:Hy4",
+    "theme": "weather-card",
+    "model": "Hy4",
+    "filename": "index.html",
+    "path": "/submissions/weather-card/Hy4/",
+    "publicPath": "/submissions/weather-card/Hy4/index.html",
+    "renderKind": "html",
+    "linesTotal": 133,
+    "linesCss": 40,
+    "linesJs": 56,
+    "sizeBytes": 10233,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T13:29:48.872Z"
+  },
+  {
+    "id": "stock-panel:fable-5.1",
+    "theme": "stock-panel",
+    "model": "fable-5.1",
+    "filename": "index.html",
+    "path": "/submissions/stock-panel/fable-5.1/",
+    "publicPath": "/submissions/stock-panel/fable-5.1/index.html",
+    "renderKind": "html",
+    "linesTotal": 117,
+    "linesCss": 38,
+    "linesJs": 49,
+    "sizeBytes": 11962,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T05:10:27.631Z"
+  },
+  {
+    "id": "stock-panel:ox-alpha",
+    "theme": "stock-panel",
+    "model": "ox-alpha",
+    "filename": "index.html",
+    "path": "/submissions/stock-panel/ox-alpha/",
+    "publicPath": "/submissions/stock-panel/ox-alpha/index.html",
+    "renderKind": "html",
+    "linesTotal": 143,
+    "linesCss": 38,
+    "linesJs": 73,
+    "sizeBytes": 7893,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-21T13:20:27.109Z"
   },
   {
     "id": "stock-panel:glm-5.3",
@@ -2258,7 +2700,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T14:18:54.291Z"
+    "updatedAt": "2026-08-14T14:57:34.675Z"
   },
   {
     "id": "stock-panel:claude-opus-5",
@@ -2275,7 +2717,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.625Z"
+    "updatedAt": "2026-07-25T06:03:58.047Z"
   },
   {
     "id": "stock-panel:gpt-5.6-sol",
@@ -2292,7 +2734,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:46.102Z"
+    "updatedAt": "2026-07-09T23:28:21.063Z"
   },
   {
     "id": "stock-panel:grok-4.6",
@@ -2309,7 +2751,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.626Z"
+    "updatedAt": "2026-08-13T10:10:22.075Z"
   },
   {
     "id": "stock-panel:kimi-k3",
@@ -2326,7 +2768,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:47.294Z"
+    "updatedAt": "2026-07-16T14:25:19.258Z"
   },
   {
     "id": "stock-panel:gpt-5.5",
@@ -2343,7 +2785,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-23T22:36:06.452Z"
+    "updatedAt": "2026-05-20T00:00:26.629Z"
   },
   {
     "id": "stock-panel:gpt-5.4",
@@ -2360,7 +2802,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:58:04.580Z"
+    "updatedAt": "2026-05-20T00:00:26.629Z"
   },
   {
     "id": "stock-panel:gpt-5.4-mini",
@@ -2377,7 +2819,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.028Z"
+    "updatedAt": "2026-05-20T00:00:26.629Z"
   },
   {
     "id": "stock-panel:gpt-5.3-codex",
@@ -2394,7 +2836,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T10:28:47.090Z"
+    "updatedAt": "2026-05-20T00:00:26.629Z"
   },
   {
     "id": "stock-panel:claude-opus-4-8",
@@ -2411,7 +2853,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-28T22:33:05.743Z"
+    "updatedAt": "2026-06-08T06:30:31.828Z"
   },
   {
     "id": "stock-panel:claude-opus-4.6",
@@ -2428,7 +2870,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T14:52:40.809Z"
+    "updatedAt": "2026-05-20T00:00:26.628Z"
   },
   {
     "id": "stock-panel:opus-4.7",
@@ -2445,7 +2887,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:59:11.645Z"
+    "updatedAt": "2026-05-20T00:00:26.629Z"
   },
   {
     "id": "stock-panel:claude-sonnet-4-6",
@@ -2462,7 +2904,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:52:50.049Z"
+    "updatedAt": "2026-05-20T00:00:26.628Z"
   },
   {
     "id": "stock-panel:Gemini-3.1-Pro-High",
@@ -2479,7 +2921,24 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:28:40.545Z"
+    "updatedAt": "2026-05-20T00:00:26.628Z"
+  },
+  {
+    "id": "stock-panel:gemini-3.7-flash",
+    "theme": "stock-panel",
+    "model": "gemini-3.7-flash",
+    "filename": "index.html",
+    "path": "/submissions/stock-panel/gemini-3.7-flash/",
+    "publicPath": "/submissions/stock-panel/gemini-3.7-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 130,
+    "linesCss": 46,
+    "linesJs": 58,
+    "sizeBytes": 5805,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-16T14:02:31.330Z"
   },
   {
     "id": "stock-panel:gemini-3.5-flash-high",
@@ -2496,7 +2955,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-21T13:57:11.215Z"
+    "updatedAt": "2026-05-20T00:02:12.999Z"
   },
   {
     "id": "stock-panel:gemini-3.1-flash-lite-preview-high",
@@ -2513,7 +2972,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.990Z"
+    "updatedAt": "2026-05-20T00:00:26.628Z"
   },
   {
     "id": "stock-panel:gemini-3.1-flash-lite-preview",
@@ -2530,7 +2989,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.990Z"
+    "updatedAt": "2026-05-20T00:00:26.628Z"
   },
   {
     "id": "stock-panel:gemini-3.0-flash",
@@ -2547,7 +3006,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:45:50.582Z"
+    "updatedAt": "2026-05-20T00:00:26.628Z"
   },
   {
     "id": "stock-panel:qwen3.8-max-new",
@@ -2564,7 +3023,24 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.626Z"
+    "updatedAt": "2026-08-02T12:58:18.136Z"
+  },
+  {
+    "id": "stock-panel:qwen3.8-max-0902",
+    "theme": "stock-panel",
+    "model": "qwen3.8-max-0902",
+    "filename": "index.html",
+    "path": "/submissions/stock-panel/qwen3.8-max-0902/",
+    "publicPath": "/submissions/stock-panel/qwen3.8-max-0902/index.html",
+    "renderKind": "html",
+    "linesTotal": 94,
+    "linesCss": 24,
+    "linesJs": 49,
+    "sizeBytes": 5703,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T04:30:43.366Z"
   },
   {
     "id": "stock-panel:qwen3.8-max",
@@ -2581,7 +3057,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.626Z"
+    "updatedAt": "2026-08-02T07:37:44.438Z"
   },
   {
     "id": "stock-panel:qwen3.8-max-pre",
@@ -2598,7 +3074,41 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-25T09:51:18.067Z"
+    "updatedAt": "2026-07-20T09:19:40.784Z"
+  },
+  {
+    "id": "stock-panel:qwen3.8-flash",
+    "theme": "stock-panel",
+    "model": "qwen3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/stock-panel/qwen3.8-flash/",
+    "publicPath": "/submissions/stock-panel/qwen3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 76,
+    "linesCss": 21,
+    "linesJs": 33,
+    "sizeBytes": 4845,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T12:26:34.189Z"
+  },
+  {
+    "id": "stock-panel:qwen3.8-27b",
+    "theme": "stock-panel",
+    "model": "qwen3.8-27b",
+    "filename": "index.html",
+    "path": "/submissions/stock-panel/qwen3.8-27b/",
+    "publicPath": "/submissions/stock-panel/qwen3.8-27b/index.html",
+    "renderKind": "html",
+    "linesTotal": 135,
+    "linesCss": 40,
+    "linesJs": 69,
+    "sizeBytes": 6712,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T23:37:47.548Z"
   },
   {
     "id": "stock-panel:qwen-3.7-max",
@@ -2615,7 +3125,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-21T13:50:38.106Z"
+    "updatedAt": "2026-06-08T06:30:31.828Z"
   },
   {
     "id": "stock-panel:qwen-3.6-plus",
@@ -2632,7 +3142,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:36:40.372Z"
+    "updatedAt": "2026-05-20T00:00:26.630Z"
   },
   {
     "id": "stock-panel:qwen3.7-plus",
@@ -2649,7 +3159,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-01T23:30:29.583Z"
+    "updatedAt": "2026-06-08T06:30:31.828Z"
   },
   {
     "id": "stock-panel:qwen3.6-max-preview",
@@ -2666,7 +3176,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-23T22:33:01.016Z"
+    "updatedAt": "2026-05-20T00:00:26.630Z"
   },
   {
     "id": "stock-panel:qwen3.5-397b-a17b",
@@ -2683,7 +3193,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:21:40.796Z"
+    "updatedAt": "2026-05-20T00:00:26.630Z"
   },
   {
     "id": "stock-panel:qwen3.5-122b-a10b",
@@ -2700,7 +3210,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.990Z"
+    "updatedAt": "2026-05-20T00:00:26.630Z"
   },
   {
     "id": "stock-panel:qwen3.5-35b-a3b",
@@ -2717,7 +3227,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": true,
-    "updatedAt": "2026-03-06T03:22:08.990Z"
+    "updatedAt": "2026-05-20T00:00:26.630Z"
   },
   {
     "id": "stock-panel:qwen3.5-plus",
@@ -2734,7 +3244,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:04:42.550Z"
+    "updatedAt": "2026-05-20T00:00:26.630Z"
   },
   {
     "id": "stock-panel:deepseek-v4-pro-GA",
@@ -2751,7 +3261,24 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.625Z"
+    "updatedAt": "2026-08-13T12:36:12.186Z"
+  },
+  {
+    "id": "stock-panel:DeepSeek-v4-pro-harness",
+    "theme": "stock-panel",
+    "model": "DeepSeek-v4-pro-harness",
+    "filename": "index.html",
+    "path": "/submissions/stock-panel/DeepSeek-v4-pro-harness/",
+    "publicPath": "/submissions/stock-panel/DeepSeek-v4-pro-harness/index.html",
+    "renderKind": "html",
+    "linesTotal": 148,
+    "linesCss": 35,
+    "linesJs": 61,
+    "sizeBytes": 8668,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-13T14:25:07.906Z"
   },
   {
     "id": "stock-panel:deepseek-v4-flash",
@@ -2768,7 +3295,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.625Z"
+    "updatedAt": "2026-07-31T15:17:16.735Z"
   },
   {
     "id": "stock-panel:kimi-k2.7",
@@ -2785,7 +3312,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.271Z"
+    "updatedAt": "2026-06-16T02:31:29.610Z"
   },
   {
     "id": "stock-panel:kimi-k2.6",
@@ -2802,7 +3329,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-23T22:33:01.016Z"
+    "updatedAt": "2026-05-20T00:00:26.629Z"
   },
   {
     "id": "stock-panel:glm-5.2",
@@ -2819,7 +3346,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.271Z"
+    "updatedAt": "2026-06-17T04:10:25.759Z"
   },
   {
     "id": "stock-panel:glm-5.1",
@@ -2836,7 +3363,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:36:40.371Z"
+    "updatedAt": "2026-05-20T00:00:26.628Z"
   },
   {
     "id": "stock-panel:glm-5",
@@ -2853,7 +3380,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T16:02:42.720Z"
+    "updatedAt": "2026-05-20T00:00:26.628Z"
   },
   {
     "id": "stock-panel:grok-4.5",
@@ -2870,7 +3397,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:47.244Z"
+    "updatedAt": "2026-07-08T23:30:26.888Z"
   },
   {
     "id": "stock-panel:grok-4.3",
@@ -2887,7 +3414,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-16T02:07:00.762Z"
+    "updatedAt": "2026-06-08T06:34:46.086Z"
   },
   {
     "id": "stock-panel:Seed-2.0-Pro",
@@ -2904,7 +3431,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:36:40.371Z"
+    "updatedAt": "2026-05-20T00:00:26.628Z"
   },
   {
     "id": "stock-panel:minimax-m2.7",
@@ -2921,7 +3448,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.029Z"
+    "updatedAt": "2026-05-20T00:00:26.629Z"
   },
   {
     "id": "stock-panel:minimax-portal-MiniMax-M2.5",
@@ -2938,7 +3465,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T16:02:42.720Z"
+    "updatedAt": "2026-05-20T00:00:26.629Z"
   },
   {
     "id": "stock-panel:fable-5",
@@ -2955,7 +3482,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-16T02:07:01.657Z"
+    "updatedAt": "2026-06-16T02:23:52.809Z"
   },
   {
     "id": "stock-panel:healer-alpha",
@@ -2972,7 +3499,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.028Z"
+    "updatedAt": "2026-05-20T00:00:26.629Z"
   },
   {
     "id": "stock-panel:hunter-alpha",
@@ -2989,7 +3516,58 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.028Z"
+    "updatedAt": "2026-05-20T00:00:26.629Z"
+  },
+  {
+    "id": "stock-panel:Hy4",
+    "theme": "stock-panel",
+    "model": "Hy4",
+    "filename": "index.html",
+    "path": "/submissions/stock-panel/Hy4/",
+    "publicPath": "/submissions/stock-panel/Hy4/index.html",
+    "renderKind": "html",
+    "linesTotal": 123,
+    "linesCss": 33,
+    "linesJs": 66,
+    "sizeBytes": 6567,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T13:30:59.242Z"
+  },
+  {
+    "id": "click-fireworks:fable-5.1",
+    "theme": "click-fireworks",
+    "model": "fable-5.1",
+    "filename": "index.html",
+    "path": "/submissions/click-fireworks/fable-5.1/",
+    "publicPath": "/submissions/click-fireworks/fable-5.1/index.html",
+    "renderKind": "html",
+    "linesTotal": 121,
+    "linesCss": 17,
+    "linesJs": 81,
+    "sizeBytes": 10771,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T05:07:20.425Z"
+  },
+  {
+    "id": "click-fireworks:ox-alpha",
+    "theme": "click-fireworks",
+    "model": "ox-alpha",
+    "filename": "index.html",
+    "path": "/submissions/click-fireworks/ox-alpha/",
+    "publicPath": "/submissions/click-fireworks/ox-alpha/index.html",
+    "renderKind": "html",
+    "linesTotal": 118,
+    "linesCss": 13,
+    "linesJs": 80,
+    "sizeBytes": 5571,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-21T14:03:49.690Z"
   },
   {
     "id": "click-fireworks:glm-5.3",
@@ -3006,7 +3584,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T14:07:06.636Z"
+    "updatedAt": "2026-08-14T14:57:34.673Z"
   },
   {
     "id": "click-fireworks:claude-opus-5",
@@ -3023,7 +3601,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.615Z"
+    "updatedAt": "2026-07-25T06:09:54.026Z"
   },
   {
     "id": "click-fireworks:gpt-5.6-sol",
@@ -3040,7 +3618,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:44.160Z"
+    "updatedAt": "2026-07-10T00:03:39.966Z"
   },
   {
     "id": "click-fireworks:grok-4.6",
@@ -3057,7 +3635,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.616Z"
+    "updatedAt": "2026-08-13T10:11:30.721Z"
   },
   {
     "id": "click-fireworks:kimi-k3",
@@ -3074,7 +3652,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:44.257Z"
+    "updatedAt": "2026-07-16T14:18:23.628Z"
   },
   {
     "id": "click-fireworks:gpt-5.5",
@@ -3091,7 +3669,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-23T22:36:06.453Z"
+    "updatedAt": "2026-05-20T00:00:26.621Z"
   },
   {
     "id": "click-fireworks:gpt-5.4",
@@ -3108,7 +3686,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T04:43:33.873Z"
+    "updatedAt": "2026-05-20T00:00:26.621Z"
   },
   {
     "id": "click-fireworks:gpt-5.4-mini",
@@ -3125,7 +3703,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.026Z"
+    "updatedAt": "2026-05-20T00:00:26.621Z"
   },
   {
     "id": "click-fireworks:gpt-5.3-codex",
@@ -3142,7 +3720,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T14:07:55.074Z"
+    "updatedAt": "2026-05-20T00:00:26.621Z"
   },
   {
     "id": "click-fireworks:claude-opus-4-8",
@@ -3159,7 +3737,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-28T22:33:33.503Z"
+    "updatedAt": "2026-06-08T06:30:31.825Z"
   },
   {
     "id": "click-fireworks:claude-opus-4.6",
@@ -3176,7 +3754,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T14:53:28.315Z"
+    "updatedAt": "2026-05-20T00:00:26.620Z"
   },
   {
     "id": "click-fireworks:opus-4.7",
@@ -3193,7 +3771,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:59:56.208Z"
+    "updatedAt": "2026-05-20T00:00:26.621Z"
   },
   {
     "id": "click-fireworks:claude-sonnet-4-6",
@@ -3210,7 +3788,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:52:50.977Z"
+    "updatedAt": "2026-05-20T00:00:26.620Z"
   },
   {
     "id": "click-fireworks:Gemini-3.1-Pro-High",
@@ -3227,7 +3805,24 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:29:21.362Z"
+    "updatedAt": "2026-05-20T00:00:26.620Z"
+  },
+  {
+    "id": "click-fireworks:gemini-3.7-flash",
+    "theme": "click-fireworks",
+    "model": "gemini-3.7-flash",
+    "filename": "index.html",
+    "path": "/submissions/click-fireworks/gemini-3.7-flash/",
+    "publicPath": "/submissions/click-fireworks/gemini-3.7-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 130,
+    "linesCss": 15,
+    "linesJs": 95,
+    "sizeBytes": 4125,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-16T14:02:43.115Z"
   },
   {
     "id": "click-fireworks:gemini-3.5-flash-high",
@@ -3244,7 +3839,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-21T13:57:11.213Z"
+    "updatedAt": "2026-05-20T00:02:18.201Z"
   },
   {
     "id": "click-fireworks:gemini-3.1-flash-lite-preview-high",
@@ -3261,7 +3856,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.987Z"
+    "updatedAt": "2026-05-20T00:00:26.620Z"
   },
   {
     "id": "click-fireworks:gemini-3.1-flash-lite-preview",
@@ -3278,7 +3873,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.987Z"
+    "updatedAt": "2026-05-20T00:00:26.620Z"
   },
   {
     "id": "click-fireworks:gemini-3.0-flash",
@@ -3295,7 +3890,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:45:52.588Z"
+    "updatedAt": "2026-05-20T00:00:26.620Z"
   },
   {
     "id": "click-fireworks:qwen3.8-max-new",
@@ -3312,7 +3907,24 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.616Z"
+    "updatedAt": "2026-08-02T12:59:09.891Z"
+  },
+  {
+    "id": "click-fireworks:qwen3.8-max-0902",
+    "theme": "click-fireworks",
+    "model": "qwen3.8-max-0902",
+    "filename": "index.html",
+    "path": "/submissions/click-fireworks/qwen3.8-max-0902/",
+    "publicPath": "/submissions/click-fireworks/qwen3.8-max-0902/index.html",
+    "renderKind": "html",
+    "linesTotal": 96,
+    "linesCss": 9,
+    "linesJs": 68,
+    "sizeBytes": 5400,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T06:03:25.746Z"
   },
   {
     "id": "click-fireworks:qwen3.8-max",
@@ -3329,7 +3941,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.616Z"
+    "updatedAt": "2026-08-02T07:45:15.459Z"
   },
   {
     "id": "click-fireworks:qwen3.8-max-pre",
@@ -3346,7 +3958,41 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-25T09:51:18.063Z"
+    "updatedAt": "2026-07-20T09:19:54.500Z"
+  },
+  {
+    "id": "click-fireworks:qwen3.8-flash",
+    "theme": "click-fireworks",
+    "model": "qwen3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/click-fireworks/qwen3.8-flash/",
+    "publicPath": "/submissions/click-fireworks/qwen3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 60,
+    "linesCss": 7,
+    "linesJs": 36,
+    "sizeBytes": 3892,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T13:55:18.369Z"
+  },
+  {
+    "id": "click-fireworks:qwen3.8-27b",
+    "theme": "click-fireworks",
+    "model": "qwen3.8-27b",
+    "filename": "index.html",
+    "path": "/submissions/click-fireworks/qwen3.8-27b/",
+    "publicPath": "/submissions/click-fireworks/qwen3.8-27b/index.html",
+    "renderKind": "html",
+    "linesTotal": 155,
+    "linesCss": 21,
+    "linesJs": 115,
+    "sizeBytes": 6916,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T23:48:43.314Z"
   },
   {
     "id": "click-fireworks:qwen-3.7-max",
@@ -3363,7 +4009,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-21T13:51:10.869Z"
+    "updatedAt": "2026-06-08T06:30:31.825Z"
   },
   {
     "id": "click-fireworks:qwen-3.6-plus",
@@ -3380,7 +4026,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:36:40.367Z"
+    "updatedAt": "2026-05-20T00:00:26.622Z"
   },
   {
     "id": "click-fireworks:qwen3.7-plus",
@@ -3397,7 +4043,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-02T00:15:02.859Z"
+    "updatedAt": "2026-06-08T06:30:31.825Z"
   },
   {
     "id": "click-fireworks:qwen3.6-max-preview",
@@ -3414,7 +4060,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-23T22:33:01.014Z"
+    "updatedAt": "2026-05-20T00:00:26.622Z"
   },
   {
     "id": "click-fireworks:qwen3.5-397b-a17b",
@@ -3431,7 +4077,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:22:09.152Z"
+    "updatedAt": "2026-05-20T00:00:26.622Z"
   },
   {
     "id": "click-fireworks:qwen3.5-122b-a10b",
@@ -3448,7 +4094,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.988Z"
+    "updatedAt": "2026-05-20T00:00:26.622Z"
   },
   {
     "id": "click-fireworks:qwen3.5-35b-a3b",
@@ -3465,7 +4111,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.988Z"
+    "updatedAt": "2026-05-20T00:00:26.622Z"
   },
   {
     "id": "click-fireworks:qwen3.5-plus",
@@ -3482,7 +4128,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:05:03.866Z"
+    "updatedAt": "2026-05-20T00:00:26.622Z"
   },
   {
     "id": "click-fireworks:deepseek-v4-pro-GA",
@@ -3499,7 +4145,24 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.616Z"
+    "updatedAt": "2026-08-13T12:36:43.799Z"
+  },
+  {
+    "id": "click-fireworks:DeepSeek-v4-pro-harness",
+    "theme": "click-fireworks",
+    "model": "DeepSeek-v4-pro-harness",
+    "filename": "index.html",
+    "path": "/submissions/click-fireworks/DeepSeek-v4-pro-harness/",
+    "publicPath": "/submissions/click-fireworks/DeepSeek-v4-pro-harness/index.html",
+    "renderKind": "html",
+    "linesTotal": 94,
+    "linesCss": 9,
+    "linesJs": 64,
+    "sizeBytes": 3962,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-13T14:25:31.998Z"
   },
   {
     "id": "click-fireworks:deepseek-v4-flash",
@@ -3516,7 +4179,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.615Z"
+    "updatedAt": "2026-07-31T15:17:40.925Z"
   },
   {
     "id": "click-fireworks:kimi-k2.7",
@@ -3533,7 +4196,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.262Z"
+    "updatedAt": "2026-06-16T02:31:51.447Z"
   },
   {
     "id": "click-fireworks:kimi-k2.6",
@@ -3550,7 +4213,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-23T22:33:01.013Z"
+    "updatedAt": "2026-05-20T00:00:26.621Z"
   },
   {
     "id": "click-fireworks:glm-5.2",
@@ -3567,7 +4230,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.262Z"
+    "updatedAt": "2026-06-17T04:02:49.031Z"
   },
   {
     "id": "click-fireworks:glm-5.1",
@@ -3584,7 +4247,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:36:40.367Z"
+    "updatedAt": "2026-05-20T00:00:26.620Z"
   },
   {
     "id": "click-fireworks:glm-5",
@@ -3601,7 +4264,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T16:02:42.718Z"
+    "updatedAt": "2026-05-20T00:00:26.620Z"
   },
   {
     "id": "click-fireworks:grok-4.5",
@@ -3618,7 +4281,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:44.189Z"
+    "updatedAt": "2026-07-08T23:31:07.719Z"
   },
   {
     "id": "click-fireworks:grok-4.3",
@@ -3635,7 +4298,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-16T02:07:00.748Z"
+    "updatedAt": "2026-06-08T06:34:58.829Z"
   },
   {
     "id": "click-fireworks:Seed-2.0-Pro",
@@ -3652,7 +4315,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:36:40.367Z"
+    "updatedAt": "2026-05-20T00:00:26.620Z"
   },
   {
     "id": "click-fireworks:minimax-m2.7",
@@ -3669,7 +4332,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.026Z"
+    "updatedAt": "2026-05-20T00:00:26.621Z"
   },
   {
     "id": "click-fireworks:minimax-portal-MiniMax-M2.5",
@@ -3686,7 +4349,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T16:02:42.718Z"
+    "updatedAt": "2026-05-20T00:00:26.621Z"
   },
   {
     "id": "click-fireworks:fable-5",
@@ -3703,7 +4366,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-16T02:07:01.651Z"
+    "updatedAt": "2026-06-16T02:23:52.807Z"
   },
   {
     "id": "click-fireworks:healer-alpha",
@@ -3720,7 +4383,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.026Z"
+    "updatedAt": "2026-05-20T00:00:26.621Z"
   },
   {
     "id": "click-fireworks:hunter-alpha",
@@ -3737,7 +4400,58 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.026Z"
+    "updatedAt": "2026-05-20T00:00:26.621Z"
+  },
+  {
+    "id": "click-fireworks:Hy4",
+    "theme": "click-fireworks",
+    "model": "Hy4",
+    "filename": "index.html",
+    "path": "/submissions/click-fireworks/Hy4/",
+    "publicPath": "/submissions/click-fireworks/Hy4/index.html",
+    "renderKind": "html",
+    "linesTotal": 102,
+    "linesCss": 10,
+    "linesJs": 73,
+    "sizeBytes": 4729,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T13:31:43.124Z"
+  },
+  {
+    "id": "neon-countdown:fable-5.1",
+    "theme": "neon-countdown",
+    "model": "fable-5.1",
+    "filename": "index.html",
+    "path": "/submissions/neon-countdown/fable-5.1/",
+    "publicPath": "/submissions/neon-countdown/fable-5.1/index.html",
+    "renderKind": "html",
+    "linesTotal": 129,
+    "linesCss": 43,
+    "linesJs": 56,
+    "sizeBytes": 11561,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T05:09:27.424Z"
+  },
+  {
+    "id": "neon-countdown:ox-alpha",
+    "theme": "neon-countdown",
+    "model": "ox-alpha",
+    "filename": "index.html",
+    "path": "/submissions/neon-countdown/ox-alpha/",
+    "publicPath": "/submissions/neon-countdown/ox-alpha/index.html",
+    "renderKind": "html",
+    "linesTotal": 138,
+    "linesCss": 42,
+    "linesJs": 63,
+    "sizeBytes": 6933,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-21T13:22:46.058Z"
   },
   {
     "id": "neon-countdown:glm-5.3",
@@ -3754,7 +4468,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T14:07:46.142Z"
+    "updatedAt": "2026-08-14T14:57:34.674Z"
   },
   {
     "id": "neon-countdown:claude-opus-5",
@@ -3771,7 +4485,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.620Z"
+    "updatedAt": "2026-07-25T06:08:49.415Z"
   },
   {
     "id": "neon-countdown:gpt-5.6-sol",
@@ -3788,7 +4502,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:44.609Z"
+    "updatedAt": "2026-07-09T23:28:21.064Z"
   },
   {
     "id": "neon-countdown:grok-4.6",
@@ -3805,7 +4519,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.620Z"
+    "updatedAt": "2026-08-13T10:11:30.722Z"
   },
   {
     "id": "neon-countdown:kimi-k3",
@@ -3822,7 +4536,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:45.112Z"
+    "updatedAt": "2026-07-16T14:19:26.713Z"
   },
   {
     "id": "neon-countdown:gpt-5.5",
@@ -3839,7 +4553,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-28T22:52:42.967Z"
+    "updatedAt": "2026-06-08T06:30:31.827Z"
   },
   {
     "id": "neon-countdown:claude-opus-4-8",
@@ -3856,7 +4570,24 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-28T22:34:02.557Z"
+    "updatedAt": "2026-06-08T06:30:31.827Z"
+  },
+  {
+    "id": "neon-countdown:gemini-3.7-flash",
+    "theme": "neon-countdown",
+    "model": "gemini-3.7-flash",
+    "filename": "index.html",
+    "path": "/submissions/neon-countdown/gemini-3.7-flash/",
+    "publicPath": "/submissions/neon-countdown/gemini-3.7-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 135,
+    "linesCss": 48,
+    "linesJs": 57,
+    "sizeBytes": 5191,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-16T14:02:54.937Z"
   },
   {
     "id": "neon-countdown:qwen3.8-max-new",
@@ -3873,7 +4604,24 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.620Z"
+    "updatedAt": "2026-08-02T12:59:53.321Z"
+  },
+  {
+    "id": "neon-countdown:qwen3.8-max-0902",
+    "theme": "neon-countdown",
+    "model": "qwen3.8-max-0902",
+    "filename": "index.html",
+    "path": "/submissions/neon-countdown/qwen3.8-max-0902/",
+    "publicPath": "/submissions/neon-countdown/qwen3.8-max-0902/index.html",
+    "renderKind": "html",
+    "linesTotal": 93,
+    "linesCss": 35,
+    "linesJs": 32,
+    "sizeBytes": 5990,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T06:23:20.394Z"
   },
   {
     "id": "neon-countdown:qwen3.8-max",
@@ -3890,7 +4638,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.621Z"
+    "updatedAt": "2026-08-02T07:37:55.222Z"
   },
   {
     "id": "neon-countdown:qwen3.8-max-pre",
@@ -3907,7 +4655,41 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-25T09:51:18.064Z"
+    "updatedAt": "2026-07-20T09:19:25.997Z"
+  },
+  {
+    "id": "neon-countdown:qwen3.8-flash",
+    "theme": "neon-countdown",
+    "model": "qwen3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/neon-countdown/qwen3.8-flash/",
+    "publicPath": "/submissions/neon-countdown/qwen3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 81,
+    "linesCss": 34,
+    "linesJs": 22,
+    "sizeBytes": 4720,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T13:31:36.699Z"
+  },
+  {
+    "id": "neon-countdown:qwen3.8-27b",
+    "theme": "neon-countdown",
+    "model": "qwen3.8-27b",
+    "filename": "index.html",
+    "path": "/submissions/neon-countdown/qwen3.8-27b/",
+    "publicPath": "/submissions/neon-countdown/qwen3.8-27b/index.html",
+    "renderKind": "html",
+    "linesTotal": 171,
+    "linesCss": 68,
+    "linesJs": 72,
+    "sizeBytes": 7974,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T23:57:38.212Z"
   },
   {
     "id": "neon-countdown:qwen3.7-plus",
@@ -3924,7 +4706,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-02T00:15:53.548Z"
+    "updatedAt": "2026-06-08T06:30:31.827Z"
   },
   {
     "id": "neon-countdown:deepseek-v4-pro-GA",
@@ -3941,7 +4723,24 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.620Z"
+    "updatedAt": "2026-08-13T12:37:23.125Z"
+  },
+  {
+    "id": "neon-countdown:DeepSeek-v4-pro-harness",
+    "theme": "neon-countdown",
+    "model": "DeepSeek-v4-pro-harness",
+    "filename": "index.html",
+    "path": "/submissions/neon-countdown/DeepSeek-v4-pro-harness/",
+    "publicPath": "/submissions/neon-countdown/DeepSeek-v4-pro-harness/index.html",
+    "renderKind": "html",
+    "linesTotal": 120,
+    "linesCss": 27,
+    "linesJs": 60,
+    "sizeBytes": 6558,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-13T14:26:04.835Z"
   },
   {
     "id": "neon-countdown:deepseek-v4-flash",
@@ -3958,7 +4757,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.620Z"
+    "updatedAt": "2026-07-31T15:18:03.356Z"
   },
   {
     "id": "neon-countdown:kimi-k2.7",
@@ -3975,7 +4774,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.267Z"
+    "updatedAt": "2026-06-16T02:32:25.183Z"
   },
   {
     "id": "neon-countdown:glm-5.2",
@@ -3992,7 +4791,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.265Z"
+    "updatedAt": "2026-06-17T04:01:15.968Z"
   },
   {
     "id": "neon-countdown:grok-4.5",
@@ -4009,7 +4808,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:44.848Z"
+    "updatedAt": "2026-07-08T23:31:07.719Z"
   },
   {
     "id": "neon-countdown:grok-4.3",
@@ -4026,7 +4825,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-16T02:07:00.752Z"
+    "updatedAt": "2026-06-08T06:35:11.415Z"
   },
   {
     "id": "neon-countdown:fable-5",
@@ -4043,7 +4842,58 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-16T02:07:01.655Z"
+    "updatedAt": "2026-06-16T02:23:52.808Z"
+  },
+  {
+    "id": "neon-countdown:Hy4",
+    "theme": "neon-countdown",
+    "model": "Hy4",
+    "filename": "index.html",
+    "path": "/submissions/neon-countdown/Hy4/",
+    "publicPath": "/submissions/neon-countdown/Hy4/index.html",
+    "renderKind": "html",
+    "linesTotal": 124,
+    "linesCss": 42,
+    "linesJs": 47,
+    "sizeBytes": 6253,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T13:32:51.019Z"
+  },
+  {
+    "id": "particle-gravity:fable-5.1",
+    "theme": "particle-gravity",
+    "model": "fable-5.1",
+    "filename": "index.html",
+    "path": "/submissions/particle-gravity/fable-5.1/",
+    "publicPath": "/submissions/particle-gravity/fable-5.1/index.html",
+    "renderKind": "html",
+    "linesTotal": 95,
+    "linesCss": 13,
+    "linesJs": 63,
+    "sizeBytes": 9024,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T05:11:15.750Z"
+  },
+  {
+    "id": "particle-gravity:ox-alpha",
+    "theme": "particle-gravity",
+    "model": "ox-alpha",
+    "filename": "index.html",
+    "path": "/submissions/particle-gravity/ox-alpha/",
+    "publicPath": "/submissions/particle-gravity/ox-alpha/index.html",
+    "renderKind": "html",
+    "linesTotal": 133,
+    "linesCss": 17,
+    "linesJs": 87,
+    "sizeBytes": 6384,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-21T13:53:06.770Z"
   },
   {
     "id": "particle-gravity:glm-5.3",
@@ -4060,7 +4910,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T14:18:54.558Z"
+    "updatedAt": "2026-08-14T14:57:34.674Z"
   },
   {
     "id": "particle-gravity:claude-opus-5",
@@ -4077,7 +4927,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.621Z"
+    "updatedAt": "2026-07-25T06:01:39.471Z"
   },
   {
     "id": "particle-gravity:gpt-5.6-sol",
@@ -4094,7 +4944,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:45.216Z"
+    "updatedAt": "2026-07-09T23:28:21.064Z"
   },
   {
     "id": "particle-gravity:grok-4.6",
@@ -4111,7 +4961,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.621Z"
+    "updatedAt": "2026-08-13T10:11:30.722Z"
   },
   {
     "id": "particle-gravity:kimi-k3",
@@ -4128,7 +4978,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:45.444Z"
+    "updatedAt": "2026-07-16T14:16:44.844Z"
   },
   {
     "id": "particle-gravity:gpt-5.5",
@@ -4145,7 +4995,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-28T22:52:42.968Z"
+    "updatedAt": "2026-06-08T06:30:31.827Z"
   },
   {
     "id": "particle-gravity:claude-opus-4-8",
@@ -4162,7 +5012,24 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-28T22:34:37.609Z"
+    "updatedAt": "2026-06-08T06:30:31.827Z"
+  },
+  {
+    "id": "particle-gravity:gemini-3.7-flash",
+    "theme": "particle-gravity",
+    "model": "gemini-3.7-flash",
+    "filename": "index.html",
+    "path": "/submissions/particle-gravity/gemini-3.7-flash/",
+    "publicPath": "/submissions/particle-gravity/gemini-3.7-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 151,
+    "linesCss": 20,
+    "linesJs": 109,
+    "sizeBytes": 4888,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-16T14:03:07.200Z"
   },
   {
     "id": "particle-gravity:qwen3.8-max-new",
@@ -4179,7 +5046,24 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.622Z"
+    "updatedAt": "2026-08-02T13:01:09.855Z"
+  },
+  {
+    "id": "particle-gravity:qwen3.8-max-0902",
+    "theme": "particle-gravity",
+    "model": "qwen3.8-max-0902",
+    "filename": "index.html",
+    "path": "/submissions/particle-gravity/qwen3.8-max-0902/",
+    "publicPath": "/submissions/particle-gravity/qwen3.8-max-0902/index.html",
+    "renderKind": "html",
+    "linesTotal": 121,
+    "linesCss": 15,
+    "linesJs": 78,
+    "sizeBytes": 6557,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T06:24:04.360Z"
   },
   {
     "id": "particle-gravity:qwen3.8-max",
@@ -4196,7 +5080,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.622Z"
+    "updatedAt": "2026-08-02T07:47:20.484Z"
   },
   {
     "id": "particle-gravity:qwen3.8-max-pre",
@@ -4213,7 +5097,41 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-25T09:51:18.065Z"
+    "updatedAt": "2026-07-20T09:18:49.594Z"
+  },
+  {
+    "id": "particle-gravity:qwen3.8-flash",
+    "theme": "particle-gravity",
+    "model": "qwen3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/particle-gravity/qwen3.8-flash/",
+    "publicPath": "/submissions/particle-gravity/qwen3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 73,
+    "linesCss": 9,
+    "linesJs": 46,
+    "sizeBytes": 4263,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T13:49:43.753Z"
+  },
+  {
+    "id": "particle-gravity:qwen3.8-27b",
+    "theme": "particle-gravity",
+    "model": "qwen3.8-27b",
+    "filename": "index.html",
+    "path": "/submissions/particle-gravity/qwen3.8-27b/",
+    "publicPath": "/submissions/particle-gravity/qwen3.8-27b/index.html",
+    "renderKind": "html",
+    "linesTotal": 164,
+    "linesCss": 18,
+    "linesJs": 121,
+    "sizeBytes": 7367,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-28T00:07:50.788Z"
   },
   {
     "id": "particle-gravity:qwen3.7-plus",
@@ -4230,7 +5148,7 @@
     "withinLineLimit": false,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-01T23:32:09.342Z"
+    "updatedAt": "2026-06-08T06:30:31.827Z"
   },
   {
     "id": "particle-gravity:deepseek-v4-pro-GA",
@@ -4247,7 +5165,24 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.621Z"
+    "updatedAt": "2026-08-13T12:38:02.687Z"
+  },
+  {
+    "id": "particle-gravity:DeepSeek-v4-pro-harness",
+    "theme": "particle-gravity",
+    "model": "DeepSeek-v4-pro-harness",
+    "filename": "index.html",
+    "path": "/submissions/particle-gravity/DeepSeek-v4-pro-harness/",
+    "publicPath": "/submissions/particle-gravity/DeepSeek-v4-pro-harness/index.html",
+    "renderKind": "html",
+    "linesTotal": 122,
+    "linesCss": 10,
+    "linesJs": 89,
+    "sizeBytes": 5511,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-13T14:26:32.474Z"
   },
   {
     "id": "particle-gravity:deepseek-v4-flash",
@@ -4264,7 +5199,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.621Z"
+    "updatedAt": "2026-07-31T15:18:25.506Z"
   },
   {
     "id": "particle-gravity:kimi-k2.7",
@@ -4281,7 +5216,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.270Z"
+    "updatedAt": "2026-06-16T02:32:57.753Z"
   },
   {
     "id": "particle-gravity:glm-5.2",
@@ -4298,7 +5233,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.269Z"
+    "updatedAt": "2026-06-17T04:07:32.369Z"
   },
   {
     "id": "particle-gravity:grok-4.5",
@@ -4315,7 +5250,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:45.357Z"
+    "updatedAt": "2026-07-08T23:31:07.719Z"
   },
   {
     "id": "particle-gravity:grok-4.3",
@@ -4332,7 +5267,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-16T02:07:00.760Z"
+    "updatedAt": "2026-06-08T06:35:26.621Z"
   },
   {
     "id": "particle-gravity:fable-5",
@@ -4349,7 +5284,58 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:03:48.920Z"
+    "updatedAt": "2026-06-17T05:10:00.381Z"
+  },
+  {
+    "id": "particle-gravity:Hy4",
+    "theme": "particle-gravity",
+    "model": "Hy4",
+    "filename": "index.html",
+    "path": "/submissions/particle-gravity/Hy4/",
+    "publicPath": "/submissions/particle-gravity/Hy4/index.html",
+    "renderKind": "html",
+    "linesTotal": 141,
+    "linesCss": 13,
+    "linesJs": 103,
+    "sizeBytes": 6239,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T13:33:44.355Z"
+  },
+  {
+    "id": "cheetah-trophy-run:fable-5.1",
+    "theme": "cheetah-trophy-run",
+    "model": "fable-5.1",
+    "filename": "index.html",
+    "path": "/submissions/cheetah-trophy-run/fable-5.1/",
+    "publicPath": "/submissions/cheetah-trophy-run/fable-5.1/index.html",
+    "renderKind": "html",
+    "linesTotal": 235,
+    "linesCss": 23,
+    "linesJs": 19,
+    "sizeBytes": 24537,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T05:35:36.719Z"
+  },
+  {
+    "id": "cheetah-trophy-run:ox-alpha",
+    "theme": "cheetah-trophy-run",
+    "model": "ox-alpha",
+    "filename": "index.html",
+    "path": "/submissions/cheetah-trophy-run/ox-alpha/",
+    "publicPath": "/submissions/cheetah-trophy-run/ox-alpha/index.html",
+    "renderKind": "html",
+    "linesTotal": 333,
+    "linesCss": 11,
+    "linesJs": 0,
+    "sizeBytes": 21860,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-22T00:01:42.323Z"
   },
   {
     "id": "cheetah-trophy-run:glm-5.3",
@@ -4366,7 +5352,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T14:11:39.230Z"
+    "updatedAt": "2026-08-14T14:57:34.672Z"
   },
   {
     "id": "cheetah-trophy-run:claude-opus-5",
@@ -4383,7 +5369,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.613Z"
+    "updatedAt": "2026-07-25T06:24:12.199Z"
   },
   {
     "id": "cheetah-trophy-run:gpt-5.6-sol",
@@ -4400,7 +5386,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:43.923Z"
+    "updatedAt": "2026-07-10T00:06:17.810Z"
   },
   {
     "id": "cheetah-trophy-run:grok-4.6",
@@ -4417,7 +5403,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.614Z"
+    "updatedAt": "2026-08-13T10:12:41.853Z"
   },
   {
     "id": "cheetah-trophy-run:kimi-k3",
@@ -4434,7 +5420,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:44.111Z"
+    "updatedAt": "2026-07-16T14:25:03.155Z"
   },
   {
     "id": "cheetah-trophy-run:gpt-5.5",
@@ -4451,7 +5437,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-05-29T00:30:06.637Z"
+    "updatedAt": "2026-06-08T06:30:31.825Z"
   },
   {
     "id": "cheetah-trophy-run:claude-opus-4-8",
@@ -4468,7 +5454,24 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-05-29T02:18:42.854Z"
+    "updatedAt": "2026-06-08T06:30:31.824Z"
+  },
+  {
+    "id": "cheetah-trophy-run:gemini-3.7-flash",
+    "theme": "cheetah-trophy-run",
+    "model": "gemini-3.7-flash",
+    "filename": "index.html",
+    "path": "/submissions/cheetah-trophy-run/gemini-3.7-flash/",
+    "publicPath": "/submissions/cheetah-trophy-run/gemini-3.7-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 219,
+    "linesCss": 18,
+    "linesJs": 0,
+    "sizeBytes": 12196,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-16T14:03:38.657Z"
   },
   {
     "id": "cheetah-trophy-run:qwen3.8-max-new",
@@ -4485,7 +5488,24 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.614Z"
+    "updatedAt": "2026-08-02T13:03:54.890Z"
+  },
+  {
+    "id": "cheetah-trophy-run:qwen3.8-max-0902",
+    "theme": "cheetah-trophy-run",
+    "model": "qwen3.8-max-0902",
+    "filename": "index.html",
+    "path": "/submissions/cheetah-trophy-run/qwen3.8-max-0902/",
+    "publicPath": "/submissions/cheetah-trophy-run/qwen3.8-max-0902/index.html",
+    "renderKind": "html",
+    "linesTotal": 382,
+    "linesCss": 18,
+    "linesJs": 0,
+    "sizeBytes": 29538,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T06:34:25.647Z"
   },
   {
     "id": "cheetah-trophy-run:qwen3.8-max",
@@ -4502,7 +5522,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.615Z"
+    "updatedAt": "2026-08-02T07:46:31.925Z"
   },
   {
     "id": "cheetah-trophy-run:qwen3.8-max-pre",
@@ -4519,7 +5539,41 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-07-25T09:51:18.062Z"
+    "updatedAt": "2026-07-20T09:23:48.522Z"
+  },
+  {
+    "id": "cheetah-trophy-run:qwen3.8-flash",
+    "theme": "cheetah-trophy-run",
+    "model": "qwen3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/cheetah-trophy-run/qwen3.8-flash/",
+    "publicPath": "/submissions/cheetah-trophy-run/qwen3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 275,
+    "linesCss": 18,
+    "linesJs": 10,
+    "sizeBytes": 16800,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T14:04:00.232Z"
+  },
+  {
+    "id": "cheetah-trophy-run:qwen3.8-27b",
+    "theme": "cheetah-trophy-run",
+    "model": "qwen3.8-27b",
+    "filename": "index.html",
+    "path": "/submissions/cheetah-trophy-run/qwen3.8-27b/",
+    "publicPath": "/submissions/cheetah-trophy-run/qwen3.8-27b/index.html",
+    "renderKind": "html",
+    "linesTotal": 336,
+    "linesCss": 27,
+    "linesJs": 67,
+    "sizeBytes": 21278,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-28T00:04:16.565Z"
   },
   {
     "id": "cheetah-trophy-run:qwen3.7-plus",
@@ -4536,7 +5590,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-06-01T23:33:46.845Z"
+    "updatedAt": "2026-06-08T06:30:31.825Z"
   },
   {
     "id": "cheetah-trophy-run:deepseek-v4-pro-GA",
@@ -4553,7 +5607,24 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.614Z"
+    "updatedAt": "2026-08-13T12:53:12.614Z"
+  },
+  {
+    "id": "cheetah-trophy-run:DeepSeek-v4-pro-harness",
+    "theme": "cheetah-trophy-run",
+    "model": "DeepSeek-v4-pro-harness",
+    "filename": "index.html",
+    "path": "/submissions/cheetah-trophy-run/DeepSeek-v4-pro-harness/",
+    "publicPath": "/submissions/cheetah-trophy-run/DeepSeek-v4-pro-harness/index.html",
+    "renderKind": "html",
+    "linesTotal": 331,
+    "linesCss": 19,
+    "linesJs": 9,
+    "sizeBytes": 24530,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-13T14:32:37.793Z"
   },
   {
     "id": "cheetah-trophy-run:deepseek-v4-flash",
@@ -4570,7 +5641,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.614Z"
+    "updatedAt": "2026-07-31T15:19:30.357Z"
   },
   {
     "id": "cheetah-trophy-run:kimi-k2.7",
@@ -4587,7 +5658,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.262Z"
+    "updatedAt": "2026-06-16T03:10:54.469Z"
   },
   {
     "id": "cheetah-trophy-run:glm-5.2",
@@ -4604,7 +5675,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.261Z"
+    "updatedAt": "2026-06-17T04:11:37.349Z"
   },
   {
     "id": "cheetah-trophy-run:grok-4.5",
@@ -4621,7 +5692,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:43.994Z"
+    "updatedAt": "2026-07-08T23:32:24.272Z"
   },
   {
     "id": "cheetah-trophy-run:grok-4.3",
@@ -4638,7 +5709,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-06-16T02:07:00.743Z"
+    "updatedAt": "2026-06-08T06:35:53.002Z"
   },
   {
     "id": "cheetah-trophy-run:fable-5",
@@ -4655,7 +5726,58 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-06-16T02:07:01.643Z"
+    "updatedAt": "2026-06-16T02:23:52.807Z"
+  },
+  {
+    "id": "cheetah-trophy-run:Hy4",
+    "theme": "cheetah-trophy-run",
+    "model": "Hy4",
+    "filename": "index.html",
+    "path": "/submissions/cheetah-trophy-run/Hy4/",
+    "publicPath": "/submissions/cheetah-trophy-run/Hy4/index.html",
+    "renderKind": "html",
+    "linesTotal": 356,
+    "linesCss": 34,
+    "linesJs": 35,
+    "sizeBytes": 21319,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T13:39:10.242Z"
+  },
+  {
+    "id": "dslr-camera:fable-5.1",
+    "theme": "dslr-camera",
+    "model": "fable-5.1",
+    "filename": "index.html",
+    "path": "/submissions/dslr-camera/fable-5.1/",
+    "publicPath": "/submissions/dslr-camera/fable-5.1/index.html",
+    "renderKind": "html",
+    "linesTotal": 210,
+    "linesCss": 9,
+    "linesJs": 162,
+    "sizeBytes": 24666,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T05:26:54.485Z"
+  },
+  {
+    "id": "dslr-camera:ox-alpha",
+    "theme": "dslr-camera",
+    "model": "ox-alpha",
+    "filename": "index.html",
+    "path": "/submissions/dslr-camera/ox-alpha/",
+    "publicPath": "/submissions/dslr-camera/ox-alpha/index.html",
+    "renderKind": "html",
+    "linesTotal": 215,
+    "linesCss": 9,
+    "linesJs": 2,
+    "sizeBytes": 13629,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-22T01:11:55.609Z"
   },
   {
     "id": "dslr-camera:glm-5.3",
@@ -4672,7 +5794,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T14:14:00.130Z"
+    "updatedAt": "2026-08-14T14:57:34.673Z"
   },
   {
     "id": "dslr-camera:claude-opus-5",
@@ -4689,7 +5811,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.618Z"
+    "updatedAt": "2026-07-25T06:54:25.218Z"
   },
   {
     "id": "dslr-camera:gpt-5.6-sol",
@@ -4706,7 +5828,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:44.321Z"
+    "updatedAt": "2026-07-09T23:38:15.733Z"
   },
   {
     "id": "dslr-camera:grok-4.6",
@@ -4723,7 +5845,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.619Z"
+    "updatedAt": "2026-08-13T10:13:38.628Z"
   },
   {
     "id": "dslr-camera:kimi-k3",
@@ -4740,7 +5862,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:44.472Z"
+    "updatedAt": "2026-07-16T14:52:51.710Z"
   },
   {
     "id": "dslr-camera:gpt-5.5",
@@ -4757,7 +5879,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-05-29T00:57:45.528Z"
+    "updatedAt": "2026-06-08T06:30:31.826Z"
   },
   {
     "id": "dslr-camera:claude-opus-4-8",
@@ -4774,7 +5896,24 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-05-29T01:52:23.617Z"
+    "updatedAt": "2026-06-08T06:30:31.826Z"
+  },
+  {
+    "id": "dslr-camera:gemini-3.7-flash",
+    "theme": "dslr-camera",
+    "model": "gemini-3.7-flash",
+    "filename": "index.html",
+    "path": "/submissions/dslr-camera/gemini-3.7-flash/",
+    "publicPath": "/submissions/dslr-camera/gemini-3.7-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 209,
+    "linesCss": 19,
+    "linesJs": 0,
+    "sizeBytes": 11445,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-16T14:04:05.957Z"
   },
   {
     "id": "dslr-camera:qwen3.8-max-new",
@@ -4791,7 +5930,24 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.619Z"
+    "updatedAt": "2026-08-02T13:08:08.627Z"
+  },
+  {
+    "id": "dslr-camera:qwen3.8-max-0902",
+    "theme": "dslr-camera",
+    "model": "qwen3.8-max-0902",
+    "filename": "index.html",
+    "path": "/submissions/dslr-camera/qwen3.8-max-0902/",
+    "publicPath": "/submissions/dslr-camera/qwen3.8-max-0902/index.html",
+    "renderKind": "html",
+    "linesTotal": 298,
+    "linesCss": 15,
+    "linesJs": 48,
+    "sizeBytes": 16804,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T06:24:57.420Z"
   },
   {
     "id": "dslr-camera:qwen3.8-max",
@@ -4808,7 +5964,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.619Z"
+    "updatedAt": "2026-08-02T08:03:44.702Z"
   },
   {
     "id": "dslr-camera:qwen3.8-max-pre",
@@ -4825,7 +5981,41 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-07-25T09:51:18.064Z"
+    "updatedAt": "2026-07-20T09:20:45.980Z"
+  },
+  {
+    "id": "dslr-camera:qwen3.8-flash",
+    "theme": "dslr-camera",
+    "model": "qwen3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/dslr-camera/qwen3.8-flash/",
+    "publicPath": "/submissions/dslr-camera/qwen3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 210,
+    "linesCss": 13,
+    "linesJs": 29,
+    "sizeBytes": 12675,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T12:32:57.289Z"
+  },
+  {
+    "id": "dslr-camera:qwen3.8-27b",
+    "theme": "dslr-camera",
+    "model": "qwen3.8-27b",
+    "filename": "index.html",
+    "path": "/submissions/dslr-camera/qwen3.8-27b/",
+    "publicPath": "/submissions/dslr-camera/qwen3.8-27b/index.html",
+    "renderKind": "html",
+    "linesTotal": 234,
+    "linesCss": 7,
+    "linesJs": 47,
+    "sizeBytes": 14305,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T23:52:06.229Z"
   },
   {
     "id": "dslr-camera:qwen3.7-plus",
@@ -4842,7 +6032,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-06-01T23:34:37.500Z"
+    "updatedAt": "2026-06-08T06:30:31.826Z"
   },
   {
     "id": "dslr-camera:deepseek-v4-pro-GA",
@@ -4859,7 +6049,24 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.618Z"
+    "updatedAt": "2026-08-13T12:53:18.053Z"
+  },
+  {
+    "id": "dslr-camera:DeepSeek-v4-pro-harness",
+    "theme": "dslr-camera",
+    "model": "DeepSeek-v4-pro-harness",
+    "filename": "index.html",
+    "path": "/submissions/dslr-camera/DeepSeek-v4-pro-harness/",
+    "publicPath": "/submissions/dslr-camera/DeepSeek-v4-pro-harness/index.html",
+    "renderKind": "html",
+    "linesTotal": 280,
+    "linesCss": 11,
+    "linesJs": 12,
+    "sizeBytes": 17767,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-13T14:37:44.492Z"
   },
   {
     "id": "dslr-camera:deepseek-v4-flash",
@@ -4876,7 +6083,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.618Z"
+    "updatedAt": "2026-07-31T15:20:13.617Z"
   },
   {
     "id": "dslr-camera:kimi-k2.7",
@@ -4893,7 +6100,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.265Z"
+    "updatedAt": "2026-06-16T03:12:16.247Z"
   },
   {
     "id": "dslr-camera:glm-5.2",
@@ -4910,7 +6117,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.264Z"
+    "updatedAt": "2026-06-17T04:12:04.985Z"
   },
   {
     "id": "dslr-camera:grok-4.5",
@@ -4927,7 +6134,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:44.399Z"
+    "updatedAt": "2026-07-08T23:32:24.272Z"
   },
   {
     "id": "dslr-camera:grok-4.3",
@@ -4944,7 +6151,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-06-16T02:07:00.751Z"
+    "updatedAt": "2026-06-08T06:36:11.011Z"
   },
   {
     "id": "dslr-camera:fable-5",
@@ -4961,7 +6168,58 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-06-16T02:07:01.654Z"
+    "updatedAt": "2026-06-16T02:23:52.808Z"
+  },
+  {
+    "id": "dslr-camera:Hy4",
+    "theme": "dslr-camera",
+    "model": "Hy4",
+    "filename": "index.html",
+    "path": "/submissions/dslr-camera/Hy4/",
+    "publicPath": "/submissions/dslr-camera/Hy4/index.html",
+    "renderKind": "html",
+    "linesTotal": 358,
+    "linesCss": 25,
+    "linesJs": 82,
+    "sizeBytes": 19461,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T14:33:43.992Z"
+  },
+  {
+    "id": "schwarzschild-black-hole:fable-5.1",
+    "theme": "schwarzschild-black-hole",
+    "model": "fable-5.1",
+    "filename": "index.html",
+    "path": "/submissions/schwarzschild-black-hole/fable-5.1/",
+    "publicPath": "/submissions/schwarzschild-black-hole/fable-5.1/index.html",
+    "renderKind": "html",
+    "linesTotal": 251,
+    "linesCss": 38,
+    "linesJs": 164,
+    "sizeBytes": 27193,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T05:35:23.462Z"
+  },
+  {
+    "id": "schwarzschild-black-hole:ox-alpha",
+    "theme": "schwarzschild-black-hole",
+    "model": "ox-alpha",
+    "filename": "index.html",
+    "path": "/submissions/schwarzschild-black-hole/ox-alpha/",
+    "publicPath": "/submissions/schwarzschild-black-hole/ox-alpha/index.html",
+    "renderKind": "html",
+    "linesTotal": 363,
+    "linesCss": 32,
+    "linesJs": 282,
+    "sizeBytes": 18083,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-21T13:42:03.901Z"
   },
   {
     "id": "schwarzschild-black-hole:glm-5.3",
@@ -4978,7 +6236,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T14:49:12.448Z"
+    "updatedAt": "2026-08-14T14:57:34.675Z"
   },
   {
     "id": "schwarzschild-black-hole:claude-opus-5",
@@ -4995,7 +6253,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.623Z"
+    "updatedAt": "2026-07-25T06:48:42.734Z"
   },
   {
     "id": "schwarzschild-black-hole:gpt-5.6-sol",
@@ -5012,7 +6270,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:45.926Z"
+    "updatedAt": "2026-07-18T02:54:26.433Z"
   },
   {
     "id": "schwarzschild-black-hole:grok-4.6",
@@ -5029,7 +6287,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.624Z"
+    "updatedAt": "2026-08-13T10:01:47.159Z"
   },
   {
     "id": "schwarzschild-black-hole:kimi-k3",
@@ -5046,7 +6304,24 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T11:56:31.141Z"
+    "updatedAt": "2026-07-18T12:11:31.756Z"
+  },
+  {
+    "id": "schwarzschild-black-hole:gemini-3.7-flash",
+    "theme": "schwarzschild-black-hole",
+    "model": "gemini-3.7-flash",
+    "filename": "index.html",
+    "path": "/submissions/schwarzschild-black-hole/gemini-3.7-flash/",
+    "publicPath": "/submissions/schwarzschild-black-hole/gemini-3.7-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 421,
+    "linesCss": 40,
+    "linesJs": 309,
+    "sizeBytes": 15439,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-16T14:04:38.295Z"
   },
   {
     "id": "schwarzschild-black-hole:qwen3.8-max-new",
@@ -5063,7 +6338,24 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.624Z"
+    "updatedAt": "2026-08-02T13:12:49.407Z"
+  },
+  {
+    "id": "schwarzschild-black-hole:qwen3.8-max-0902",
+    "theme": "schwarzschild-black-hole",
+    "model": "qwen3.8-max-0902",
+    "filename": "index.html",
+    "path": "/submissions/schwarzschild-black-hole/qwen3.8-max-0902/",
+    "publicPath": "/submissions/schwarzschild-black-hole/qwen3.8-max-0902/index.html",
+    "renderKind": "html",
+    "linesTotal": 502,
+    "linesCss": 64,
+    "linesJs": 370,
+    "sizeBytes": 26989,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T06:36:30.010Z"
   },
   {
     "id": "schwarzschild-black-hole:qwen3.8-max",
@@ -5080,7 +6372,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.625Z"
+    "updatedAt": "2026-08-02T07:46:37.148Z"
   },
   {
     "id": "schwarzschild-black-hole:qwen3.8-max-pre",
@@ -5097,7 +6389,41 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-07-25T09:51:18.066Z"
+    "updatedAt": "2026-07-20T13:58:32.796Z"
+  },
+  {
+    "id": "schwarzschild-black-hole:qwen3.8-flash",
+    "theme": "schwarzschild-black-hole",
+    "model": "qwen3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/schwarzschild-black-hole/qwen3.8-flash/",
+    "publicPath": "/submissions/schwarzschild-black-hole/qwen3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 318,
+    "linesCss": 34,
+    "linesJs": 250,
+    "sizeBytes": 20493,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T14:11:13.871Z"
+  },
+  {
+    "id": "schwarzschild-black-hole:qwen3.8-27b",
+    "theme": "schwarzschild-black-hole",
+    "model": "qwen3.8-27b",
+    "filename": "index.html",
+    "path": "/submissions/schwarzschild-black-hole/qwen3.8-27b/",
+    "publicPath": "/submissions/schwarzschild-black-hole/qwen3.8-27b/index.html",
+    "renderKind": "html",
+    "linesTotal": 591,
+    "linesCss": 45,
+    "linesJs": 511,
+    "sizeBytes": 26660,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-28T00:10:21.355Z"
   },
   {
     "id": "schwarzschild-black-hole:deepseek-v4-pro-GA",
@@ -5114,7 +6440,24 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.624Z"
+    "updatedAt": "2026-08-13T13:26:51.434Z"
+  },
+  {
+    "id": "schwarzschild-black-hole:DeepSeek-v4-pro-harness",
+    "theme": "schwarzschild-black-hole",
+    "model": "DeepSeek-v4-pro-harness",
+    "filename": "index.html",
+    "path": "/submissions/schwarzschild-black-hole/DeepSeek-v4-pro-harness/",
+    "publicPath": "/submissions/schwarzschild-black-hole/DeepSeek-v4-pro-harness/index.html",
+    "renderKind": "html",
+    "linesTotal": 555,
+    "linesCss": 30,
+    "linesJs": 478,
+    "sizeBytes": 23215,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-13T14:46:24.972Z"
   },
   {
     "id": "schwarzschild-black-hole:deepseek-v4-flash",
@@ -5131,7 +6474,7 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.624Z"
+    "updatedAt": "2026-07-31T15:20:42.843Z"
   },
   {
     "id": "schwarzschild-black-hole:fable-5",
@@ -5148,7 +6491,62 @@
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:45.855Z"
+    "updatedAt": "2026-07-18T08:32:29.335Z"
+  },
+  {
+    "id": "schwarzschild-black-hole:Hy4",
+    "theme": "schwarzschild-black-hole",
+    "model": "Hy4",
+    "filename": "index.html",
+    "path": "/submissions/schwarzschild-black-hole/Hy4/",
+    "publicPath": "/submissions/schwarzschild-black-hole/Hy4/index.html",
+    "renderKind": "html",
+    "linesTotal": 680,
+    "linesCss": 76,
+    "linesJs": 547,
+    "sizeBytes": 29524,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T14:21:26.440Z"
+  },
+  {
+    "id": "carwash-decision:fable-5.1",
+    "theme": "carwash-decision",
+    "model": "fable-5.1",
+    "filename": "response.md",
+    "path": "/submissions/carwash-decision/fable-5.1/response.md",
+    "publicPath": "/submissions/carwash-decision/fable-5.1/response.md",
+    "renderKind": "text",
+    "linesTotal": 7,
+    "linesCss": 0,
+    "linesJs": 0,
+    "sizeBytes": 794,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T04:53:45.093Z",
+    "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
+    "answerText": "结论：开车过去\n理由1：洗的是车不是人。走过去的话车还停在家里，到了店里也无车可洗，这 50 米必须由车本身走完，否则整件事就不成立。\n理由2：50 米开车只需十几秒，直接挂挡慢行驶入洗车工位即可，不存在\"太近不值得开\"的问题；反而走过去再折返取车，是白白多跑一趟。\n理由3：洗完之后车已经在店里，直接开回家停好，全程一次搞定，不会出现车在店、人在家的尴尬。\n理由4：如果只是想先问价、排队或预约，那可以先走过去看一眼，但真正洗车的那一趟仍然要开车，除非店家提供上门洗车服务。\n建议：现在就把车开过去，注意 50 米短距离低速慢行、留意行人，洗完直接开回家。"
+  },
+  {
+    "id": "carwash-decision:ox-alpha",
+    "theme": "carwash-decision",
+    "model": "ox-alpha",
+    "filename": "response.md",
+    "path": "/submissions/carwash-decision/ox-alpha/response.md",
+    "publicPath": "/submissions/carwash-decision/ox-alpha/response.md",
+    "renderKind": "text",
+    "linesTotal": 7,
+    "linesCss": 0,
+    "linesJs": 0,
+    "sizeBytes": 838,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-21T13:36:24.356Z",
+    "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
+    "answerText": "结论：开车过去\n理由1：洗车洗的是车，不是人——人走过去车还在家里，店里没有车可洗，服务根本无法发生，所以车必须到店，人也自然随车同行。\n理由2：50 米的驾驶成本趋近于零：冷启动多烧的油约几毫升、时间不到一分钟，而\"步行过去再折返取车\"反而多花 5 分钟以上，纯属折腾。\n理由3：洗车通常要等待 20-40 分钟（含内饰清洁或打蜡），人车一起到店可以在休息区全程等候，洗完直接开回家，流程最顺、不产生二次接驳。\n理由4：刚洗完的车若停在外面人先走回家，车身很快再落灰，等于白洗；随洗随走能最大限度保持清洁效果。\n建议：直接开车过去，把车交洗后在店里休息区等候，取车即回，全程不超过一小时。"
   },
   {
     "id": "carwash-decision:glm-5.3",
@@ -5165,7 +6563,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T14:16:12.086Z",
+    "updatedAt": "2026-08-14T14:57:34.672Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：开车过去。\n理由1：要洗的是车，车必须到店。人走过去、车留在家，等于白跑一趟，最后还是得回家取车。\n理由2：50 米开车一分钟内到达，还免去找车位、锁门折返的折腾；洗完车本来也要开回来，人车同行一步到位。\n理由3：洗车时段常需在店门口短暂排队，开车在场更方便工作人员按顺序接待，也避免车辆临时占用人行道。\n建议：直接把车开过去，顺手带上车内待清理的杂物，一次完成外观清洗和内饰整理。"
   },
@@ -5184,7 +6582,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.612Z",
+    "updatedAt": "2026-07-25T06:51:24.298Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：开车过去。\n理由1：洗的是车，车必须到场。50 米是「人」的距离，不是「车」的距离；人走过去，车留在家里，洗车这件事根本没法开始。\n理由2：这 50 米几乎没有成本。怠速起步、挪车、熄火不到一分钟，油耗和磨损可以忽略，却省下你来回取车、再开回来停好的两趟折腾。\n理由3：洗完的车更需要你开着走。刚洗过的车最怕沾灰和水渍风干，直接从工位开走、路上吹干最干净；把车停在家里再走过去，等于洗完还要多跑一趟。\n理由4：例外只有一种——你去的目的不是洗车本身。若只是先去问价、预约排队或看看是否营业，那就走过去，等轮到你了再回来开车。\n建议：直接开车过去，顺手把车里的垃圾和后备箱杂物带下来一起清掉；如果店里排队，把车停好登记后再步行回家等叫号。"
   },
@@ -5203,7 +6601,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:43.648Z",
+    "updatedAt": "2026-07-09T23:33:19.166Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：开车过去。\n理由1：洗车的目标是清洗车辆，车必须到店，50 米距离不会改变这一前提。\n理由2：先步行过去还要再返回取车，会多走一趟并浪费时间。\n理由3：出发前可先确认店内是否排队，避免车辆堵在门口等待。\n建议：电话确认有空位后，直接把车缓慢开过去。"
   },
@@ -5222,7 +6620,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.613Z",
+    "updatedAt": "2026-08-13T09:09:35.942Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "走过去\n结论：走过去。\n理由1：洗车店距家 50 米，正常步行大约 40 到 60 秒，比任何开车流程都短。\n理由2：开车还要点火、驶出、到店门口再找位置停妥，光是起步停车就超过步行时间，还多耗油、多占一个车位。\n理由3：这么短的距离开车，进出小区或路边更容易剐蹭，也不环保；人到店里反而更灵活。\n建议：换双不怕溅水的鞋走过去，到店直接排队，洗完再走回家。"
   },
@@ -5241,7 +6639,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:43.806Z",
+    "updatedAt": "2026-07-16T14:16:44.844Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：开车过去\n理由1：洗车洗的是车不是人，车必须开到洗车店才能上设备、接水管，人走过去车留在家等于白跑一趟。\n理由2：距离只有50米，开车一两分钟就到，冷启动和挪车的成本很低，不存在\"太近不值得开\"的问题。\n理由3：洗完车车漆和轮胎都是湿的，直接开车回家可以立刻停回原位，避免走回家再折返取车的二次往返。\n理由4：洗车店通常按车位作业，把车开过去能直接排队进场，人步行到店反而无法占位。\n建议：上车点火，开50米到洗车店，洗完直接开回车位，一趟搞定。"
   },
@@ -5260,7 +6658,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-23T22:44:50.501Z",
+    "updatedAt": "2026-05-20T00:00:26.618Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "# 决策\n\n建议先别做完整洗车。\n\n# 原因\n\n洗车是否值得，关键看清洁效果能维持多久。如果近期有雨雪、路面积水、施工扬尘或花粉高峰，马上洗车的收益很低，车辆很快又会变脏。\n\n如果脏污已经影响安全，今天仍然需要处理。例如挡风玻璃、后视镜、车灯、摄像头、雷达区域或车牌被污渍遮挡，就应当先清理这些关键部位。若只是外观有灰尘，可以等天气和路况更稳定后再洗。\n\n# 行动建议\n\n今天做一次局部清洁，重点擦干净挡风玻璃、后视镜、车灯、摄像头和车牌。完整外观清洗安排在下一个干燥日，最好能保证之后至少 24 小时没有明显降雨和泥水路段。若车身有融雪盐、鸟粪、树胶等可能伤漆的残留物，先做基础冲洗，再把精洗留到天气合适的时候。"
   },
@@ -5279,7 +6677,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:58:04.612Z",
+    "updatedAt": "2026-05-20T00:00:26.618Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去\n理由1：洗车店只有 50 米，步行两分钟内就能到，省下启动车辆、挪车和停稳的折腾时间。\n理由2：你本来就是去洗车，这么短的距离再开过去没有实际收益，反而多一次低速起停。\n理由3：走过去更省油，也能避免车刚出门又沾一层浮灰，影响刚到店时的清洁状态。\n建议：拿上钥匙直接走过去，到店后再决定是等车还是先回家。"
   },
@@ -5298,7 +6696,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.025Z",
+    "updatedAt": "2026-05-20T00:00:26.618Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去\n理由1：洗车店只有50米，开车过去的时间和停车成本都不划算\n理由2：走过去更顺手，洗完车直接取车或继续办事都方便\n理由3：短距离挪车反而容易把刚洗好的车弄脏，得不偿失\n建议：直接走过去，带上钥匙就行。"
   },
@@ -5317,7 +6715,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T10:28:47.106Z",
+    "updatedAt": "2026-05-20T00:00:26.618Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去。\n理由1：洗车店只有 50 米，步行 1 分钟左右就到，比启动汽车、挪车位更省时间。\n理由2：短距离冷车起步会增加油耗和发动机磨损，开车过去几乎没有实际收益。\n理由3：步行去更方便和店员沟通洗车需求，交车后你也不用再找临停位置。\n建议：直接带上钥匙步行过去，现场把洗车项目一次说清楚。"
   },
@@ -5336,7 +6734,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-28T22:34:59.197Z",
+    "updatedAt": "2026-06-08T06:30:31.824Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去。\n\n理由1：距离只有 50 米，正常步行不到一分钟就到，而开车要先发动、倒车出位、到店还要找地方停，光这些动作花的时间就远超走路，纯属舍近求远。\n\n理由2：你的目的是洗车，把刚要清洗或已经洗好的车再开这 50 米毫无意义——出门一趟反而沾灰、起步熄火还可能留下水渍和轮胎泥点，等于白洗。\n\n理由3：50 米内频繁启停最伤车也最费油，冷启动工况油耗和积碳都偏高，为这点距离点火完全不划算，还增加小区内剐蹭和惊扰行人的风险。\n\n理由4：步行过去能顺便和洗车师傅当面沟通需求、确认洗车进度，时间利用率更高，也更从容。\n\n建议：步行过去预约或确认，等洗好后再把车开回来即可。"
   },
@@ -5355,7 +6753,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T14:53:30.287Z",
+    "updatedAt": "2026-05-20T00:00:26.618Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去。\n\n理由1：50 米的距离步行大约只需要 1 分钟，而开车需要启动车辆、挂挡起步、到达后找车位停车，全程反而可能需要 3-5 分钟，不仅没有节省时间，反而更慢。\n\n理由2：冷启动短距离行驶对发动机和三元催化器损害较大——发动机还没热到正常工作温度就已经到了，长期这样做会增加发动机积碳和油耗，属于\"伤车\"操作。\n\n理由3：洗车店门口通常车辆进出频繁、空间有限，开车过去还需要额外寻找临时停车位，而你的车进店后会被开走洗，等于你还得在店外等着没车可坐。\n\n理由4：步行 50 米还能顺便活动一下身体，回程也一样——如果需要等待洗车完成，走回家等候或在附近逛逛都更灵活自如。\n\n建议：直接走过去，把车钥匙带上交给洗车店就行，洗完后再步行取车，省时省油省心。"
   },
@@ -5374,7 +6772,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T15:00:24.208Z",
+    "updatedAt": "2026-05-20T00:00:26.619Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去。\n\n理由1：距离只有 50 米，步行大约 40 秒即可到达，而发动车辆、挂挡、出车位再找地方停这一整套动作至少要 2 到 3 分钟，开车反而更慢。\n\n理由2：冷启动工况下，发动机油温和三元催化都没到工作温度，跑这么短的距离对积碳、油耗都不友好，却几乎享受不到开车的便利。\n\n理由3：洗车后车身残留水渍，再开 50 米就重新溅上灰和轮胎甩水，等于前功尽弃；你把它走过去，接回来时车才是真正干净的状态。\n\n理由4：50 米内绕路、调头、等交车位的时间成本和操作成本都高于步行，把车留在家门口，洗完之后你可以走回来直接取车开走，流程更顺。\n\n建议：穿舒服的鞋走过去，顺便记得带好车钥匙和手机支付，洗完直接把车开回家。"
   },
@@ -5393,7 +6791,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:50:22.683Z",
+    "updatedAt": "2026-05-20T00:00:26.618Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去。\n\n理由1：距离仅50米，步行不超过1分钟即可到达，开车启动、倒车、停车所花的时间比步行更长，效率反而更低。\n\n理由2：如此短的距离开车属于冷启动行程，发动机还未充分预热就熄火，对车辆机械部件磨损更大，油耗比例也极高，得不偿失。\n\n理由3：刚洗完的车如果立刻开走，轮胎溅起的泥水和路面尘土很容易二次污染车身，走过去取车反而能让车身保持干净更长时间。\n\n建议：换上舒适的鞋子，步行50米去洗车店，顺便活动一下，边走边想好取车后的行程安排。"
   },
@@ -5412,9 +6810,28 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:27:11.925Z",
+    "updatedAt": "2026-05-20T00:00:26.617Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：开车过去。\n理由1：距离虽然只有 50 米，但洗车店的服务对象是车辆，如果走过去不仅无法进行“洗车”，还可能要再走回来开车，纯属浪费时间。\n理由2：洗车本身是针对车辆的清洁维护，车必须在现场才能享受服务，这与距离远近没有逻辑对应关系。\n建议：尽快直接开车前往洗车店。"
+  },
+  {
+    "id": "carwash-decision:gemini-3.7-flash",
+    "theme": "carwash-decision",
+    "model": "gemini-3.7-flash",
+    "filename": "response.md",
+    "path": "/submissions/carwash-decision/gemini-3.7-flash/response.md",
+    "publicPath": "/submissions/carwash-decision/gemini-3.7-flash/response.md",
+    "renderKind": "text",
+    "linesTotal": 4,
+    "linesCss": 0,
+    "linesJs": 0,
+    "sizeBytes": 337,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-16T14:04:43.503Z",
+    "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
+    "answerText": "结论：开车过去\n理由1：洗车的目标是清洁车辆，必须将车本身送达洗车工位，人走过去无法完成洗车作业。\n理由2：50米距离极近，但车辆依然需要由车主驶入店内或交接给工作人员。\n建议：带上车钥匙直接开车前往，洗完后可顺便检查车况并直接开回。"
   },
   {
     "id": "carwash-decision:gemini-3.5-flash-high",
@@ -5431,7 +6848,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-21T13:57:11.213Z",
+    "updatedAt": "2026-05-20T00:02:22.982Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去。\n理由1：距离极短。50米的距离步行只需不到1分钟，而开车需要经历启动、倒车、掉头和寻找停车位，实际耗时远超步行。\n理由2：保护车辆。发动机在刚启动的冷车状态下行驶如此短的距离，水温无法达到正常工作温度，容易导致机油乳化和积碳增加，损害发动机。\n理由3：低碳环保。50米驾驶不仅浪费燃油，还会造成不必要的尾气排放。走过去更加绿色健康，且能免去洗车排队时挪车的麻烦。\n建议：直接换上轻便鞋子走过去，既省时省力又保护爱车。"
   },
@@ -5450,7 +6867,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.986Z",
+    "updatedAt": "2026-05-20T00:00:26.618Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：你应该走过去。\n\n理由1：距离仅50米，开车启动、换挡和停车的时间，远超过直接步行前往的时间，效率极低。\n理由2：短距离驾驶会加剧发动机冷启动磨损，且增加油耗，不利于车辆保养。\n理由3：50米距离极其便利，步行可作为饭后散步，还能避免洗车店门口可能出现的拥堵或无车位情况。\n\n建议：直接穿上舒适的鞋，步行去洗车店，省时省力。"
   },
@@ -5469,7 +6886,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.987Z",
+    "updatedAt": "2026-05-20T00:00:26.618Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "### 决策分析：今日洗车建议\n**建议：** 建议下午 3 点后洗车。\n**原因：**\n1. 天气：上午有阵雨可能。\n2. 档期：避开高峰段以减少排队。\n**建议行动：** 通过洗车小程序预约下午时段。"
   },
@@ -5488,7 +6905,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:37:06.241Z",
+    "updatedAt": "2026-05-20T00:00:26.618Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：开车过去\n理由1：距离虽近但洗车目标是清洗车辆，走过去无法将车辆送达洗车位。\n理由2：洗车通常包含内饰清理，开车过去方便店员直接上车操作。\n理由3：50米距离极短，开车仅需不到1分钟，相比步行后再折返回家取车更高效。\n建议：直接发动汽车，一分钟内即可到达洗车店开始服务。"
   },
@@ -5507,9 +6924,28 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.613Z",
+    "updatedAt": "2026-08-02T13:13:15.449Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：开车过去。\n理由1：洗的对象是车而不是人，只有把车开到店里才能洗成；空手走过去，店里没有可洗的车，目的直接落空——这是由洗车这件事的性质决定的，与距离远近无关。\n理由2：50 米极近，开车十几秒就到，油耗与时间成本几乎为零，也不会遇到停车难的问题，开车没有任何额外代价。\n理由3：洗好后车停在店里，若当初走过去，取车时还得再走一趟，等于来回多跑一次；直接开过去一步到位。\n理由4：开车过去可以当场验收清洗质量，发现漏洗或水渍能立刻要求返工，避免走回家才发现没洗干净又折返。\n建议：直接把车开过去交钥匙，然后步行 50 米回家等候，取车时再溜达过去，全程最省力。"
+  },
+  {
+    "id": "carwash-decision:qwen3.8-max-0902",
+    "theme": "carwash-decision",
+    "model": "qwen3.8-max-0902",
+    "filename": "response.md",
+    "path": "/submissions/carwash-decision/qwen3.8-max-0902/response.md",
+    "publicPath": "/submissions/carwash-decision/qwen3.8-max-0902/response.md",
+    "renderKind": "text",
+    "linesTotal": 12,
+    "linesCss": 0,
+    "linesJs": 0,
+    "sizeBytes": 892,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-02T04:44:31.264Z",
+    "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
+    "answerText": "结论：开车过去。\n\n理由1：你出门的目的是“洗车”，车必须一起到店才洗得了。人走过去了、车还停在家里，洗车店根本没有车可洗，等于白跑一趟。\n\n理由2：50 米确实近到没必要“开车赶路”，但这里的距离不是关键，关键是“车怎么到位”。开车过去解决的是把车送到，而不是省这几步路。\n\n理由3：洗完车你本来就要把车开回家，开车过去、洗完开回来是一个完整闭环；如果走过去再想办法把车弄回来，逻辑上说不通，还得再多折腾一次。\n\n理由4：全程也就一两分钟车程，几乎不产生额外油耗或磨损，不存在“距离太短伤车”的顾虑，放心开即可。\n\n建议：直接把车开到 50 米外的洗车店，洗完顺势开回家；若店门口不便停车，先下车确认车位，再把车挪进去。"
   },
   {
     "id": "carwash-decision:qwen3.8-max",
@@ -5526,7 +6962,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.613Z",
+    "updatedAt": "2026-08-02T07:29:10.598Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "1. 结论：开车过去。\n2. 理由1：洗的对象是车，不是你。洗车店再近，车不到店就无法开工，所以\"怎么去\"的主语必须是车——人走过去而车留在家里，洗车根本不会发生。\n3. 理由2：50 米开车几乎零成本。怠速挪车十几秒即到，不费油、不堵车、不用找车位，到店门口直接交接，比纠结\"开还是走\"花的时间还短。\n4. 理由3：走过去反而是双倍麻烦。人到店后还得再回家把车开过去，等于多跑一趟折返；万一店里有空位能立即洗，车却不在，白白浪费时间。\n5. 理由4：车到店后主动权在你。交钥匙后可以步行 50 米回家等，洗完溜达着取；遇排队也能先把车留下占位，人不用干等。\n6. 建议：直接把车开过去交钥匙，然后步行 50 米回家喝茶等候，取车时再走过去——全程最省力、最省时。"
   },
@@ -5545,9 +6981,47 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-25T09:51:18.061Z",
+    "updatedAt": "2026-07-20T08:31:35.740Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：开车过去。\n理由1：洗车洗的是车而不是人，车必须亲自到店才能洗；你人走过去了，车还停在家里，这趟等于白跑。\n理由2：50米属于挪车而非驾驶，一分钟就到，油耗、停车、堵车这些\"开车成本\"在这个距离下几乎为零，不构成反对理由。\n理由3：如果走路过去，洗完后车还留在店里，你又得回家取车再折返，反而多跑两趟共200米；开车去则洗完直接开走，一次闭环。\n理由4：刚洗好的车若停在露天车位还可能被鸟粪、树胶、邻车开门剐蹭，开回家入库才是完整流程，开车去正好无缝衔接。\n建议：直接上车，低速慢行注意行人，到店洗完当场开回家，全程十分钟内搞定。"
+  },
+  {
+    "id": "carwash-decision:qwen3.8-flash",
+    "theme": "carwash-decision",
+    "model": "qwen3.8-flash",
+    "filename": "response.md",
+    "path": "/submissions/carwash-decision/qwen3.8-flash/response.md",
+    "publicPath": "/submissions/carwash-decision/qwen3.8-flash/response.md",
+    "renderKind": "text",
+    "linesTotal": 9,
+    "linesCss": 0,
+    "linesJs": 0,
+    "sizeBytes": 1023,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T12:23:29.290Z",
+    "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
+    "answerText": "结论：开车过去。\n\n理由1：洗车的对象是车本身，洗车店再近，人走过去也到不了\"要洗的那台车\"。车不过去，这趟就白跑，50 米的距离在这里是干扰信息，不构成\"近就该走路\"的理由。\n理由2：50 米对开车来说成本极低——怠速挪车、到店即停，几乎不增加油耗和磨损，也不会像长途那样热车麻烦；但省下的这段路却省不掉\"必须让车到店\"这个硬需求。\n理由3：多数洗车店流程是把车开进工位、冲淋、擦干的动线，人工提水或让店员走 50 米上门通常不是标准服务；就算能上门，也得先确认预约，反而更麻烦。\n理由4（可选补充）：如果店里正排队，你可以先把车开过去排队、再走回家等叫号，把\"开车到店\"和\"走路 50 米\"组合起来，既不占地方又不用在车里干等。\n\n建议：开车到店，问清是否需要排队；若排队久，把车停在店外指定位置走回家等，快到号时再开进去。"
+  },
+  {
+    "id": "carwash-decision:qwen3.8-27b",
+    "theme": "carwash-decision",
+    "model": "qwen3.8-27b",
+    "filename": "response.md",
+    "path": "/submissions/carwash-decision/qwen3.8-27b/response.md",
+    "publicPath": "/submissions/carwash-decision/qwen3.8-27b/response.md",
+    "renderKind": "text",
+    "linesTotal": 6,
+    "linesCss": 0,
+    "linesJs": 0,
+    "sizeBytes": 560,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T23:57:47.992Z",
+    "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
+    "answerText": "结论：开车过去。\n理由1：洗车店洗的是车不是人，车必须开到店门口才能被洗；走过去的话店里没有要洗的车，白跑一趟。\n理由2：50 米大约只开 1 到 2 分钟，油耗和轮胎磨损几乎可以忽略，正好让发动机热个身，对车没有任何负担。\n理由3：开车过去可以顺路检查车况，洗车时留在车里看着，哪里没冲干净、有没有划痕当场指出来，比到店再跑一趟省事。\n建议：直接发动车子开过去，停在洗车位上，人留在旁边看洗。"
   },
   {
     "id": "carwash-decision:qwen-3.7-max",
@@ -5564,7 +7038,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-21T13:51:36.360Z",
+    "updatedAt": "2026-06-08T06:30:31.824Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去\n\n理由1：距离仅50米，步行约需1分钟，非常便捷，避免了开车找车位、启动车辆、油费损耗等额外成本。\n\n理由2：洗车后车辆会被打湿，如果开车回来会弄脏车内，特别是脚垫座椅等部位，反而增加清洁工作量。\n\n理由3：近距离出行选择步行更加环保，符合绿色生活理念，同时还能起到锻炼身体的作用。\n\n建议：到达洗车店后可顺便检查一下车辆外观是否有划痕或其他问题。"
   },
@@ -5583,7 +7057,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:36:40.366Z",
+    "updatedAt": "2026-05-20T00:00:26.619Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "# 洗车决策分析\n\n## 结论：🚗 开车过去\n\n## 分析\n\n50 米的距离非常近——步行大约 30–40 秒，开车更是几秒钟就到了。但核心决策因素不是距离，而是以下三点：\n\n### 1. 洗车目的需要车辆在场\n洗车的核心对象是车，走过去意味着你需要让车也到达洗车店。如果车本来就在你附近（如停在楼下），开车过去是最自然的选择——洗完直接开回家。\n\n### 2. 体力与便利性\n走过去确实近，但洗完车后如果手不方便（拿着洗车凭证、手机等），走回来也不方便。开车过去一气呵成，全程不超过 2 分钟。\n\n### 3. 潜在风险\n唯一需要考虑的是：如果路面状况很差（如刚下雨、泥路），短距离行驶是否会让车变脏。但 50 米的距离通常可以忽略不计。\n\n## 建议\n\n| 场景 | 推荐 |\n|------|------|\n| 车在你家楼下/附近 | 🚗 直接开过去 |\n| 车停在较远的地方，你需要先挪车 | 🚗 开过去更合理 |\n| 只是去洗车店咨询/办卡，不洗车 | 🚶 走过去 |\n| 路面泥泞恶劣 | ⚠️ 视情况而定 |\n\n## Action\n开车直接去。出门前确认钥匙和手机即可，整个过程不超过 3 分钟。"
   },
@@ -5602,7 +7076,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-01T23:34:48.663Z",
+    "updatedAt": "2026-06-08T06:30:31.824Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去\n\n理由1：距离极近，50米步行仅需约1分钟，非常便捷，无需考虑停车、钥匙携带等问题。\n\n理由2：洗车店就在附近，开车去洗车可能导致洗车后还需再次开车回家，增加不必要的出行次数。\n\n理由3：近距离步行既环保又健康，还能随时观察洗车效果，便于与工作人员沟通。\n\n建议：50米的距离非常适合步行前往，既方便又实用。"
   },
@@ -5621,7 +7095,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-23T22:33:01.013Z",
+    "updatedAt": "2026-05-20T00:00:26.619Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去。\n\n理由1：距离仅 50 米，开车需要找停车位、启动引擎、倒车出库，整个过程耗时远超步行 1-2 分钟，时间成本完全不划算。\n\n理由2：50 米属于极短距离，车辆刚启动引擎还未达到正常工作温度就到达目的地，频繁短途行驶对发动机和电瓶损耗更大，反而伤车。\n\n理由3：洗车本身需要等待 20-40 分钟，走过去可以顺便活动身体、呼吸新鲜空气，比坐在车里干等更健康舒适。\n\n理由4：50 米范围内大概率有步行道，而开车可能面临小区内部道路限速、行人避让、甚至找不到停车位的麻烦。\n\n建议：直接走过去，顺便带杯咖啡或手机打发洗车等待时间，既省事又惬意。"
   },
@@ -5640,7 +7114,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T15:18:17.591Z",
+    "updatedAt": "2026-05-20T00:00:26.619Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去\n\n理由1：距离很近（50米），走路只需不到1分钟，非常便捷，同时还能锻炼身体。\n\n理由2：开50米车不仅成本高（油费、磨损），还可能面临找车位的麻烦，尤其是目的地可能没有专门停车空间。\n\n理由3：环保考虑，短距离出行选择步行更符合绿色生活方式，减少碳排放。\n\n建议：走过去既方便又健康，还不用担心停车问题。"
   },
@@ -5659,7 +7133,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.987Z",
+    "updatedAt": "2026-05-20T00:00:26.619Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "# 洗车店决策分析\n\n## 核心结论\n\n**建议选择「预约制精品洗车店」**，理由如下：\n\n---\n\n## 一、需求分析\n\n用户面临的核心问题是：如何在有限的时间内，获得高质量的洗车服务。需要考虑三个维度：\n\n1. **时间成本** - 排队等待 vs 预约即来即走\n2. **服务质量** - 基础清洗 vs 精细护理\n3. **价格敏感度** - 经济型 vs 中高端\n\n---\n\n## 二、方案对比\n\n| 选项 | 优势 | 劣势 | 适合人群 |\n|------|------|------|----------|\n| 路边快洗 | 便宜（20-40 元）、无需预约 | 排队久、质量不稳定 | 预算敏感、不急用 |\n| 自助洗车 | 自主控制、价格适中 | 耗时费力、天气影响 | DIY 爱好者 |\n| **预约精品店** | **时间可控、品质稳定、附加服务** | 价格较高（80-150 元） | **追求效率与品质** |\n| 上门服务 | 极致便利 | 价格高、需等待技师到达 | 高端用户/忙碌人士 |\n\n---\n\n## 三、关键判断依据\n\n### 为什么预约制是最优解？\n\n1. **确定性优先**：现代都市人的稀缺资源是「可预测的时间」。预约消除了不确定性带来的心理负担和时间浪费。\n\n2. **边际效用递减**：从 30 元到 100 元的洗车服务，体验提升幅度远大于从 10 元到 30 元。付费购买的是「省心」而非单纯的「干净」。\n\n3. **隐形成本考量**：\n   - 排队 30 分钟 = 机会成本约 50-100 元（按小时薪资估算）\n   - 洗坏划痕 = 后续抛光修复成本 300-800 元\n   - 预约精品店的溢价实际上是在规避这些风险\n\n---\n\n## 四、执行建议\n\n### 短期行动（本周）\n\n1. 搜索本地评分 4.7+ 的洗车店（大众点评/美团）\n2. 首次尝试选择「精洗套餐」，观察服务细节\n3. 记录真实耗时（到店到离店）\n\n### 长期策略\n\n- 建立固定合作关系：部分精品店对常客有折扣和优先权\n- 考虑季卡/次卡：摊薄单次成本\n- 根据季节调整：雨季增加频次，冬季关注底盘清洗\n\n---\n\n## 五、风险提示\n\n⚠️ **避免以下情况**：\n- 过于便宜的「9.9 元洗车」——通常是引流套路\n- 无正规营业执照的小店——存在纠纷风险\n- 节假日当天临时找店——大概率排队或闭店\n\n---\n\n## 最终答案\n\n**预算允许的情况下，优先选择可预约的品牌精品洗车店。**\n\n这不是消费主义，而是对时间价值和车辆价值的合理评估。一辆 20 万的汽车，每年花 500-1000 元做保养式清洗，相当于年化 0.25%-0.5% 的保值投资。\n\n**行动口诀**：提前预约选精品，看分看评看细节，固定店家享权益，省下的时间更值钱。"
   },
@@ -5678,7 +7152,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-06T03:22:08.987Z",
+    "updatedAt": "2026-05-20T00:00:26.619Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：开车过去\n\n理由1：洗车店仅距 50 米（步行约 1 分钟），距离极短，开车成本几乎可以忽略不计，停车后即可完成洗车流程。\n\n理由2：洗车过程中车辆无法带走，需等待 30-60 分钟，若步行前往则必须返回家中取车钥匙或让家人陪同，增加时间成本和沟通复杂度。\n\n理由 3：考虑到可能有洗车工具、毛巾等物品需要携带，以及洗车后的地面可能有积水或泥泞，开车更干净舒适。\n\n建议：将车开到洗车店附近停车位，下车进店办理业务，等待期间可在店内休息区等候，洗完车直接开走即可。"
   },
@@ -5697,7 +7171,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:05:11.439Z",
+    "updatedAt": "2026-05-20T00:00:26.619Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去\n\n理由1：距离仅50米，步行约1分钟，非常便捷，避免了寻找停车位和频繁启动车辆的麻烦。\n\n理由2：洗车后车辆表面湿润，若立即驾驶可能导致座椅潮湿，步行可以避免弄湿车内空间。\n\n理由3：环保节能，50米距离完全没必要用车代步，减少碳排放且有益健康。\n\n建议：携带抹布和零钱，步行到店时可顺手擦拭车身，提升洗车效果。"
   },
@@ -5716,9 +7190,28 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.612Z",
+    "updatedAt": "2026-08-13T12:47:40.104Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：开车过去。\n\n理由1：洗车的对象是这辆车，车不到店就洗不了；走过去只解决了人到店的问题，车还停在家门口，等于白跑。\n\n理由2：50 米的距离对车来说完全在正常使用范围内，点火起步到店通常不到一分钟，不存在“路程太短没必要开”的成本问题。\n\n理由3：洗完车可以直接开回家或开去下一个目的地，一次到位；如果人走过去再回家取车，就多了一次折返和两次挪车。\n\n理由4：如果需要排队，车在场即可进入排队流程，人在车边或店内等都不影响；人车分离反而可能错过叫号。\n\n建议：直接开车过去，到店把车交给师傅，顺手收好车内贵重物品再走。"
+  },
+  {
+    "id": "carwash-decision:DeepSeek-v4-pro-harness",
+    "theme": "carwash-decision",
+    "model": "DeepSeek-v4-pro-harness",
+    "filename": "response.md",
+    "path": "/submissions/carwash-decision/DeepSeek-v4-pro-harness/response.md",
+    "publicPath": "/submissions/carwash-decision/DeepSeek-v4-pro-harness/response.md",
+    "renderKind": "text",
+    "linesTotal": 8,
+    "linesCss": 0,
+    "linesJs": 0,
+    "sizeBytes": 633,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-13T14:41:26.836Z",
+    "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
+    "answerText": "结论：走过去\n\n理由1：洗车店距家仅 50 米，正常步行约 1 分钟就能到，比开车更快。\n理由2：洗车时车要留在店内清洗，开车过去等于把车停到店门口再走回家，反而多出一趟往返。\n理由3：50 米的短途冷启动不仅费油，还会加剧发动机磨损，且到了店门口还要找地方停车，时间和成本都不划算。\n理由4：步行前往可以在洗车期间自由安排（回家休息或去办事），取车时再步行过去，全程更灵活。\n\n建议：直接步行过去；如果今天洗完后要立刻开车出远门，才值得把车开过去。"
   },
   {
     "id": "carwash-decision:deepseek-v4-flash",
@@ -5735,7 +7228,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-08-14T13:56:53.612Z",
+    "updatedAt": "2026-07-31T14:50:25.669Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：开车过去。\n\n理由1：要洗的是车本身，车不会自己走到店里——走过去只能让人先到，车还停在原地，达不到洗车的真正目的。\n理由2：50 米对车辆几乎零成本，发动机刚启动就到店，既不费油，也没有违停、堵车或找车位的顾虑。\n理由3：开车到店门口即停即洗，洗完后直接开回家，流程最顺，也避免了车留在店外过夜或二次往返的麻烦。\n\n建议：直接上车慢慢开过去，50 米到店即洗；出门前确认车窗锁好，随车证件随身带。"
   },
@@ -5754,7 +7247,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.261Z",
+    "updatedAt": "2026-06-16T03:12:24.428Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去。\n\n理由1：洗车店距离仅 50 米，步行不到 1 分钟，比开车启动、掉头、找车位更快。\n理由2：刚洗完的车如果立即短途开过去，发动机尚未充分预热，反而容易造成积碳；走过去避免白洗后的即时污染。\n理由3：50 米短途驾驶油耗和磨损成本远高于步行，且存在倒车、会车等不必要风险。\n理由4：步行过程中可以顺便检查车身表面残留的泡沫或水渍，及时提醒店员处理。\n\n建议：把车钥匙留给店员或确认洗好后直接步行取车，既省时又环保。"
   },
@@ -5773,7 +7266,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-23T22:33:01.013Z",
+    "updatedAt": "2026-05-20T00:00:26.619Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去\n\n理由1：50米距离极短，步行仅需约30秒，而开车需要启动、调头、找车位，耗时更长且操作繁琐。\n\n理由2：洗车店门口通常湿滑且空间狭窄，车辆进出不便，走过去可避免剐蹭风险和停车困扰。\n\n理由3：短距离开车对发动机和油耗都不经济，冷启动磨损大，不符合经济用车原则。\n\n理由4：步行更环保零排放，同时可顺便活动身体，比开车更符合健康生活方式。\n\n建议：换双方便穿脱的鞋子，带上车钥匙和钱包，走过去后让洗车师傅直接开工。"
   },
@@ -5792,7 +7285,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-17T05:07:51.260Z",
+    "updatedAt": "2026-06-17T03:15:44.042Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去。\n理由1：距离只有 50 米，步行不到 1 分钟即可到达，开车反而更费事——点火、挪车、找车位，时间比走路还长。\n理由2：洗车店就在家门口范围内，车本来就停在小区或门口，没必要专门「开去」再原路折返，徒增行驶里程。\n理由3：短距离频繁启停最伤车也最费油，冷车状态下油耗和排放都偏高，为 50 米发动一次不划算。\n理由4：走路顺带活动身体、不用纠结停车，省心也省钱。\n建议：带上车钥匙和洗车卡，直接步行过去；如果是把车留在店里清洗、人先回家，那就更不该「开到店门口」——直接走过去确认取车时间即可。"
   },
@@ -5811,7 +7304,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:36:40.365Z",
+    "updatedAt": "2026-05-20T00:00:26.618Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去\n\n理由1：距离仅 50 米，步行不到 1 分钟即可到达，开车反而需要启动、倒车、找停车位，总耗时远超步行。\n\n理由2：50 米路程开车几乎无法达到经济时速，冷启动状态下发动机燃烧不充分，既费油又伤车，属于典型短途伤车场景。\n\n理由3：洗车后车是干净的，开去洗车店再开回来，车身可能在路上沾上灰尘或泥水，等于白洗一趟。走过去取车开回来，至少能保证洗完后直接到家。\n\n理由4：步行 50 米顺带活动身体，久坐后起来走走对健康有益，零碳排放，环保且不堵路。\n\n建议：穿双方便的鞋走过去，洗完直接把车开回家，省时省油又护车。"
   },
@@ -5830,7 +7323,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T16:02:42.717Z",
+    "updatedAt": "2026-05-20T00:00:26.618Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去\n\n理由1：距离仅 50 米，步行约 1 分钟，开车反而需要热车、系安全带、找停车位，耗时可能更长。\n理由2：洗车时车辆需要清洗外部，人下车等待更方便，步行到达刚好可以顺便活动身体。\n理由3：环保省油，短途启动对发动机磨损大，且燃油消耗不经济。\n理由4：避免开车后车身再次沾染路面灰尘或水渍，步行前往可保持刚洗完的干净状态。\n\n建议：穿双舒服的鞋，带把伞防晒或挡雨，轻松走过去顺便享受一下出门的小确幸。"
   },
@@ -5849,7 +7342,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-18T10:14:43.745Z",
+    "updatedAt": "2026-07-08T23:32:24.272Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去\n\n理由1：距离只有 50 米，正常步行大约 40–60 秒就能到，几乎不耗时，没必要为了这点路启动车辆。\n\n理由2：开车过去还要点火、挪车、找停车位、熄火下车，整套动作往往比步行更久，还多耗油、多磨损。\n\n理由3：洗车店门口车位通常紧张，50 米内步行最灵活，还能避免进出场排队或临时违停的麻烦。\n\n理由4：步行零排放、零停车成本，还能顺路活动一下身体，对短距离出行更合理。\n\n建议：穿双方便走路的鞋，带好车钥匙和支付方式，直接步行前往；若提着大件洗车用品或天气极端恶劣，再考虑开车。"
   },
@@ -5868,7 +7361,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-16T02:07:00.742Z",
+    "updatedAt": "2026-06-08T06:36:21.495Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去\n\n理由1：50米步行仅需45-70秒，开车反而需要找钥匙、启动、找停车位、熄火下车，整个流程通常超过3分钟。\n\n理由2：开车50米会造成冷启动高油耗和不必要尾气排放，且极短途对发动机磨损相对更高，不环保也不经济。\n\n理由3：步行可以顺便活动身体、观察沿途环境，50米距离完全在舒适步行范围内，无需任何工具准备。\n\n建议：直接出门步行，带上手机和车钥匙以备不时之需。"
   },
@@ -5887,7 +7380,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-04-16T14:36:40.365Z",
+    "updatedAt": "2026-05-20T00:00:26.617Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "# 洗车决策分析\n## 🎯 最终决策：推荐走过去\n---\n## 📋 决策理由：\n1. **距离极短**：50米步行仅需1分钟左右，比开车打火、挪车、找车位的时间还要短，效率更高。\n2. **成本更低**：完全零油耗/电费，省下来的钱完全可以多买一瓶饮料。\n3. **避免麻烦**：洗车店门口通常车位紧张，开车过去很可能需要排队等车位，反而耽误时间。\n4. **额外好处**：短短几步路相当于活动身体，久坐之后的小锻炼，对健康有益。\n---\n## ⚠️ 特殊例外情况（可考虑开车）：\n- 外面下大雨/刮大风/极端高温等恶劣天气\n- 手上拎了很多重物不方便走路\n- 需要顺便带东西过去洗车\n---\n## ✅ 行动建议：\n直接穿好鞋子步行过去，1分钟就能到，到了直接和老板说洗车就可以啦，省事儿又方便~"
   },
@@ -5906,7 +7399,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.026Z",
+    "updatedAt": "2026-05-20T00:00:26.619Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "1. 结论：开车过去\n2. 理由1：洗车的前提是车辆必须在场，不把车开过去无法开展任何清洁作业。\n3. 理由2：50米的距离极短，开车过去只需几秒钟，能避免步行到达后再折返取车的低效。\n4. 理由3：直接将车开入工位可以方便洗车师傅立即登记或冲洗，节省沟通和排队时间。\n5. 建议：拿上车钥匙，现在就直接把车开进洗车店。"
   },
@@ -5925,7 +7418,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-02-20T16:02:42.717Z",
+    "updatedAt": "2026-05-20T00:00:26.619Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去\n\n理由1：距离只有50米，步行1分钟即可到达，开车反而需要找车位、发动、熄火等操作，综合耗时更长。\n\n理由2：洗车店就在家门口，开车过去需要热车、怠速、起步等，发动机刚启动就熄火，对发动机养护不利，增加不必要的磨损。\n\n理由3：50米距离跑步/走路产生的碳排放和能耗，远低于开车往返的油耗成本，不环保也不经济。\n\n理由4：洗车过程中人需要在现场等待，停车后还需走回来取车，步行可避免重复短途移动。\n\n建议：直接走过去，省时省力还环保。"
   },
@@ -5944,7 +7437,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-06-16T02:07:01.638Z",
+    "updatedAt": "2026-06-16T02:23:52.806Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：开车过去。\n理由1：洗车的对象是车本身，车必须出现在洗车店才能被洗。走过去的话人到了、车还停在家里，这趟就白跑了。\n理由2：50 米的车程不到一分钟，冷启动磨损和油耗都可以忽略，不存在\"太近不值得开\"的成本问题。\n理由3：洗完车也需要把车开回家，开车去正好形成\"开去—洗车—开回\"的闭环，不需要再折返取车。\n建议：直接把车开到洗车店，洗完顺路开回家；如果只是想散步，可以在等待洗车的间隙走走。"
   },
@@ -5963,7 +7456,7 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.025Z",
+    "updatedAt": "2026-05-20T00:00:26.619Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "# 洗车决策分析\n\n## 结论\n\n**建议：走过去。**\n\n## 理由分析\n\n### 1. 物理层面\n- 50 米 ≈ 步行 1 分钟以内（普通人步速约 1.2m/s）\n- 开车需要：解锁 → 上车 → 启动 → 缓慢驶入 → 停车，耗时约 2-3 分钟\n- **步行反而更快到达**\n\n### 2. 环保与经济\n- 启动发动机行驶 50 米，油耗虽微小但完全可避免\n- 减少冷启动排放（冷启动排放是热车状态的数倍）\n- 减少车辆不必要的机械磨损\n\n### 3. 安全考量\n- 洗车店周边可能有行人、水渍、其他待洗车辆\n- 50 米短距挪车增加剐蹭风险\n- 步行更灵活，无需担心停车问题\n\n### 4. 健康收益\n- 步行 50 米虽短，但属于日常微量运动积累\n- 站立起身、步行有助血液循环\n\n## 唯一例外\n\n以下情况可以开车：\n- 雨天路滑且需携带物品\n- 身体不适或行动不便\n- 车辆已满是泥泞，需要直接开进洗车位（专业洗车流程要求）\n\n## 行动建议\n\n> 走过去，把车钥匙放口袋里。到了洗车店如果需要把车开进去洗，再回来挪车也不迟。"
   },
@@ -5982,8 +7475,27 @@
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-03-28T02:01:29.026Z",
+    "updatedAt": "2026-05-20T00:00:26.619Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "# 洗车决策：走过去 vs 开过去\n\n## 决策\n\n**走过去，毫无疑问。**\n\n## 分析\n\n### 时间成本\n- 50 米步行 ≈ 40-50 秒\n- 开车：上车（15s）→ 发动机启动（5s）→ 缓慢挪动（30s）→ 停车熄火（15s）≈ 65 秒\n- **步行更快，且零启动成本**\n\n### 安全成本\n- 50 米内频繁启停，冷车状态下油耗和磨损远超正常行驶\n- 洗车店门口车流、水渍、行人密集，短距挪车增加刮蹭风险\n- 50 米开车走的其实是\"不值得冒的风险\"\n\n### 隐性收益\n- 多走几步路，少排几克碳\n- 短途步行让身体从久坐中苏醒，血液循环启动更快\n- 心理上：走去的\"仪式感\"比开车更轻快\n\n### 唯一例外\n以下情况可以开车：\n- 下大雨且未带伞\n- 东西太重搬不动\n- 洗车流程要求你把车开进工位（但这不影响你\"走过去取车/开进工位\"的决策）\n\n## 结论\n\n> 50 米的距离，本质上是一个\"走路问题\"而非\"开车问题\"。把车钥匙装好，走过去，让洗车店帮你把车开进工位。这是最高效、最安全、最省心的方案。"
+  },
+  {
+    "id": "carwash-decision:Hy4",
+    "theme": "carwash-decision",
+    "model": "Hy4",
+    "filename": "response.md",
+    "path": "/submissions/carwash-decision/Hy4/response.md",
+    "publicPath": "/submissions/carwash-decision/Hy4/response.md",
+    "renderKind": "text",
+    "linesTotal": 12,
+    "linesCss": 0,
+    "linesJs": 0,
+    "sizeBytes": 968,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-27T14:25:37.805Z",
+    "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
+    "answerText": "结论：开车过去。\n\n理由1：要洗的是车，不是你。走过去的结果是“人到了店里、车还停在家”，你还得走回来取车再开过去，同样的路白白多走两趟。\n\n理由2：50 米属于挪车级距离，慢速开过去大约 20 秒，比找店员、办交接还快；冷启动多耗的那几毫升油（成本不到一毛钱），远低于多跑一个来回的时间成本。\n\n理由3：洗完能直接开回家停好，车身不会在折返路上重新落灰或被雨淋；先走过去的话，取车时很可能赶上刚洗完的车在户外停着，白洗一半。\n\n理由4：唯一该走过去的情况是这 50 米需要横穿主干道、或店门口没法临停，挪车反而更费事——那就直接问店家能不能上门取车。\n\n建议：开车过去。出发前关严车窗、收好外置天线，顺手带上脚垫；50 米不用热车，怠速慢行即可，到店把钥匙交给店员，等洗好再开走。"
   }
 ]

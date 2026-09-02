@@ -1,0 +1,121 @@
+<!-- 设计说明：粒子引力场 —— 240 粒子围绕能量核心做轨道运动，核心脉动发光；
+     点击产生冲击波排斥，按住拖拽形成临时引力点，悬停移动为斥力场；HUD 显示粒子数/能量/FPS/模式。 -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>粒子引力场 · Particle Gravity</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{font-family:system-ui,-apple-system,'Segoe UI','PingFang SC',sans-serif;background:#070a14;touch-action:none;cursor:crosshair}
+canvas{display:block;position:fixed;inset:0}
+.hud{position:fixed;left:14px;top:14px;z-index:2;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.hud .t{font-size:14px;font-weight:700;letter-spacing:.18em;color:#e8ecff}
+.hud .row{display:flex;gap:10px;flex-wrap:wrap}
+.hud span{font-size:11px;color:#9db0e8;background:rgba(12,16,38,.66);border:1px solid #26305c;padding:4px 10px;border-radius:999px;font-variant-numeric:tabular-nums;backdrop-filter:blur(4px)}
+.hud b{color:#7ee2ff;font-weight:650}
+.hint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);color:#8fa0d0;font-size:11px;letter-spacing:.2em;pointer-events:none;z-index:2}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="hud">
+  <div class="t">引力场模拟器</div>
+  <div class="row"><span>粒子 <b id="pc">240</b></span><span>能量 <b id="en">0</b></span><span>FPS <b id="fp">60</b></span><span>模式 <b id="md">轨道环绕</b></span></div>
+</div>
+<div class="hint">点击 = 冲击波 · 按住拖拽 = 临时引力 · 悬停 = 斥力场</div>
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+let W=innerWidth,H=innerHeight,DPR=Math.min(devicePixelRatio||1,2);
+cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);
+const N=240,parts=[],waves=[];
+let G=4200,R0=42;
+const cx=()=>W/2,cy=()=>H/2;
+function spawn(){
+  const a=Math.random()*6.283,r=130+Math.random()*160;
+  const vt=Math.sqrt(G/r)*.82;
+  return{x:cx()+Math.cos(a)*r,y:cy()+Math.sin(a)*r,vx:-Math.sin(a)*vt,vy:Math.cos(a)*vt,sz:.8+Math.random()*1.9};
+}
+for(let i=0;i<N;i++)parts.push(spawn());
+function impulse(x,y,dir){
+  for(const p of parts){
+    const dx=p.x-x,dy=p.y-y,d2=dx*dx+dy*dy;
+    if(d2<260*260&&d2>36){
+      const d=Math.sqrt(d2),f=dir*2600/(d2+900);
+      p.vx+=dx/d*f;p.vy+=dy/d*f;
+    }
+  }
+}
+let attract=null,repel=null;
+addEventListener('pointerdown',e=>{impulse(e.clientX,e.clientY,1);waves.push({x:e.clientX,y:e.clientY,r:10,a:1});attract={x:e.clientX,y:e.clientY};repel=null;});
+addEventListener('pointermove',e=>{if(attract){attract.x=e.clientX;attract.y=e.clientY;}else{repel={x:e.clientX,y:e.clientY};}});
+addEventListener('pointerup',()=>{attract=null;});
+addEventListener('pointerleave',()=>{attract=null;repel=null;});
+addEventListener('resize',()=>{
+  W=innerWidth;H=innerHeight;DPR=Math.min(devicePixelRatio||1,2);
+  cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);
+});
+let fps=60,lastT=performance.now(),frames=0,accT=0,slow=0;
+function tick(t){
+  const dt=Math.min(2.5,(t-lastT)/16.7);lastT=t;
+  frames++;accT+=dt/60;
+  if(accT>=1){fps=Math.round(frames/accT*60);frames=0;accT=0;}
+  ctx.fillStyle='rgba(7,9,20,0.16)';
+  ctx.fillRect(0,0,W,H);
+  const X=cx(),Y=cy(),pulse=R0+5*Math.sin(t*.0021);
+  const core=ctx.createRadialGradient(X,Y,2,X,Y,pulse*2.6);
+  core.addColorStop(0,'rgba(255,244,214,0.95)');
+  core.addColorStop(.25,'rgba(126,226,255,0.55)');
+  core.addColorStop(.6,'rgba(70,120,255,0.16)');
+  core.addColorStop(1,'rgba(70,120,255,0)');
+  ctx.fillStyle=core;
+  ctx.beginPath();ctx.arc(X,Y,pulse*2.6,0,6.283);ctx.fill();
+  ctx.globalCompositeOperation='lighter';
+  let energy=0;
+  for(const p of parts){
+    const dx=X-p.x,dy=Y-p.y,d2=dx*dx+dy*dy,d=Math.sqrt(d2)||1;
+    const f=G/(d2+640);
+    p.vx+=dx/d*f*dt;p.vy+=dy/d*f*dt;
+    if(attract){
+      const ax=attract.x-p.x,ay=attract.y-p.y,ad2=ax*ax+ay*ay;
+      if(ad2<320*320&&ad2>64){
+        const ad=Math.sqrt(ad2),af=3400/(ad2+400);
+        p.vx+=ax/ad*af*dt;p.vy+=ay/ad*af*dt;
+      }
+    }else if(repel){
+      const ax=p.x-repel.x,ay=p.y-repel.y,ad2=ax*ax+ay*ay;
+      if(ad2<200*200&&ad2>16){
+        const ad=Math.sqrt(ad2),af=1500/(ad2+300);
+        p.vx+=ax/ad*af*dt;p.vy+=ay/ad*af*dt;
+      }
+    }
+    p.vx*=.995;p.vy*=.995;
+    p.x+=p.vx*dt;p.y+=p.vy*dt;
+    const r2=(p.x-X)*(p.x-X)+(p.y-Y)*(p.y-Y);
+    if(r2<(R0+8)*(R0+8)||p.x<-40||p.x>W+40||p.y<-40||p.y>H+40)Object.assign(p,spawn());
+    const sp=Math.sqrt(p.vx*p.vx+p.vy*p.vy);
+    energy+=sp*sp;
+    const hue=Math.max(0,Math.min(95,sp*6));
+    ctx.fillStyle='hsla('+(185+hue)+',88%,'+(52+hue*.4)+'%,0.85)';
+    ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,6.283);ctx.fill();
+  }
+  for(let i=waves.length-1;i>=0;i--){
+    const w=waves[i];w.r+=7*w.a+2;w.a-=.022;
+    if(w.a<=0){waves.splice(i,1);continue;}
+    ctx.strokeStyle='rgba(150,220,255,'+w.a.toFixed(3)+')';
+    ctx.lineWidth=2.2*w.a+0.3;
+    ctx.beginPath();ctx.arc(w.x,w.y,w.r,0,6.283);ctx.stroke();
+  }
+  ctx.globalCompositeOperation='source-over';
+  document.getElementById('pc').textContent=N;
+  document.getElementById('en').textContent=Math.round(energy/120);
+  document.getElementById('fp').textContent=fps;
+  document.getElementById('md').textContent=attract?'临时引力':repel?'斥力场':'轨道环绕';
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

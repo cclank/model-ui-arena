@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>最炫倒计时</title>
+<style>
+*{margin:0;box-sizing:border-box}
+body{min-height:100dvh;display:flex;align-items:center;justify-content:center;overflow:hidden;
+font-family:ui-monospace,Menlo,Consolas,monospace;color:#fff;background:#05060f}
+.bg{position:fixed;inset:0;background:
+radial-gradient(60% 50% at 50% 45%,#12204a55,transparent 70%),
+repeating-linear-gradient(115deg,#ffffff06 0 1px,transparent 1px 46px)}
+body.done .bg{background:radial-gradient(60% 50% at 50% 45%,#0a3a2a88,transparent 70%)}
+.wrap{position:relative;display:grid;justify-items:center;gap:22px}
+.ring{position:relative;width:min(78vw,320px);aspect-ratio:1;display:grid;place-items:center}
+svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+#arc{stroke:#4dd8ff;stroke-width:6;fill:none;stroke-linecap:round;transition:stroke .3s;
+filter:drop-shadow(0 0 10px #4dd8ff)}
+.track{stroke:#ffffff12;stroke-width:6;fill:none}
+body.hot #arc{stroke:#ff5d7e;filter:drop-shadow(0 0 14px #ff5d7e)}
+body.done #arc{stroke:#37e0a6;filter:drop-shadow(0 0 16px #37e0a6)}
+#num{font-size:clamp(84px,30vw,140px);font-weight:700;letter-spacing:.02em;text-shadow:0 0 34px #4dd8ff66;line-height:1;font-variant-numeric:tabular-nums}
+body.hot #num{color:#ffd9e0;text-shadow:0 0 40px #ff5d7e99;animation:beat .95s ease-in-out infinite}
+@keyframes beat{40%{transform:scale(1.12)}}
+#label{font-size:13px;letter-spacing:.5em;color:#9db8e8;text-transform:uppercase;text-align:center}
+body.done #label{color:#8ef0cd}
+#bar{width:min(78vw,320px);height:8px;border-radius:99px;background:#ffffff12;overflow:hidden}
+#fill{height:100%;width:100%;background:linear-gradient(90deg,#4dd8ff,#8a7bff);border-radius:99px;transition:width .25s linear}
+body.hot #fill{background:linear-gradient(90deg,#ff5d7e,#ffb03a)}
+body.done #fill{background:#37e0a6}
+#btn{font:inherit;font-size:14px;letter-spacing:.2em;padding:11px 30px;border-radius:99px;cursor:pointer;
+border:1px solid #4dd8ff66;background:#4dd8ff14;color:#dff6ff;transition:.2s}
+#btn:hover{background:#4dd8ff2a}
+#btn:active{transform:scale(.94)}
+canvas{position:fixed;inset:0;pointer-events:none}
+#big{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+#burst{font-size:clamp(40px,11vw,64px);font-weight:800;letter-spacing:.14em;color:#eafff5;opacity:0;
+text-shadow:0 0 40px #37e0a6}
+body.done #burst{animation:pop .9s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes pop{0%{opacity:0;transform:scale(.2)}30%{opacity:1;transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
+</style>
+</head>
+<body>
+<div class="bg"></div><canvas id="fx"></canvas>
+<div class="wrap">
+<div class="ring">
+<svg viewBox="0 0 200 200"><circle class="track" cx="100" cy="100" r="92"/><circle id="arc" cx="100" cy="100" r="92" stroke-dasharray="578" stroke-dashoffset="0"/></svg>
+<div id="num">10</div>
+</div>
+<div id="bar"><div id="fill"></div></div>
+<div id="label">Ready</div>
+<button id="btn">RESTART</button>
+<div id="big"><div id="burst">COMPLETE</div></div>
+</div>
+<script>
+const $=s=>document.querySelector(s),C=578,DUR=10000;
+let t0=0,run=false,raf=0,fx=$("#fx"),g=fx.getContext("2d"),parts=[];
+function fit(){fx.width=innerWidth;fx.height=innerHeight}fit();addEventListener("resize",fit);
+function fmt(n){return n>=10?""+n:n.toFixed(1)}
+function loop(now){if(!run)return;const e=now-t0,left=Math.max(0,DUR-e),n=left/1000;
+$("#num").textContent=n<=0?"0":(n>9.9?"10":Math.ceil(n));
+$("#arc").style.strokeDashoffset=(C*(e/DUR)).toFixed(1);
+$("#fill").style.width=(left/DUR*100).toFixed(1)+"%";
+document.body.classList.toggle("hot",n<=3&&n>0);
+$("#label").textContent=n<=0?"Mission Complete":n<=3?"Final Countdown":"Counting Down";
+if(n<=0){run=false;fire();document.body.classList.add("done");document.body.classList.remove("hot")}
+else raf=requestAnimationFrame(loop)}
+function start(){document.body.classList.remove("done");t0=performance.now();run=true;parts=[];cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)}
+function fire(){const cx=innerWidth/2,cy=innerHeight/2;
+for(let i=0;i<160;i++){const a=Math.random()*6.283,v=2+Math.random()*7;
+parts.push({x:cx,y:cy,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c:`hsl(${140+Math.random()*80} 90% 65%)`})}}
+function fxloop(){g.clearRect(0,0,fx.width,fx.height);
+for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.06;p.l-=.012;
+if(p.l<=0){parts.splice(i,1);continue}g.globalAlpha=p.l;g.fillStyle=p.c;g.beginPath();g.arc(p.x,p.y,2.4,0,7);g.fill()}
+g.globalAlpha=1;requestAnimationFrame(fxloop)}
+$("#btn").onclick=start;
+setTimeout(start,600);fxloop();
+</script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skeuomorphic Pro DSLR Camera</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh; background: radial-gradient(circle at center, #1e293b, #090d16);
+      display: flex; align-items: center; justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 16px; overflow: hidden;
+    }
+    .stage {
+      width: 100%; max-width: 620px; aspect-ratio: 4 / 3; position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    svg { width: 100%; height: 100%; filter: drop-shadow(0 30px 40px rgba(0,0,0,0.8)); }
+    .camera-interact { cursor: pointer; }
+    .dial:hover { filter: brightness(1.15); }
+    .lens-reflect { animation: shimmer 4s infinite ease-in-out; }
+    @keyframes shimmer {
+      0%, 100% { opacity: 0.6; transform: translate(0, 0); }
+      50% { opacity: 0.9; transform: translate(-8px, -6px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Body Matte Polycarbonate Texture / Gradients -->
+        <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#2d3748" />
+          <stop offset="40%" stop-color="#1a202c" />
+          <stop offset="100%" stop-color="#0f172a" />
+        </linearGradient>
+        <linearGradient id="bodySideGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#111827" />
+          <stop offset="100%" stop-color="#030712" />
+        </linearGradient>
+        <linearGradient id="gripTexture" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#1e293b" />
+          <stop offset="50%" stop-color="#0f172a" />
+          <stop offset="100%" stop-color="#020617" />
+        </linearGradient>
+
+        <!-- Metal Ring Gradients -->
+        <linearGradient id="metalSilver" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#f8fafc" />
+          <stop offset="25%" stop-color="#94a3b8" />
+          <stop offset="50%" stop-color="#e2e8f0" />
+          <stop offset="75%" stop-color="#64748b" />
+          <stop offset="100%" stop-color="#334155" />
+        </linearGradient>
+        <linearGradient id="redRingGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#ef4444" />
+          <stop offset="50%" stop-color="#b91c1c" />
+          <stop offset="100%" stop-color="#7f1d1d" />
+        </linearGradient>
+
+        <!-- Optical Glass Lens Multi-Coating Reflect Gradients -->
+        <radialGradient id="glassCoating" cx="40%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="#1e1b4b" />
+          <stop offset="50%" stop-color="#0284c7" stop-opacity="0.8" />
+          <stop offset="75%" stop-color="#047857" stop-opacity="0.6" />
+          <stop offset="100%" stop-color="#030712" />
+        </radialGradient>
+        <linearGradient id="lensFlare" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.8" />
+          <stop offset="50%" stop-color="#ec4899" stop-opacity="0.3" />
+          <stop offset="100%" stop-color="#818cf8" stop-opacity="0" />
+        </linearGradient>
+
+        <!-- Grip Crosshatch Pattern (Pure SVG Hand-drawn) -->
+        <pattern id="gripPattern" width="6" height="6" patternUnits="userSpaceOnUse">
+          <path d="M 0 3 L 6 3 M 3 0 L 3 6" stroke="#000000" stroke-width="0.8" opacity="0.6" />
+          <circle cx="3" cy="3" r="1" fill="#334155" opacity="0.8" />
+        </pattern>
+
+        <!-- Drop Shadow Filter -->
+        <filter id="deskShadow" x="-10%" y="-10%" width="120%" height="130%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="16" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.8 0" />
+          <feOffset dx="0" dy="24" />
+          <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
+        </filter>
+      </defs>
+
+      <!-- Ambient Drop Shadow on Surface -->
+      <ellipse cx="400" cy="510" rx="320" ry="35" fill="#000000" opacity="0.7" />
+      <ellipse cx="450" cy="505" rx="220" ry="25" fill="#000000" opacity="0.9" />
+
+      <!-- MAIN CAMERA GROUP (3/4 PERSPECTIVE ANGLE) -->
+      <g id="cameraBody" class="camera-interact">
+
+        <!-- 1. Right Side/Depth Extrusion (Perspective 3/4) -->
+        <path d="M 560,180 L 640,210 L 650,470 L 570,450 Z" fill="url(#bodySideGrad)" stroke="#1e293b" stroke-width="1.5" />
+        <path d="M 640,210 L 650,215 L 660,460 L 650,470 Z" fill="#020617" />
+        <!-- Side strap lug -->
+        <rect x="645" y="270" width="12" height="22" rx="3" fill="url(#metalSilver)" />
+        <ellipse cx="651" cy="281" rx="3" ry="5" fill="#0f172a" />
+
+        <!-- 2. Main Front Chassis Body Box -->
+        <rect x="180" y="160" width="390" height="290" rx="24" fill="url(#bodyGrad)" stroke="#334155" stroke-width="2" />
+
+        <!-- Handgrip Bump on Left (User perspective left / Camera right) -->
+        <path d="M 175,190 Q 140,240 145,340 Q 150,420 185,445 L 250,450 L 250,170 Z" fill="url(#gripTexture)" stroke="#1e293b" stroke-width="1.5" />
+        <path d="M 175,195 Q 145,245 150,340 Q 155,415 185,440 L 240,440 L 240,180 Z" fill="url(#gripPattern)" />
+
+        <!-- 3. Pentaprism / Viewfinder Top Hump (军舰头) -->
+        <g id="pentaprism">
+          <!-- Main pyramid facet -->
+          <polygon points="340,160 460,160 480,95 320,95" fill="url(#bodyGrad)" stroke="#334155" stroke-width="1.5" />
+          <polygon points="320,95 480,95 450,75 350,75" fill="#1e293b" stroke="#334155" stroke-width="1" />
+          <!-- Hot shoe for flash on top -->
+          <rect x="375" y="66" width="50" height="10" rx="2" fill="url(#metalSilver)" />
+          <rect x="382" y="62" width="36" height="5" fill="#0f172a" />
+          <!-- Brand / Model Typographic Badge (Fictional Original Brand) -->
+          <text x="400" y="135" font-family="'Helvetica Neue', sans-serif" font-weight="900" font-size="19" fill="#f8fafc" text-anchor="middle" letter-spacing="3.5">LANKON</text>
+          <text x="400" y="150" font-family="'Helvetica Neue', sans-serif" font-weight="700" font-size="9" fill="#94a3b8" text-anchor="middle" letter-spacing="2">PRO FX-7</text>
+        </g>
+
+        <!-- 4. Mode Dial (Top Right) & Shutter Button -->
+        <g id="topControls" class="dial">
+          <!-- Mode dial cylinder -->
+          <path d="M 505,130 L 555,140 L 555,160 L 505,150 Z" fill="url(#metalSilver)" stroke="#0f172a" stroke-width="1" />
+          <!-- Knurling ridges on mode dial -->
+          <line x1="515" y1="133" x2="515" y2="152" stroke="#334155" stroke-width="2" />
+          <line x1="525" y1="135" x2="525" y2="154" stroke="#334155" stroke-width="2" />
+          <line x1="535" y1="137" x2="535" y2="156" stroke="#334155" stroke-width="2" />
+          <line x1="545" y1="139" x2="545" y2="158" stroke="#334155" stroke-width="2" />
+          <ellipse cx="530" cy="135" rx="25" ry="8" fill="#1e293b" stroke="#64748b" stroke-width="1" />
+          <text x="530" y="138" font-size="7" font-weight="bold" fill="#ef4444" text-anchor="middle">AUTO</text>
+
+          <!-- Shutter Button Angle Base on Grip -->
+          <polygon points="210,145 255,155 245,170 200,160" fill="url(#bodyGrad)" />
+          <ellipse cx="230" cy="150" rx="14" ry="7" fill="url(#metalSilver)" stroke="#0f172a" stroke-width="1" />
+          <ellipse cx="230" cy="148" rx="10" ry="5" fill="#f8fafc" />
+          <!-- Red Assist Lamp -->
+          <circle cx="285" cy="205" r="7" fill="#450a0a" stroke="#7f1d1d" stroke-width="1.5" />
+          <circle cx="285" cy="205" r="4" fill="#ef4444" />
+        </g>
+
+        <!-- 5. 3/4 Perspective Barrel & Detachable Lens Assembly -->
+        <!-- In 3/4 perspective, the cylindrical lens points slightly forward/right, forming layered ellipses -->
+        <g id="lensAssembly" transform="translate(410, 320)">
+
+          <!-- Base Mount Flange -->
+          <ellipse cx="0" cy="0" rx="135" ry="145" fill="#0f172a" stroke="#334155" stroke-width="3" />
+          <ellipse cx="0" cy="0" rx="128" ry="138" fill="url(#metalSilver)" />
+
+          <!-- Main Outer Barrel (Matte Metal) -->
+          <ellipse cx="-15" cy="5" rx="120" ry="130" fill="#1e293b" stroke="#0f172a" stroke-width="2" />
+
+          <!-- Zoom Ring Section with Grooved Ridges -->
+          <ellipse cx="-25" cy="8" rx="112" ry="122" fill="#0f172a" />
+          <!-- Distinct Knurling Pattern on Zoom Ring -->
+          <g stroke="#334155" stroke-width="2" opacity="0.8">
+            <line x1="-120" y1="0" x2="-125" y2="20" />
+            <line x1="-100" y1="-50" x2="-105" y2="-30" />
+            <line x1="-60" y1="-95" x2="-65" y2="-75" />
+            <line x1="0" y1="-115" x2="-5" y2="-95" />
+            <line x1="60" y1="-95" x2="55" y2="-75" />
+            <line x1="90" y1="-50" x2="85" y2="-30" />
+          </g>
+
+          <!-- Luxury Pro Red Ring (红圈镜头标志) -->
+          <ellipse cx="-32" cy="10" rx="104" ry="114" fill="none" stroke="url(#redRingGrad)" stroke-width="4.5" />
+
+          <!-- Focus Distance Scale Window -->
+          <g transform="translate(-50, -85) rotate(-5)">
+            <rect x="0" y="0" width="36" height="12" rx="3" fill="#020617" stroke="#475569" stroke-width="1" />
+            <text x="18" y="9" font-size="7" font-family="monospace" fill="#38bdf8" text-anchor="middle">1.5m ∞</text>
+          </g>
+
+          <!-- Front Bezel with Lens Specs Engraving -->
+          <ellipse cx="-40" cy="12" rx="96" ry="106" fill="#0f172a" stroke="#1e293b" stroke-width="2" />
+          <text x="-40" y="-72" font-family="sans-serif" font-size="8" font-weight="bold" fill="#94a3b8" text-anchor="middle" letter-spacing="1.5">F/1.4 50mm NANO COATING</text>
+          <text x="-40" y="105" font-family="sans-serif" font-size="7.5" font-weight="bold" fill="#64748b" text-anchor="middle" letter-spacing="1">Ø 77mm MADE IN JAPAN</text>
+
+          <!-- Front Element Multi-Coated Optical Glass (Deep Reflective Cavity) -->
+          <ellipse cx="-40" cy="12" rx="78" ry="86" fill="url(#glassCoating)" stroke="#0284c7" stroke-width="1.5" />
+
+          <!-- Internal Aperture Blades Geometry -->
+          <g transform="translate(-40, 12)">
+            <polygon points="-20,-15 15,-25 28,10 -5,22 -25,5" fill="#020617" opacity="0.85" stroke="#1e293b" stroke-width="1" />
+            <!-- Inner Deep Reflection -->
+            <ellipse cx="2" cy="-2" rx="32" ry="36" fill="#090d16" opacity="0.9" />
+          </g>
+
+          <!-- Glass Highlights / Flare Reflections (Hand-drawn Curved Sheen) -->
+          <g class="lens-reflect">
+            <!-- Curved cyan highlight crescent -->
+            <path d="M -90,-20 Q -40,-60 10,-35 Q -30,-45 -70,-5 Z" fill="url(#lensFlare)" />
+            <!-- Secondary magenta soft glow -->
+            <ellipse cx="-15" cy="45" rx="35" ry="18" fill="#ec4899" opacity="0.35" transform="rotate(-25, -15, 45)" />
+            <!-- Point Pinpoint Glint -->
+            <circle cx="-65" cy="-25" r="4" fill="#ffffff" opacity="0.9" />
+            <circle cx="-55" cy="-35" r="2" fill="#ffffff" opacity="0.7" />
+          </g>
+        </g>
+      </g>
+    </svg>
+  </div>
+</body>
+</html>

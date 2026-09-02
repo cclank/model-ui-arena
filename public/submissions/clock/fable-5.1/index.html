@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CHRONO · 高辨识度时钟</title>
+<style>
+  :root{--bg1:#070c18;--bg2:#1b2d55;--blob:#3a5bd9;--ink:#f3f6ff;--muted:rgba(243,246,255,.58);--accent:#ffc46b;--sec:#ff5d6c;--glass:rgba(255,255,255,.07);--line:rgba(255,255,255,.14);--face1:#1a2440;--face2:#0a1020;--tick:rgba(243,246,255,.32)}
+  [data-phase="dawn"]{--bg1:#2b1f3f;--bg2:#ff9a6c;--blob:#ffcf7a;--ink:#fff7f0;--muted:rgba(255,247,240,.62);--accent:#ffd27a;--face1:#4a3050;--face2:#22172e;--tick:rgba(255,247,240,.35)}
+  [data-phase="day"]{--bg1:#dceeff;--bg2:#6fb4ff;--blob:#ffd66b;--ink:#0d1b33;--muted:rgba(13,27,51,.6);--accent:#ff8c1a;--sec:#ff3b4a;--glass:rgba(255,255,255,.42);--line:rgba(255,255,255,.7);--face1:#ffffff;--face2:#dbe8fb;--tick:rgba(13,27,51,.35)}
+  [data-phase="dusk"]{--bg1:#1a1030;--bg2:#c8506b;--blob:#ff8a4c;--ink:#fff4f2;--muted:rgba(255,244,242,.6);--accent:#ffb46b;--face1:#3a2140;--face2:#160c22;--tick:rgba(255,244,242,.35)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:ui-sans-serif,system-ui,-apple-system,"PingFang SC","Segoe UI",Roboto,sans-serif;color:var(--ink);background:radial-gradient(130% 90% at 50% -10%,var(--bg2),var(--bg1) 72%);display:grid;place-items:center;padding:14px;overflow:hidden;position:relative;transition:background 1s,color .6s}
+  body::before,body::after{content:"";position:absolute;width:62vmax;height:62vmax;border-radius:50%;filter:blur(90px);opacity:.38;background:var(--blob);left:-18vmax;top:-30vmax;animation:drift 16s ease-in-out infinite alternate;transition:background 1s}
+  body::after{background:var(--bg2);left:auto;right:-24vmax;top:auto;bottom:-34vmax;animation-duration:22s;animation-direction:alternate-reverse}
+  @keyframes drift{from{transform:translate(-8%,-6%) scale(1)}to{transform:translate(14%,12%) scale(1.18)}}
+  .card{position:relative;z-index:1;width:min(100%,400px);padding:18px 20px 16px;border-radius:28px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 30px 70px rgba(0,0,0,.35);display:grid;gap:10px;transition:background .6s}
+  .top{display:flex;align-items:center;justify-content:space-between}
+  .brand{font-weight:800;letter-spacing:.32em;font-size:12px;display:flex;align-items:center;gap:8px}
+  .brand i{width:8px;height:8px;border-radius:50%;background:var(--sec);box-shadow:0 0 12px var(--sec);animation:blink 1s steps(2) infinite}
+  .seg{display:flex;background:rgba(0,0,0,.18);border-radius:999px;padding:3px;gap:2px}
+  .seg button{border:0;background:transparent;color:var(--muted);font:600 11px/1 inherit;padding:6px 10px;border-radius:999px;cursor:pointer;transition:.25s}
+  .seg button.on{background:var(--ink);color:var(--bg1)}
+  .dial-wrap{position:relative;width:min(78vw,270px);aspect-ratio:1;margin:2px auto 0}
+  .pulse{position:absolute;inset:0;border-radius:50%;border:2px solid var(--accent);opacity:0;animation:pulse 1s cubic-bezier(.2,.7,.3,1) infinite}
+  @keyframes pulse{0%{transform:scale(.94);opacity:.55}100%{transform:scale(1.14);opacity:0}}
+  .dial{width:100%;height:100%;display:block;filter:drop-shadow(0 18px 30px rgba(0,0,0,.35))}
+  #face stop:first-child{stop-color:var(--face1)}#face stop:last-child{stop-color:var(--face2)}
+  .tick{stroke:var(--tick);stroke-linecap:round;transition:stroke .3s,stroke-width .3s}
+  .tick.major{stroke:var(--ink);stroke-width:3.2}
+  .tick.on{stroke:var(--accent);stroke-width:4;filter:url(#glow)}
+  .hand line{stroke:var(--ink);stroke-linecap:round}
+  .hand.sec line,.hand.sec circle{stroke:var(--sec);fill:var(--sec)}
+  .nums text{font-family:inherit;font-weight:800;fill:var(--ink)}
+  .digital{text-align:center}
+  .time{font-size:clamp(44px,13vw,58px);font-weight:800;letter-spacing:.02em;font-variant-numeric:tabular-nums;line-height:1;text-shadow:0 8px 30px rgba(0,0,0,.25)}
+  .time .colon{animation:blink 1s steps(2) infinite;display:inline-block}
+  @keyframes blink{50%{opacity:.25}}
+  .meta{margin-top:6px;display:flex;justify-content:center;gap:10px;font-size:12.5px;color:var(--muted);font-weight:600;letter-spacing:.06em}
+  .meta b{color:var(--accent);font-weight:800}
+  .bar{position:relative;height:6px;border-radius:99px;background:rgba(0,0,0,.2);overflow:visible;margin:6px 4px 0}
+  .bar i{position:absolute;inset:0 auto 0 0;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--sec));width:0;transition:width 1s linear}
+  .bar b{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--glass),0 0 14px var(--accent);transition:left 1s linear}
+  .stats{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:8px;font-weight:600;font-variant-numeric:tabular-nums}
+  .stats em{font-style:normal;color:var(--ink);font-weight:800}
+  .stats .ph{display:flex;align-items:center;gap:5px}.stats svg{width:13px;height:13px;fill:var(--accent)}
+</style>
+</head>
+<body data-phase="night">
+<main class="card">
+  <header class="top">
+    <div class="brand"><i></i>CHRONO</div>
+    <div class="seg" id="seg"><button data-m="auto" class="on">自动</button><button data-m="day">白天</button><button data-m="night">夜晚</button></div>
+  </header>
+  <section class="dial-wrap">
+    <div class="pulse" id="pulse"></div>
+    <svg class="dial" viewBox="-160 -160 320 320" role="img" aria-label="模拟时钟">
+      <defs>
+        <radialGradient id="face" cx="50%" cy="38%" r="70%"><stop offset="0"/><stop offset="1"/></radialGradient>
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <circle r="154" fill="url(#face)" stroke="var(--line)" stroke-width="2"/>
+      <g id="ticks"></g>
+      <g class="nums" font-size="24" text-anchor="middle"><text y="-104">12</text><text x="116" y="9">3</text><text y="123">6</text><text x="-116" y="9">9</text></g>
+      <g id="hour" class="hand"><line y1="20" y2="-76" stroke-width="7.5"/></g>
+      <g id="min" class="hand"><line y1="24" y2="-116" stroke-width="5"/></g>
+      <g id="sec" class="hand sec"><line y1="36" y2="-132" stroke-width="2"/><circle cy="24" r="5"/></g>
+      <circle r="7" fill="var(--sec)"/><circle r="2.6" fill="var(--face2)"/>
+    </svg>
+  </section>
+  <section class="digital">
+    <div class="time" id="time">--<span class="colon">:</span>--<span class="colon">:</span>--</div>
+    <div class="meta"><b id="ampm">AM</b><span id="date">—</span><span id="tz">UTC</span></div>
+  </section>
+  <section>
+    <div class="bar"><i id="prog"></i><b id="sun"></b></div>
+    <div class="stats"><span>今日已过 <em id="pct">0%</em></span><span>距整点 <em id="next">00:00</em></span><span class="ph"><svg viewBox="0 0 24 24" id="phIcon"><path id="phPath" d=""/></svg><em id="phName">夜晚</em></span></div>
+  </section>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const ticks = $("ticks"), tickEls = [];
+  for (let i = 0; i < 60; i++) {           // 60 刻度：整点刻度加粗，其余细刻度
+    const major = i % 5 === 0, l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    l.setAttribute("y1", major ? -140 : -146); l.setAttribute("y2", -132);
+    l.setAttribute("transform", `rotate(${i * 6})`); l.setAttribute("class", "tick" + (major ? " major" : ""));
+    l.setAttribute("stroke-width", major ? 3.2 : 1.6); ticks.appendChild(l); tickEls.push(l);
+  }
+  const ICON = { sun: "M12 5a7 7 0 1 1 0 14 7 7 0 0 1 0-14zm0-4 1.5 3h-3L12 1zm0 22-1.5-3h3L12 23zM1 12l3-1.5v3L1 12zm22 0-3 1.5v-3l3-1.5z", moon: "M14 2a10 10 0 1 0 8 15.5A8 8 0 0 1 14 2z" };
+  const PHASES = { dawn: ["清晨", "sun"], day: ["白天", "sun"], dusk: ["黄昏", "sun"], night: ["夜晚", "moon"] };
+  const phaseOf = (h) => (h < 5 || h >= 19) ? "night" : h < 7 ? "dawn" : h < 17 ? "day" : "dusk";
+  let mode = "auto", lastSec = -1, lastPhase = "";
+  const pad = (n) => String(n).padStart(2, "0");
+  $("tz").textContent = "UTC" + (-new Date().getTimezoneOffset() >= 0 ? "+" : "-") + Math.abs(new Date().getTimezoneOffset() / 60) + " · " + Intl.DateTimeFormat().resolvedOptions().timeZone.split("/").pop().replace("_", " ");
+  $("seg").addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    mode = b.dataset.m; [...$("seg").children].forEach((x) => x.classList.toggle("on", x === b)); lastPhase = "";
+  });
+  function applyPhase(h) {
+    const p = mode === "auto" ? phaseOf(h) : mode;
+    if (p === lastPhase) return; lastPhase = p;
+    document.body.dataset.phase = p;
+    const [name, icon] = PHASES[p]; $("phName").textContent = name + (mode === "auto" ? "" : " · 预览"); $("phPath").setAttribute("d", ICON[icon]);
+  }
+  function frame() {
+    const d = new Date(), ms = d.getMilliseconds(), s = d.getSeconds(), m = d.getMinutes(), h = d.getHours();
+    const sf = s + ms / 1000, mf = m + sf / 60, hf = (h % 12) + mf / 60;
+    $("sec").setAttribute("transform", `rotate(${sf * 6})`);            // 平滑扫秒
+    $("min").setAttribute("transform", `rotate(${mf * 6})`);
+    $("hour").setAttribute("transform", `rotate(${hf * 30})`);
+    if (s !== lastSec) {                                                  // 每秒只做一次 DOM 文本更新
+      if (lastSec >= 0) tickEls[lastSec].classList.remove("on");
+      tickEls[s].classList.add("on"); lastSec = s;
+      $("time").innerHTML = `${pad(h % 12 || 12)}<span class="colon">:</span>${pad(m)}<span class="colon">:</span>${pad(s)}`;
+      $("ampm").textContent = h < 12 ? "AM" : "PM";
+      $("date").textContent = d.toLocaleDateString("zh-CN", { month: "long", day: "numeric", weekday: "short" });
+      const dayPct = (h * 3600 + m * 60 + s) / 864;
+      $("prog").style.width = $("sun").style.left = dayPct + "%"; $("pct").textContent = dayPct.toFixed(1) + "%";
+      $("next").textContent = pad(59 - m) + ":" + pad(60 - s === 60 ? 0 : 60 - s);
+      applyPhase(h);
+    }
+    requestAnimationFrame(frame);
+  }
+  const sync = -new Date().getMilliseconds() + "ms";                      // 让脉冲圈与冒号闪烁对齐真实秒边界
+  $("pulse").style.animationDelay = sync; document.documentElement.style.setProperty("--sync", sync);
+  document.querySelectorAll(".brand i").forEach((el) => (el.style.animationDelay = sync));
+  frame();
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) lastSec = -1; });
+</script>
+</body>
+</html>

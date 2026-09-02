@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>行情面板 · PULSE</title>
+<style>
+  :root { --bg:#0a0f1c; --card:#101828; --line:#1e2a44; --ink:#e8eefb; --sub:#6f7f9f;
+    --up:#ff4d4f; --down:#2fd483; --accent:#4da3ff; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:18px;
+    font-family:"SF Pro Display",-apple-system,"PingFang SC",system-ui,sans-serif; color:var(--ink);
+    background:radial-gradient(120% 110% at 50% -10%, #14203a, var(--bg)); }
+  .panel { width:min(94vw,560px); }
+  .head { display:flex; justify-content:space-between; align-items:center; padding:0 4px 14px; }
+  .head h1 { font-size:18px; letter-spacing:.08em; }
+  .head h1 small { display:block; font-size:11px; color:var(--sub); letter-spacing:.24em; font-weight:400; margin-top:3px; }
+  .live { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--sub); font-variant-numeric:tabular-nums; }
+  .live i { width:8px; height:8px; border-radius:50%; background:var(--up); box-shadow:0 0 10px var(--up);
+    animation:blink 1.4s ease-in-out infinite; }
+  @keyframes blink { 50%{opacity:.25} }
+  .grid { display:grid; gap:12px; }
+  .row {
+    display:grid; grid-template-columns:96px 1fr 108px; gap:14px; align-items:center;
+    background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px 18px;
+    transition:border-color .3s, transform .3s;
+  }
+  .row:hover { transform:translateY(-2px); border-color:#2c3d63; }
+  .sym b { font-size:15px; display:block; letter-spacing:.02em; }
+  .sym span { font-size:11px; color:var(--sub); }
+  .badge { display:inline-block; margin-top:6px; font-size:10px; padding:2px 8px; border-radius:99px;
+    border:1px solid var(--line); color:var(--sub); letter-spacing:.1em; }
+  .spark { width:100%; height:52px; }
+  .quote { text-align:right; }
+  .quote .p { font-size:20px; font-weight:700; font-variant-numeric:tabular-nums; transition:color .2s; }
+  .quote .c { font-size:12.5px; font-variant-numeric:tabular-nums; margin-top:3px; display:flex; gap:6px; justify-content:flex-end; }
+  .quote .c em { font-style:normal; opacity:.75; }
+  .u .p, .u .c { color:var(--up); } .d .p, .d .c { color:var(--down); }
+  .flash-u { animation:fu .6s ease; } .flash-d { animation:fd .6s ease; }
+  @keyframes fu { 0%{background:rgba(255,77,79,.28)} 100%{background:transparent} }
+  @keyframes fd { 0%{background:rgba(47,212,131,.28)} 100%{background:transparent} }
+  .foot { display:flex; justify-content:space-between; padding:14px 6px 0; font-size:11px; color:var(--sub); }
+  .foot b { color:var(--accent); font-weight:600; }
+  @media (max-width:420px) {
+    .row { grid-template-columns:84px 1fr 96px; gap:10px; padding:14px; }
+    .quote .p { font-size:17px; }
+  }
+</style>
+</head>
+<body>
+  <div class="panel">
+    <div class="head">
+      <h1>PULSE · 自选监控<small>MOCK STREAM · 模拟行情</small></h1>
+      <div class="live"><i></i><span id="clock">--:--:--</span></div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="foot">
+      <span><b>▲ 红涨</b> / <b style="color:var(--down)">▼ 绿跌</b>（A股配色惯例）</span>
+      <span>数据为本地模拟，非投资建议</span>
+    </div>
+  </div>
+<script>
+(function () {
+  "use strict";
+  var STOCKS = [
+    { code:"600519", name:"贵州茅台", px:1688.00, vol:0.9 },
+    { code:"300750", name:"宁德时代", px:213.50, vol:1.6 },
+    { code:"002594", name:"比亚迪",   px:256.30, vol:1.3 },
+    { code:"000858", name:"五粮液",   px:132.80, vol:1.1 }
+  ];
+  var grid = document.getElementById("grid");
+  var volLabel = function (v) { return v < 1.1 ? "低波动" : v < 1.5 ? "中波动" : "高波动"; };
+  var rows = [];
+
+  STOCKS.forEach(function (s) {
+    s.open = s.px; s.hist = [];
+    for (var i = 0; i < 40; i++) { s.px *= 1 + (Math.random() - 0.5) * 0.004 * s.vol; s.hist.push(s.px); }
+    var row = document.createElement("div");
+    row.className = "row";
+    row.innerHTML =
+      '<div class="sym"><b>' + s.code + '</b><span>' + s.name + '</span><br><span class="badge">' + volLabel(s.vol) + '</span></div>' +
+      '<div><svg class="spark" viewBox="0 0 120 52" preserveAspectRatio="none"></svg></div>' +
+      '<div class="quote"><div class="p">--</div><div class="c"><span class="ch"></span><em class="cp"></em></div></div>';
+    grid.appendChild(row);
+    s.el = { row: row, p: row.querySelector(".p"), ch: row.querySelector(".ch"), cp: row.querySelector(".cp"), svg: row.querySelector("svg") };
+    rows.push(s);
+  });
+
+  function spark(s) {
+    var a = s.hist, min = Math.min.apply(null, a), max = Math.max.apply(null, a), span = (max - min) || 1;
+    var pts = a.map(function (v, i) {
+      return (i * (120 / (a.length - 1))).toFixed(1) + "," + (46 - (v - min) / span * 40).toFixed(1);
+    }).join(" ");
+    var up = s.px >= s.open;
+    s.el.svg.innerHTML =
+      '<defs><linearGradient id="g' + s.code + '" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="' + (up ? "rgba(255,77,79,.35)" : "rgba(47,212,131,.35)") + '"/>' +
+      '<stop offset="1" stop-color="transparent"/></linearGradient></defs>' +
+      '<polygon points="0,52 ' + pts + ' 120,52" fill="url(#g' + s.code + ')"/>' +
+      '<polyline points="' + pts + '" fill="none" stroke="' + (up ? "#ff4d4f" : "#2fd483") + '" stroke-width="2" stroke-linejoin="round"/>';
+  }
+  function paint(s) {
+    var d = s.px - s.open, pc = d / s.open * 100, up = d >= 0;
+    s.el.p.textContent = s.px.toFixed(2);
+    s.el.ch.textContent = (up ? "▲ +" : "▼ ") + d.toFixed(2);
+    s.el.cp.textContent = (up ? "+" : "") + pc.toFixed(2) + "%";
+    s.el.row.classList.toggle("u", up); s.el.row.classList.toggle("d", !up);
+    spark(s);
+  }
+  function tick() {
+    // 假流式：每支股票按各自波动率做小幅随机游走
+    rows.forEach(function (s) {
+      var prev = s.px;
+      s.px = Math.max(0.01, s.px * (1 + (Math.random() - 0.5) * 0.006 * s.vol));
+      s.hist.push(s.px); if (s.hist.length > 40) s.hist.shift();
+      paint(s);
+      var up = s.px > prev;
+      s.el.row.classList.remove("flash-u", "flash-d");
+      void s.el.row.offsetWidth; // 重触发动画
+      s.el.row.classList.add(up ? "flash-u" : "flash-d");
+    });
+  }
+  function clock() {
+    var n = new Date(), z = function (x) { return (x < 10 ? "0" : "") + x; };
+    document.getElementById("clock").textContent = z(n.getHours()) + ":" + z(n.getMinutes()) + ":" + z(n.getSeconds());
+  }
+  rows.forEach(paint);
+  clock();
+  setInterval(tick, 900);
+  setInterval(clock, 1000);
+})();
+</script>
+</body>
+</html>

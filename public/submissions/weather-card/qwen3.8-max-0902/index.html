@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>天气卡片</title>
+<style>
+  *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+  body{min-height:100vh;display:grid;place-items:center;padding:16px;background:#0d1220;
+    font-family:-apple-system,"PingFang SC",system-ui,sans-serif}
+  .card{position:relative;width:min(96vw,380px);border-radius:26px;overflow:hidden;color:#fff;
+    box-shadow:0 24px 60px rgba(0,0,0,.5);transition:background 1s ease}
+  #fx{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+  .inner{position:relative;z-index:2;padding:18px 18px 20px}
+  .cities{display:flex;gap:6px;background:rgba(255,255,255,.14);padding:4px;border-radius:999px;backdrop-filter:blur(6px)}
+  .cities button{flex:1;border:0;background:transparent;color:rgba(255,255,255,.75);padding:8px 0;border-radius:999px;
+    font-size:13px;font-weight:600;cursor:pointer;transition:.3s;font-family:inherit}
+  .cities button.on{background:rgba(255,255,255,.92);color:#1a2340}
+  .now{display:flex;align-items:center;justify-content:space-between;margin-top:18px}
+  .temp{font-size:66px;font-weight:200;line-height:1;letter-spacing:-2px}
+  .temp sup{font-size:26px;font-weight:300;vertical-align:super}
+  .cond{text-align:right}
+  .cond .d{font-size:18px;font-weight:600}
+  .cond .u{font-size:12px;opacity:.8;margin-top:2px}
+  .icon{width:64px;height:64px}
+  .metrics{display:flex;gap:10px;margin-top:18px}
+  .metric{flex:1;background:rgba(255,255,255,.13);border-radius:14px;padding:10px;text-align:center;backdrop-filter:blur(4px)}
+  .metric .k{font-size:11px;opacity:.8}
+  .metric .v{font-size:16px;font-weight:700;margin-top:3px}
+  .unit{position:absolute;top:18px;right:18px;z-index:3;background:rgba(0,0,0,.22);border:0;color:#fff;
+    border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+  .fc{margin-top:18px;background:rgba(0,0,0,.18);border-radius:18px;padding:14px 12px}
+  .fc h4{font-size:12px;opacity:.75;font-weight:600;margin-bottom:8px;letter-spacing:1px}
+  .days{display:flex;justify-content:space-between}
+  .day{flex:1;text-align:center;font-size:11px}
+  .day .dow{opacity:.8}
+  .day .hi{font-weight:700;font-size:14px;margin-top:2px}
+  .day .lo{opacity:.6;font-size:12px}
+  svg.chart{width:100%;height:52px;margin-top:6px;overflow:visible}
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <canvas id="fx"></canvas>
+    <button class="unit" id="unit">°C</button>
+    <div class="inner">
+      <div class="cities" id="cities"></div>
+      <div class="now">
+        <div>
+          <div class="temp"><span id="tval">--</span><sup id="tunit">°C</sup></div>
+          <div style="font-size:13px;opacity:.8;margin-top:6px" id="feel">体感 —</div>
+        </div>
+        <div class="cond">
+          <div id="icwrap"></div>
+          <div class="d" id="cdesc">—</div>
+          <div class="u" id="ccity">—</div>
+        </div>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="k">风速</div><div class="v" id="wind">—</div></div>
+        <div class="metric"><div class="k">湿度</div><div class="v" id="humi">—</div></div>
+        <div class="metric"><div class="k">降水</div><div class="v" id="pop">—</div></div>
+      </div>
+      <div class="fc">
+        <h4>未来 5 天</h4>
+        <svg class="chart" id="chart" viewBox="0 0 320 52" preserveAspectRatio="none"></svg>
+        <div class="days" id="days"></div>
+      </div>
+    </div>
+  </div>
+<script>
+const CITIES=[
+  {n:'北京',w:'sunny',t:31,feel:34,wind:12,humi:38,pop:5,bg:['#ff9d4d','#ff6b6b','#4a2c6d'],
+   f:[['今天',31,20],['周三',33,22],['周四',30,21],['周五',28,19],['周六',32,21]]},
+  {n:'上海',w:'rain',t:26,feel:28,wind:20,humi:86,pop:80,bg:['#3a5a8c','#2b3f66','#1a2340'],
+   f:[['今天',26,22],['周三',25,21],['周四',27,23],['周五',29,24],['周六',28,23]]},
+  {n:'哈尔滨',w:'snow',t:-8,feel:-15,wind:16,humi:70,pop:60,bg:['#6b8fc4','#4a6a9c','#2c3e63'],
+   f:[['今天',-8,-18],['周三',-6,-15],['周四',-10,-20],['周五',-12,-22],['周六',-9,-17]]}
+];
+const ICONS={
+  sunny:'<svg class="icon" viewBox="0 0 64 64"><circle cx="32" cy="32" r="13" fill="#ffe066"/><g stroke="#ffe066" stroke-width="3" stroke-linecap="round"><line x1="32" y1="6" x2="32" y2="14"/><line x1="32" y1="50" x2="32" y2="58"/><line x1="6" y1="32" x2="14" y2="32"/><line x1="50" y1="32" x2="58" y2="32"/><line x1="13" y1="13" x2="19" y2="19"/><line x1="45" y1="45" x2="51" y2="51"/><line x1="13" y1="51" x2="19" y2="45"/><line x1="45" y1="19" x2="51" y2="13"/></g></svg>',
+  rain:'<svg class="icon" viewBox="0 0 64 64"><ellipse cx="26" cy="26" rx="18" ry="13" fill="#cdd8ee"/><ellipse cx="40" cy="28" rx="14" ry="11" fill="#e6edff"/><g stroke="#7fb2ff" stroke-width="3" stroke-linecap="round"><line x1="22" y1="44" x2="19" y2="54"/><line x1="33" y1="44" x2="30" y2="56"/><line x1="44" y1="44" x2="41" y2="52"/></g></svg>',
+  snow:'<svg class="icon" viewBox="0 0 64 64"><ellipse cx="30" cy="24" rx="18" ry="13" fill="#dfe8ff"/><ellipse cx="42" cy="26" rx="13" ry="10" fill="#f0f5ff"/><g stroke="#bfe0ff" stroke-width="2.4" stroke-linecap="round"><path d="M22 44v10M17 49h10M19 46l6 6M25 46l-6 6"/><path d="M40 46v8M36 50h8M37.5 47.5l5 5M42.5 47.5l-5 5"/></g></svg>'
+};
+let cur=0,celsius=true,dispT=null;
+const cv=document.getElementById('fx'),ctx=cv.getContext('2d');let P=[];
+const card=document.getElementById('card');
+function fit(){const r=card.getBoundingClientRect();cv.width=r.width*devicePixelRatio;cv.height=r.height*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);}
+function seed(){P=[];const w=cv.width/devicePixelRatio,h=cv.height/devicePixelRatio,type=CITIES[cur].w,n=type==='sunny'?40:type==='rain'?90:70;
+  for(let i=0;i<n;i++)P.push(type==='sunny'?{x:Math.random()*w,y:Math.random()*h,r:Math.random()*2.4+.6,s:Math.random()*.4+.1,a:Math.random()}:
+    type==='rain'?{x:Math.random()*w,y:Math.random()*h,l:Math.random()*12+8,s:Math.random()*5+7}:
+    {x:Math.random()*w,y:Math.random()*h,r:Math.random()*2.6+1,s:Math.random()*1.1+.4,d:Math.random()*2-1,a:Math.random()*6});}
+function anim(){const w=cv.width/devicePixelRatio,h=cv.height/devicePixelRatio,type=CITIES[cur].w;ctx.clearRect(0,0,w,h);
+  if(type==='sunny'){for(const p of P){p.y-=p.s;if(p.y<-4)p.y=h+4;p.a+=.02;ctx.globalAlpha=.3+.4*Math.abs(Math.sin(p.a));ctx.fillStyle='#fff6d5';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();}ctx.globalAlpha=1;}
+  else if(type==='rain'){ctx.strokeStyle='rgba(190,215,255,.65)';ctx.lineWidth=1.6;for(const p of P){p.y+=p.s;p.x+=p.s*.2;if(p.y>h){p.y=-10;p.x=Math.random()*w;}ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-p.s*.25,p.y-p.l);ctx.stroke();}}
+  else{for(const p of P){p.y+=p.s;p.x+=Math.sin(p.a+=.02)*p.d;if(p.y>h){p.y=-6;p.x=Math.random()*w;}ctx.globalAlpha=.85;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();}ctx.globalAlpha=1;}
+  requestAnimationFrame(anim);}
+function toF(c){return Math.round(c*9/5+32);}
+function temp(c){return celsius?c:toF(c);}
+function unit(){return celsius?'°C':'°F';}
+function countTo(target){const from=dispT==null?target:dispT,t0=performance.now();
+  (function step(){const k=Math.min(1,(performance.now()-t0)/500),e=1-Math.pow(1-k,3);
+    dispT=Math.round(from+(target-from)*e);document.getElementById('tval').textContent=temp(dispT);
+    if(k<1)requestAnimationFrame(step);})();}
+function render(){const c=CITIES[cur];
+  card.style.background='linear-gradient(160deg,'+c.bg.join(',')+')';
+  document.getElementById('icwrap').innerHTML=ICONS[c.w];
+  document.getElementById('cdesc').textContent={sunny:'晴朗',rain:'小雨',snow:'阵雪'}[c.w];
+  document.getElementById('ccity').textContent=c.n;
+  document.getElementById('feel').textContent='体感 '+temp(c.feel)+unit();
+  document.getElementById('wind').textContent=c.wind+' km/h';
+  document.getElementById('humi').textContent=c.humi+'%';
+  document.getElementById('pop').textContent=c.pop+'%';
+  document.getElementById('tunit').textContent=unit();document.getElementById('unit').textContent=unit();
+  countTo(c.t);
+  const days=document.getElementById('days');days.innerHTML='';
+  const svg=document.getElementById('chart');
+  const his=c.f.map(d=>temp(d[1])),los=c.f.map(d=>temp(d[2]));
+  const all=his.concat(los),mx=Math.max(...all),mn=Math.min(...all);
+  const X=i=>40+i*60,Y=v=>46-((v-mn)/((mx-mn)||1))*40;
+  const path=v=>v.map((t,i)=>(i?'L':'M')+X(i)+' '+Y(t)).join(' ');
+  svg.innerHTML='<path d="'+path(his)+'" fill="none" stroke="#ffd166" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>'+
+    '<path d="'+path(los)+'" fill="none" stroke="#8ecbff" stroke-width="2.4" stroke-dasharray="4 4" stroke-linecap="round"/>'+
+    his.map((t,i)=>'<circle cx="'+X(i)+'" cy="'+Y(t)+'" r="3" fill="#ffd166"/>').join('');
+  c.f.forEach((d,i)=>{days.innerHTML+='<div class="day"><div class="dow">'+d[0]+'</div><div class="hi">'+temp(d[1])+'°</div><div class="lo">'+temp(d[2])+'°</div></div>';});
+}
+const ct=document.getElementById('cities');
+CITIES.forEach((c,i)=>{const b=document.createElement('button');b.textContent=c.n;b.onclick=()=>{cur=i;[...ct.children].forEach((x,j)=>x.classList.toggle('on',j===i));seed();render();};ct.appendChild(b);});
+ct.children[0].classList.add('on');
+document.getElementById('unit').onclick=()=>{celsius=!celsius;render();};
+fit();seed();render();anim();
+addEventListener('resize',()=>{fit();seed();});
+</script>
+</body>
+</html>
