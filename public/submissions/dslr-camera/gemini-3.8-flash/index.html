@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSLR Camera Skeuomorphic Replica - gemini-3.8-flash</title>
+<style>
+  :root {
+    --bg-surface: #0a0e17;
+    --metal-dark: #1e293b;
+    --leather-dark: #111622;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(circle at 50% 40%, #172033 0%, #060911 100%);
+    color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 16px; overflow-x: hidden;
+  }
+  .stage {
+    position: relative; width: 100%; max-width: 520px;
+    background: transparent; display: flex; flex-direction: column; align-items: center;
+  }
+  .camera-svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 30px 40px rgba(0,0,0,0.85)); }
+  .table-shadow {
+    width: 85%; height: 26px; border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 70%);
+    margin-top: -18px; z-index: 1;
+  }
+  .hud-badge {
+    margin-top: 24px; display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    padding: 6px 16px; border-radius: 999px; font-size: 12px; color: #94a3b8;
+    backdrop-filter: blur(8px);
+  }
+  .hud-badge span.dot { width: 6px; height: 6px; border-radius: 50%; background: #ef4444; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <svg class="camera-svg" viewBox="0 0 680 500" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- Camera Body Matte Texture Gradients -->
+      <linearGradient id="bodyBase" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#2d3748"/>
+        <stop offset="30%" stop-color="#1a202c"/>
+        <stop offset="70%" stop-color="#121721"/>
+        <stop offset="100%" stop-color="#0a0d14"/>
+      </linearGradient>
+
+      <!-- Grip Rubber Texture Gradient -->
+      <linearGradient id="gripLeather" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#111622"/>
+        <stop offset="40%" stop-color="#222b3d"/>
+        <stop offset="80%" stop-color="#141a27"/>
+        <stop offset="100%" stop-color="#090d14"/>
+      </linearGradient>
+
+      <!-- Metal Ring Linear Gradients -->
+      <linearGradient id="metalChrome" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#e2e8f0"/>
+        <stop offset="25%" stop-color="#94a3b8"/>
+        <stop offset="50%" stop-color="#cbd5e1"/>
+        <stop offset="75%" stop-color="#475569"/>
+        <stop offset="100%" stop-color="#1e293b"/>
+      </linearGradient>
+
+      <linearGradient id="redRing" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#dc2626"/>
+        <stop offset="50%" stop-color="#ef4444"/>
+        <stop offset="100%" stop-color="#991b1b"/>
+      </linearGradient>
+
+      <!-- Optical Glass Element Coatings -->
+      <radialGradient id="lensCoating" cx="42%" cy="42%" r="58%">
+        <stop offset="0%" stop-color="#0284c7" stop-opacity="0.9"/>
+        <stop offset="35%" stop-color="#1e1b4b" stop-opacity="0.95"/>
+        <stop offset="70%" stop-color="#311042" stop-opacity="0.98"/>
+        <stop offset="100%" stop-color="#050508"/>
+      </radialGradient>
+
+      <linearGradient id="apertureSheen" x1="20%" y1="10%" x2="80%" y2="90%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.7"/>
+        <stop offset="30%" stop-color="#38bdf8" stop-opacity="0.3"/>
+        <stop offset="70%" stop-color="#a855f7" stop-opacity="0.1"/>
+        <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+      </linearGradient>
+
+      <!-- Pattern for Grip Dimples -->
+      <pattern id="gripDimples" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+        <circle cx="4" cy="4" r="1.5" fill="#090d16" opacity="0.8"/>
+        <circle cx="4" cy="3.5" r="1" fill="#334155" opacity="0.3"/>
+      </pattern>
+
+      <!-- Pattern for Zoom Ring Ribs -->
+      <pattern id="ribbedGrip" x="0" y="0" width="6" height="40" patternUnits="userSpaceOnUse">
+        <rect x="0" y="0" width="3" height="40" fill="#1e293b"/>
+        <rect x="3" y="0" width="3" height="40" fill="#0f172a"/>
+      </pattern>
+    </defs>
+
+    <!-- MAIN BODY (3/4 Isometric Perspective) -->
+    <!-- Right Body Perspective Extrusion -->
+    <path d="M 520 180 L 590 200 L 585 390 L 510 395 Z" fill="#101520" stroke="#000" stroke-width="1.5"/>
+
+    <!-- Main Front Chassis Block -->
+    <path d="M 120 170 C 120 160 130 150 145 150 L 490 150 C 505 150 515 160 515 175 L 510 400 C 510 415 495 425 480 425 L 140 425 C 125 425 115 415 115 400 Z" fill="url(#bodyBase)" stroke="#1a202c" stroke-width="2"/>
+
+    <!-- Left Hand Grip (Bulging Ergo 3D Form) -->
+    <path d="M 115 200 C 90 220 80 260 85 330 C 90 380 110 415 145 425 L 195 425 L 195 190 Z" fill="url(#gripLeather)"/>
+    <path d="M 115 200 C 90 220 80 260 85 330 C 90 380 110 415 145 425 L 195 425 L 195 190 Z" fill="url(#gripDimples)"/>
+
+    <!-- Pentaprism / Viewfinder Dome ("军舰头") -->
+    <path d="M 240 150 L 275 80 L 375 80 L 410 150 Z" fill="#1e2532" stroke="#0f131a" stroke-width="2"/>
+    <polygon points="275,80 325,75 375,80 355,150 295,150" fill="#2a3447"/>
+    <!-- Brand typography on Pentaprism -->
+    <text x="325" y="132" font-family="-apple-system, sans-serif" font-weight="900" font-size="16" fill="#e2e8f0" letter-spacing="3" text-anchor="middle">LANKON</text>
+    <text x="325" y="145" font-family="-apple-system, sans-serif" font-weight="700" font-size="9" fill="#94a3b8" letter-spacing="1.5" text-anchor="middle">FX-990 PROFESSIONAL</text>
+
+    <!-- Top Hot Shoe Mount (Flash Bracket) -->
+    <rect x="305" y="65" width="40" height="12" rx="2" fill="url(#metalChrome)" stroke="#0f172a"/>
+    <rect x="313" y="68" width="24" height="4" fill="#0f172a"/>
+
+    <!-- Top Left Mode Dial (模式转盘) -->
+    <path d="M 170 142 L 220 142 L 215 155 L 175 155 Z" fill="url(#metalChrome)" stroke="#0f172a"/>
+    <!-- Knurled ticks on Mode Dial -->
+    <g stroke="#0f172a" stroke-width="2">
+      <line x1="180" y1="144" x2="180" y2="153"/>
+      <line x1="190" y1="144" x2="190" y2="153"/>
+      <line x1="200" y1="144" x2="200" y2="153"/>
+      <line x1="210" y1="144" x2="210" y2="153"/>
+    </g>
+
+    <!-- Shutter Button & Angled Front Top Deck -->
+    <ellipse cx="140" cy="180" rx="16" ry="10" fill="url(#metalChrome)" stroke="#334155" stroke-width="2"/>
+    <ellipse cx="140" cy="179" rx="11" ry="6" fill="#f1f5f9"/>
+
+    <!-- Red Assist Illuminator Lamp -->
+    <circle cx="215" cy="190" r="8" fill="#1e293b" stroke="#334155"/>
+    <circle cx="215" cy="190" r="5" fill="#ef4444"/>
+    <circle cx="213" cy="188" r="2" fill="#fca5a5"/>
+
+    <!-- LENS ASSEMBLY (Extruded Cylinders at 3/4 Elliptical Angle) -->
+    <!-- Base Mount Flange -->
+    <ellipse cx="340" cy="285" rx="130" ry="120" fill="#0f172a" stroke="#1e293b" stroke-width="3"/>
+
+    <!-- Barrel Outer Shell -->
+    <ellipse cx="340" cy="285" rx="122" ry="112" fill="url(#metalChrome)"/>
+
+    <!-- Focus Ring Textured Grip Band -->
+    <ellipse cx="340" cy="285" rx="115" ry="105" fill="#111827"/>
+    <ellipse cx="340" cy="285" rx="115" ry="105" fill="url(#ribbedGrip)" opacity="0.6"/>
+
+    <!-- Iconic Luxury Red Line Ring (红圈) -->
+    <ellipse cx="340" cy="285" rx="104" ry="94" fill="none" stroke="url(#redRing)" stroke-width="3.5"/>
+
+    <!-- Front Filter Thread Bezel -->
+    <ellipse cx="340" cy="285" rx="98" ry="88" fill="#1e293b" stroke="#000" stroke-width="2"/>
+
+    <!-- Lens Spec Inscription Typography (Tilted around circumference) -->
+    <text x="340" y="206" font-family="monospace" font-weight="700" font-size="9" fill="#94a3b8" letter-spacing="1.5" text-anchor="middle">LANKON OPTICAL 50mm f/1.2 S USM Ø82mm</text>
+
+    <!-- Multi-Coated Optical Glass Front Element (Deep Cavity Effect) -->
+    <ellipse cx="340" cy="285" rx="84" ry="76" fill="url(#lensCoating)"/>
+
+    <!-- Aperture Blades Silhouette inside Lens -->
+    <g fill="#0b0e14" opacity="0.85">
+      <polygon points="340,255 375,270 365,305 325,305 315,270"/>
+    </g>
+
+    <!-- Glass Highlights & Optical Reflection Glare Curves -->
+    <!-- Top-Left Cyan/White Glare Arc -->
+    <path d="M 285 240 C 315 220 365 220 395 240 C 380 232 330 232 285 240 Z" fill="url(#apertureSheen)"/>
+    <ellipse cx="305" cy="245" rx="18" ry="8" fill="#ffffff" opacity="0.5" transform="rotate(-25 305 245)"/>
+
+    <!-- Bottom-Right Violet Coating Glint -->
+    <ellipse cx="375" cy="325" rx="26" ry="12" fill="#c084fc" opacity="0.25" transform="rotate(-30 375 325)"/>
+
+    <!-- Camera Strap Lug on Side -->
+    <rect x="585" y="260" width="16" height="8" rx="2" fill="url(#metalChrome)" stroke="#000"/>
+    <ellipse cx="597" cy="264" rx="2" ry="2" fill="#000"/>
+  </svg>
+  <div class="table-shadow"></div>
+
+  <div class="hud-badge">
+    <span class="dot"></span>
+    <span>纯手绘拟物复刻 • 无位图 • 3/4 视角手柄与红圈镜头</span>
+  </div>
+</div>
+</body>
+</html>

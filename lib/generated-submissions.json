@@ -272,6 +272,23 @@
     "updatedAt": "2026-05-20T00:00:26.622Z"
   },
   {
+    "id": "clock:gemini-3.8-flash",
+    "theme": "clock",
+    "model": "gemini-3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/clock/gemini-3.8-flash/",
+    "publicPath": "/submissions/clock/gemini-3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 126,
+    "linesCss": 63,
+    "linesJs": 36,
+    "sizeBytes": 5542,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T15:44:22.790Z"
+  },
+  {
     "id": "clock:gemini-3.7-flash",
     "theme": "clock",
     "model": "gemini-3.7-flash",
@@ -884,6 +901,23 @@
     "updatedAt": "2026-08-27T14:41:10.434Z"
   },
   {
+    "id": "clock:muse-spark-1.3",
+    "theme": "clock",
+    "model": "muse-spark-1.3",
+    "filename": "index.html",
+    "path": "/submissions/clock/muse-spark-1.3/",
+    "publicPath": "/submissions/clock/muse-spark-1.3/index.html",
+    "renderKind": "html",
+    "linesTotal": 70,
+    "linesCss": 31,
+    "linesJs": 13,
+    "sizeBytes": 5627,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T14:06:59.549Z"
+  },
+  {
     "id": "recorder:fable-5.1",
     "theme": "recorder",
     "model": "fable-5.1",
@@ -1154,6 +1188,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-05-20T00:00:26.625Z"
+  },
+  {
+    "id": "recorder:gemini-3.8-flash",
+    "theme": "recorder",
+    "model": "gemini-3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/recorder/gemini-3.8-flash/",
+    "publicPath": "/submissions/recorder/gemini-3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 195,
+    "linesCss": 67,
+    "linesJs": 92,
+    "sizeBytes": 7803,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T14:48:09.920Z"
   },
   {
     "id": "recorder:gemini-3.7-flash",
@@ -1768,6 +1819,23 @@
     "updatedAt": "2026-08-27T13:28:22.774Z"
   },
   {
+    "id": "recorder:muse-spark-1.3",
+    "theme": "recorder",
+    "model": "muse-spark-1.3",
+    "filename": "index.html",
+    "path": "/submissions/recorder/muse-spark-1.3/",
+    "publicPath": "/submissions/recorder/muse-spark-1.3/index.html",
+    "renderKind": "html",
+    "linesTotal": 115,
+    "linesCss": 39,
+    "linesJs": 37,
+    "sizeBytes": 8114,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T14:06:02.262Z"
+  },
+  {
     "id": "weather-card:fable-5.1",
     "theme": "weather-card",
     "model": "fable-5.1",
@@ -2038,6 +2106,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-05-20T00:00:26.630Z"
+  },
+  {
+    "id": "weather-card:gemini-3.8-flash",
+    "theme": "weather-card",
+    "model": "gemini-3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/weather-card/gemini-3.8-flash/",
+    "publicPath": "/submissions/weather-card/gemini-3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 179,
+    "linesCss": 47,
+    "linesJs": 93,
+    "sizeBytes": 7739,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T14:49:08.943Z"
   },
   {
     "id": "weather-card:gemini-3.7-flash",
@@ -2652,6 +2737,23 @@
     "updatedAt": "2026-08-27T13:29:48.872Z"
   },
   {
+    "id": "weather-card:muse-spark-1.3",
+    "theme": "weather-card",
+    "model": "muse-spark-1.3",
+    "filename": "index.html",
+    "path": "/submissions/weather-card/muse-spark-1.3/",
+    "publicPath": "/submissions/weather-card/muse-spark-1.3/index.html",
+    "renderKind": "html",
+    "linesTotal": 136,
+    "linesCss": 57,
+    "linesJs": 48,
+    "sizeBytes": 11877,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T14:08:15.916Z"
+  },
+  {
     "id": "stock-panel:fable-5.1",
     "theme": "stock-panel",
     "model": "fable-5.1",
@@ -2922,6 +3024,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-05-20T00:00:26.628Z"
+  },
+  {
+    "id": "stock-panel:gemini-3.8-flash",
+    "theme": "stock-panel",
+    "model": "gemini-3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/stock-panel/gemini-3.8-flash/",
+    "publicPath": "/submissions/stock-panel/gemini-3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 171,
+    "linesCss": 54,
+    "linesJs": 85,
+    "sizeBytes": 6778,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T14:49:55.832Z"
   },
   {
     "id": "stock-panel:gemini-3.7-flash",
@@ -3536,6 +3655,23 @@
     "updatedAt": "2026-08-27T13:30:59.242Z"
   },
   {
+    "id": "stock-panel:muse-spark-1.3",
+    "theme": "stock-panel",
+    "model": "muse-spark-1.3",
+    "filename": "index.html",
+    "path": "/submissions/stock-panel/muse-spark-1.3/",
+    "publicPath": "/submissions/stock-panel/muse-spark-1.3/index.html",
+    "renderKind": "html",
+    "linesTotal": 83,
+    "linesCss": 26,
+    "linesJs": 35,
+    "sizeBytes": 6217,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T14:06:12.284Z"
+  },
+  {
     "id": "click-fireworks:fable-5.1",
     "theme": "click-fireworks",
     "model": "fable-5.1",
@@ -3806,6 +3942,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-05-20T00:00:26.620Z"
+  },
+  {
+    "id": "click-fireworks:gemini-3.8-flash",
+    "theme": "click-fireworks",
+    "model": "gemini-3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/click-fireworks/gemini-3.8-flash/",
+    "publicPath": "/submissions/click-fireworks/gemini-3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 138,
+    "linesCss": 15,
+    "linesJs": 103,
+    "sizeBytes": 4177,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T14:50:30.439Z"
   },
   {
     "id": "click-fireworks:gemini-3.7-flash",
@@ -4420,6 +4573,23 @@
     "updatedAt": "2026-08-27T13:31:43.124Z"
   },
   {
+    "id": "click-fireworks:muse-spark-1.3",
+    "theme": "click-fireworks",
+    "model": "muse-spark-1.3",
+    "filename": "index.html",
+    "path": "/submissions/click-fireworks/muse-spark-1.3/",
+    "publicPath": "/submissions/click-fireworks/muse-spark-1.3/index.html",
+    "renderKind": "html",
+    "linesTotal": 79,
+    "linesCss": 11,
+    "linesJs": 49,
+    "sizeBytes": 5908,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T14:05:12.538Z"
+  },
+  {
     "id": "neon-countdown:fable-5.1",
     "theme": "neon-countdown",
     "model": "fable-5.1",
@@ -4571,6 +4741,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-06-08T06:30:31.827Z"
+  },
+  {
+    "id": "neon-countdown:gemini-3.8-flash",
+    "theme": "neon-countdown",
+    "model": "gemini-3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/neon-countdown/gemini-3.8-flash/",
+    "publicPath": "/submissions/neon-countdown/gemini-3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 162,
+    "linesCss": 59,
+    "linesJs": 73,
+    "sizeBytes": 6381,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T14:51:07.479Z"
   },
   {
     "id": "neon-countdown:gemini-3.7-flash",
@@ -4862,6 +5049,23 @@
     "updatedAt": "2026-08-27T13:32:51.019Z"
   },
   {
+    "id": "neon-countdown:muse-spark-1.3",
+    "theme": "neon-countdown",
+    "model": "muse-spark-1.3",
+    "filename": "index.html",
+    "path": "/submissions/neon-countdown/muse-spark-1.3/",
+    "publicPath": "/submissions/neon-countdown/muse-spark-1.3/index.html",
+    "renderKind": "html",
+    "linesTotal": 130,
+    "linesCss": 22,
+    "linesJs": 82,
+    "sizeBytes": 8241,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T14:05:12.552Z"
+  },
+  {
     "id": "particle-gravity:fable-5.1",
     "theme": "particle-gravity",
     "model": "fable-5.1",
@@ -5013,6 +5217,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-06-08T06:30:31.827Z"
+  },
+  {
+    "id": "particle-gravity:gemini-3.8-flash",
+    "theme": "particle-gravity",
+    "model": "gemini-3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/particle-gravity/gemini-3.8-flash/",
+    "publicPath": "/submissions/particle-gravity/gemini-3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 173,
+    "linesCss": 22,
+    "linesJs": 128,
+    "sizeBytes": 6084,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T14:51:50.427Z"
   },
   {
     "id": "particle-gravity:gemini-3.7-flash",
@@ -5304,6 +5525,23 @@
     "updatedAt": "2026-08-27T13:33:44.355Z"
   },
   {
+    "id": "particle-gravity:muse-spark-1.3",
+    "theme": "particle-gravity",
+    "model": "muse-spark-1.3",
+    "filename": "index.html",
+    "path": "/submissions/particle-gravity/muse-spark-1.3/",
+    "publicPath": "/submissions/particle-gravity/muse-spark-1.3/index.html",
+    "renderKind": "html",
+    "linesTotal": 129,
+    "linesCss": 12,
+    "linesJs": 92,
+    "sizeBytes": 8341,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T14:05:30.896Z"
+  },
+  {
     "id": "cheetah-trophy-run:fable-5.1",
     "theme": "cheetah-trophy-run",
     "model": "fable-5.1",
@@ -5455,6 +5693,23 @@
     "unlimitedLines": true,
     "usesBitmap": false,
     "updatedAt": "2026-06-08T06:30:31.824Z"
+  },
+  {
+    "id": "cheetah-trophy-run:gemini-3.8-flash",
+    "theme": "cheetah-trophy-run",
+    "model": "gemini-3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/cheetah-trophy-run/gemini-3.8-flash/",
+    "publicPath": "/submissions/cheetah-trophy-run/gemini-3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 268,
+    "linesCss": 35,
+    "linesJs": 0,
+    "sizeBytes": 13262,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T15:44:22.790Z"
   },
   {
     "id": "cheetah-trophy-run:gemini-3.7-flash",
@@ -5746,6 +6001,23 @@
     "updatedAt": "2026-08-27T13:39:10.242Z"
   },
   {
+    "id": "cheetah-trophy-run:muse-spark-1.3",
+    "theme": "cheetah-trophy-run",
+    "model": "muse-spark-1.3",
+    "filename": "index.html",
+    "path": "/submissions/cheetah-trophy-run/muse-spark-1.3/",
+    "publicPath": "/submissions/cheetah-trophy-run/muse-spark-1.3/index.html",
+    "renderKind": "html",
+    "linesTotal": 814,
+    "linesCss": 18,
+    "linesJs": 0,
+    "sizeBytes": 48074,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T14:21:54.600Z"
+  },
+  {
     "id": "dslr-camera:fable-5.1",
     "theme": "dslr-camera",
     "model": "fable-5.1",
@@ -5897,6 +6169,23 @@
     "unlimitedLines": true,
     "usesBitmap": false,
     "updatedAt": "2026-06-08T06:30:31.826Z"
+  },
+  {
+    "id": "dslr-camera:gemini-3.8-flash",
+    "theme": "dslr-camera",
+    "model": "gemini-3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/dslr-camera/gemini-3.8-flash/",
+    "publicPath": "/submissions/dslr-camera/gemini-3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 192,
+    "linesCss": 29,
+    "linesJs": 0,
+    "sizeBytes": 9140,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T15:44:22.790Z"
   },
   {
     "id": "dslr-camera:gemini-3.7-flash",
@@ -6188,6 +6477,23 @@
     "updatedAt": "2026-08-27T14:33:43.992Z"
   },
   {
+    "id": "dslr-camera:muse-spark-1.3",
+    "theme": "dslr-camera",
+    "model": "muse-spark-1.3",
+    "filename": "index.html",
+    "path": "/submissions/dslr-camera/muse-spark-1.3/",
+    "publicPath": "/submissions/dslr-camera/muse-spark-1.3/index.html",
+    "renderKind": "html",
+    "linesTotal": 543,
+    "linesCss": 30,
+    "linesJs": 0,
+    "sizeBytes": 33197,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T14:38:13.450Z"
+  },
+  {
     "id": "schwarzschild-black-hole:fable-5.1",
     "theme": "schwarzschild-black-hole",
     "model": "fable-5.1",
@@ -6305,6 +6611,23 @@
     "unlimitedLines": true,
     "usesBitmap": false,
     "updatedAt": "2026-07-18T12:11:31.756Z"
+  },
+  {
+    "id": "schwarzschild-black-hole:gemini-3.8-flash",
+    "theme": "schwarzschild-black-hole",
+    "model": "gemini-3.8-flash",
+    "filename": "index.html",
+    "path": "/submissions/schwarzschild-black-hole/gemini-3.8-flash/",
+    "publicPath": "/submissions/schwarzschild-black-hole/gemini-3.8-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 401,
+    "linesCss": 44,
+    "linesJs": 296,
+    "sizeBytes": 15313,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T15:44:22.791Z"
   },
   {
     "id": "schwarzschild-black-hole:gemini-3.7-flash",
@@ -6509,6 +6832,23 @@
     "unlimitedLines": true,
     "usesBitmap": false,
     "updatedAt": "2026-08-27T14:21:26.440Z"
+  },
+  {
+    "id": "schwarzschild-black-hole:muse-spark-1.3",
+    "theme": "schwarzschild-black-hole",
+    "model": "muse-spark-1.3",
+    "filename": "index.html",
+    "path": "/submissions/schwarzschild-black-hole/muse-spark-1.3/",
+    "publicPath": "/submissions/schwarzschild-black-hole/muse-spark-1.3/index.html",
+    "renderKind": "html",
+    "linesTotal": 982,
+    "linesCss": 97,
+    "linesJs": 756,
+    "sizeBytes": 39923,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T15:44:22.792Z"
   },
   {
     "id": "carwash-decision:fable-5.1",
@@ -6813,6 +7153,25 @@
     "updatedAt": "2026-05-20T00:00:26.617Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：开车过去。\n理由1：距离虽然只有 50 米，但洗车店的服务对象是车辆，如果走过去不仅无法进行“洗车”，还可能要再走回来开车，纯属浪费时间。\n理由2：洗车本身是针对车辆的清洁维护，车必须在现场才能享受服务，这与距离远近没有逻辑对应关系。\n建议：尽快直接开车前往洗车店。"
+  },
+  {
+    "id": "carwash-decision:gemini-3.8-flash",
+    "theme": "carwash-decision",
+    "model": "gemini-3.8-flash",
+    "filename": "response.md",
+    "path": "/submissions/carwash-decision/gemini-3.8-flash/response.md",
+    "publicPath": "/submissions/carwash-decision/gemini-3.8-flash/response.md",
+    "renderKind": "text",
+    "linesTotal": 6,
+    "linesCss": 0,
+    "linesJs": 0,
+    "sizeBytes": 478,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T15:24:34.314Z",
+    "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
+    "answerText": "结论：开车过去。\n理由1：洗车的目标是清洁车辆本身，车辆必须到达现场才能完成清洗服务。\n理由2：50米虽然步行仅需一分钟，但如果走过去，车辆仍留在原地无法清洗，还需要折返回家取车。\n理由3：直接开车过去省去往返折腾，洗完后也可直接将干净的车辆开回或继续出行。\n建议：直接启动车辆慢速开进洗车工位，注意观察出入口行人和店内引导提示。"
   },
   {
     "id": "carwash-decision:gemini-3.7-flash",
@@ -7497,5 +7856,24 @@
     "updatedAt": "2026-08-27T14:25:37.805Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：开车过去。\n\n理由1：要洗的是车，不是你。走过去的结果是“人到了店里、车还停在家”，你还得走回来取车再开过去，同样的路白白多走两趟。\n\n理由2：50 米属于挪车级距离，慢速开过去大约 20 秒，比找店员、办交接还快；冷启动多耗的那几毫升油（成本不到一毛钱），远低于多跑一个来回的时间成本。\n\n理由3：洗完能直接开回家停好，车身不会在折返路上重新落灰或被雨淋；先走过去的话，取车时很可能赶上刚洗完的车在户外停着，白洗一半。\n\n理由4：唯一该走过去的情况是这 50 米需要横穿主干道、或店门口没法临停，挪车反而更费事——那就直接问店家能不能上门取车。\n\n建议：开车过去。出发前关严车窗、收好外置天线，顺手带上脚垫；50 米不用热车，怠速慢行即可，到店把钥匙交给店员，等洗好再开走。"
+  },
+  {
+    "id": "carwash-decision:muse-spark-1.3",
+    "theme": "carwash-decision",
+    "model": "muse-spark-1.3",
+    "filename": "response.md",
+    "path": "/submissions/carwash-decision/muse-spark-1.3/response.md",
+    "publicPath": "/submissions/carwash-decision/muse-spark-1.3/response.md",
+    "renderKind": "text",
+    "linesTotal": 7,
+    "linesCss": 0,
+    "linesJs": 0,
+    "sizeBytes": 483,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-03T13:59:18.503Z",
+    "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
+    "answerText": "结论：走过去\n理由1：50米走路只需要一两分钟，上车、启动、停车的功夫早就走到了。\n理由2：这么短的距离开车，发动机刚冷启动就要熄火，反而增加磨损和油耗。\n理由3：开车过去还要找车位、掉头、挪车，而洗车店门口未必方便停车，纯属自找麻烦。\n理由4：走过去顺便活动活动身体，回来时车也洗好了，一举两得。\n建议：直接迈开腿走过去，省油又省心。"
   }
 ]

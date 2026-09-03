@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<title>霓虹倒计时 Neon Countdown · muse-spark-1.3</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#05060f;font-family:"Segoe UI",ui-rounded,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+canvas{position:fixed;inset:0;width:100%;height:100%}
+.ui{position:fixed;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.core{display:flex;flex-direction:column;align-items:center}
+.cap{position:absolute;top:max(16px,env(safe-area-inset-top));left:0;right:0;text-align:center;font-size:11px;letter-spacing:5px;color:#5fd4ff;text-shadow:0 0 8px rgba(60,200,255,.7)}
+.cap b{display:block;margin-top:4px;font-size:8px;font-weight:400;letter-spacing:2px;color:#7d8bb8;text-shadow:none}
+.num{font-size:clamp(84px,25vw,150px);font-weight:900;line-height:.9;color:#eafcff;font-variant-numeric:tabular-nums;text-shadow:0 0 8px #9ff4ff,0 0 20px #38d3ff,0 0 46px #1f8fff,0 0 90px #3f5bff;transition:color .12s}
+.unit{margin-top:6px;font-size:11px;letter-spacing:8px;color:#8aa7d8;padding-left:8px}
+.track{width:min(300px,52vw);height:5px;margin-top:14px;border-radius:3px;background:rgba(120,160,255,.15);overflow:hidden}
+.track i{display:block;height:100%;width:100%;border-radius:3px;background:linear-gradient(90deg,#3dffd9,#2f9bff);box-shadow:0 0 10px rgba(60,220,255,.9)}
+.msg{margin-top:12px;height:28px;font-size:15px;letter-spacing:3px;color:#ffd76a;opacity:0;transform:translateY(6px);transition:.35s;text-shadow:0 0 14px rgba(255,190,70,.9)}
+.msg.show{opacity:1;transform:none}
+#go{position:fixed;bottom:max(26px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:3;pointer-events:auto;font:inherit;font-size:12px;letter-spacing:2px;color:#bdeeff;padding:10px 22px;border-radius:99px;border:1px solid rgba(110,215,255,.55);background:rgba(20,40,110,.35);cursor:pointer;box-shadow:0 0 18px rgba(50,170,255,.35);backdrop-filter:blur(3px)}
+#go:active{transform:translateX(-50%) scale(.94);background:rgba(60,140,255,.4)}
+@keyframes jolt{0%,100%{transform:translateY(0)}25%{transform:translateY(-3px)}75%{transform:translateY(3px)}}
+.ui.hot .core{animation:jolt .2s linear infinite}
+.ui.hot .num{color:#ffe3e6;text-shadow:0 0 8px #ff9da8,0 0 20px #ff3d55,0 0 48px #ff1f3d,0 0 100px #b3001b}
+.ui.hot .track i{background:linear-gradient(90deg,#ffd76a,#ff2e4d);box-shadow:0 0 12px rgba(255,60,90,.9)}
+@keyframes glowP{0%,100%{filter:brightness(1)}50%{filter:brightness(1.45)}}
+.ui.done .num{color:#fff6d8;text-shadow:0 0 10px #ffd76a,0 0 26px #ffb020,0 0 60px #ff7a00;animation:glowP 1s ease-in-out infinite}
+.ui.done .track i{background:linear-gradient(90deg,#ffe9a0,#ffb020);box-shadow:0 0 14px rgba(255,190,60,.95)}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="ui" id="ui">
+  <div class="cap">NEON·COUNTDOWN<b>muse-spark-1.3 · 十秒霓虹发射倒计时</b></div>
+  <div class="core">
+    <div class="num" id="num">10</div>
+    <div class="unit">SECONDS</div>
+    <div class="track"><i id="bar"></i></div>
+    <div class="msg" id="msg"></div>
+  </div>
+</div>
+<button id="go">↻ RESTART</button>
+<script>
+"use strict";
+var cv=document.getElementById('bg'),X=cv.getContext('2d'),W=0,H=0,CX=0,OY=0,DPR=Math.min(window.devicePixelRatio||1,2);
+function rs(){W=innerWidth;H=innerHeight;CX=W/2;OY=H*.5-22;cv.width=W*DPR;cv.height=H*DPR;X.setTransform(DPR,0,0,DPR,0,0)}
+addEventListener('resize',rs);rs();
+var DUR=10000,start=0,state='run',sec=10,lastTick=0,rem=DUR;
+var num=document.getElementById('num'),ui=document.getElementById('ui'),msg=document.getElementById('msg'),bar=document.getElementById('bar');
+var HUES=[45,350,280,210,160,30,120,55,300,190,10,260],ripples=[],sparks=[];
+function begin(){
+  start=performance.now();state='run';sec=10;lastTick=start;num.textContent='10';num.style.animation='';
+  ui.className='ui';msg.textContent='';msg.className='msg';bar.style.width='100%';ripples.length=0;sparks.length=0;
+}
+function push(x,y,r,v,a){ripples.push({x:x,y:y,r:r,v:v,a:a})}
+function tickFx(p){
+  push(CX,OY,120,3.4+p*7,.55+p*.4);
+  if(p>.5)push(CX,OY,90,6,.4);
+  if(navigator.vibrate)navigator.vibrate(p>.5?[16,30,16]:12);
+  num.style.animation='none';void num.offsetWidth;num.style.animation='pop .3s cubic-bezier(.2,1.6,.4,1)';
+}
+num.addEventListener('animationend',function(){num.style.animation=''});
+function burst(x,y){
+  for(var i=0;i<130;i++){var a=Math.random()*6.283,v=2+Math.random()*12;
+    sparks.push({x:x,y:y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-2,g:.22,f:.975,l:60+(Math.random()*50|0),h:HUES[Math.random()*HUES.length|0],r:.8+Math.random()*2})}
+  push(x,y,16,9,.95);push(x,y,40,7,.8);push(x,y,70,5,.6);
+}
+function finish(){
+  state='done';ui.classList.add('done');ui.classList.remove('hot');
+  num.textContent='0';num.style.animation='none';void num.offsetWidth;num.style.animation='pop .5s cubic-bezier(.2,1.6,.4,1)';
+  msg.textContent='🎆 倒计时完成 · 时间到！';msg.className='msg show';bar.style.width='0%';
+  burst(CX,OY);
+  if(navigator.vibrate)navigator.vibrate([30,40,30,40,140]);
+}
+document.getElementById('go').addEventListener('click',function(){begin()});
+begin();
+function frame(now){
+  var i;
+  if(state==='run'){
+    rem=DUR-(now-start);
+    if(rem<=0){finish()}
+    else{var s2=Math.ceil(rem/1000);
+      if(s2!==sec){sec=s2;ui.classList.toggle('hot',sec<=3);num.textContent=sec;tickFx(sec<=3?(4-sec)/4:0);lastTick=now}
+      bar.style.width=(rem/DUR*100).toFixed(1)+'%';
+    }
+  }
+  var t=now*.001,hot=state==='run'&&sec<=3,R=Math.min(W,H)*.31;
+  X.globalAlpha=1;X.globalCompositeOperation='source-over';
+  var g=X.createRadialGradient(CX,OY,0,CX,OY,Math.max(W,H)*.62);
+  if(state==='done'){g.addColorStop(0,'#2a1503');g.addColorStop(.5,'#120b18');g.addColorStop(1,'#05060f')}
+  else if(hot){g.addColorStop(0,'#3a0810');g.addColorStop(.5,'#14080f');g.addColorStop(1,'#05060f')}
+  else{g.addColorStop(0,'#0c1c3a');g.addColorStop(.5,'#0a0d22');g.addColorStop(1,'#05060f')}
+  X.fillStyle=g;X.fillRect(0,0,W,H);
+  X.lineCap='round';
+  X.globalAlpha=.12;X.strokeStyle='#7f9dff';X.lineWidth=7;
+  X.beginPath();X.arc(CX,OY,R,0,6.283);X.stroke();
+  if(state==='done'){
+    for(i=0;i<10;i++){var dn=i/10*6.283-1.5708;
+      X.globalAlpha=.35;X.fillStyle='#ffd76a';X.beginPath();X.arc(CX+Math.cos(dn)*R,OY+Math.sin(dn)*R,3,0,6.283);X.fill()}
+  }else{
+    for(i=0;i<10;i++){var an=i/10*6.283-1.5708,dx=CX+Math.cos(an)*R,dy=OY+Math.sin(an)*R,on=i<sec,isCur=i===sec-1;
+      X.globalAlpha=on?(isCur?.9:.45):.1;X.fillStyle=hot?'#ff5a6e':'#5fd9ff';
+      X.beginPath();X.arc(dx,dy,on?5:3,0,6.283);X.fill();
+      if(isCur&&hot){X.globalAlpha=.25+.25*Math.sin(t*30);X.beginPath();X.arc(dx,dy,11,0,6.283);X.fill()}}
+    var frac=rem/DUR,a0=-1.5708,a1=a0+frac*6.283,col=hot?'hsla(0,95%,62%,1)':(sec<=5?'hsla(30,100%,60%,1)':'hsla(190,100%,60%,1)');
+    X.globalAlpha=.95;X.strokeStyle=col;X.lineWidth=7;X.shadowColor=col;X.shadowBlur=16;
+    X.beginPath();X.arc(CX,OY,R,a0,a1);X.stroke();X.shadowBlur=0;
+  }
+  X.globalCompositeOperation='lighter';
+  for(i=0;i<ripples.length;i++){var q=ripples[i];q.r+=q.v;q.a-=.02;
+    if(q.a>0){X.globalAlpha=Math.max(0,q.a);X.strokeStyle=hot?'#ff7a8a':'#7fe7ff';X.lineWidth=2.5;
+      X.beginPath();X.arc(q.x,q.y,q.r,0,6.283);X.stroke()}}
+  for(i=ripples.length-1;i>=0;i--)if(ripples[i].a<=0)ripples.splice(i,1);
+  for(i=0;i<sparks.length;i++){var s=sparks[i];
+    s.vy+=s.g;s.vx*=s.f;s.vy*=s.f;s.x+=s.vx;s.y+=s.vy;
+    if(s.l--<1)continue;
+    var k=s.l/s.m;X.globalAlpha=k*k;X.fillStyle='hsla('+s.h+',100%,65%,1)';
+    X.beginPath();X.arc(s.x,s.y,s.r*k+.6,0,6.283);X.fill()}
+  for(i=sparks.length-1;i>=0;i--)if(sparks[i].l<1)sparks.splice(i,1);
+  X.globalCompositeOperation='source-over';X.globalAlpha=1;
+  if(hot){var fa=.16*(1-(now-lastTick)/1000);
+    if(fa>0){X.fillStyle='rgba(255,40,60,'+fa.toFixed(3)+')';X.fillRect(0,0,W,H)}}
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

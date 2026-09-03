@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Muse Clock</title>
+<style>
+:root{--a:#ffb454;--line:#2c3a5c;--ink:#e9eefb;--mut:#8b96b3;--dg:#24304e;--bg2:#0b1226}
+body.night{--a:#9fb0ff;--line:#202c4e;--dg:#131a33;--bg2:#05070f}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:radial-gradient(120% 120% at 50% -10%,#22345e 0%,#0d152e 52%,#070c1c 100%);transition:background 1s}
+body.night{background:radial-gradient(120% 120% at 50% -10%,#141c44 0%,#060810 55%,#03040a 100%)}
+.stage{width:min(94vw,390px);position:relative;text-align:center;padding:26px 0 30px}
+.brand{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:2px;color:var(--mut)}
+.brand b{color:var(--a);letter-spacing:1px}
+.mode{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);padding:4px 11px;border-radius:99px;letter-spacing:1px;font-size:10px}
+.orbwrap{position:relative;width:268px;height:268px;margin:40px auto 14px}
+.halo{position:absolute;inset:-26px;border-radius:50%;filter:blur(4px);background:radial-gradient(circle,rgba(255,180,84,.34),transparent 64%);animation:breathe 5s ease-in-out infinite;pointer-events:none}
+body.night .halo{background:radial-gradient(circle,rgba(159,176,255,.30),transparent 64%)}
+@keyframes breathe{0%,100%{transform:scale(.96);opacity:.45}50%{transform:scale(1.05);opacity:.75}}
+.face{position:relative;width:268px;height:268px;margin:auto;border-radius:50%;background:radial-gradient(circle at 34% 28%,#28365c,#111830 68%);box-shadow:0 24px 70px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.07),inset 0 0 70px rgba(0,0,0,.45);transition:background 1s}
+.i{position:absolute;left:50%;top:50%;width:2px;height:2px;margin:-1px;border-radius:50%;background:var(--line)}
+.i.ma{width:4px;height:4px;margin:-2px;background:var(--a);box-shadow:0 0 10px var(--a)}
+.hand{position:absolute;left:50%;top:50%;border-radius:9px;transform-origin:50% 100%;transition:background 1s}
+.hand.hh{width:7px;height:62px;margin-left:-3.5px;margin-top:-62px;background:linear-gradient(var(--ink),#a8b4d6)}
+.hand.mh{width:5px;height:92px;margin-left:-2.5px;margin-top:-92px;background:linear-gradient(#dfe6f6,#7e8cb2)}
+.hand.sh{width:2px;height:104px;margin-left:-1px;margin-top:-104px;background:var(--a);box-shadow:0 0 10px var(--a)}
+.cap{position:absolute;left:50%;top:50%;width:16px;height:16px;margin:-8px;border-radius:50%;background:var(--a);box-shadow:0 0 16px var(--a),inset 0 0 0 4px #0d1329}
+.stars{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity 1.4s}
+body.night .stars{opacity:1}
+.stars i{position:absolute;width:2px;height:2px;border-radius:50%;background:#cdd9ff;animation:tw 3.4s ease-in-out infinite}
+@keyframes tw{0%,100%{opacity:.1;transform:scale(.7)}50%{opacity:.95;transform:scale(1.35)}}
+.digi{margin-top:24px;font:700 50px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:2px;font-variant-numeric:tabular-nums;text-shadow:0 0 26px rgba(255,180,84,.28)}
+body.night .digi{text-shadow:0 0 26px rgba(159,176,255,.3)}
+.date{margin-top:9px;font-size:13px;letter-spacing:1px;color:var(--mut)}
+.meta{margin-top:22px;display:inline-flex;gap:8px;align-items:center;font-size:10px;letter-spacing:2px;color:var(--mut);border:1px solid rgba(255,255,255,.09);padding:5px 13px;border-radius:99px}
+.meta i{width:6px;height:6px;border-radius:50%;background:#38e09a;box-shadow:0 0 8px #38e09a;animation:blink 2s ease-in-out infinite}
+@keyframes blink{50%{opacity:.25}}
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="stage">
+  <div class="brand"><b>MUSE SPARK</b><span class="mode" id="mode">—</span></div>
+  <div class="orbwrap">
+    <div class="halo"></div>
+    <div class="face" id="face"><div class="hand hh"></div><div class="hand mh"></div><div class="hand sh"></div><div class="cap"></div></div>
+  </div>
+  <div class="digi" id="digi">--:--:--</div>
+  <div class="date" id="date">—</div>
+  <div class="meta"><i></i>CLOCK · muse-spark-1.3</div>
+</div>
+<script>
+const $=i=>document.getElementById(i),face=$('face'),digi=$('digi'),dateEl=$('date'),mode=$('mode'),stars=$('stars');
+const pad=n=>String(n).padStart(2,'0'),WD=['日','一','二','三','四','五','六'];
+for(let i=0;i<60;i++){const t=document.createElement('i');t.className=i%5===0?'i ma':'i';face.appendChild(t);t.style.transform=`rotate(${i*6}deg) translateY(-117px)`}
+for(let i=0;i<30;i++){const s=document.createElement('i');s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*72}%;animation-delay:${-Math.random()*4}s;animation-duration:${2+Math.random()*3.5}s`;stars.appendChild(s)}
+let last='';
+(function tick(){const d=new Date(),ms=d.getMilliseconds(),s=d.getSeconds()+ms/1e3,m=d.getMinutes()+s/60,h=d.getHours()+m/60;
+face.children[0].style.transform=`rotate(${(h%12)*30}deg)`;
+face.children[1].style.transform=`rotate(${m*6}deg)`;
+face.children[2].style.transform=`rotate(${s*6}deg)`;
+const key=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+if(key!==last){last=key;digi.textContent=key;dateEl.textContent=`${d.getFullYear()} / ${pad(d.getMonth()+1)} / ${pad(d.getDate())} · 星期${WD[d.getDay()]}`}
+const n=h>=19||h<6;document.body.classList.toggle('night',n);mode.textContent=n?'NIGHT · 夜':'DAY · 昼';
+requestAnimationFrame(tick)})();
+</script>
+</body>
+</html>

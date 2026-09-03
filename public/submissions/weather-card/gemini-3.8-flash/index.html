@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dynamic Weather Card - gemini-3.8-flash</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f172a; color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .card {
+    width: 100%; max-width: 360px; border-radius: 32px; overflow: hidden;
+    position: relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    transition: background 0.6s ease;
+  }
+  .card.sunny { background: linear-gradient(145deg, #1e3a8a, #0284c7); }
+  .card.rainy { background: linear-gradient(145deg, #1e293b, #334155); }
+  .card.snowy { background: linear-gradient(145deg, #0f172a, #475569); }
+  .fx-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+  .content { position: relative; z-index: 2; padding: 24px 20px; }
+  .city-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .tab-btn {
+    flex: 1; padding: 8px 4px; border-radius: 999px; border: none;
+    background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.8);
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s;
+  }
+  .tab-btn.active { background: #fff; color: #0f172a; }
+  .current-wrap { text-align: center; margin: 10px 0 24px; }
+  .temp-val { font-size: 64px; font-weight: 800; line-height: 1; letter-spacing: -2px; }
+  .desc-val { font-size: 18px; font-weight: 500; margin-top: 6px; color: rgba(255,255,255,0.9); }
+  .details-bar {
+    display: flex; justify-content: space-around; margin: 20px 0;
+    background: rgba(0,0,0,0.2); padding: 12px; border-radius: 16px;
+    backdrop-filter: blur(8px); font-size: 13px;
+  }
+  .detail-item { text-align: center; }
+  .detail-label { color: rgba(255,255,255,0.6); font-size: 11px; margin-bottom: 2px; }
+  .detail-val { font-weight: 700; }
+  .forecast-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.7); margin-bottom: 12px; }
+  .forecast-list { display: flex; justify-content: space-between; gap: 6px; }
+  .forecast-day {
+    flex: 1; text-align: center; background: rgba(255,255,255,0.06);
+    border-radius: 12px; padding: 10px 4px; font-size: 12px;
+  }
+  .f-date { color: rgba(255,255,255,0.6); font-size: 11px; margin-bottom: 4px; }
+  .f-icon { font-size: 18px; margin: 4px 0; }
+  .f-temp { font-weight: 700; }
+  .f-low { color: rgba(255,255,255,0.5); font-size: 10px; }
+  .chart-svg { width: 100%; height: 36px; margin-top: 14px; overflow: visible; }
+  .chart-svg polyline { fill: none; stroke: rgba(255,255,255,0.6); stroke-width: 2; stroke-dasharray: 2; }
+</style>
+</head>
+<body>
+<div class="card sunny" id="weatherCard">
+  <canvas class="fx-canvas" id="fxCanvas"></canvas>
+  <div class="content">
+    <div class="city-tabs">
+      <button class="tab-btn active" onclick="switchCity(0)">北京</button>
+      <button class="tab-btn" onclick="switchCity(1)">上海</button>
+      <button class="tab-btn" onclick="switchCity(2)">哈尔滨</button>
+    </div>
+    <div class="current-wrap">
+      <div class="temp-val" id="tempVal">26°C</div>
+      <div class="desc-val" id="descVal">晴空万里</div>
+    </div>
+    <div class="details-bar">
+      <div class="detail-item"><div class="detail-label">风速</div><div class="detail-val" id="windVal">微风 2级</div></div>
+      <div class="detail-item"><div class="detail-label">湿度</div><div class="detail-val" id="humidVal">42%</div></div>
+      <div class="detail-item"><div class="detail-label">体感</div><div class="detail-val" id="feelVal">27°C</div></div>
+    </div>
+    <div class="forecast-title">未来 5 天预报</div>
+    <div class="forecast-list" id="forecastList"></div>
+    <svg class="chart-svg" viewBox="0 0 320 36">
+      <polyline points="20,18 80,12 160,8 240,16 300,10" />
+    </svg>
+  </div>
+</div>
+<script>
+  const cities = [
+    { name: '北京', type: 'sunny', temp: 26, desc: '晴空万里', wind: '微风 2级', humid: '38%', feel: '27°C',
+      forecast: [{d:'周一',i:'☀️',h:26,l:15},{d:'周二',i:'🌤️',h:28,l:16},{d:'周三',i:'☀️',h:29,l:18},{d:'周四',i:'⛅',h:25,l:16},{d:'周五',i:'🌦️',h:23,l:14}] },
+    { name: '上海', type: 'rainy', temp: 19, desc: '中雨连绵', wind: '东风 4级', humid: '88%', feel: '18°C',
+      forecast: [{d:'周一',i:'🌧️',h:19,l:14},{d:'周二',i:'🌧️',h:18,l:13},{d:'周三',i:'🌦️',h:22,l:16},{d:'周四',i:'🌤️',h:24,l:17},{d:'周五',i:'⛅',h:23,l:16}] },
+    { name: '哈尔滨', type: 'snowy', temp: -8, desc: '阵雪降温', wind: '北风 5级', humid: '72%', feel: '-14°C',
+      forecast: [{d:'周一',i:'❄️',h:-8,l:-16},{d:'周二',i:'❄️',h:-6,l:-15},{d:'周三',i:'⛅',h:-4,l:-12},{d:'周四',i:'🌤️',h:-2,l:-10},{d:'周五',i:'☀️',h:0,l:-9}] }
+  ];
+
+  let currentIdx = 0;
+  const card = document.getElementById('weatherCard');
+  const canvas = document.getElementById('fxCanvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+
+  function resizeCanvas() {
+    canvas.width = card.offsetWidth;
+    canvas.height = card.offsetHeight;
+    initParticles();
+  }
+
+  function initParticles() {
+    particles = [];
+    const count = 40;
+    for(let i=0; i<count; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        v: 1 + Math.random() * 3,
+        r: 1 + Math.random() * 2,
+        alpha: 0.3 + Math.random() * 0.7
+      });
+    }
+  }
+
+  function renderFx() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const type = cities[currentIdx].type;
+    ctx.fillStyle = type === 'sunny' ? '#fde047' : '#e2e8f0';
+
+    particles.forEach(p => {
+      if (type === 'sunny') {
+        p.y -= p.v * 0.2;
+        p.alpha += (Math.random() - 0.5) * 0.05;
+        if (p.alpha < 0.1) p.alpha = 0.5;
+        if (p.y < 0) p.y = canvas.height;
+      } else if (type === 'rainy') {
+        p.y += p.v * 3;
+        p.x += 0.5;
+        if (p.y > canvas.height) { p.y = 0; p.x = Math.random() * canvas.width; }
+      } else if (type === 'snowy') {
+        p.y += p.v * 0.8;
+        p.x += Math.sin(p.y * 0.05);
+        if (p.y > canvas.height) { p.y = 0; p.x = Math.random() * canvas.width; }
+      }
+      ctx.globalAlpha = Math.max(0.1, Math.min(1, p.alpha));
+      ctx.beginPath();
+      if (type === 'rainy') {
+        ctx.rect(p.x, p.y, 1.5, p.v * 4);
+      } else {
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      }
+      ctx.fill();
+    });
+    requestAnimationFrame(renderFx);
+  }
+
+  function switchCity(idx) {
+    currentIdx = idx;
+    const c = cities[idx];
+    document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+    card.className = `card ${c.type}`;
+    document.getElementById('tempVal').textContent = `${c.temp}°C`;
+    document.getElementById('descVal').textContent = c.desc;
+    document.getElementById('windVal').textContent = c.wind;
+    document.getElementById('humidVal').textContent = c.humid;
+    document.getElementById('feelVal').textContent = c.feel;
+
+    const list = document.getElementById('forecastList');
+    list.innerHTML = c.forecast.map(f => `
+      <div class="forecast-day">
+        <div class="f-date">${f.d}</div>
+        <div class="f-icon">${f.i}</div>
+        <div class="f-temp">${f.h}°</div>
+        <div class="f-low">${f.l}°</div>
+      </div>
+    `).join('');
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+  switchCity(0);
+  requestAnimationFrame(renderFx);
+</script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Muse Recorder</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(120% 120% at 50% -10%,#2a1530 0%,#160a1c 52%,#0b050e 100%);color:#f2eef4;font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;padding:14px}
+.card{width:min(94vw,384px);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.09);border-radius:22px;padding:20px 18px 16px;box-shadow:0 30px 80px rgba(0,0,0,.55);backdrop-filter:blur(6px)}
+header{display:flex;justify-content:space-between;align-items:center}
+header h1{font-size:17px;font-weight:700;letter-spacing:1px}
+header small{display:block;font-size:10px;letter-spacing:2px;color:#9a8aa6;font-weight:600}
+.chip{display:inline-flex;align-items:center;gap:7px;font-size:11px;color:#cfc3d6;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);padding:5px 11px;border-radius:99px}
+.chip i{width:7px;height:7px;border-radius:50%;background:#8d7d94}
+.card[data-st=rec] .chip i{background:#ff4d5e;box-shadow:0 0 9px #ff4d5e;animation:blink 1s steps(2) infinite}
+.card[data-st=pause] .chip i{background:#ffb454;box-shadow:0 0 9px #ffb454}
+@keyframes blink{50%{opacity:.15}}
+.zone{display:flex;flex-direction:column;align-items:center;padding:26px 0 18px;position:relative}
+.pulse{position:absolute;top:48px;width:118px;height:118px;border-radius:50%;pointer-events:none}
+.card[data-st=rec] .pulse{border:1.5px solid rgba(255,77,94,.65);animation:ring 2.2s ease-out infinite}
+.card[data-st=rec] .pulse::after{content:"";position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(255,77,94,.4);animation:ring 2.2s ease-out 1.1s infinite}
+@keyframes ring{0%{transform:scale(.7);opacity:1}100%{transform:scale(1.9);opacity:0}}
+.mic{width:108px;height:108px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 34% 28%,#ff6d7c,#d81f3d 68%);box-shadow:0 16px 40px rgba(216,31,61,.5),inset 0 -6px 16px rgba(0,0,0,.3);transition:transform .18s,filter .3s}
+.mic:active{transform:scale(.94)}
+.mic svg{width:34px;height:34px}
+.card[data-st=idle] .mic{filter:saturate(.5) brightness(.9)}
+.time{margin-top:16px;font:600 42px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;letter-spacing:1px}
+.sub{margin-top:5px;font-size:12px;color:#9a8aa6;letter-spacing:1px}
+canvas{width:100%;height:52px;display:block}
+.ctrl{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:9px;margin-top:16px}
+.ctrl button{border:none;cursor:pointer;padding:11px 0;border-radius:13px;font:600 13px inherit;letter-spacing:1px;transition:transform .15s,opacity .2s,filter .2s}
+.ctrl button:active{transform:scale(.95)}
+.ctrl button:disabled{opacity:.32;cursor:not-allowed}
+#bS{background:linear-gradient(135deg,#b26cff,#7b4dff);color:#fff;box-shadow:0 8px 22px rgba(123,77,255,.4)}
+#bP{background:rgba(255,255,255,.09);color:#eee}
+#bT{background:rgba(255,255,255,.06);color:#ff97a2;border:1px solid rgba(255,77,94,.5)}
+#bT.arm{background:#ff4d5e;color:#fff;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{filter:brightness(1.35)}}
+.sum{margin-top:16px;border:1px dashed rgba(255,255,255,.14);border-radius:14px;padding:13px 15px;background:rgba(255,255,255,.035);opacity:0;transform:translateY(10px);pointer-events:none;transition:.35s}
+.sum.show{opacity:1;transform:none;pointer-events:auto}
+.sum .srow{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;color:#cfc3d6}
+.sum .srow b{font:600 16px ui-monospace,Menlo,Consolas,monospace;color:#fff}
+.sum .srow .ok{color:#38e09a;font:600 13px inherit;letter-spacing:0}
+.sum p{margin-top:7px;font-size:10.5px;color:#8d7d94;letter-spacing:1px}
+footer{text-align:center;margin-top:15px;font-size:9.5px;letter-spacing:2px;color:#7a6b84}
+</style>
+</head>
+<body>
+<div class="card" id="card" data-st="idle">
+  <header><div><small>MUSE SPARK</small><h1>录音机 Recorder</h1></div><span class="chip"><i></i><span id="stxt">待机</span></span></header>
+  <div class="zone">
+    <div class="pulse"></div>
+    <button class="mic" id="mic" title="点击开始 / 暂停">
+      <svg viewBox="0 0 24 24"><path fill="#fff" d="M12 14.6a3.2 3.2 0 0 0 3.2-3.2V6.2a3.2 3.2 0 0 0-6.4 0v5.2A3.2 3.2 0 0 0 12 14.6Z"/><path fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" d="M6.7 11.2a5.3 5.3 0 0 0 10.6 0M12 16.6v3.2"/></svg>
+    </button>
+    <div class="time" id="time">00:00</div>
+    <div class="sub" id="sub">点击麦克风开始模拟录音</div>
+  </div>
+  <canvas id="wave"></canvas>
+  <div class="ctrl">
+    <button id="bS">▶ 开始</button>
+    <button id="bP" disabled>⏸ 暂停</button>
+    <button id="bT" disabled>■ 停止</button>
+  </div>
+  <div class="sum" id="sum">
+    <div class="srow"><span>本次录音时长</span><b id="sdur">00:00</b></div>
+    <div class="srow"><span>结束状态</span><span class="ok">✓ 手动结束</span></div>
+    <div class="srow"><span>录制段落</span><b id="segs" style="font-size:14px">1</b></div>
+    <p>纯本地演示：波形为实时模拟，未采集任何声音。</p>
+  </div>
+  <footer>RECORDER · muse-spark-1.3</footer>
+</div>
+<script>
+const $=i=>document.getElementById(i);
+const card=$('card'),time=$('time'),sub=$('sub'),stxt=$('stxt'),sumEl=$('sum');
+const bS=$('bS'),bP=$('bP'),bT=$('bT'),cv=$('wave'),ctx=cv.getContext('2d');
+const pad=n=>String(n).padStart(2,'0'),mmss=t=>`${pad(Math.floor(t/60))}:${pad(Math.floor(t%60))}`;
+let st='idle',t0=0,acc=0,seg=0,arm=false,armT=null;
+const N=90;
+let hist=new Array(N).fill(0),phase=0;
+function set(s){st=s;card.dataset.st=s;
+ stxt.textContent=s==='rec'?'录音中':s==='pause'?'已暂停':'待机';
+ sub.textContent=s==='idle'?(acc?'录音完成，可再次开始':'点击麦克风开始模拟录音'):(s==='pause'?'已暂停 · 点击继续':'录音中 · 波形实时跳动');
+ bS.disabled=s==='rec';bS.textContent=s==='idle'?(acc?'↻ 再来一次':'▶ 开始'):'▶ 开始';
+ bP.disabled=s==='idle';bP.textContent=s==='pause'?'▶ 继续':'⏸ 暂停';
+ bT.disabled=s==='idle';bT.textContent=s==='idle'?'■ 停止':'■ 停止';}
+function dis(){clearTimeout(armT);arm=false;bT.classList.remove('arm');bT.textContent='■ 停止'}
+function start(){acc=0;seg=1;hist=new Array(N).fill(0);t0=performance.now();sumEl.classList.remove('show');set('rec')}
+function pause(){acc+=performance.now()-t0;set('pause')}
+function resume(){t0=performance.now();set('rec')}
+function stop(){const total=acc+(st==='pause'?0:performance.now()-t0);
+ $('sdur').textContent=mmss(total);$('segs').textContent=seg;
+ sumEl.classList.add('show');dis();hist.fill(0);set('idle')}
+bS.onclick=()=>{dis();start()};
+bP.onclick=()=>{if(st==='rec')pause();else if(st==='pause')resume()};
+bT.onclick=()=>{if(!arm){arm=true;bT.classList.add('arm');bT.textContent='确认停止？';armT=setTimeout(dis,2800);return}stop()};
+mic.onclick=()=>{if(st==='idle')start();else if(st==='rec')pause();else resume()};
+function size(){const d=Math.min(2,devicePixelRatio||1);cv.width=cv.clientWidth*d;cv.height=52*d;ctx.setTransform(d,0,0,d,0,0)}
+addEventListener('resize',size);size();
+(function loop(t){requestAnimationFrame(loop);
+ if(st==='rec'){phase+=.12;const v=Math.min(1,Math.max(.08,.34+.3*Math.sin(phase*1.3)+.26*Math.sin(phase*.53+2)+Math.random()*.2));hist.push(v);hist.shift();
+   time.textContent=mmss(acc+(t-t0));}
+ else if(st==='pause')time.textContent=mmss(acc);
+ else if(st==='idle')hist.fill(0);
+ const w=cv.clientWidth||1,bw=w/N,g=ctx.createLinearGradient(0,52,0,4);
+ g.addColorStop(0,'#ff4d5e');g.addColorStop(1,'#ff9a7b');
+ ctx.clearRect(0,0,w,52);
+ hist.forEach((v,i)=>{if(!v)return;const x=i*bw,hh=v*44;
+  ctx.globalAlpha=.35+.65*i/N;ctx.fillStyle=g;ctx.fillRect(x+1,52-hh,bw-2.5,hh)});
+ ctx.globalAlpha=1;})(0);
+</script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Celebration Fireworks - gemini-3.8-flash</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body {
+    background: #05050d; overflow: hidden; height: 100vh; width: 100vw;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    position: relative; touch-action: manipulation;
+  }
+  canvas { display: block; width: 100%; height: 100%; }
+  .hud {
+    position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+    color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 500;
+    pointer-events: none; text-align: center; background: rgba(0,0,0,0.4);
+    padding: 6px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(4px);
+  }
+  .counter { font-size: 11px; color: #38bdf8; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="hud">
+  <div>轻触或点击屏幕任意位置绽放烟花</div>
+  <div class="counter" id="hudStat">活跃粒子: 0 • 累计绽放: 0</div>
+</div>
+<canvas id="c"></canvas>
+<script>
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const hudStat = document.getElementById('hudStat');
+  let w, h;
+  let particles = [];
+  let totalBursts = 0;
+
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  const colors = [
+    '#f43f5e', '#ec4899', '#d946ef', '#a855f7',
+    '#6366f1', '#3b82f6', '#06b6d4', '#14b8a6',
+    '#10b981', '#84cc16', '#eab308', '#f97316'
+  ];
+
+  function createFirework(x, y) {
+    totalBursts++;
+    const count = 60 + Math.floor(Math.random() * 40);
+    const baseColor = colors[Math.floor(Math.random() * colors.length)];
+    const secondaryColor = colors[Math.floor(Math.random() * colors.length)];
+    const speedBase = 2.5 + Math.random() * 3.5;
+
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.2;
+      const speed = speedBase * (0.4 + Math.random() * 0.8);
+      particles.push({
+        x: x, y: y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        color: Math.random() > 0.3 ? baseColor : secondaryColor,
+        alpha: 1,
+        decay: 0.012 + Math.random() * 0.015,
+        gravity: 0.04,
+        size: 1.5 + Math.random() * 1.5,
+        trail: []
+      });
+    }
+  }
+
+  function loop() {
+    ctx.fillStyle = 'rgba(5, 5, 13, 0.2)';
+    ctx.fillRect(0, 0, w, h);
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.trail.push({ x: p.x, y: p.y });
+      if (p.trail.length > 4) p.trail.shift();
+
+      p.vx *= 0.98;
+      p.vy *= 0.98;
+      p.vy += p.gravity;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.alpha -= p.decay;
+
+      if (p.alpha <= 0) {
+        particles.splice(i, 1);
+        continue;
+      }
+
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = p.size;
+      ctx.beginPath();
+      if (p.trail.length > 1) {
+        ctx.moveTo(p.trail[0].x, p.trail[0].y);
+        for (let t = 1; t < p.trail.length; t++) {
+          ctx.lineTo(p.trail[t].x, p.trail[t].y);
+        }
+      } else {
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    if (particles.length > 600) {
+      particles.splice(0, particles.length - 600);
+    }
+
+    hudStat.textContent = `活跃粒子: ${particles.length} • 累计绽放: ${totalBursts}`;
+    requestAnimationFrame(loop);
+  }
+
+  function trigger(e) {
+    const x = e.clientX || (e.touches && e.touches[0].clientX) || w / 2;
+    const y = e.clientY || (e.touches && e.touches[0].clientY) || h / 2;
+    createFirework(x, y);
+  }
+
+  window.addEventListener('pointerdown', trigger);
+
+  // Initial welcome fireworks
+  setTimeout(() => createFirework(w * 0.35, h * 0.4), 300);
+  setTimeout(() => createFirework(w * 0.65, h * 0.35), 700);
+
+  requestAnimationFrame(loop);
+</script>
+</body>
+</html>

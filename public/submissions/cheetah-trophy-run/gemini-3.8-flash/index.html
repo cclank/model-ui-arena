@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cheetah World Champions Glory Run - gemini-3.8-flash</title>
+<style>
+  :root {
+    --gold: #f59e0b; --gold-light: #fef08a; --grass: #15803d;
+    --night: #090d16;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #020617; color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 12px; overflow-x: hidden;
+  }
+  .poster-card {
+    position: relative; width: 100%; max-width: 480px;
+    background: radial-gradient(circle at 50% 30%, #1e293b 0%, #090d16 100%);
+    border-radius: 28px; overflow: hidden;
+    box-shadow: 0 25px 60px -15px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.08);
+  }
+  .svg-canvas { width: 100%; height: auto; display: block; }
+  .floating-header {
+    position: absolute; top: 16px; left: 16px; right: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    pointer-events: none; z-index: 10;
+  }
+  .title-tag {
+    font-size: 11px; font-weight: 800; letter-spacing: 0.15em;
+    color: #f59e0b; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+    padding: 6px 14px; border-radius: 999px; border: 1px solid rgba(245,158,11,0.3);
+  }
+  .score-badge {
+    background: rgba(0,0,0,0.75); border: 1px solid rgba(255,255,255,0.15);
+    backdrop-filter: blur(8px); padding: 6px 14px; border-radius: 12px;
+    text-align: right; font-family: monospace;
+  }
+  .score-time { font-size: 10px; color: #ef4444; font-weight: 700; letter-spacing: 0.05em; }
+  .score-val { font-size: 15px; font-weight: 800; color: #f8fafc; }
+</style>
+</head>
+<body>
+<div class="poster-card">
+  <div class="floating-header">
+    <div class="title-tag">WORLD CHAMPION 2026</div>
+    <div class="score-badge">
+      <div class="score-time">90+7' 补时绝杀</div>
+      <div class="score-val">FINAL 3 : 2</div>
+    </div>
+  </div>
+
+  <svg class="svg-canvas" viewBox="0 0 600 750" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- Stadium Light Gradients -->
+      <radialGradient id="stadiumLight1" cx="20%" cy="10%" r="60%">
+        <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.5"/>
+        <stop offset="100%" stop-color="#020617" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="stadiumLight2" cx="80%" cy="10%" r="60%">
+        <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.4"/>
+        <stop offset="100%" stop-color="#020617" stop-opacity="0"/>
+      </radialGradient>
+
+      <!-- Trophy Gold Gradient -->
+      <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#fef08a"/>
+        <stop offset="30%" stop-color="#eab308"/>
+        <stop offset="70%" stop-color="#ca8a04"/>
+        <stop offset="100%" stop-color="#713f12"/>
+      </linearGradient>
+      <linearGradient id="goldHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/>
+        <stop offset="100%" stop-color="#ca8a04" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="malachiteGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#064e3b"/>
+        <stop offset="50%" stop-color="#059669"/>
+        <stop offset="100%" stop-color="#064e3b"/>
+      </linearGradient>
+
+      <!-- Cheetah Fur Gradients -->
+      <linearGradient id="cheetahFur" x1="0%" y1="0%" x2="100%" y2="80%">
+        <stop offset="0%" stop-color="#fbbf24"/>
+        <stop offset="50%" stop-color="#d97706"/>
+        <stop offset="100%" stop-color="#b45309"/>
+      </linearGradient>
+      <linearGradient id="cheetahBelly" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#fef3c7"/>
+        <stop offset="100%" stop-color="#fde68a"/>
+      </linearGradient>
+
+      <!-- Speed Line Gradients -->
+      <linearGradient id="speedGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#f59e0b" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.8"/>
+      </linearGradient>
+
+      <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="8" result="blur"/>
+        <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+      </filter>
+    </defs>
+
+    <!-- Stadium Background -->
+    <rect width="600" height="750" fill="#090d16"/>
+    <circle cx="120" cy="80" r="280" fill="url(#stadiumLight1)"/>
+    <circle cx="480" cy="80" r="280" fill="url(#stadiumLight2)"/>
+
+    <!-- Crowd Silhouette -->
+    <path d="M 0 460 Q 150 430 300 450 T 600 440 L 600 520 L 0 520 Z" fill="#0f172a" opacity="0.85"/>
+    <path d="M 0 480 Q 200 460 400 475 T 600 465 L 600 530 L 0 530 Z" fill="#1e293b" opacity="0.9"/>
+
+    <!-- Confetti streamers -->
+    <g opacity="0.7">
+      <path d="M 80 120 Q 140 180 110 240 T 160 320" fill="none" stroke="#f59e0b" stroke-width="4" stroke-dasharray="8 6"/>
+      <path d="M 520 140 Q 460 200 490 270 T 430 360" fill="none" stroke="#38bdf8" stroke-width="3" stroke-dasharray="10 5"/>
+      <path d="M 280 80 Q 320 150 290 220" fill="none" stroke="#ef4444" stroke-width="3" stroke-dasharray="6 4"/>
+      <circle cx="95" cy="220" r="5" fill="#fde047"/>
+      <circle cx="480" cy="190" r="6" fill="#38bdf8"/>
+      <circle cx="210" cy="140" r="4" fill="#ec4899"/>
+      <circle cx="390" cy="110" r="5" fill="#10b981"/>
+    </g>
+
+    <!-- Grass Pitch -->
+    <path d="M 0 510 C 200 495 400 495 600 510 L 600 750 L 0 750 Z" fill="url(#malachiteGrad)"/>
+    <ellipse cx="300" cy="670" rx="280" ry="80" fill="#14532d" opacity="0.5"/>
+    <path d="M -50 640 Q 300 580 650 640" stroke="rgba(255,255,255,0.25)" stroke-width="5" fill="none"/>
+
+    <!-- Turf Marks and Speed Turf Cuts -->
+    <g stroke="#166534" stroke-width="3" stroke-linecap="round">
+      <line x1="180" y1="620" x2="140" y2="605"/>
+      <line x1="220" y1="635" x2="170" y2="620"/>
+      <line x1="260" y1="645" x2="200" y2="630"/>
+      <line x1="390" y1="655" x2="350" y2="648"/>
+    </g>
+
+    <!-- Match Ball in Bottom Right -->
+    <g transform="translate(450, 615)">
+      <circle cx="0" cy="0" r="28" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <!-- Classic Pentagons on ball -->
+      <polygon points="0,-12 11,-4 7,9 -7,9 -11,-4" fill="#0f172a"/>
+      <path d="M 0 -12 L 0 -28 M 11 -4 L 26 -8 M 7 9 L 20 20 M -7 9 L -20 20 M -11 -4 L -26 -8" stroke="#0f172a" stroke-width="2"/>
+      <!-- Motion lines behind ball -->
+      <path d="M -35 -10 L -80 -10 M -38 4 L -70 4 M -30 18 L -60 18" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+    </g>
+
+    <!-- Speed Lines behind Cheetah -->
+    <g opacity="0.6">
+      <line x1="40" y1="360" x2="230" y2="360" stroke="url(#speedGrad)" stroke-width="3" stroke-linecap="round"/>
+      <line x1="20" y1="410" x2="260" y2="410" stroke="url(#speedGrad)" stroke-width="4" stroke-linecap="round"/>
+      <line x1="70" y1="470" x2="290" y2="470" stroke="url(#speedGrad)" stroke-width="3" stroke-linecap="round"/>
+      <line x1="100" y1="520" x2="310" y2="520" stroke="url(#speedGrad)" stroke-width="5" stroke-linecap="round"/>
+    </g>
+
+    <!-- Cheetah Motion Phantom Echo -->
+    <g opacity="0.25" transform="translate(-40, 20)">
+      <path d="M 280 430 C 230 400 220 330 280 270 C 330 220 380 240 400 290 Z" fill="#b45309"/>
+      <path d="M 230 430 Q 150 480 90 420" stroke="#b45309" stroke-width="14" stroke-linecap="round" fill="none"/>
+    </g>
+
+    <!-- CHEETAH CHARACTER (Dynamic Forward-Leaning Sprint) -->
+    <g id="cheetahMain">
+      <!-- Tail: Long arched athletic counterbalance -->
+      <path d="M 220 440 Q 130 460 80 380 T 50 280" fill="none" stroke="url(#cheetahFur)" stroke-width="16" stroke-linecap="round"/>
+      <path d="M 50 280 Q 42 265 38 250" fill="none" stroke="#0f172a" stroke-width="16" stroke-linecap="round"/> <!-- Black tail tip -->
+      <!-- Tail spots -->
+      <circle cx="150" cy="435" r="5" fill="#0f172a"/>
+      <circle cx="110" cy="405" r="5" fill="#0f172a"/>
+      <circle cx="75" cy="340" r="5" fill="#0f172a"/>
+
+      <!-- Rear Left Leg (Stretching back, driving propulsion) -->
+      <path d="M 250 450 L 160 520 L 110 590 L 135 600" stroke="url(#cheetahFur)" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+      <!-- Torso / Muscular Lean forward (45-degree angle) -->
+      <path d="M 230 460 C 250 380 320 330 380 340 C 430 350 440 400 390 460 C 330 500 270 490 230 460 Z" fill="url(#cheetahFur)"/>
+      <path d="M 280 450 C 320 390 370 380 395 430 C 350 470 300 480 280 450 Z" fill="url(#cheetahBelly)"/>
+
+      <!-- Rear Right Leg (Stepping forward) -->
+      <path d="M 310 470 L 290 560 L 330 630 L 360 635" stroke="url(#cheetahFur)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+      <!-- Cheetah Spots on Torso -->
+      <g fill="#0f172a">
+        <ellipse cx="270" cy="400" rx="5" ry="4"/>
+        <ellipse cx="295" cy="370" rx="6" ry="5"/>
+        <ellipse cx="330" cy="355" rx="5" ry="4"/>
+        <ellipse cx="360" cy="370" rx="6" ry="4"/>
+        <ellipse cx="320" cy="410" rx="7" ry="5"/>
+        <ellipse cx="260" cy="435" rx="5" ry="4"/>
+        <ellipse cx="370" cy="415" rx="5" ry="4"/>
+      </g>
+
+      <!-- Head and Neck -->
+      <g transform="translate(380, 240)">
+        <!-- Neck -->
+        <path d="M -30 90 L 0 40 L 40 70 L 20 110 Z" fill="url(#cheetahFur)"/>
+        <!-- Head Skull Base -->
+        <ellipse cx="25" cy="30" rx="35" ry="28" fill="url(#cheetahFur)"/>
+        <!-- Snout / Muzzle -->
+        <ellipse cx="52" cy="36" rx="18" ry="14" fill="#fef3c7"/>
+        <polygon points="62,32 68,36 62,40" fill="#0f172a"/>
+        <!-- Fierce Victorious Eye -->
+        <path d="M 28 20 Q 38 15 45 23 Q 36 26 28 20 Z" fill="#0f172a"/>
+        <circle cx="36" cy="21" r="3" fill="#f59e0b"/>
+        <circle cx="38" cy="20" r="1" fill="#ffffff"/>
+        <!-- CHEETAH TEAR STRIPES (Crucial feature) -->
+        <path d="M 38 24 Q 44 32 48 46" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+        <!-- Ears -->
+        <path d="M 5 12 Q 10 -6 22 2 Q 18 16 5 12 Z" fill="url(#cheetahFur)"/>
+        <path d="M 9 10 Q 12 0 19 6 Z" fill="#fde68a"/>
+        <path d="M 25 8 Q 32 -8 40 4 Q 35 15 25 8 Z" fill="url(#cheetahFur)"/>
+        <!-- Head spots -->
+        <circle cx="10" cy="22" r="3" fill="#0f172a"/>
+        <circle cx="18" cy="18" r="2.5" fill="#0f172a"/>
+        <circle cx="16" cy="32" r="3" fill="#0f172a"/>
+      </g>
+
+      <!-- Muscular Athletic Front Arms Raised High to Lift Trophy -->
+      <!-- Left Arm (Holding left base of trophy) -->
+      <path d="M 350 340 L 330 240 L 320 150" stroke="url(#cheetahFur)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <ellipse cx="320" cy="145" rx="9" ry="7" fill="#d97706"/> <!-- Paws -->
+
+      <!-- Right Arm (Holding right base of trophy) -->
+      <path d="M 400 350 L 390 235 L 380 150" stroke="url(#cheetahFur)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <ellipse cx="380" cy="145" rx="9" ry="7" fill="#d97706"/> <!-- Paws -->
+    </g>
+
+    <!-- THE FIFA WORLD CUP TROPHY (Glorious High Hoist) -->
+    <g id="trophy" transform="translate(350, 110)" filter="url(#glow)">
+      <!-- Malachite Green Base bands -->
+      <rect x="-38" y="10" width="76" height="24" rx="4" fill="url(#malachiteGrad)" stroke="#ca8a04" stroke-width="1.5"/>
+      <rect x="-34" y="16" width="68" height="4" fill="#047857"/>
+      <rect x="-34" y="24" width="68" height="4" fill="#047857"/>
+
+      <!-- Spiral Rising Human Figures Supporting the Globe -->
+      <path d="M -26 10 C -32 -20 -15 -45 -18 -75 C 0 -65 18 -65 18 -75 C 15 -45 32 -20 26 10 Z" fill="url(#goldGrad)"/>
+
+      <!-- Central Body Contours (Two figures entwined in ecstatic triumph) -->
+      <path d="M -15 -10 Q -24 -40 -12 -65 Q 0 -45 0 -10 Z" fill="#ca8a04" opacity="0.8"/>
+      <path d="M 15 -10 Q 24 -40 12 -65 Q 0 -45 0 -10 Z" fill="#eab308" opacity="0.9"/>
+
+      <!-- Globe / Earth at Top -->
+      <circle cx="0" cy="-80" r="28" fill="url(#goldGrad)"/>
+      <circle cx="0" cy="-80" r="28" fill="url(#goldHighlight)"/>
+      <!-- Continental relief outlines on trophy globe -->
+      <path d="M -16 -88 Q -8 -96 0 -88 Q 12 -96 16 -84 Q 10 -72 0 -76 Q -12 -70 -16 -88 Z" fill="#ca8a04" opacity="0.7"/>
+      <path d="M -10 -74 Q 0 -66 12 -70 Q 6 -60 -6 -62 Z" fill="#ca8a04" opacity="0.7"/>
+
+      <!-- Brilliant Apex Flare -->
+      <circle cx="-10" cy="-92" r="5" fill="#ffffff" opacity="0.95"/>
+      <polygon points="-10,-102 -8,-94 -0,-92 -8,-90 -10,-82 -12,-90 -20,-92 -12,-94" fill="#ffffff"/>
+    </g>
+
+    <!-- Flying Grass & Turf Sparks from Sprint Kickoff -->
+    <g fill="#22c55e" opacity="0.9">
+      <circle cx="120" cy="590" r="4"/>
+      <polygon points="130,592 125,580 135,585"/>
+      <polygon points="105,602 95,595 102,610"/>
+      <polygon points="280,640 270,628 285,635"/>
+      <circle cx="340" cy="625" r="3.5"/>
+    </g>
+  </svg>
+</div>
+</body>
+</html>

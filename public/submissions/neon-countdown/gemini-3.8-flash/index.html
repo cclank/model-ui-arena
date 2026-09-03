@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyber Neon Countdown - gemini-3.8-flash</title>
+<style>
+  :root {
+    --neon-pink: #f43f5e; --neon-cyan: #06b6d4;
+    --neon-gold: #fbbf24; --bg: #030712;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 16px; overflow: hidden;
+  }
+  .timer-card {
+    position: relative; width: 100%; max-width: 360px;
+    background: radial-gradient(circle at center, #111827 0%, #030712 100%);
+    border: 1px solid rgba(6, 182, 212, 0.2); border-radius: 36px;
+    padding: 32px 20px; display: flex; flex-direction: column; align-items: center;
+    box-shadow: 0 0 50px rgba(6, 182, 212, 0.15), inset 0 0 20px rgba(0,0,0,0.8);
+  }
+  .hud-badge {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--neon-cyan); background: rgba(6, 182, 212, 0.1);
+    padding: 4px 14px; border-radius: 999px; margin-bottom: 24px;
+    border: 1px solid rgba(6, 182, 212, 0.3);
+  }
+  .gauge-wrap { position: relative; width: 220px; height: 220px; margin-bottom: 24px; }
+  .gauge-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .gauge-track { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 10; }
+  .gauge-bar {
+    fill: none; stroke: var(--neon-cyan); stroke-width: 10; stroke-linecap: round;
+    stroke-dasharray: 565.48; stroke-dashoffset: 0;
+    filter: drop-shadow(0 0 8px var(--neon-cyan));
+    transition: stroke-dashoffset 0.1s linear, stroke 0.3s;
+  }
+  .center-core {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .number-val {
+    font-size: 80px; font-weight: 900; line-height: 1; font-family: monospace;
+    color: #fff; text-shadow: 0 0 25px var(--neon-cyan);
+    transition: transform 0.1s, color 0.3s;
+  }
+  .number-val.pulse { transform: scale(1.15); }
+  .number-val.critical { color: var(--neon-pink); text-shadow: 0 0 35px var(--neon-pink); }
+  .sub-state { font-size: 12px; color: #94a3b8; letter-spacing: 0.1em; margin-top: 4px; font-weight: 600; }
+  .blast-msg {
+    display: none; font-size: 24px; font-weight: 900; color: var(--neon-gold);
+    text-shadow: 0 0 20px var(--neon-gold); letter-spacing: 0.1em;
+    animation: blastAnim 0.6s infinite alternate; margin-bottom: 16px;
+  }
+  @keyframes blastAnim { 0% { transform: scale(0.95); opacity: 0.8; } 100% { transform: scale(1.05); opacity: 1; } }
+  .btn-restart {
+    background: linear-gradient(135deg, rgba(6,182,212,0.2), rgba(6,182,212,0.05));
+    border: 1px solid var(--neon-cyan); color: #fff; font-size: 13px; font-weight: 700;
+    letter-spacing: 0.1em; padding: 10px 24px; border-radius: 999px; cursor: pointer;
+    box-shadow: 0 0 15px rgba(6,182,212,0.25); transition: all 0.2s;
+  }
+  .btn-restart:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 25px var(--neon-cyan); }
+  .btn-restart:active { transform: scale(0.95); }
+</style>
+</head>
+<body>
+<div class="timer-card">
+  <div class="hud-badge" id="hudBadge">NEON COUNTDOWN</div>
+  <div class="gauge-wrap">
+    <svg class="gauge-svg" viewBox="0 0 200 200">
+      <circle class="gauge-track" cx="100" cy="100" r="90" />
+      <circle class="gauge-bar" id="gaugeBar" cx="100" cy="100" r="90" />
+    </svg>
+    <div class="center-core">
+      <div class="number-val" id="numVal">10</div>
+      <div class="sub-state" id="subState">SECONDS REMAINING</div>
+    </div>
+  </div>
+  <div class="blast-msg" id="blastMsg">💥 LIFTOFF BLAST!</div>
+  <button class="btn-restart" id="restartBtn">RESTART 10S</button>
+</div>
+<script>
+  const TOTAL_MS = 10000;
+  let remainingMs = TOTAL_MS;
+  let lastTime = performance.now();
+  let isDone = false;
+  let lastSec = 10;
+
+  const numVal = document.getElementById('numVal');
+  const gaugeBar = document.getElementById('gaugeBar');
+  const subState = document.getElementById('subState');
+  const blastMsg = document.getElementById('blastMsg');
+  const hudBadge = document.getElementById('hudBadge');
+  const restartBtn = document.getElementById('restartBtn');
+  const circumference = 2 * Math.PI * 90;
+
+  function updateFrame(now) {
+    if (isDone) return;
+    const delta = now - lastTime;
+    lastTime = now;
+    remainingMs = Math.max(0, remainingMs - delta);
+
+    const progress = remainingMs / TOTAL_MS;
+    gaugeBar.style.strokeDashoffset = circumference * (1 - progress);
+
+    const currentSec = Math.ceil(remainingMs / 1000);
+    if (currentSec !== lastSec && currentSec > 0) {
+      lastSec = currentSec;
+      numVal.textContent = currentSec;
+      numVal.classList.add('pulse');
+      setTimeout(() => numVal.classList.remove('pulse'), 150);
+
+      if (currentSec <= 3) {
+        gaugeBar.style.stroke = 'var(--neon-pink)';
+        numVal.classList.add('critical');
+        hudBadge.style.color = 'var(--neon-pink)';
+        hudBadge.style.borderColor = 'var(--neon-pink)';
+        hudBadge.textContent = 'CRITICAL WARNING';
+      }
+    }
+
+    if (remainingMs <= 0) {
+      isDone = true;
+      numVal.textContent = '0';
+      gaugeBar.style.strokeDashoffset = circumference;
+      subState.textContent = 'SEQUENCE COMPLETED';
+      blastMsg.style.display = 'block';
+      hudBadge.textContent = 'MISSION TARGET HIT';
+      document.body.style.background = '#1e1b4b';
+      setTimeout(() => { document.body.style.background = 'var(--bg)'; }, 300);
+      return;
+    }
+
+    requestAnimationFrame(updateFrame);
+  }
+
+  function start() {
+    isDone = false;
+    remainingMs = TOTAL_MS;
+    lastSec = 10;
+    numVal.textContent = '10';
+    numVal.classList.remove('critical');
+    gaugeBar.style.stroke = 'var(--neon-cyan)';
+    gaugeBar.style.strokeDashoffset = '0';
+    hudBadge.style.color = 'var(--neon-cyan)';
+    hudBadge.style.borderColor = 'rgba(6, 182, 212, 0.3)';
+    hudBadge.textContent = 'NEON COUNTDOWN';
+    subState.textContent = 'SECONDS REMAINING';
+    blastMsg.style.display = 'none';
+    lastTime = performance.now();
+    requestAnimationFrame(updateFrame);
+  }
+
+  restartBtn.onclick = start;
+  start();
+</script>
+</body>
+</html>

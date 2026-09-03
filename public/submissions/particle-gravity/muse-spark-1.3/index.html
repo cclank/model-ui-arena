@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<title>粒子引力场 Particle Gravity · muse-spark-1.3</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#03060f;touch-action:none;user-select:none;-webkit-user-select:none;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+#st{position:fixed;top:max(10px,env(safe-area-inset-top));left:12px;z-index:3;color:#9fe8ff;font-size:11px;line-height:1.8;letter-spacing:.5px;pointer-events:none;text-shadow:0 0 8px rgba(0,0,0,.9)}
+#st b{color:#ffe9a8}
+.cap{position:fixed;top:max(10px,env(safe-area-inset-top));right:12px;z-index:3;font-size:10px;color:#6f8bd8;letter-spacing:1px;pointer-events:none;text-align:right;line-height:1.7}
+#hw{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:2;pointer-events:none;color:#ffe9a8;font-size:14px;letter-spacing:6px;text-shadow:0 0 14px rgba(255,190,80,.9);opacity:0;transition:opacity .3s}
+#hw.on{opacity:1}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:4;display:flex;flex-wrap:wrap;gap:7px;justify-content:center;align-items:center;padding:24px 10px max(10px,env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(2,5,14,.8))}
+button{font:inherit;font-size:11px;letter-spacing:1px;color:#c9ecff;background:rgba(16,34,86,.55);border:1px solid rgba(110,180,255,.4);border-radius:99px;padding:8px 13px;cursor:pointer;min-width:64px}
+button:active{transform:scale(.92);background:rgba(70,130,255,.5)}
+button.on{border-color:#ffe9a8;color:#ffe9a8;background:rgba(120,80,20,.4)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="st"><b>粒子</b> 0 · <b>FPS</b> 0<br><b>模式</b> 引力 · <b>质量</b> ×1</div>
+<div class="cap">PARTICLE·GRAVITY<br>muse-spark-1.3</div>
+<div id="hw">+ 引力脉冲</div>
+<div class="bar">
+  <button id="pm">− 粒子</button>
+  <button id="pp">粒子 ＋</button>
+  <button id="mb" class="on">模式 · 引力</button>
+  <button id="qb">质量 ×1</button>
+</div>
+<script>
+"use strict";
+var cv=document.getElementById('cv'),X=cv.getContext('2d');
+var W=0,H=0,CX=0,CY=0,DPR=Math.min(window.devicePixelRatio||1,2),Rm=620;
+function rs(){W=innerWidth;H=innerHeight;CX=W/2;CY=H/2;cv.width=W*DPR;cv.height=H*DPR;X.setTransform(DPR,0,0,DPR,0,0);Rm=Math.max(W,H)*.55}
+addEventListener('resize',rs);rs();
+var HUES=[186,195,204,214,248,262,276,292,312,330],PAR=[],DES=380,BASE=380,NMIN=140,NMAX=760;
+var MODES=['引力','漩涡','排斥'],mi=0,QM=[1,2,3],qi=0;
+var shocks=[],atts=[],hover=false,mx=-9999,my=-9999,t0=performance.now(),t=0,tr=0;
+var stEl=document.getElementById('st'),mbEl=document.getElementById('mb'),qbEl=document.getElementById('qb');
+function make(edge){var a=Math.random()*6.283;
+  return {x:edge?CX+Math.cos(a)*Rm*.92:CX+(Math.random()-.5)*W*.7,y:edge?CY+Math.sin(a)*Rm*.92:CY+(Math.random()-.5)*H*.7,
+    vx:(Math.random()-.5)*30,vy:(Math.random()-.5)*30,h:HUES[Math.random()*HUES.length|0]+(Math.random()-.5)*30,b:Math.random()*4-2}}
+function sync(){while(PAR.length<DES)PAR.push(make(true));while(PAR.length>DES)PAR.pop()}
+var i;for(i=0;i<BASE;i++)PAR.push(make(false));
+function integ(h,mode){
+  var j,p,dx,dy,d,d2,f;
+  for(i=0;i<PAR.length;i++){p=PAR[i];
+    dx=CX-p.x;dy=CY-p.y;d2=dx*dx+dy*dy+900;d=Math.sqrt(d2);
+    var pull=(1.8e6*QM[qi])/d2;
+    if(mode===2)pull=-pull*1.35;
+    p.vx+=(dx/d)*pull*h;p.vy+=(dy/d)*pull*h;
+    var spin=mode===1?2.6:(mode===0?.9:0);
+    if(spin){p.vx+=(-dy/d)*spin*Math.abs(pull)*.7*h;p.vy+=(dx/d)*spin*Math.abs(pull)*.7*h}
+    if(d<36){var bo=(36-d)*46;p.vx+=(dx/d)*bo*h;p.vy+=(dy/d)*bo*h;p.vx*=.92;p.vy*=.92}
+    if(hover){dx=mx-p.x;dy=my-p.y;d2=dx*dx+dy*dy+2600;d=Math.sqrt(d2);
+      if(d<150){f=2.6e6*(1-d/150)/d2;p.vx+=(-dx/d)*f*h;p.vy+=(-dy/d)*f*h}}
+    for(j=0;j<atts.length;j++){var A=atts[j];dx=A.x-p.x;dy=A.y-p.y;d2=dx*dx+dy*dy+2200;d=Math.sqrt(d2);
+      f=1.4e6*A.w/d2;p.vx+=(dx/d)*f*h;p.vy+=(dy/d)*f*h}
+    for(j=0;j<shocks.length;j++){var S=shocks[j];dx=p.x-S.x;dy=p.y-S.y;d=Math.sqrt(dx*dx+dy*dy+1);
+      if(Math.abs(d-S.r)<26&&d<S.rmx){var w=1-d/S.rmx;p.vx+=(dx/d)*S.p*w*h;p.vy+=(dy/d)*S.p*w*h}}
+    var dm=Math.exp(-h*1.1);p.vx*=dm;p.vy*=dm;
+    var vv=p.vx*p.vx+p.vy*p.vy;
+    if(vv>313600){var s2=560/Math.sqrt(vv);p.vx*=s2;p.vy*=s2}
+    p.x+=p.vx*h;p.y+=p.vy*h;p.h+=p.b*h*2;
+    dx=p.x-CX;dy=p.y-CY;
+    if(dx*dx+dy*dy>Rm*Rm||p.x<-80||p.x>W+80||p.y<-80||p.y>H+80){
+      var a=Math.random()*6.283;p.x=CX+Math.cos(a)*Rm*.8;p.y=CY+Math.sin(a)*Rm*.8;p.vx=(Math.random()-.5)*40;p.vy=(Math.random()-.5)*40}}
+  for(j=shocks.length-1;j>=0;j--){shocks[j].r+=shocks[j].v*h;if(shocks[j].r>=shocks[j].rmx)shocks.splice(j,1)}
+  for(j=atts.length-1;j>=0;j--){atts[j].w-=h*1.5;if(atts[j].w<=0)atts.splice(j,1)}
+}
+var fps=60,fc=0,fa=0,hw=document.getElementById('hw'),hwT=0;
+function evPos(e){var r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
+cv.addEventListener('pointermove',function(e){var p=evPos(e);mx=p.x;my=p.y;hover=true});
+cv.addEventListener('pointerleave',function(){hover=false;mx=-9999;my=-9999});
+cv.addEventListener('pointerdown',function(e){e.preventDefault();
+  var p=evPos(e);mx=p.x;my=p.y;hover=true;
+  shocks.push({x:p.x,y:p.y,r:8,v:760,rmx:Math.max(W,H)*.8,p:1500});
+  atts.push({x:p.x,y:p.y,w:1});
+  if(navigator.vibrate)navigator.vibrate(10);
+  hw.className='on';clearTimeout(hwT);hwT=setTimeout(function(){hw.className=''},420)});
+function frame(now){
+  var dt=Math.min(.05,(now-t0)/1000);t0=now;t+=dt;tr+=dt;
+  integ(dt/2,mi);integ(dt/2,mi);
+  sync();
+  X.globalAlpha=1;X.globalCompositeOperation='source-over';
+  X.fillStyle='rgba(3,6,15,.34)';X.fillRect(0,0,W,H);
+  X.globalCompositeOperation='lighter';
+  var j,p,spd;
+  for(i=0;i<PAR.length;i++){p=PAR[i];spd=Math.sqrt(p.vx*p.vx+p.vy*p.vy);
+    X.globalAlpha=.05+.1*(1-Math.min(1,spd/420));
+    X.fillStyle='hsla('+((p.h%360)+360)%360+',90%,62%,1)';
+    X.beginPath();X.arc(p.x,p.y,5.5,0,6.283);X.fill();
+    X.globalAlpha=.8;X.fillStyle='hsla('+((p.h%360)+360)%360+',95%,74%,1)';
+    X.beginPath();X.arc(p.x,p.y,1.7,0,6.283);X.fill()}
+  var pl=1+.28*Math.sin(t*4),cC=mi===2?'rgba(255,130,50,':'rgba(110,235,255,';
+  var gr=X.createRadialGradient(CX,CY,0,CX,CY,66*pl);
+  gr.addColorStop(0,cC+'.95)');gr.addColorStop(.4,cC+'.25)');gr.addColorStop(1,'rgba(0,0,0,0)');
+  X.fillStyle=gr;X.beginPath();X.arc(CX,CY,66*pl,0,6.283);X.fill();
+  X.globalAlpha=.95;X.fillStyle='#f2ffff';X.beginPath();X.arc(CX,CY,3+1.3*Math.sin(t*6),0,6.283);X.fill();
+  X.strokeStyle='rgba(160,240,255,.45)';X.lineWidth=1.4;
+  for(j=0;j<2;j++){X.globalAlpha=.32-.1*j;X.beginPath();X.arc(CX,CY,(17+j*14)+Math.sin(t*2+j)*2,0,6.283);X.stroke()}
+  X.globalAlpha=1;X.fillStyle='#fff';
+  for(j=0;j<5;j++){var an2=t*(mi===1?3.4:1.7)+j*1.2566,r2=10+((j*13)%22);
+    X.beginPath();X.arc(CX+Math.cos(an2)*r2,CY+Math.sin(an2)*r2,1.6,0,6.283);X.fill()}
+  for(j=0;j<shocks.length;j++){var S=shocks[j],f2=1-S.r/S.rmx;
+    X.globalAlpha=Math.max(0,f2)*.8;X.strokeStyle='rgba(255,235,160,.9)';X.lineWidth=2.5*f2+1;
+    X.beginPath();X.arc(S.x,S.y,S.r,0,6.283);X.stroke()}
+  for(j=0;j<atts.length;j++){var A2=atts[j];X.globalAlpha=Math.max(0,A2.w)*.7;X.strokeStyle='rgba(190,140,255,.9)';
+    X.beginPath();X.arc(A2.x,A2.y,16+10*(1-A2.w),0,6.283);X.stroke()}
+  X.globalCompositeOperation='source-over';X.globalAlpha=1;
+  fc++;fa+=dt;
+  if(fa>=.5){fps=Math.round(fc/fa);fc=0;fa=0;
+    if(fps<38)DES=Math.max(NMIN,DES-16);
+    else if(fps>55&&DES<BASE)DES=Math.min(BASE,DES+16);
+    stEl.innerHTML='<b>粒子</b> '+PAR.length+' · <b>FPS</b> '+fps+'<br><b>模式</b> '+MODES[mi]+' · <b>质量</b> ×'+QM[qi]}
+  requestAnimationFrame(frame);
+}
+document.getElementById('pm').addEventListener('click',function(){BASE=Math.max(NMIN,BASE-60);DES=BASE});
+document.getElementById('pp').addEventListener('click',function(){BASE=Math.min(NMAX,BASE+60);DES=BASE});
+mbEl.addEventListener('click',function(){mi=(mi+1)%3;mbEl.textContent='模式 · '+MODES[mi];mbEl.className=mi===0?'on':''});
+qbEl.addEventListener('click',function(){qi=(qi+1)%3;qbEl.textContent='质量 ×'+QM[qi]});
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

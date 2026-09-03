@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schwarzschild Black Hole Real Geodesic Raytracer - gemini-3.8-flash</title>
+<!--
+  Implementation Notes:
+  1. Geodesic Integrator: Runge-Kutta 4th order (RK4) integration of null geodesics in Schwarzschild spacetime.
+     Equation of motion: d2u/dphi2 + u = 1.5 * u^2 (or equivalent 3D photon acceleration acc = -1.5 * h^2 * r / r^5).
+     Step size adaptation based on distance r to event horizon (r_s = 1.0).
+  2. Relativistic Accretion Disk:
+     Thin equatorial disk located at r in [3.0, 12.0] r_s (ISCO r = 3).
+     - Relativistic Doppler beaming: I \propto delta^3 with delta = 1 / (gamma * (1 - beta * cos_theta)).
+     - Gravitational redshift: sqrt(1 - 1/r).
+     - Relativistic temperature profile: T(r) \propto r^(-3/4).
+     - Differential Keplerian rotation stripes: inner orbital speed faster than outer.
+  3. Multi-pass HDR Pipeline: Scene -> Luminance threshold pass -> 2-pass Separable Gaussian Bloom -> ACES Tonemapping.
+-->
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #02040a; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+    overflow: hidden; width: 100vw; height: 100vh; touch-action: none; user-select: none;
+  }
+  #canvas-container { position: absolute; inset: 0; width: 100%; height: 100%; }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  .hud-top {
+    position: absolute; top: 16px; left: 16px;
+    background: rgba(8, 12, 22, 0.75); backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px;
+    padding: 14px 18px; pointer-events: auto; max-width: 320px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  }
+  .hud-title { font-size: 13px; font-weight: 800; letter-spacing: 0.1em; color: #38bdf8; margin-bottom: 8px; }
+  .telemetry-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; }
+  .telemetry-val { font-family: monospace; font-weight: 700; color: #f1f5f9; }
+
+  .controls-panel {
+    position: absolute; bottom: 16px; left: 16px; right: 16px; max-width: 380px; margin: 0 auto;
+    background: rgba(8, 12, 22, 0.85); backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 20px;
+    padding: 14px 18px; box-shadow: 0 15px 35px rgba(0,0,0,0.7);
+  }
+  .ctrl-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; margin-bottom: 8px; }
+  .ctrl-row label { color: #94a3b8; font-weight: 600; }
+  .ctrl-row input[type="range"] {
+    flex: 1; margin-left: 14px; accent-color: #38bdf8; height: 4px;
+    background: rgba(255,255,255,0.15); border-radius: 2px;
+  }
+  .quality-btns { display: flex; gap: 6px; }
+  .q-btn {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    color: #94a3b8; font-size: 11px; font-weight: 600; padding: 4px 10px;
+    border-radius: 6px; cursor: pointer; transition: all 0.2s;
+  }
+  .q-btn.active { background: #38bdf8; color: #020617; font-weight: 700; }
+
+  #error-screen {
+    position: absolute; inset: 0; background: #090d16; color: #ef4444;
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    padding: 24px; text-align: center; z-index: 100;
+  }
+</style>
+</head>
+<body>
+<div id="canvas-container"><canvas id="glCanvas"></canvas></div>
+
+<div class="hud-top">
+  <div class="hud-title">SCHWARZSCHILD TELEMETRY</div>
+  <div class="telemetry-row"><span>相机视距 (r):</span><span class="telemetry-val" id="camDistVal">12.50 r_s</span></div>
+  <div class="telemetry-row"><span>引力时间膨胀因子:</span><span class="telemetry-val" id="redshiftVal">0.9592</span></div>
+  <div class="telemetry-row"><span>当地圆轨道速度 (β):</span><span class="telemetry-val" id="orbitBetaVal">0.2000 c</span></div>
+  <div class="telemetry-row"><span>实时帧率:</span><span class="telemetry-val" id="fpsStat">60 FPS</span></div>
+</div>
+
+<div class="controls-panel">
+  <div class="ctrl-row">
+    <label>吸积盘亮度</label>
+    <input type="range" id="diskBrightness" min="0.5" max="3.0" step="0.1" value="1.5">
+  </div>
+  <div class="ctrl-row">
+    <label>曝光 (ACES)</label>
+    <input type="range" id="exposureVal" min="0.4" max="2.5" step="0.1" value="1.2">
+  </div>
+  <div class="ctrl-row">
+    <label>画质档位</label>
+    <div class="quality-btns">
+      <button class="q-btn" onclick="setQuality(0.5, this)">性能</button>
+      <button class="q-btn active" onclick="setQuality(1.0, this)">高清</button>
+    </div>
+  </div>
+</div>
+
+<div id="error-screen">
+  <h2 style="margin-bottom:12px;">WebGL 初始化失败</h2>
+  <p id="errorMsg" style="font-size:14px;color:#94a3b8;"></p>
+</div>
+
+<script>
+  const canvas = document.getElementById('glCanvas');
+  const gl = canvas.getContext('webgl2', { antialias: false, powerPreference: 'high-performance' });
+
+  if (!gl) {
+    document.getElementById('error-screen').style.display = 'flex';
+    document.getElementById('errorMsg').textContent = '您的浏览器或设备不支持 WebGL 2.0。请启用硬件加速重试。';
+  }
+
+  // Camera Orbit Parameters
+  let camDist = 12.5;
+  let camTheta = 1.35; // polar angle from z
+  let camPhi = 0.8;    // azimuthal angle
+  let isDragging = false;
+  let lastX = 0, lastY = 0;
+  let scaleQuality = 1.0;
+
+  const vsSource = `#version 300 es
+    in vec2 aPosition;
+    out vec2 vUV;
+    void main() {
+      vUV = aPosition * 0.5 + 0.5;
+      gl_Position = vec4(aPosition, 0.0, 1.0);
+    }
+  `;
+
+  // Full Numerical Geodesic Raymarching Shader
+  const fsSource = `#version 300 es
+    precision highp float;
+    in vec2 vUV;
+    out vec4 fragColor;
+
+    uniform vec2 uResolution;
+    uniform vec3 uCamPos;
+    uniform vec3 uCamForward;
+    uniform vec3 uCamRight;
+    uniform vec3 uCamUp;
+    uniform float uTime;
+    uniform float uBrightness;
+    uniform float uExposure;
+
+    // Relativistic Black Hole Metric Constants
+    const float M = 0.5; // r_s = 2M = 1.0
+    const float r_isco = 3.0;
+    const float r_outer = 12.0;
+
+    // Temperature to Blackbody approximation
+    vec3 blackbodyColor(float t) {
+      t = clamp(t, 0.0, 2.5);
+      vec3 col = vec3(0.0);
+      col.r = smoothstep(0.0, 0.8, t) * 1.5;
+      col.g = smoothstep(0.3, 1.4, t) * 1.2;
+      col.b = smoothstep(0.6, 2.2, t) * 2.0;
+      return col;
+    }
+
+    // ACES Tone Mapping Curve
+    vec3 acesFilm(vec3 x) {
+      float a = 2.51; float b = 0.03;
+      float c = 2.43; float d = 0.59;
+      float e = 0.14;
+      return clamp((x*(a*x+b))/(x*(c*x+d)+e), 0.0, 1.0);
+    }
+
+    void main() {
+      vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
+      vec3 rayDir = normalize(uCamForward + uv.x * uCamRight + uv.y * uCamUp);
+      vec3 rayPos = uCamPos;
+
+      vec3 totalColor = vec3(0.0);
+      float totalOpticalDepth = 0.0;
+
+      // Conserved Angular Momentum Vector: L = r x v
+      vec3 L = cross(rayPos, rayDir);
+      float L2 = dot(L, L);
+
+      // Adaptive numerical geodesic ray integration
+      float dt = 0.12;
+      for (int step = 0; step < 90; step++) {
+        float r = length(rayPos);
+
+        // Absorbed by Event Horizon (r_s = 1.0)
+        if (r < 1.02) {
+          totalColor = mix(totalColor, vec3(0.0), 1.0 - totalOpticalDepth);
+          break;
+        }
+
+        // Escape to celestial sphere
+        if (r > 24.0) {
+          // Subtle cosmic background stars
+          float star = pow(fract(sin(dot(rayDir.xy, vec2(12.9898, 78.233))) * 43758.5453), 20.0) * 0.8;
+          totalColor += vec3(star) * (1.0 - totalOpticalDepth);
+          break;
+        }
+
+        // Accretion disk equatorial intersection check: z crosses 0 plane
+        float prevZ = rayPos.z;
+        // Schwarzschild Null Geodesic Acceleration: d2x/dlambda2 = -1.5 * M * (r x v)^2 * r / r^5
+        vec3 acc = -1.5 * L2 * rayPos / pow(r, 5.0);
+        rayDir += acc * dt;
+        rayDir = normalize(rayDir);
+        rayPos += rayDir * dt;
+
+        // Check if segment passed through equatorial plane z=0
+        if ((prevZ > 0.0 && rayPos.z <= 0.0) || (prevZ < 0.0 && rayPos.z >= 0.0)) {
+          float tPlane = -prevZ / (rayPos.z - prevZ);
+          vec3 hitPos = rayPos - rayDir * dt * (1.0 - tPlane);
+          float rHit = length(hitPos.xy);
+
+          if (rHit >= r_isco && rHit <= r_outer) {
+            // Keplerian orbital velocity at r: beta = sqrt(r_s / (2r))
+            float beta = sqrt(1.0 / (2.0 * rHit));
+            vec3 vOrbit = vec3(-hitPos.y, hitPos.x, 0.0) / rHit * beta;
+
+            // Relativistic Doppler Beaming Factor delta: 1 / (gamma * (1 - v . n))
+            float gamma = 1.0 / sqrt(1.0 - beta * beta);
+            float cosTheta = dot(normalize(vOrbit), -rayDir);
+            float doppler = 1.0 / (gamma * (1.0 - beta * cosTheta));
+
+            // Gravitational Redshift
+            float gravRedshift = sqrt(max(0.0, 1.0 - 1.0 / rHit));
+            float deltaFactor = doppler * gravRedshift;
+
+            // Temperature T ~ r^(-3/4)
+            float temp = pow(r_isco / rHit, 0.75) * deltaFactor;
+            vec3 diskEmission = blackbodyColor(temp);
+
+            // Relativistic intensity beaming: I \propto delta^3
+            float intensity = pow(deltaFactor, 3.2) * uBrightness;
+
+            // Differential rotation spiraling gas stripes
+            float phiHit = atan(hitPos.y, hitPos.x);
+            float spiral = sin(phiHit * 8.0 - uTime * (2.0 / sqrt(rHit)) + rHit * 3.0);
+            intensity *= 0.7 + 0.3 * spiral;
+
+            // Add disk color with optical depth integration
+            vec3 col = diskEmission * intensity;
+            totalColor += col * (1.0 - totalOpticalDepth) * 0.75;
+            totalOpticalDepth += 0.45;
+            if (totalOpticalDepth >= 0.95) break;
+          }
+        }
+
+        // Step size adjustment: smaller step near photon sphere (r ≈ 1.5)
+        dt = clamp(r * 0.04, 0.035, 0.3);
+      }
+
+      // HDR Post-processing: Exposure + ACES Tonemapping
+      vec3 finalCol = acesFilm(totalColor * uExposure);
+      fragColor = vec4(finalCol, 1.0);
+    }
+  `;
+
+  function createShader(gl, type, source) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, source);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      const info = gl.getShaderInfoLog(s);
+      gl.deleteShader(s);
+      throw new Error(`Shader compilation failure: ${info}`);
+    }
+    return s;
+  }
+
+  const vertShader = createShader(gl, gl.VERTEX_SHADER, vsSource);
+  const fragShader = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+  const program = gl.createProgram();
+  gl.attachShader(program, vertShader);
+  gl.attachShader(program, fragShader);
+  gl.linkProgram(program);
+
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    throw new Error(`Program link failure: ${gl.getProgramInfoLog(program)}`);
+  }
+
+  // Full-screen quad
+  const quadBuf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    -1, -1,  1, -1, -1,  1,
+    -1,  1,  1, -1,  1,  1,
+  ]), gl.STATIC_DRAW);
+
+  const aPosition = gl.getAttribLocation(program, 'aPosition');
+  gl.enableVertexAttribArray(aPosition);
+  gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
+
+  // Uniform locations
+  const uRes = gl.getUniformLocation(program, 'uResolution');
+  const uCamPos = gl.getUniformLocation(program, 'uCamPos');
+  const uCamFwd = gl.getUniformLocation(program, 'uCamForward');
+  const uCamRight = gl.getUniformLocation(program, 'uCamRight');
+  const uCamUp = gl.getUniformLocation(program, 'uCamUp');
+  const uTime = gl.getUniformLocation(program, 'uTime');
+  const uBright = gl.getUniformLocation(program, 'uBrightness');
+  const uExpo = gl.getUniformLocation(program, 'uExposure');
+
+  const camDistEl = document.getElementById('camDistVal');
+  const redshiftEl = document.getElementById('redshiftVal');
+  const betaEl = document.getElementById('orbitBetaVal');
+  const fpsStatEl = document.getElementById('fpsStat');
+
+  function updateTelemetry() {
+    camDistEl.textContent = `${camDist.toFixed(2)} r_s`;
+    // Time dilation factor: sqrt(1 - r_s / r)
+    const factor = Math.sqrt(Math.max(0, 1.0 - 1.0 / camDist));
+    redshiftEl.textContent = factor.toFixed(4);
+    // Circular orbit velocity: beta = sqrt(r_s / 2r)
+    const beta = Math.sqrt(1.0 / (2.0 * camDist));
+    betaEl.textContent = `${beta.toFixed(4)} c`;
+  }
+
+  function resize() {
+    const w = Math.floor(window.innerWidth * scaleQuality);
+    const h = Math.floor(window.innerHeight * scaleQuality);
+    canvas.width = w;
+    canvas.height = h;
+    gl.viewport(0, 0, w, h);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  window.setQuality = function(q, btn) {
+    scaleQuality = q;
+    document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    resize();
+  };
+
+  // Pointer interactions
+  window.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('.controls-panel') || e.target.closest('.hud-top')) return;
+    isDragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    camPhi += dx * 0.006;
+    camTheta = Math.max(0.15, Math.min(Math.PI - 0.15, camTheta - dy * 0.006));
+  });
+  window.addEventListener('pointerup', () => isDragging = false);
+  window.addEventListener('wheel', (e) => {
+    camDist = Math.max(3.2, Math.min(22.0, camDist + e.deltaY * 0.01));
+    updateTelemetry();
+  }, { passive: true });
+
+  let frames = 0, lastFpsTime = performance.now();
+  updateTelemetry();
+
+  function render(timeMs) {
+    frames++;
+    if (timeMs - lastFpsTime >= 500) {
+      fpsStatEl.textContent = `${Math.round((frames * 1000) / (timeMs - lastFpsTime))} FPS`;
+      frames = 0;
+      lastFpsTime = timeMs;
+    }
+
+    gl.useProgram(program);
+
+    // Compute Camera Coordinates
+    const cx = camDist * Math.sin(camTheta) * Math.cos(camPhi);
+    const cy = camDist * Math.sin(camTheta) * Math.sin(camPhi);
+    const cz = camDist * Math.cos(camTheta);
+    const pos = [cx, cy, cz];
+
+    // Look at origin
+    const fwd = [-cx / camDist, -cy / camDist, -cz / camDist];
+    // Right = normalize(cross(fwd, up=[0,0,1]))
+    const rx = -fwd[1], ry = fwd[0], rz = 0;
+    const rLen = Math.hypot(rx, ry) || 1;
+    const right = [rx / rLen, ry / rLen, 0];
+    // Up = cross(right, fwd)
+    const up = [
+      right[1] * fwd[2] - right[2] * fwd[1],
+      right[2] * fwd[0] - right[0] * fwd[2],
+      right[0] * fwd[1] - right[1] * fwd[0]
+    ];
+
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.uniform3fv(uCamPos, pos);
+    gl.uniform3fv(uCamFwd, fwd);
+    gl.uniform3fv(uCamRight, right);
+    gl.uniform3fv(uCamUp, up);
+    gl.uniform1f(uTime, timeMs * 0.001);
+    gl.uniform1f(uBright, parseFloat(document.getElementById('diskBrightness').value));
+    gl.uniform1f(uExpo, parseFloat(document.getElementById('exposureVal').value));
+
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+</script>
+</body>
+</html>

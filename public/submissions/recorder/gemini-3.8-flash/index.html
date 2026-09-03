@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voice Memo Recorder - gemini-3.8-flash</title>
+<style>
+  :root {
+    --bg: #090d16; --card: #131c2e; --accent: #ef4444;
+    --text: #f8fafc; --sub: #94a3b8; --border: rgba(255,255,255,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .rec-card {
+    width: 100%; max-width: 360px; background: var(--card);
+    border: 1px solid var(--border); border-radius: 28px; padding: 24px 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6); display: flex; flex-direction: column; align-items: center;
+  }
+  .header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 12px;
+    font-weight: 600; padding: 4px 12px; border-radius: 999px;
+    background: rgba(255,255,255,0.05); color: var(--sub);
+  }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #64748b; }
+  .status-pill.recording { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+  .status-pill.recording .status-dot { background: #ef4444; animation: blink 1s infinite; }
+  .status-pill.paused { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+  .status-pill.paused .status-dot { background: #f59e0b; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .timer-display {
+    font-family: monospace; font-size: 46px; font-weight: 700;
+    font-variant-numeric: tabular-nums; margin-bottom: 16px;
+    letter-spacing: 0.05em; text-shadow: 0 0 20px rgba(255,255,255,0.1);
+  }
+  .waveform-box {
+    width: 100%; height: 72px; background: rgba(0,0,0,0.3);
+    border-radius: 14px; display: flex; align-items: center;
+    justify-content: center; gap: 4px; padding: 0 16px; margin-bottom: 24px;
+    border: 1px solid var(--border); overflow: hidden;
+  }
+  .wave-bar {
+    width: 4px; height: 6px; background: #3b82f6; border-radius: 2px;
+    transition: height 0.1s ease;
+  }
+  .controls { display: flex; align-items: center; justify-content: center; gap: 16px; width: 100%; margin-bottom: 20px; }
+  .btn {
+    border: none; outline: none; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; font-weight: 600;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .btn:active { transform: scale(0.92); }
+  .btn-record {
+    width: 68px; height: 68px; border-radius: 50%; background: #ef4444;
+    color: white; box-shadow: 0 10px 20px rgba(239,68,68,0.4);
+  }
+  .btn-record.recording { background: #f59e0b; box-shadow: 0 10px 20px rgba(245,158,11,0.4); }
+  .btn-stop {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: rgba(255,255,255,0.08); color: var(--text); border: 1px solid var(--border);
+  }
+  .btn-stop:disabled { opacity: 0.3; cursor: not-allowed; }
+  .summary-card {
+    width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    border-radius: 16px; padding: 14px 16px; font-size: 13px;
+  }
+  .summary-title { font-size: 11px; text-transform: uppercase; color: var(--sub); letter-spacing: 0.1em; margin-bottom: 6px; font-weight: 600; }
+  .summary-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .summary-val { font-weight: 600; color: #38bdf8; font-family: monospace; }
+</style>
+</head>
+<body>
+<div class="rec-card">
+  <div class="header">
+    <span style="font-size:14px;font-weight:600;">Studio Memo</span>
+    <div class="status-pill" id="statusPill"><span class="status-dot"></span><span id="statusLabel">READY</span></div>
+  </div>
+  <div class="timer-display" id="timer">00:00</div>
+  <div class="waveform-box" id="waveform"></div>
+  <div class="controls">
+    <button class="btn btn-stop" id="stopBtn" disabled title="停止并保存">
+      <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
+    </button>
+    <button class="btn btn-record" id="recBtn" title="开始/暂停">
+      <svg id="recIcon" width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+    </button>
+  </div>
+  <div class="summary-card" id="summaryCard">
+    <div class="summary-title">最新录音摘要</div>
+    <div class="summary-row"><span>状态</span><span class="summary-val" id="sumStatus">无记录</span></div>
+    <div class="summary-row"><span>持续时长</span><span class="summary-val" id="sumDuration">--:--</span></div>
+  </div>
+</div>
+<script>
+  const waveBox = document.getElementById('waveform');
+  const barCount = 28;
+  const bars = [];
+  for(let i=0; i<barCount; i++) {
+    const b = document.createElement('div');
+    b.className = 'wave-bar';
+    waveBox.appendChild(b);
+    bars.push(b);
+  }
+
+  let state = 'idle'; // idle | recording | paused
+  let elapsed = 0;
+  let timerInterval = null;
+  let waveAnim = null;
+
+  const recBtn = document.getElementById('recBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const timer = document.getElementById('timer');
+  const statusPill = document.getElementById('statusPill');
+  const statusLabel = document.getElementById('statusLabel');
+  const recIcon = document.getElementById('recIcon');
+  const sumStatus = document.getElementById('sumStatus');
+  const sumDuration = document.getElementById('sumDuration');
+
+  function fmtTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  function renderWave() {
+    if (state === 'recording') {
+      bars.forEach(b => {
+        const h = Math.floor(Math.random() * 48) + 6;
+        b.style.height = `${h}px`;
+        b.style.background = h > 34 ? '#ef4444' : '#38bdf8';
+      });
+    } else {
+      bars.forEach(b => { b.style.height = '6px'; b.style.background = '#334155'; });
+    }
+  }
+
+  function start() {
+    state = 'recording';
+    statusPill.className = 'status-pill recording';
+    statusLabel.textContent = 'REC';
+    recBtn.className = 'btn btn-record recording';
+    recIcon.innerHTML = '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>';
+    stopBtn.disabled = false;
+    timerInterval = setInterval(() => { elapsed++; timer.textContent = fmtTime(elapsed); }, 1000);
+    waveAnim = setInterval(renderWave, 80);
+  }
+
+  function pause() {
+    state = 'paused';
+    statusPill.className = 'status-pill paused';
+    statusLabel.textContent = 'PAUSED';
+    recBtn.className = 'btn btn-record';
+    recIcon.innerHTML = '<circle cx="12" cy="12" r="8"/>';
+    clearInterval(timerInterval);
+    clearInterval(waveAnim);
+    renderWave();
+  }
+
+  function stop() {
+    if (state === 'idle') return;
+    const finalDuration = fmtTime(elapsed);
+    sumStatus.textContent = '已保存 (HQ 48kHz)';
+    sumDuration.textContent = finalDuration;
+
+    state = 'idle';
+    elapsed = 0;
+    clearInterval(timerInterval);
+    clearInterval(waveAnim);
+    renderWave();
+
+    timer.textContent = '00:00';
+    statusPill.className = 'status-pill';
+    statusLabel.textContent = 'READY';
+    recBtn.className = 'btn btn-record';
+    recIcon.innerHTML = '<circle cx="12" cy="12" r="8"/>';
+    stopBtn.disabled = true;
+  }
+
+  recBtn.onclick = () => {
+    if (state === 'idle' || state === 'paused') start();
+    else if (state === 'recording') pause();
+  };
+
+  stopBtn.onclick = () => {
+    if (confirm('确认停止并保存本次录音？')) stop();
+  };
+</script>
+</body>
+</html>

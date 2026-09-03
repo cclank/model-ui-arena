@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Muse Weather</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(120% 130% at 50% -12%,#223461 0%,#101830 55%,#070c19 100%);color:#eef1fa;font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;padding:16px}
+.wrap{width:min(96vw,420px)}
+.cities{display:flex;gap:9px;justify-content:center;margin-bottom:13px;flex-wrap:nowrap}
+.city{border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#c3cde4;padding:7px 15px;border-radius:99px;font-size:13px;cursor:pointer;transition:.25s;letter-spacing:1px;white-space:nowrap}
+.city.on{background:linear-gradient(135deg,#5f8dff,#7a5bff);color:#fff;border-color:transparent;box-shadow:0 6px 18px rgba(95,141,255,.35)}
+.card{background:linear-gradient(180deg,#141c33,rgba(16,22,40,.95));border:1px solid rgba(255,255,255,.09);border-radius:22px;padding:16px 16px 14px;box-shadow:0 30px 80px rgba(0,0,0,.5);transition:opacity .18s ease,transform .18s ease}
+.card.out{opacity:0;transform:translateY(-9px) scale(.985)}
+.card.in{animation:enter .3s ease}
+@keyframes enter{from{opacity:0;transform:translateY(9px) scale(.985)}to{opacity:1;transform:none}}
+.hd{display:flex;justify-content:space-between;align-items:flex-start}
+.hd small{font-size:9.5px;letter-spacing:2.5px;color:#7f8db0;font-weight:700}
+.hd h1{font-size:17px;letter-spacing:2px;margin-top:2px}
+.ut{display:block;font-size:10.5px;color:#7f8db0;margin-top:3px;letter-spacing:1px}
+.unit{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#dfe6f6;width:40px;height:40px;border-radius:50%;font-size:13px;font-weight:600;cursor:pointer;transition:.2s}
+.unit:hover{background:rgba(255,255,255,.14)}
+.scene{position:relative;overflow:hidden;border-radius:18px;margin-top:14px;padding:16px 16px 14px;min-height:172px;transition:background .5s}
+.scene[data-w=sun]{background:linear-gradient(160deg,#2c5286,#5a4d9c 55%,#8f5697)}
+.scene[data-w=sun][data-night]{background:linear-gradient(160deg,#131c42,#1f2b63 55%,#332b6b)}
+.scene[data-w=rain]{background:linear-gradient(160deg,#14283e,#2c5170 55%,#4a6f8b)}
+.scene[data-w=rain][data-night]{background:linear-gradient(160deg,#0a1526,#122a46 60%,#1d3c5a)}
+.scene[data-w=cloud]{background:linear-gradient(160deg,#283047,#3d4358 55%,#575d74)}
+.scene[data-w=cloud][data-night]{background:linear-gradient(160deg,#141928,#262c44 60%,#333a55)}
+.orb{position:absolute;top:-34px;right:-16px;width:130px;height:130px;border-radius:50%;background:radial-gradient(circle at 40% 36%,#fff6d2,#ffc35e 42%,rgba(255,160,60,0) 72%);filter:blur(2px);animation:halo 4.5s ease-in-out infinite}
+@keyframes halo{50%{box-shadow:0 0 96px 26px rgba(255,175,70,.42)}}
+.scene[data-night] .orb{background:radial-gradient(circle at 42% 36%,#fbfcff,#c9d3f4 44%,rgba(201,211,244,0) 72%);animation:haloM 4.5s ease-in-out infinite}
+@keyframes haloM{50%{box-shadow:0 0 52px 10px rgba(214,222,255,.3)}}
+.scene[data-w=rain] .orb,.scene[data-w=cloud] .orb{display:none}
+.fx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.fx i{position:absolute;display:block}
+.sp{width:3px;height:3px;border-radius:50%;background:#ffeeb6;box-shadow:0 0 9px #ffd77a;animation:rise linear infinite}
+@keyframes rise{0%{opacity:0}14%{opacity:.95}100%{opacity:0;transform:translate(10px,-112px) scale(1.2)}}
+.dp{width:1.7px;height:13px;border-radius:3px;background:linear-gradient(#b7e2ff,rgba(183,226,255,.12));animation:fall linear infinite}
+@keyframes fall{0%{transform:translateY(-36px) rotate(16deg);opacity:0}8%{opacity:.95}100%{transform:translateY(210px) rotate(16deg);opacity:0}}
+.cd{width:88px;height:26px;border-radius:50%;background:rgba(238,243,255,.55);filter:blur(10px);opacity:.45;animation:drift ease-in-out infinite alternate}
+@keyframes drift{from{transform:translateX(-26px)}to{transform:translateX(64px)}}
+.st2{width:2px;height:2px;border-radius:50%;background:#eef2ff;animation:tw ease-in-out infinite alternate}
+@keyframes tw{from{opacity:.12}to{opacity:.95}}
+.now{position:relative;display:flex;justify-content:space-between;align-items:center}
+.big{font-size:64px;font-weight:700;line-height:1;display:flex;align-items:flex-start;text-shadow:0 6px 30px rgba(0,0,0,.3)}
+.big i{font-style:normal;font-size:22px;margin-top:8px;font-weight:500;opacity:.85}
+.side{text-align:right;max-width:54%}
+.desc{font-size:17px;font-weight:600}
+.desc em{display:block;font-style:normal;font-size:11px;opacity:.75;margin-top:2px;font-weight:400}
+.meta{display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:flex-end;margin-top:10px;font-size:11.5px;opacity:.92}
+.meta i{font-style:normal;opacity:.6;margin-right:3px}
+.fc{margin-top:16px}
+.fhead{display:flex;justify-content:space-between;font-size:11px;color:#8b96b3;letter-spacing:1px;margin-bottom:6px}
+.fhead b{color:#dfe6f6;font-size:13px}
+.chart{display:block;width:100%;height:88px}
+.cols{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;text-align:center;margin-top:4px}
+.cols div{font-size:11.5px;color:#b9c2d8;padding:7px 0 9px;border-radius:12px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.05)}
+.cols b{display:block;font-weight:600;color:#e6ebf7;margin-bottom:2px;font-size:11.5px}
+.cols .g{display:block;font-size:16px;margin:1px 0 3px}
+.cols .th{color:#ffc35e;font-weight:600}
+.cols .tl{color:#8fa3d0;margin-left:4px}
+footer{text-align:center;margin-top:15px;font-size:9px;letter-spacing:2.5px;color:#5f6d92}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="cities" id="cities"></div>
+  <div class="card" id="card">
+    <header class="hd"><div><small>MUSE SPARK</small><h1 id="cname">—</h1><span class="ut" id="utime">—</span></div><button class="unit" id="unit" title="切换单位">°F</button></header>
+    <div class="scene" id="scene" data-w="sun">
+      <div class="fx" id="fx"></div><div class="orb"></div>
+      <div class="now">
+        <div class="big"><span id="v">--</span><i id="us">°C</i></div>
+        <div class="side"><div class="desc"><span id="desc">—</span><em id="dsub">—</em></div>
+        <div class="meta"><span><i>风</i><b id="wind">—</b></span><span><i>湿</i><b id="hum">—</b></span><span><i>最高</i><b id="hi">—</b></span><span><i>最低</i><b id="lo">—</b></span></div></div>
+      </div>
+    </div>
+    <section class="fc"><div class="fhead"><b>5 日预报</b><span>高 / 低温趋势</span></div><svg class="chart" id="chart"></svg><div class="cols" id="cols"></div></section>
+    <footer>WEATHER · muse-spark-1.3</footer>
+  </div>
+</div>
+<script>
+const $=i=>document.getElementById(i);
+const D=[
+{ct:'上海',t:31,w:'sun',d:'晴',ph:'体感炎热 · 注意防晒',wind:'东南风 3 级',hum:62,hi:33,lo:26,fc:[['周一','晴',33,26],['周二','晴转多云',32,25],['周三','多云',31,25],['周四','阵雨',29,24],['周五','晴',33,26]]},
+{ct:'东京',t:24,w:'rain',d:'中雨',ph:'午后转小 · 带伞出门',wind:'东北风 4 级',hum:91,hi:26,lo:21,fc:[['周一','小雨',26,21],['周二','中雨',23,20],['周三','小雨转多云',25,21],['周四','多云',27,22],['周五','晴',28,23]]},
+{ct:'北京',t:20,w:'cloud',d:'阴',ph:'凉爽干燥 · 适合出行',wind:'西北风 3 级',hum:44,hi:24,lo:12,fc:[['周一','多云',23,13],['周二','晴',25,14],['周三','阴',24,15],['周四','小雨',22,13],['周五','晴',26,15]]}];
+const IC=[['雷','⛈'],['雪','❄'],['雨','🌧'],['阴','☁'],['云','☁'],['晴','☀']];
+const glyph=d=>{for(const[k,v]of IC)if(d.includes(k))return v;return '☀'};
+const fmt=c=>u==='C'?Math.round(c):Math.round(c*9/5+32);
+const night=()=>{const h=new Date().getHours();return h>=19||h<6};
+let idx=0,u='C',raf=0;
+function clock(){$('utime').textContent='更新于 '+new Date().toTimeString().slice(0,5)}
+function countUp(to){const from=+$('v').textContent||0;cancelAnimationFrame(raf);const t0=performance.now();
+(function st(t){const p=Math.min(1,(t-t0)/560),e=1-Math.pow(1-p,3);$('v').textContent=Math.round(from+(to-from)*e);if(p<1)raf=requestAnimationFrame(st)})(t0)}
+function fx(){const el=$('fx');el.innerHTML='';const w=D[idx].w,n=$('scene').dataset.night==='1';
+const put=(c,k,cfg)=>{for(let n2=0;n2<k;n2++){const d2=document.createElement('i');d2.className=c;const o={left:(Math.random()*96).toFixed(1)+'%',top:(cfg.top||0)+(Math.random()*80).toFixed(1)+'%',animationDelay:(-Math.random()*6).toFixed(2)+'s',animationDuration:(cfg.d+Math.random()*cfg.j).toFixed(2)+'s'};
+if(cfg.size)o.width=(cfg.size[0]+Math.random()*cfg.size[1]).toFixed(0)+'px';d2.style.cssText=Object.entries(o).map(x=>x[0]+':'+x[1]).join(';');el.appendChild(d2)}};
+if(w==='rain')put('dp',26,{d:1.15,j:1.4,top:8});
+else if(w==='sun'){if(!n)put('sp',13,{d:3.2,j:3});else put('st2',16,{d:2.2,j:2.4})}
+else{put('cd',4,{d:4.5,j:3,top:10,size:[60,50]});if(n)put('st2',12,{d:2.4,j:2.6})}}
+function chart(){const svg=$('chart'),fc=D[idx].fc,W=svg.clientWidth||340,H=88,P=11;
+const hi=fc.map(f=>fmt(f[2])),lo=fc.map(f=>fmt(f[3])),mn=Math.min(...lo)-2,mx=Math.max(...hi)+2;
+const X=i=>(W*(i+.5)/5),Y=v=>P+(mx-v)/(mx-mn)*(H-2*P);
+let dhi='',dlo='',dots='',grid='';
+for(let i=0;i<5;i++){dhi+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(hi[i]).toFixed(1)+' ';dlo+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(lo[i]).toFixed(1)+' ';
+dots+=`<circle cx="${X(i)}" cy="${Y(hi[i])}" r="3.2" fill="#ffc35e" stroke="#141c33" stroke-width="1.4"/><circle cx="${X(i)}" cy="${Y(lo[i])}" r="3.2" fill="#6fd3ff" stroke="#141c33" stroke-width="1.4"/>`}
+const y1=Y(mx),y2=Y((mx+mn)/2),y3=Y(mn);
+grid=`<line x1="0" x2="${W}" y1="${y1}" y2="${y1}"/><line x1="0" x2="${W}" y1="${y2}" y2="${y2}"/><line x1="0" x2="${W}" y1="${y3}" y2="${y3}"/>`;
+svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+svg.innerHTML=`<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc35e" stop-opacity=".30"/><stop offset="1" stop-color="#ffc35e" stop-opacity="0"/></linearGradient></defs>
+<g stroke="rgba(255,255,255,.07)">${grid}</g>
+<path d="${dhi}L ${X(4).toFixed(1)} ${Y(mn).toFixed(1)} L ${X(0).toFixed(1)} ${Y(mn).toFixed(1)} Z" fill="url(#ag)"/>
+<path d="${dhi}" fill="none" stroke="#ffc35e" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="${dlo}" fill="none" stroke="#6fd3ff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+<g>${dots}</g>
+<text x="2" y="${y1-5}" font-size="9.5" fill="#ffc35e">${mx}°</text><text x="2" y="${y3+12}" font-size="9.5" fill="#6fd3ff">${mn}°</text>`}
+function render(){const c=D[idx],sc=$('scene');
+$('cname').textContent=c.ct;$('desc').textContent=c.d;$('dsub').textContent=c.ph;
+$('wind').textContent=c.wind;$('hum').textContent=c.hum+'%';$('hi').textContent=fmt(c.hi)+'°';$('lo').textContent=fmt(c.lo)+'°';
+sc.dataset.w=c.w;sc.dataset.night=night()?'1':'';
+$('us').textContent='°'+u;countUp(fmt(c.t));clock();
+$('cols').innerHTML=c.fc.map(f=>`<div><b>${f[0]}</b><span class="g">${glyph(f[1])}</span><span class="th">${fmt(f[2])}°</span><span class="tl">${fmt(f[3])}°</span></div>`).join('');
+chart();fx();document.querySelectorAll('.city').forEach((b,i)=>b.classList.toggle('on',i===idx))}
+function go(i){if(i===idx)return;idx=i;$('card').classList.add('out');
+setTimeout(()=>{render();$('card').classList.remove('out');$('card').classList.add('in');setTimeout(()=>$('card').classList.remove('in'),300)},190)}
+D.forEach((c,i)=>{const b=document.createElement('button');b.className='city';b.textContent=c.ct;b.onclick=()=>go(i);$('cities').appendChild(b)});
+$('unit').onclick=()=>{u=u==='C'?'F':'C';$('unit').textContent=u==='C'?'°F':'°C';render()};
+setInterval(()=>{clock();if(night()!==($('scene').dataset.night==='1'))render()},15000);
+render();
+</script>
+</body>
+</html>

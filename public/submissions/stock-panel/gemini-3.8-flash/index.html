@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Pulse Panel - gemini-3.8-flash</title>
+<style>
+  :root {
+    --bg: #090d16; --card: #131c2e; --up: #10b981; --down: #ef4444;
+    --text: #f8fafc; --sub: #94a3b8; --border: rgba(255,255,255,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .panel {
+    width: 100%; max-width: 360px; background: var(--card);
+    border: 1px solid var(--border); border-radius: 24px; padding: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  }
+  .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .live-badge {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 11px;
+    font-weight: 700; color: var(--up); background: rgba(16,185,129,0.12);
+    padding: 3px 10px; border-radius: 999px;
+  }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .stock-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .stock-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 14px; background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border); border-radius: 14px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .stock-item.active { border-color: rgba(56,189,248,0.5); background: rgba(56,189,248,0.05); }
+  .sym { font-weight: 700; font-size: 14px; }
+  .name { font-size: 11px; color: var(--sub); }
+  .price { font-size: 14px; font-weight: 700; text-align: right; }
+  .tag {
+    font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 4px;
+    display: inline-block; margin-top: 2px;
+  }
+  .up { color: var(--up); }
+  .down { color: var(--down); }
+  .tag.up { background: rgba(16,185,129,0.15); }
+  .tag.down { background: rgba(239,68,68,0.15); }
+  .chart-box {
+    background: rgba(0,0,0,0.25); border: 1px solid var(--border);
+    border-radius: 16px; padding: 14px;
+  }
+  .chart-meta { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 10px; }
+  .sparkline { width: 100%; height: 70px; overflow: visible; }
+  .sparkline path { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .flash-up { animation: flashG 0.4s; }
+  .flash-down { animation: flashR 0.4s; }
+  @keyframes flashG { 0% { background: rgba(16,185,129,0.3); } 100% { background: transparent; } }
+  @keyframes flashR { 0% { background: rgba(239,68,68,0.3); } 100% { background: transparent; } }
+</style>
+</head>
+<body>
+<div class="panel">
+  <div class="panel-header">
+    <div>
+      <div style="font-weight:700;font-size:15px;">全球资产看板</div>
+      <div style="font-size:11px;color:var(--sub);" id="updateTime">实时流更新中</div>
+    </div>
+    <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+  </div>
+  <div class="stock-list" id="stockList"></div>
+  <div class="chart-box">
+    <div class="chart-meta">
+      <span id="chartSym" style="font-weight:700;">NVDA.US 走势</span>
+      <span id="chartRange" style="color:var(--sub);">今日分时</span>
+    </div>
+    <svg class="sparkline" id="chartSvg" viewBox="0 0 300 70"></svg>
+  </div>
+</div>
+<script>
+  const stocks = [
+    { sym: 'NVDA', name: '英伟达', price: 138.25, delta: 3.42, pct: 2.54, history: [132, 134, 133, 135, 137, 136, 138.25] },
+    { sym: 'AAPL', name: '苹果公司', price: 224.80, delta: -1.15, pct: -0.51, history: [227, 226, 226.5, 225, 224, 225.2, 224.8] },
+    { sym: 'TSLA', name: '特斯拉', price: 218.40, delta: 5.60, pct: 2.63, history: [210, 212, 215, 214, 217, 216, 218.4] }
+  ];
+  let activeIdx = 0;
+
+  function renderList() {
+    const list = document.getElementById('stockList');
+    list.innerHTML = stocks.map((s, i) => {
+      const isUp = s.delta >= 0;
+      const sign = isUp ? '+' : '';
+      const cls = isUp ? 'up' : 'down';
+      return `
+        <div class="stock-item ${i === activeIdx ? 'active' : ''}" onclick="selectStock(${i})" id="stock-${i}">
+          <div>
+            <div class="sym">${s.sym}</div>
+            <div class="name">${s.name}</div>
+          </div>
+          <div>
+            <div class="price ${cls}">$${s.price.toFixed(2)}</div>
+            <div class="tag ${cls}">${sign}${s.delta.toFixed(2)} (${sign}${s.pct.toFixed(2)}%)</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderChart() {
+    const s = stocks[activeIdx];
+    document.getElementById('chartSym').textContent = `${s.sym} 分时曲线`;
+    const svg = document.getElementById('chartSvg');
+    const min = Math.min(...s.history);
+    const max = Math.max(...s.history);
+    const range = (max - min) || 1;
+    const w = 300, h = 60, pad = 5;
+
+    const points = s.history.map((val, idx) => {
+      const x = (idx / (s.history.length - 1)) * w;
+      const y = h - ((val - min) / range) * (h - pad * 2) - pad;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+
+    const strokeColor = s.delta >= 0 ? '#10b981' : '#ef4444';
+    svg.innerHTML = `
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${strokeColor}" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="${strokeColor}" stop-opacity="0.0"/>
+        </linearGradient>
+      </defs>
+      <polygon points="0,${h} ${points} ${w},${h}" fill="url(#g)"/>
+      <path d="M ${points}" stroke="${strokeColor}"/>
+    `;
+  }
+
+  function selectStock(i) {
+    activeIdx = i;
+    renderList();
+    renderChart();
+  }
+
+  setInterval(() => {
+    stocks.forEach((s, idx) => {
+      const deltaChange = (Math.random() - 0.49) * (s.price * 0.005);
+      s.price = +(s.price + deltaChange).toFixed(2);
+      s.delta = +(s.delta + deltaChange).toFixed(2);
+      s.pct = +(s.pct + (deltaChange / s.price) * 100).toFixed(2);
+      s.history.push(s.price);
+      if (s.history.length > 15) s.history.shift();
+
+      const el = document.getElementById(`stock-${idx}`);
+      if (el) {
+        el.classList.remove('flash-up', 'flash-down');
+        void el.offsetWidth;
+        el.classList.add(deltaChange >= 0 ? 'flash-up' : 'flash-down');
+      }
+    });
+    renderList();
+    renderChart();
+    document.getElementById('updateTime').textContent = `更新于: ${new Date().toLocaleTimeString()}`;
+  }, 2000);
+
+  renderList();
+  renderChart();
+</script>
+</body>
+</html>

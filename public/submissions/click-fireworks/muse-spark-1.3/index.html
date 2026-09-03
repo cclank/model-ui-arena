@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<title>点击烟花 Click Fireworks · muse-spark-1.3</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#03040c;touch-action:none;user-select:none;-webkit-user-select:none;font-family:ui-rounded,"PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+.top{position:fixed;inset:0 0 auto;z-index:4;display:flex;justify-content:space-between;gap:10px;padding:max(12px,env(safe-area-inset-top)) 14px 0;pointer-events:none}
+h1{font-size:15px;letter-spacing:3px;color:#eef4ff;font-weight:800;text-shadow:0 0 12px rgba(150,220,255,.95),0 0 26px rgba(255,140,255,.5)}
+h1 i{display:block;font-style:normal;font-size:9px;font-weight:500;letter-spacing:1px;color:#93a4d8;margin-top:2px;text-shadow:none}
+.badge{font-size:10px;align-self:flex-start;color:#bfe9ff;padding:4px 9px;border-radius:99px;border:1px solid rgba(120,215,255,.45);background:rgba(28,48,120,.3);letter-spacing:1px;white-space:nowrap}
+.tip{position:fixed;left:0;right:0;bottom:max(20px,env(safe-area-inset-bottom));text-align:center;z-index:4;pointer-events:none;color:#8d9ccf;font-size:12px;letter-spacing:4px;text-shadow:0 1px 10px #000}
+.tip b{color:#ffd98a}
+#cs{position:fixed;right:14px;bottom:max(12px,env(safe-area-inset-bottom));z-index:4;font:inherit;font-size:10px;letter-spacing:1px;color:#cfe6ff;padding:6px 11px;border-radius:99px;border:1px solid rgba(160,200,255,.4);background:rgba(20,32,80,.55);cursor:pointer}
+#cs:active{transform:scale(.9);background:rgba(70,110,220,.55)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="top"><h1>CLICK·FIREWORKS<i>muse-spark-1.3 · 点击夜空即绽放</i></h1><div class="badge" id="md">自动演示</div></div>
+<div class="tip">轻触 / 点击夜空 → 绽放 🎆 · 连点更绚烂</div>
+<button id="cs">⏸ 演示开关</button>
+<script>
+"use strict";
+var cv=document.getElementById('cv'),X=cv.getContext('2d'),W=0,H=0,DPR=Math.min(window.devicePixelRatio||1,2);
+function rs(){W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;X.setTransform(DPR,0,0,DPR,0,0)}
+addEventListener('resize',rs);rs();
+var stars=[],i;for(i=0;i<130;i++)stars.push({x:Math.random()*W,y:Math.random()*H,r:.3+Math.random()*1.2,p:Math.random()*6.3,s:.2+Math.random()*1.6});
+var HUES=[8,20,38,45,52,88,160,192,214,262,300,325,342],PART=[],cap=620,rings=[];
+function grab(){for(var j=0;j<PART.length;j++)if(!PART[j].o)return PART[j];if(PART.length>=cap)return null;var q={o:0};PART.push(q);return q}
+function boom(cx,cy,big){
+  var n=big?130:56+(Math.random()*46|0),sp=big?9:4.2+Math.random()*1.6,a,v,p;
+  for(i=0;i<n;i++){p=grab();if(!p)break;a=Math.random()*6.283;v=sp*(.2+Math.random()*1.1);
+    p.o=1;p.x=cx;p.y=cy;p.px=cx;p.py=cy;p.vx=Math.cos(a)*v;p.vy=Math.sin(a)*v*.9-.8;
+    p.g=.032+Math.random()*.03;p.f=.972+Math.random()*.012;p.l=p.m=44+(Math.random()*50|0);
+    p.h=HUES[Math.random()*HUES.length|0]+Math.random()*18-9;p.r=.8+Math.random()*1.8;p.tw=Math.random()<.3;}
+  rings.push({x:cx,y:cy,r:4,v:big?2.2:1.5,a:1});}
+function shoot(){boom(W*(.1+Math.random()*.8),H*(.08+Math.random()*.45),Math.random()<.35)}
+var demo=1,idle=0,last=performance.now(),md=document.getElementById('md');
+function setMode(m){demo=m;md.textContent=demo?'自动演示':'手动模式';md.style.color=demo?'':'#ffe0a0';md.style.borderColor=demo?'':'rgba(255,200,110,.8)'}
+function hit(e){var r=cv.getBoundingClientRect();boom(e.clientX-r.left,e.clientY-r.top,0);idle=0;if(demo)setMode(0)}
+cv.addEventListener('pointerdown',hit);
+document.getElementById('cs').addEventListener('click',function(e){e.stopPropagation();setMode(demo?0:1);if(demo){shoot();idle=0}});
+function frame(now){
+  var t=now*.001,dt=Math.min(40,now-last);last=now;idle+=dt;
+  if(demo&&idle>1500){shoot();idle=Math.random()*700}
+  if(!demo&&idle>14000){setMode(1);shoot();idle=0}
+  X.globalAlpha=1;X.globalCompositeOperation='source-over';
+  var g=X.createLinearGradient(0,0,0,H);g.addColorStop(0,'#02030b');g.addColorStop(.5,'#080b24');g.addColorStop(1,'#1a0f3a');
+  X.fillStyle=g;X.fillRect(0,0,W,H);
+  X.globalCompositeOperation='lighter';
+  for(var b=0;b<2;b++){var bx=W*(.3+.4*b)+Math.sin(t*.4+b*3)*40,by=H*(.25+.3*b)+Math.cos(t*.3+b*2)*30;
+    var nb=X.createRadialGradient(bx,by,10,bx,by,Math.max(W,H)*.5);
+    nb.addColorStop(0,b?'rgba(124,58,237,.10)':'rgba(37,99,235,.12)');nb.addColorStop(1,'rgba(0,0,0,0)');
+    X.fillStyle=nb;X.fillRect(0,0,W,H);}
+  for(i=0;i<stars.length;i++){var s=stars[i];X.globalAlpha=.25+.55*(.5+.5*Math.sin(t*s.s+s.p));X.fillStyle='#dbe6ff';X.fillRect(s.x,s.y,s.r,s.r)}
+  X.globalAlpha=1;
+  for(i=0;i<PART.length;i++){var p=PART[i];if(!p.o)continue;
+    p.px=p.x;p.py=p.y;p.vx*=p.f;p.vy=p.vy*p.f+p.g;p.x+=p.vx;p.y+=p.vy;
+    if(--p.l<1||p.y>H+40||p.x<-40||p.x>W+40){p.o=0;continue}
+    var k=p.l/p.m,a=k*k,gl=p.tw?(0.7+0.5*Math.sin(t*22+p.h)):1;
+    X.globalAlpha=Math.min(1,a*.9*gl);X.strokeStyle='hsla('+p.h+',100%,58%,1)';X.lineWidth=p.r*k*1.7;
+    X.beginPath();X.moveTo(p.px,p.py);X.lineTo(p.x,p.y);X.stroke();
+    X.globalAlpha=Math.min(1,a);X.fillStyle='hsla('+p.h+',100%,75%,1)';
+    X.beginPath();X.arc(p.x,p.y,p.r*(.4+k),0,6.283);X.fill();
+    if(k>.75){X.globalAlpha=(k-.75)*1.6;X.fillStyle='#fff';X.beginPath();X.arc(p.x,p.y,p.r*.5*k,0,6.283);X.fill()}}
+  for(i=rings.length-1;i>=0;i--){var R=rings[i];R.r+=R.v;R.a-=.02;if(R.a<=0){rings.splice(i,1);continue}
+    X.globalAlpha=Math.max(R.a,0);X.strokeStyle='rgba(190,230,255,1)';X.lineWidth=1.5;
+    X.beginPath();X.arc(R.x,R.y,R.r,0,6.283);X.stroke()}
+  X.globalCompositeOperation='source-over';
+  requestAnimationFrame(frame);}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

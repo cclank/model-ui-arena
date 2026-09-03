@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Muse Stocks</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--up:#ff5a6e;--dn:#2bd4a0;--ink:#eef1fa;--mut:#8b96b3}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(120% 130% at 50% -12%,#17304a 0%,#0d1626 55%,#060b14 100%);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;padding:16px}
+.panel{width:min(96vw,404px);background:linear-gradient(180deg,#111a2e,rgba(10,15,26,.97));border:1px solid rgba(255,255,255,.09);border-radius:22px;padding:18px 16px 16px;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+header{display:flex;justify-content:space-between;align-items:center}
+header h1{font-size:17px;letter-spacing:1px}
+header h1 small{display:block;font-size:9.5px;letter-spacing:2.5px;color:#5f83a8;font-weight:700;margin-bottom:3px}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;letter-spacing:2px;color:#9fe8c8;border:1px solid rgba(43,212,160,.35);background:rgba(43,212,160,.08);padding:5px 11px;border-radius:99px}
+.live i{width:6px;height:6px;border-radius:50%;background:var(--dn);box-shadow:0 0 9px var(--dn);animation:blink 1.6s ease-in-out infinite}
+@keyframes blink{50%{opacity:.2}}
+.stamp{display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-size:11px;color:var(--mut);letter-spacing:1px}
+.stamp b{color:#cfd8ec;font-weight:600}
+.list{display:flex;flex-direction:column;gap:9px;margin-top:9px}
+.row{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:11px 13px;transition:border-color .25s,transform .2s}
+.row:hover{border-color:rgba(255,255,255,.18);transform:translateY(-1px)}
+.nm b{display:block;font-size:15.5px;letter-spacing:.5px}
+.nm span{display:block;font-size:10.5px;color:var(--mut);letter-spacing:1px;margin-top:2px}
+.spark{display:block;width:100%;height:34px;min-width:0}
+.pr{text-align:right}
+.price{display:block;font:600 16px ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;letter-spacing:.3px}
+.price.pop{animation:pop .55s ease}
+@keyframes pop{35%{transform:scale(1.1)}}
+.chg{display:inline-flex;align-items:center;gap:3px;margin-top:4px;font:600 11px inherit;padding:2px 8px;border-radius:8px}
+.note{margin-top:13px;font-size:10px;color:#56627e;letter-spacing:1px;text-align:center}
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,80px);background:#18223a;border:1px solid rgba(255,90,110,.5);color:#ffd9de;font-size:12.5px;padding:10px 16px;border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.5);opacity:0;transition:.35s;z-index:9;pointer-events:none;letter-spacing:.5px}
+.toast.show{transform:translate(-50%,0);opacity:1}
+</style>
+</head>
+<body>
+<div class="panel">
+  <header><h1><small>MUSE SPARK</small>行情面板</h1><span class="live"><i></i>LIVE · 模拟</span></header>
+  <div class="stamp"><span>自选股 · 4 支</span><span id="stime">—</span></div>
+  <div class="list" id="list"></div>
+  <div class="note">数据为本地模拟 · 约每 2.4s 随机波动刷新</div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const $=i=>document.getElementById(i),UP=getComputedStyle(document.documentElement).getPropertyValue('--up').trim(),DN=getComputedStyle(document.documentElement).getPropertyValue('--dn').trim();
+const RAW=[{t:'NVDA',n:'英伟达',pc:128.42,p:131.55},{t:'AAPL',n:'苹果',pc:232.10,p:229.87},{t:'TSLA',n:'特斯拉',pc:342.80,p:349.10},{t:'MSFT',n:'微软',pc:438.60,p:431.24}];
+const L=26,W=128,H=34;
+const sig=n=>n>0?'+':'',pc=s=>(s.p-s.pc)/s.pc*100;
+const STK=RAW.map(s=>{s.ser=[];let v=s.pc*(1+(Math.random()-.5)*.02);
+for(let i=0;i<L-1;i++){v+=(s.p-v)/(L-1-i)+(Math.random()-.5)*s.pc*.003;s.ser.push(+v.toFixed(2))}
+s.ser.push(s.p);s.pct=pc(s);return s});
+function sparkSVG(s,w){const ser=s.ser,mn=Math.min(...ser),mx=Math.max(...ser),rg=(mx-mn)||1,col=s.p>=s.pc?UP:DN;
+const X=i=>i/(L-1)*w,Y=v=>4+(mx-v)/rg*(H-8);
+let d='';for(let i=0;i<L;i++)d+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(ser[i]).toFixed(1)+' ';
+return `<path d="${d}L ${w} ${H} L 0 ${H} Z" fill="${col}1f"/><path d="${d}" fill="none" stroke="${col}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${X(L-1).toFixed(1)}" cy="${Y(ser[L-1]).toFixed(1)}" r="2.3" fill="${col}"/>`}
+function paint(s){const up=s.p>=s.pc,col=up?UP:DN,amt=s.p-s.pc,p=pc(s);
+s.el.price.textContent=s.p.toFixed(2);s.el.price.style.color=col;
+s.el.chg.innerHTML=`${up?'▲':'▼'}${sig(amt)}${amt.toFixed(2)}&nbsp;·&nbsp;${sig(p)}${p.toFixed(2)}%`;
+s.el.chg.style.color=col;s.el.chg.style.background=col+'1a';
+const w=Math.max(48,s.el.spark.clientWidth||128);
+s.el.spark.setAttribute('viewBox',`0 0 ${w} ${H}`);s.el.spark.innerHTML=sparkSVG(s,w);
+s.el.price.classList.remove('pop');void s.el.price.offsetWidth;s.el.price.classList.add('pop');
+const jump=Math.abs(p-s.pct);
+if(jump>=.6){toast(`${s.t} 快速波动 · ${up?'▲':'▼'}${sig(p)}${p.toFixed(2)}%`)}
+s.pct=p}
+let toastT;function toast(m){const t=$('toast');t.innerHTML=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600)}
+STK.forEach(s=>{const row=document.createElement('article');row.className='row';
+row.innerHTML=`<div class="nm"><b>${s.t}</b><span>${s.n}</span></div><svg class="spark"></svg><div class="pr"><span class="price"></span><span class="chg"></span></div>`;
+$('list').appendChild(row);
+s.el={price:row.querySelector('.price'),chg:row.querySelector('.chg'),spark:row.querySelector('.spark')};
+paint(s)});
+function stamp(){$('stime').textContent='刷新 '+new Date().toTimeString().slice(0,5)}
+addEventListener('resize',()=>STK.forEach(paint));
+setInterval(()=>{const n=1+Math.floor(Math.random()*2);
+for(let k=0;k<n;k++){const s=STK[Math.floor(Math.random()*STK.length)];
+s.p=Math.max(.5,+((s.p*(1+(Math.random()-.5)*.012)).toFixed(2)));
+s.ser.push(s.p);s.ser.shift();paint(s)}
+stamp()},2400);
+stamp();
+</script>
+</body>
+</html>
