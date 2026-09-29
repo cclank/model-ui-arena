@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN" data-cv="r">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>行情速览 · 股票面板</title>
+<style>
+:root{--up:#ff4d5e;--dn:#1fd08f;--bg:#080d1c;--pn:rgba(255,255,255,.05);--ln:rgba(255,255,255,.1);--tx:#e9edf9;--mu:#8792b0;--ac:#6ea8ff}
+:root[data-cv=g]{--up:#1fd08f;--dn:#ff4d5e}
+*{box-sizing:border-box;margin:0}
+body{min-height:100vh;color:var(--tx);font:14px/1.4 -apple-system,"SF Pro Text","PingFang TC","PingFang SC","Helvetica Neue",sans-serif;font-variant-numeric:tabular-nums;
+  background:radial-gradient(900px 520px at 12% -12%,#1c2f63,transparent 60%),radial-gradient(760px 520px at 105% 0,#2c1b52,transparent 55%),var(--bg)}
+.wrap{max-width:1080px;margin:0 auto;padding:16px 14px 28px}
+header{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;margin-bottom:14px}
+h1{font-size:19px;letter-spacing:.05em}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mu)}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--ac);box-shadow:0 0 0 0 var(--ac);animation:pl 1.6s infinite}
+@keyframes pl{70%{box-shadow:0 0 0 7px transparent}}
+.idx{margin-left:auto;font-size:13px;color:var(--mu)}.idx b{color:var(--tx);font-size:15px;margin:0 4px}
+.up{--c:var(--up)}.dn{--c:var(--dn)}.up,.dn{color:var(--c)}
+.grid{display:grid;gap:12px}
+@media(min-width:900px){.grid{grid-template-columns:400px 1fr;align-items:start;gap:14px}}
+@media(max-width:600px){.sc{display:none}.row{padding:7px 6px!important;grid-template-columns:1fr 60px auto;gap:8px}.sp{width:60px}.card{padding:10px}.big b{font-size:28px!important}}
+.card{background:var(--pn);border:1px solid var(--ln);border-radius:20px;padding:14px;backdrop-filter:blur(10px)}
+.tools{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mu);flex-wrap:wrap}
+button{font:inherit;color:var(--tx);background:var(--pn);border:1px solid var(--ln);border-radius:99px;padding:4px 12px;cursor:pointer}
+button:hover{border-color:var(--ac)}
+.row{display:grid;grid-template-columns:1fr 84px auto;gap:10px;align-items:center;width:100%;text-align:left;border-radius:14px;border:1px solid transparent;padding:10px 8px;margin-bottom:2px;background:none}
+.row[aria-pressed=true]{background:rgba(110,168,255,.12);border-color:rgba(110,168,255,.4)}
+.row b{font-size:15px}.row small{display:block;color:var(--mu);font-size:12px;margin-top:2px}
+.sp{width:84px;height:32px;overflow:visible}.sp path{fill:none;stroke:var(--c);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+.px{text-align:right;white-space:nowrap}.px b{display:inline-block;padding:0 5px;border-radius:6px;font-size:16px}
+.px span{display:inline-block;margin-top:3px;padding:1px 7px;border-radius:99px;font-size:12px;font-weight:600;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c)}
+[data-f=u] .px b{animation:fu .7s}[data-f=d] .px b{animation:fd .7s}
+@keyframes fu{from{background:color-mix(in srgb,var(--up) 45%,transparent)}}
+@keyframes fd{from{background:color-mix(in srgb,var(--dn) 45%,transparent)}}
+.tag{font-style:normal;white-space:nowrap;padding:0 6px;border-radius:5px;font-size:11px;margin-left:6px;background:rgba(255,255,255,.08)}
+.tag.hi{background:rgba(255,176,32,.2);color:#ffb020}.tag.md{background:rgba(255,222,110,.14);color:#ffe08a}
+.hd{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.hd h2{font-size:18px}.hd small{color:var(--mu)}.big b{font-size:34px;letter-spacing:-.01em;margin-right:8px}.big span{font-size:15px;font-weight:600;color:var(--c)}
+#ch{margin:8px -4px 4px;touch-action:pan-y;cursor:crosshair}#ch svg{display:block;width:100%;height:auto}
+.gl{stroke:rgba(255,255,255,.07)}.op{stroke:rgba(255,255,255,.28);stroke-dasharray:3 5}.lp{stroke:var(--c);stroke-dasharray:2 4;opacity:.8}
+.ln{fill:none;stroke:var(--c);stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round}.cr{stroke:rgba(255,255,255,.5);stroke-dasharray:4 4}
+.ax{fill:var(--mu);font-size:15px}.tg{fill:var(--c)}.tt{fill:#fff;font-size:15px;font-weight:700}.dot{fill:var(--c);stroke:#fff;stroke-width:2}
+.oh{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12px;color:var(--mu)}.oh b{color:var(--tx);font-weight:600;margin-left:4px}
+.risk{margin-top:14px}.risk h3{font-size:14px;margin-bottom:10px;display:flex;justify-content:space-between}
+.bar{position:relative;height:8px;border-radius:9px;background:linear-gradient(90deg,#3ddc97,#ffe08a 55%,#ff6b6b);margin:6px 0 4px}
+.bar i{position:absolute;top:-4px;width:6px;height:16px;border-radius:3px;background:#fff;box-shadow:0 0 0 3px rgba(0,0,0,.35);transition:left .5s}
+.bl{display:flex;justify-content:space-between;font-size:11px;color:var(--mu)}
+.risk p{margin-top:10px;font-size:13px}.risk .ds{color:var(--mu);font-size:11px;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>行情速览</h1><span class="live"><i></i>LIVE <span id="clk"></span></span>
+    <div class="idx">综合指数<b id="ix"></b><span id="ic"></span></div>
+    <div class="tools"><span><b class="up">▲ 涨</b> / <b class="dn">▼ 跌</b></span><button id="cv">红涨绿跌</button></div>
+  </header>
+  <div class="grid">
+    <section class="card"><div id="list"></div></section>
+    <section class="main">
+      <div class="card">
+        <div class="hd"><div><h2 id="mn"></h2><small id="mt"></small></div><div class="big" id="bg"></div></div>
+        <div id="ch"></div><div class="oh" id="oh"></div>
+      </div>
+      <div class="card risk" id="rk"></div>
+    </section>
+  </div>
+</div>
+<script>
+const $ = s => document.querySelector(s), R = Math.random, N = 90, fmt = (v, d = 2) => v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+const rng = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const gauss = r => Math.sqrt(-2 * Math.log(r() || 1e-9)) * Math.cos(6.2832 * r());
+// [代码, 名称, 行业, 基准价, 单笔波动, 历史漂移]（全部为虚构 mock 数据）
+const STK = [['STRX', '星辰半导体', '半导体', 128.4, .0016, .0004], ['HYNG', '海岳能源', '能源', 46.85, .0011, -.0003], ['CDBIO', '云杉生物', '生物医药', 72.1, .0034, .0006],
+  ['CFSH', '长风航运', '航运', 18.62, .0021, -.0005], ['AURV', '极光电动', '新能源车', 213.7, .0028, -.0002], ['BCB', '北辰银行', '金融', 9.48, .0008, .0002]].map(([c, n, sec, p, v, dr], i) => {
+  const r = rng(i * 7919 + 11), s = { c, n, sec, v, h: [], q: [], t: [], dir: '' }; let x = p;
+  for (let k = 0; k < N; k++) { const ret = dr + v * gauss(r); x *= 1 + ret; s.h.push(x); s.q.push(300 + r() * 500 + Math.abs(ret) / v * 400); s.t.push(Date.now() - (N - k) * 900); }
+  s.open = s.h[0]; return s;
+});
+let sel = 0, hover = null;
+const stat = s => {                                   // 最新价 / 涨跌 / 近 20 笔对数收益率标准差
+  const p = s.h[N - 1], ch = p - s.open, rt = s.h.slice(-21).map((v, i, a) => i ? Math.log(v / a[i - 1]) : 0).slice(1);
+  const m = rt.reduce((a, b) => a + b) / rt.length, sd = Math.sqrt(rt.reduce((a, b) => a + (b - m) ** 2, 0) / rt.length);
+  return { p, ch, pc: ch / s.open * 100, sd, hi: Math.max(...s.h), lo: Math.min(...s.h), cls: ch >= 0 ? 'up' : 'dn', lv: sd > .0028 ? ['高波动', 'hi'] : sd > .0018 ? ['波动偏大', 'md'] : ['平稳', 'lo'] };
+};
+const sgn = (v, d = 2) => (v >= 0 ? '+' : '−') + fmt(Math.abs(v), d), arrow = v => v >= 0 ? '▲' : '▼';
+const spark = h => { const mn = Math.min(...h), mx = Math.max(...h); return h.map((v, i) => `${i ? 'L' : 'M'}${(i / (h.length - 1) * 84).toFixed(1)} ${(30 - (v - mn) / (mx - mn || 1) * 28).toFixed(1)}`).join(''); };
+
+function drawList() {
+  $('#list').innerHTML = STK.map((s, i) => { const t = stat(s);
+    return `<button class="row ${t.cls}" data-i="${i}" data-f="${s.dir}" aria-pressed="${i === sel}"><div><b>${s.n}</b><small>${s.c}<span class="sc"> · ${s.sec}</span><em class="tag ${t.lv[1]}">${t.lv[1] === 'hi' ? '⚠ ' : ''}${t.lv[0]}</em></small></div>
+      <svg class="sp" viewBox="0 0 84 32"><path d="${spark(s.h.slice(-40))}"/></svg><div class="px"><b>${fmt(t.p)}</b><span>${arrow(t.ch)} ${sgn(t.pc)}%</span></div></button>`; }).join('');
+  const all = STK.map(stat), avg = all.reduce((a, t) => a + t.pc, 0) / all.length;
+  $('#ix').textContent = fmt(21384.52 * (1 + avg / 100 * .6)); $('#ic').textContent = `${arrow(avg)} ${sgn(avg)}%`; $('#ic').className = avg >= 0 ? 'up' : 'dn';
+}
+function chart(s) {
+  const W = 640, H = 300, L = 6, Rr = 64, T = 12, B = 66, pw = W - L - Rr, ph = H - T - B, h = s.h, mn = Math.min(...h, s.open), mx = Math.max(...h, s.open), pd = (mx - mn || 1) * .12, lo = mn - pd, hi = mx + pd;
+  const X = i => L + pw * i / (N - 1), Y = v => T + ph * (hi - v) / (hi - lo), c = h[N - 1] >= s.open ? 'var(--up)' : 'var(--dn)', d = h.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(v).toFixed(1)}`).join('');
+  let o = `<svg viewBox="0 0 ${W} ${H}" style="--c:${c}"><defs><linearGradient id="ar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}" stop-opacity=".38"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></linearGradient></defs>`;
+  for (let k = 0; k <= 4; k++) { const v = lo + (hi - lo) * k / 4; o += `<path class="gl" d="M${L} ${Y(v)}H${L + pw}"/><text class="ax" x="${W - Rr + 8}" y="${Y(v) + 5}">${fmt(v)}</text>`; }
+  const qm = Math.max(...s.q); s.q.forEach((q, i) => { const bh = q / qm * 38; o += `<rect x="${X(i) - 2.2}" y="${H - 6 - bh}" width="4.4" height="${bh}" rx="1" fill="${h[i] >= (h[i - 1] ?? h[i]) ? 'var(--up)' : 'var(--dn)'}" opacity=".5"/>`; });
+  const ly = Y(h[N - 1]);
+  o += `<path class="op" d="M${L} ${Y(s.open)}H${L + pw}"/><path d="${d}L${X(N - 1)} ${T + ph}L${L} ${T + ph}Z" fill="url(#ar)"/><path class="ln" d="${d}"/>`;
+  o += `<path class="lp" d="M${L} ${ly}H${L + pw}"/><rect class="tg" x="${L + pw + 3}" y="${ly - 12}" width="${Rr - 5}" height="24" rx="6"/><text class="tt" x="${L + pw + 8}" y="${ly + 5}">${fmt(h[N - 1])}</text><circle class="dot" cx="${X(N - 1)}" cy="${ly}" r="5"/>`;
+  if (hover != null) o += `<path class="cr" d="M${X(hover)} ${T}V${H - 4}"/><circle cx="${X(hover)}" cy="${Y(h[hover])}" r="5.5" fill="#fff" stroke="${c}" stroke-width="3"/>`;
+  return o + '</svg>';
+}
+function drawMain() {
+  const s = STK[sel], t = stat(s), i = hover ?? N - 1, p = s.h[i], ch = p - s.open, cl = ch >= 0 ? 'up' : 'dn';
+  $('#mn').textContent = `${s.n} ${s.c}`; $('#mt').textContent = `${s.sec} · ${hover == null ? '实时' : '十字线'} ${new Date(s.t[i]).toLocaleTimeString('zh-TW', { hour12: false })}`;
+  $('#bg').className = 'big ' + cl; $('#bg').innerHTML = `<b>${fmt(p)}</b><span>${arrow(ch)} ${sgn(ch)} (${sgn(ch / s.open * 100)}%)</span>`;
+  $('#ch').innerHTML = chart(s);
+  $('#oh').innerHTML = `<span>开<b>${fmt(s.open)}</b></span><span>高<b>${fmt(t.hi)}</b></span><span>低<b>${fmt(t.lo)}</b></span><span>成交量<b>${fmt(s.q.reduce((a, b) => a + b) / 10, 1)} 万手</b></span>`;
+  const score = Math.min(1, t.sd / .0045), msg = { hi: '短线波动剧烈，价格可能快速跳变，谨慎追涨杀跌，务必控制仓位。', md: '波动高于平时，建议分批操作并设置止损位。', lo: '走势相对平稳，仍需留意消息面带来的突发波动。' }[t.lv[1]];
+  $('#rk').innerHTML = `<h3><span>风险提示 · ${s.n}</span><span class="tag ${t.lv[1]}" style="margin:0">${t.lv[0]}</span></h3><div class="bar"><i style="left:calc(${score * 100}% - 3px)"></i></div>
+    <div class="bl"><span>平稳</span><span>波动偏大</span><span>高波动</span></div><p>近 20 笔波动率 <b>${fmt(t.sd * 100)}%</b> · 窗口振幅 <b>${fmt((t.hi - t.lo) / s.open * 100)}%</b>。${msg}</p><div class="ds">数据为本地随机模拟，仅供界面演示，不构成投资建议。</div>`;
+}
+function tick() {                                     // 流式行情：每只股票以一定概率产生新成交价，偶发消息冲击
+  for (const s of STK) {
+    if (R() > .6) { s.dir = ''; continue; }
+    let ret = s.v * gauss(R); if (R() < .02) ret += (R() < .5 ? -1 : 1) * s.v * (3 + R() * 3);
+    const last = s.h[N - 1], p = last * (1 + ret); s.dir = p > last ? 'u' : 'd';
+    s.h.push(p); s.h.shift(); s.q.push(300 + R() * 500 + Math.abs(ret) / s.v * 400); s.q.shift(); s.t.push(Date.now()); s.t.shift();
+  }
+  $('#clk').textContent = new Date().toLocaleTimeString('zh-TW', { hour12: false }); drawList(); drawMain();
+}
+$('#list').addEventListener('pointerdown', e => { const r = e.target.closest('.row'); if (r) { sel = +r.dataset.i; hover = null; drawList(); drawMain(); } });  // 每秒重绘列表，用 pointerdown 避免点击丢失
+$('#ch').addEventListener('pointermove', e => { const b = $('#ch svg').getBoundingClientRect(), x = (e.clientX - b.left) / b.width * 640; hover = Math.max(0, Math.min(N - 1, Math.round((x - 6) / (570 / (N - 1))))); drawMain(); });
+$('#ch').addEventListener('pointerleave', () => { hover = null; drawMain(); });
+$('#cv').onclick = () => { const g = document.documentElement.dataset.cv === 'r'; document.documentElement.dataset.cv = g ? 'g' : 'r'; $('#cv').textContent = g ? '绿涨红跌' : '红涨绿跌'; };
+tick(); setInterval(tick, 700);
+</script>
+</body>
+</html>

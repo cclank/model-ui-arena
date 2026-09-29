@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>粒子引力场</title>
+<style>
+*{margin:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;color:#cdd6ff;
+  font-family:-apple-system,"SF Pro Text","PingFang TC","PingFang SC","Helvetica Neue",sans-serif;
+  background:radial-gradient(ellipse at 28% 22%,rgba(76,54,200,.3),transparent 55%),radial-gradient(ellipse at 78% 82%,rgba(20,120,210,.24),transparent 55%),#03040e}
+canvas{position:fixed;inset:0;width:100%;height:100%}
+#ov{pointer-events:none}
+.bk{position:fixed;border-radius:50%;filter:blur(34px);opacity:.15;pointer-events:none;animation:fl linear infinite}
+@keyframes fl{50%{transform:translate(7vw,-6vh) scale(1.25)}}
+#hud{position:fixed;top:14px;left:14px;padding:10px 14px;border-radius:14px;background:rgba(10,12,38,.55);border:1px solid rgba(140,150,255,.22);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-size:12px;line-height:1.75;font-variant-numeric:tabular-nums;pointer-events:none}
+#hud h1{font-size:14px;letter-spacing:.24em;color:#fff;margin-bottom:2px}#hud b{color:#fff;font-weight:600}
+#bar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px;white-space:nowrap}
+button{font:inherit;font-size:13px;color:#cdd6ff;background:rgba(14,16,46,.6);border:1px solid rgba(140,150,255,.3);border-radius:99px;padding:8px 16px;cursor:pointer;backdrop-filter:blur(8px);transition:.2s}
+button.on{color:#fff;background:rgba(90,100,255,.5);border-color:#8f9bff;box-shadow:0 0 16px rgba(110,120,255,.55)}
+#tip{position:fixed;bottom:64px;left:0;right:0;text-align:center;font-size:12px;letter-spacing:.12em;opacity:.7;pointer-events:none;transition:opacity 1s}
+</style>
+</head>
+<body>
+<canvas id="tr"></canvas><canvas id="ov"></canvas>
+<div id="hud"><h1>引力场</h1>粒子 <b id="n">0</b> · 能量 <b id="e">0</b><br>FPS <b id="f">60</b> · 模式 <b id="m">引力</b></div>
+<div id="tip">移动指针牵引粒子 · 点击 / 轻触释放冲击波并放置临时引力点</div>
+<div id="bar"><button data-m="0" class="on">引力</button><button data-m="1">斥力</button><button data-m="2">漩涡</button><button id="rs">重置</button></div>
+<script>
+const $ = s => document.querySelector(s), TAU = Math.PI * 2, R = Math.random;
+const tr = $('#tr'), tc = tr.getContext('2d'), ov = $('#ov'), oc = ov.getContext('2d');
+const MOB = matchMedia('(pointer:coarse)').matches || innerWidth < 600, NMAX = MOB ? 3200 : 7000;
+const F = () => new Float32Array(NMAX), px = F(), py = F(), vx = F(), vy = F(), pz = F(), key = new Uint8Array(NMAX);
+let W, H, S, dpr, cx, cy, Kc, VR, active = NMAX, mode = 0, energy = 0, pulse = 0, fps = 60, t = 0, slow = 0;
+const MODES = ['引力', '斥力', '漩涡'], HUES = [[226, 92, 56], [262, 90, 63], [304, 88, 62], [352, 96, 62], [392, 100, 62], [410, 100, 76]];
+const COL = Array.from({ length: 16 }, (_, b) => { const u = b / 15 * (HUES.length - 1), i = Math.min(HUES.length - 2, u | 0), f = u - i, m = HUES[i].map((v, k) => v + (HUES[i + 1][k] - v) * f); return `hsl(${m[0] % 360} ${m[1]}% ${m[2]}%)`; });
+for (let i = 0; i < 7; i++) { const d = document.createElement('i'), s = 160 + R() * 260; d.className = 'bk'; d.style.cssText = `width:${s}px;height:${s}px;left:${R() * 100}%;top:${R() * 100}%;background:hsl(${200 + R() * 120} 90% 60%);animation-duration:${40 + R() * 40}s;animation-delay:-${R() * 40}s`; document.body.append(d); }
+
+/* ---------- 物理：柔化牛顿引力 F = K / (r² + ε²)，辛欧拉积分（速度先更新、位置后更新，长期轨道能量稳定） ---------- */
+function resize() {
+  dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; S = Math.min(W, H); cx = W / 2; cy = H / 2;
+  for (const c of [tr, ov]) { c.width = W * dpr; c.height = H * dpr; c.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0); }
+  Kc = .0121 * S * S * S; VR = Math.sqrt(Kc / (.25 * S));   // 参考圆轨道速度：半径 0.25S 处约 0.22S/秒
+}
+function spawn(i, r0, r1, spiral) {                        // 在轨道半径 [r0,r1]·S 处生成，速度取圆轨道速度 × 偏心因子；spiral 时排成双臂旋涡
+  const r = S * (r0 + (r1 - r0) * Math.pow(R(), .8)), arm = R() < .5 ? 0 : Math.PI;
+  const a = spiral ? arm + 3.2 * Math.log(1 + r / (.06 * S)) + (R() + R() + R() - 1.5) * .5 : R() * TAU, v = Math.sqrt(Kc / r) * (.9 + .18 * R());
+  px[i] = cx + Math.cos(a) * r; py[i] = cy + Math.sin(a) * r; vx[i] = -Math.sin(a) * v; vy[i] = Math.cos(a) * v; pz[i] = .4 + R() * .8;
+}
+function reset() { for (let i = 0; i < NMAX; i++) spawn(i, .035, .5, true); WV.length = WL.length = 0; }
+const WL = [], WV = [], ptr = { x: 0, y: 0, on: false, down: false }, pl = { a: 0, x: 0, y: 0 };   // 临时引力井 / 冲击波 / 指针 / 绕核公转的“行星”
+function shock(x, y) { WV.push({ x, y, t: 0 }); WL.push({ x, y, life: 6, m: mode, k: Kc * 1.1 }); }
+function step(dt) {
+  const rp = .33 * S; pl.a += Math.sqrt(Kc / rp) / rp * dt; pl.x = cx + Math.cos(pl.a) * rp; pl.y = cy + Math.sin(pl.a) * rp;
+  const wells = [...WL, { x: pl.x, y: pl.y, m: 0, k: Kc * .05 }]; if (ptr.on) wells.push({ x: ptr.x, y: ptr.y, m: mode, k: Kc * (ptr.down ? 1.9 : .5) });
+  const nw = wells.length, SOFT = (.035 * S) ** 2, SOFT2 = (.05 * S) ** 2, CORE2 = (.026 * S) ** 2, ESC2 = (.85 * Math.max(W, H)) ** 2, drag = Math.exp(-.03 * dt), th = .09 * S;
+  let ke = 0;
+  for (let i = 0; i < active; i++) {
+    const x = px[i], y = py[i]; let dx = cx - x, dy = cy - y, r2 = dx * dx + dy * dy + SOFT, inv = Kc / (r2 * Math.sqrt(r2)), ax = dx * inv, ay = dy * inv, dvx = 0, dvy = 0;
+    for (let j = 0; j < nw; j++) {
+      const w = wells[j]; dx = w.x - x; dy = w.y - y; r2 = dx * dx + dy * dy + SOFT2; inv = w.k * (w.life === undefined ? 1 : Math.min(1, w.life / 1.5)) / (r2 * Math.sqrt(r2));
+      if (w.m === 0) { ax += dx * inv; ay += dy * inv; } else if (w.m === 1) { ax -= dx * inv * 1.1; ay -= dy * inv * 1.1; } else { ax += (dx * .45 - dy) * inv; ay += (dy * .45 + dx) * inv; }
+    }
+    for (const w of WV) {                                   // 冲击波：环形波前扫过时给粒子一个沿径向向外的速度冲量
+      dx = x - w.x; dy = y - w.y; const d = Math.sqrt(dx * dx + dy * dy) + .01, e = (d - w.t * S * 1.15) / th;
+      if (e > -1 && e < 1) { const k = S * 1.5 * (1 - Math.abs(e)) * (1 - w.t / 1.6) * dt / d; dvx += dx * k; dvy += dy * k; }
+    }
+    let nx = vx[i] + ax * dt + dvx, ny = vy[i] + ay * dt + dvy; const ex = x - cx, ey = y - cy, rr = ex * ex + ey * ey, rc = Math.sqrt(rr) + 1, vc = Math.sqrt(Kc / Math.max(rc, .06 * S)) / rc;
+    nx += (-ey * vc - nx) * .12 * dt; ny += (ex * vc - ny) * .12 * dt;   // 吸积盘“黏性”：受扰动的粒子约 8 秒内重新回到圆轨道，盘面保持连续旋转
+    nx *= drag; ny *= drag; vx[i] = nx; vy[i] = ny; px[i] = x + nx * dt; py[i] = y + ny * dt; const sp = Math.sqrt(nx * nx + ny * ny); ke += sp * sp;
+    if (rr < CORE2) { spawn(i, .3, .5, true); pulse = Math.min(1, pulse + .05); } else if (rr > ESC2) spawn(i, .3, .5, true);   // 落入核心 / 飞出画面：在外圈重生，粒子总数守恒
+    key[i] = Math.min(15, (sp / VR * 4.6) | 0) * 2 + (pz[i] > .75 ? 1 : 0);
+  }
+  energy = ke / active / (VR * VR) * 25;
+  for (let i = WV.length; i--;) { WV[i].t += dt; if (WV[i].t > 1.6) WV.splice(i, 1); }
+  for (let i = WL.length; i--;) { WL[i].life -= dt; if (WL[i].life <= 0) WL.splice(i, 1); }
+}
+
+/* ---------- 渲染：拖尾层（半透明擦除 + 叠加发光的速度条纹）与覆盖层（核心、冲击波、引力井） ---------- */
+function draw() {
+  tc.globalCompositeOperation = 'destination-out'; tc.fillStyle = 'rgba(0,0,0,.2)'; tc.fillRect(0, 0, W, H);
+  tc.globalCompositeOperation = 'lighter'; tc.lineCap = 'round';
+  for (let k = 0; k < 32; k++) {                             // 32 个绘制批次 = 16 档速度色 × 远/近两层深度
+    tc.strokeStyle = COL[k >> 1]; tc.lineWidth = k & 1 ? 1.7 : .9; tc.globalAlpha = k & 1 ? .6 : .35; tc.beginPath();
+    for (let i = 0; i < active; i++) if (key[i] === k) { tc.moveTo(px[i] - vx[i] * .024, py[i] - vy[i] * .024); tc.lineTo(px[i], py[i]); }
+    tc.stroke();
+  }
+  tc.globalAlpha = 1; oc.clearRect(0, 0, W, H); oc.globalCompositeOperation = 'lighter';
+  const core = (r, a, c) => { const g = oc.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, c.replace('A', a)); g.addColorStop(1, c.replace('A', 0)); oc.fillStyle = g; oc.fillRect(cx - r, cy - r, r * 2, r * 2); };
+  const br = 1 + .07 * Math.sin(t * 3) + pulse * .6; core(S * .2 * br, .3, 'rgba(90,110,255,A)'); core(S * .08 * br, .6, 'rgba(255,160,200,A)'); core(S * .028 * br, 1, 'rgba(255,255,255,A)');
+  for (const w of WV) { const r = w.t * S * 1.15, a = Math.max(0, 1 - w.t / 1.6); oc.strokeStyle = `rgba(150,220,255,${a * .55})`; oc.lineWidth = 1 + 3 * a; oc.beginPath(); oc.arc(w.x, w.y, r, 0, TAU); oc.stroke(); }
+  const mk = (x, y, m, a) => { const c = ['120,220,255', '255,140,90', '200,130,255'][m], r = S * .03 * (1 + .25 * Math.sin(t * 6)); oc.strokeStyle = `rgba(${c},${a})`; oc.lineWidth = 2;
+    oc.beginPath(); oc.arc(x, y, r, 0, TAU); oc.stroke(); oc.beginPath(); oc.arc(x, y, r * 2.2, 0, TAU); oc.globalAlpha = .4; oc.stroke(); oc.globalAlpha = 1; };
+  for (const w of WL) mk(w.x, w.y, w.m, Math.min(1, w.life / 1.5));
+  oc.strokeStyle = 'rgba(160,170,255,.07)'; oc.lineWidth = 1; oc.beginPath(); oc.arc(cx, cy, .33 * S, 0, TAU); oc.stroke();   // 行星轨道与光晕
+  const pg = oc.createRadialGradient(pl.x, pl.y, 0, pl.x, pl.y, S * .035); pg.addColorStop(0, 'rgba(255,240,210,.95)'); pg.addColorStop(.3, 'rgba(255,190,120,.4)'); pg.addColorStop(1, 'rgba(255,160,90,0)'); oc.fillStyle = pg; oc.fillRect(pl.x - S * .04, pl.y - S * .04, S * .08, S * .08);
+  if (ptr.on) mk(ptr.x, ptr.y, mode, ptr.down ? 1 : .5);
+}
+
+/* ---------- 交互与主循环 ---------- */
+addEventListener('pointermove', e => { ptr.x = e.clientX; ptr.y = e.clientY; ptr.on = true; });
+addEventListener('pointerdown', e => { if (e.target.closest?.('button')) return; ptr.x = e.clientX; ptr.y = e.clientY; ptr.on = ptr.down = true; shock(ptr.x, ptr.y); $('#tip').style.opacity = 0; });
+const up = e => { ptr.down = false; if (e.pointerType !== 'mouse') ptr.on = false; };
+addEventListener('pointerup', up); addEventListener('pointercancel', up); document.addEventListener('mouseleave', () => ptr.on = false);
+const setMode = m => { mode = m; $('#m').textContent = MODES[m]; document.querySelectorAll('[data-m]').forEach(b => b.classList.toggle('on', +b.dataset.m === m)); };
+document.querySelectorAll('[data-m]').forEach(b => b.onclick = () => setMode(+b.dataset.m)); $('#rs').onclick = reset;
+addEventListener('keydown', e => { if ('123'.includes(e.key)) setMode(+e.key - 1); if (e.key === 'r') reset(); if (e.key === ' ') shock(ptr.x || cx, ptr.y || cy); });
+addEventListener('resize', () => { resize(); });
+let last = performance.now(), hudAt = 0;
+function frame(now) {
+  const raw = (now - last) / 1e3, dt = Math.min(.033, raw); last = now; t += dt; fps += (1 / Math.max(raw, .001) - fps) * .06; pulse *= Math.exp(-dt * 2.5);
+  step(dt); draw();
+  if (fps < 38) slow += raw; else if (fps > 57) slow -= raw * .25; else slow = Math.max(0, slow - raw * .5);   // 自适应：持续掉帧就降低粒子数，恢复后再升回
+  if (slow > 1.5) { active = Math.max(1500, active * .85 | 0); slow = 0; } else if (slow < -4 && active < NMAX) { active = Math.min(NMAX, active * 1.1 + 1 | 0); slow = 0; }
+  if (now - hudAt > 250) { hudAt = now; $('#n').textContent = active.toLocaleString(); $('#e').textContent = energy.toFixed(1); $('#f').textContent = Math.round(fps); }
+  requestAnimationFrame(frame);
+}
+resize(); reset(); setTimeout(() => WV.push({ x: cx, y: cy, t: 0 }), 1200); requestAnimationFrame(frame);   // 开场一圈冲击波
+</script>
+</body>
+</html>

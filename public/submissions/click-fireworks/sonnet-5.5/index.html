@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>点击放烟花</title>
+<style>
+*{margin:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#04050d;touch-action:none;user-select:none;-webkit-user-select:none;
+  font-family:-apple-system,"SF Pro Text","PingFang TC","PingFang SC","Helvetica Neue",sans-serif}
+canvas{position:fixed;inset:0;width:100%;height:100%}
+#gl{mix-blend-mode:screen;opacity:.9;pointer-events:none}
+#hud{position:fixed;top:14px;left:16px;right:16px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;color:#c9d1ff;font-size:13px;pointer-events:none;text-shadow:0 1px 8px #000}
+#hud b{display:block;font-size:15px;letter-spacing:.14em;color:#fff;margin-bottom:2px}
+#hud small{opacity:.7;font-variant-numeric:tabular-nums}
+button{pointer-events:auto;font:inherit;color:#dfe4ff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.22);border-radius:99px;padding:5px 14px;cursor:pointer;backdrop-filter:blur(6px)}
+#hint{position:fixed;left:0;right:0;bottom:24%;text-align:center;color:#fff;font-size:clamp(18px,5vw,26px);letter-spacing:.32em;text-indent:.32em;
+  pointer-events:none;transition:opacity 1.2s;text-shadow:0 0 18px rgba(255,190,120,.8);animation:br 2.6s ease-in-out infinite}
+#hint small{display:block;margin-top:10px;font-size:12px;letter-spacing:.2em;opacity:.65}
+@keyframes br{50%{opacity:.45}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas><canvas id="fx"></canvas><canvas id="gl"></canvas>
+<div id="hud"><div><b>夜空烟火</b><small id="st"></small></div><button id="snd">声音：开</button></div>
+<div id="hint">点击夜空，放一束烟花<small>按住并滑动可连发</small></div>
+<script>
+const $ = s => document.querySelector(s), TAU = Math.PI * 2, R = Math.random;
+const bg = $('#bg'), cv = $('#fx'), ctx = cv.getContext('2d'), gl = $('#gl'), gctx = gl.getContext('2d');
+let W, H, dpr, sc = 1, lastIn = performance.now(), shots = 0, muted = false, AC = null, NBUF = null;
+const rng = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const PAL = [...Array.from({ length: 36 }, (_, i) => `hsl(${i * 10} 100% 64%)`), 'hsl(48 100% 92%)'], PALA = (i, a) => `hsla(${i * 10} 100% 66% / ${a})`;
+
+/* ---------- 静态夜景：渐变天空、星星、月亮、两层城市天际线（只在尺寸变化时绘制一次） ---------- */
+function drawBG() {
+  const c = bg.getContext('2d'), r = rng(20240929); bg.width = W * dpr; bg.height = H * dpr; c.scale(dpr, dpr);
+  const g = c.createLinearGradient(0, 0, 0, H); [[0, '#02030a'], [.5, '#0a0f2e'], [.82, '#241246'], [1, '#52204f']].forEach(s => g.addColorStop(...s)); c.fillStyle = g; c.fillRect(0, 0, W, H);
+  for (let i = 0; i < 240; i++) { c.fillStyle = `rgba(255,255,255,${.2 + r() * .7})`; const s = r() < .08 ? 1.8 : .9; c.fillRect(r() * W, r() * H * .78, s, s); }
+  const mx = W * .16, my = H * .16, mg = c.createRadialGradient(mx, my, 0, mx, my, 90); mg.addColorStop(0, 'rgba(255,240,210,.35)'); mg.addColorStop(1, 'rgba(255,240,210,0)');
+  c.fillStyle = mg; c.fillRect(mx - 90, my - 90, 180, 180); c.fillStyle = '#fff4dc'; c.beginPath(); c.arc(mx, my, 15, 0, TAU); c.fill();
+  [['#0f1233', .13, .07, 26], ['#04050c', .09, .05, 34]].forEach(([col, hMax, hMin, ww], layer) => {
+    for (let x = -10; x < W;) {
+      const w = ww * (.6 + r() * .9), h = H * (hMin + r() * (hMax - hMin) * (1 + (layer ? Math.sin(x / W * 3.1) * .6 : 0)));
+      c.fillStyle = col; c.fillRect(x, H - h, w, h + 2);
+      if (layer) for (let wy = H - h + 8; wy < H - 6; wy += 9) for (let wx = x + 4; wx < x + w - 5; wx += 7) if (r() < .16) { c.fillStyle = `rgba(255,${190 + r() * 50 | 0},110,${.35 + r() * .5})`; c.fillRect(wx, wy, 2.4, 3.4); }
+      x += w + r() * 3;
+    }
+  });
+}
+function resize() {
+  W = innerWidth; H = innerHeight; dpr = Math.min(2, devicePixelRatio || 1); sc = Math.min(W, H) / 700;
+  cv.width = W * dpr; cv.height = H * dpr; gl.width = Math.ceil(W / 5); gl.height = Math.ceil(H / 5); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); drawBG();
+}
+addEventListener('resize', resize); resize();
+
+/* ---------- 粒子池：定长 TypedArray 环形缓冲，最多 MAX 个，永不无限增长 ---------- */
+const MAX = 6500, A = () => new Float32Array(MAX), P = { x: A(), y: A(), vx: A(), vy: A(), l: A(), m: A(), k: A(), s: A(), c: new Uint8Array(MAX), f: new Uint8Array(MAX) };
+let head = 0, live = 0, light = { c: 0, a: 0 };
+const FL = [], RK = [];                                  // 闪光、升空的礼花弹
+function add(x, y, vx, vy, life, k, s, c, f = 0) { const i = head; head = (head + 1) % MAX; P.x[i] = x; P.y[i] = y; P.vx[i] = vx; P.vy[i] = vy; P.l[i] = P.m[i] = life; P.k[i] = k; P.s[i] = s; P.c[i] = c; P.f[i] = f; }
+// f: 1 炸裂后二次噼啪  2 轻重力  4 末段闪烁  8 垂柳(重力大/拖尾长)
+function burst(x, y) {
+  const q = Math.max(.45, Math.min(1.15, 1.25 - live / MAX)), Rr = Math.min(W, H) * (.2 + R() * .22), h = R() * 36 | 0, h2 = (h + 10 + R() * 8 | 0) % 36, kind = R() * 6 | 0, k = 1.7;
+  FL.push({ x, y, c: h, t: 0 }); light = { c: h, a: 1 }; snd('boom', x / W * 2 - 1, .55 + R() * .45); if (kind === 4) snd('crackle', x / W * 2 - 1, .5);
+  const sphere = (n, r, c1, c2, fl, life = 1.5) => { for (let i = 0; i < n; i++) { const a = R() * TAU, z = R() * 2 - 1, s = Math.sqrt(1 - z * z), v = r * k * (.72 + .28 * R());
+    add(x, y, Math.cos(a) * s * v, Math.sin(a) * s * v, life + R() * .6, k, 2.2, R() < .3 ? c2 : c1, fl | (R() < .35 ? 4 : 0)); } };
+  if (kind === 0) sphere(220 * q | 0, Rr, h, h2, 0);
+  if (kind === 1) { const n = 110 * q | 0, tl = .3 + R() * .7, ro = R() * TAU; for (let i = 0; i < n; i++) { const a = i / n * TAU, vx = Math.cos(a) * Rr * k, vy = Math.sin(a) * Rr * k * tl;
+    add(x, y, vx * Math.cos(ro) - vy * Math.sin(ro), vx * Math.sin(ro) + vy * Math.cos(ro), 1.6, k, 2.4, h, 6); } sphere(50 * q | 0, Rr * .35, h2, h2, 0, 1.1); }
+  if (kind === 2) for (let i = 0; i < 150 * q; i++) { const a = R() * TAU, v = Rr * 1.05 * (.25 + .75 * Math.sqrt(R())); add(x, y, Math.cos(a) * v, Math.sin(a) * v, 2.6 + R() * .8, 1.05, 1.8, 5, 8 | 4); }
+  if (kind === 3) { const n = 130 * q | 0, s = Rr * 1.5 / 17, hc = R() < .6 ? 34 : h; for (let i = 0; i < n; i++) { const t = i / n * TAU;
+    add(x, y, 16 * Math.sin(t) ** 3 * s, -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * s, 1.7, 1.5, 2.6, hc, 2 | 4); } }
+  if (kind === 4) sphere(200 * q | 0, Rr, h, h2, 1);
+  if (kind === 5) { sphere(180 * q | 0, Rr, h, h, 0); sphere(90 * q | 0, Rr * .5, h2, h2, 0, 1.3); }
+}
+function launch(tx, ty, fromX) {
+  const x0 = fromX ?? tx + (R() - .5) * 120, dur = Math.max(.28, Math.min(.65, (H - ty) / 1500));
+  RK.push({ x0, x1: tx, y1: ty, u: 0, dur, w: R() * TAU }); shots++; snd('launch', tx / W * 2 - 1, .5);
+}
+
+/* ---------- 合成音效（WebAudio，无音频文件） ---------- */
+function snd(kind, pan = 0, vol = 1) {
+  if (muted) return; AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume();
+  if (!NBUF) { NBUF = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate); const d = NBUF.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = R() * 2 - 1; }
+  const t = AC.currentTime, out = AC.createGain(), pn = AC.createStereoPanner ? AC.createStereoPanner() : null; out.gain.value = vol;
+  if (pn) { pn.pan.value = pan; out.connect(pn); pn.connect(AC.destination); } else out.connect(AC.destination);
+  const noise = (at, dur, type, f0, f1, g0) => { const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = NBUF; f.type = type; f.frequency.setValueAtTime(f0, at);
+    f.frequency.exponentialRampToValueAtTime(f1, at + dur); g.gain.setValueAtTime(g0, at); g.gain.exponentialRampToValueAtTime(.001, at + dur); s.connect(f); f.connect(g); g.connect(out); s.start(at, R()); s.stop(at + dur + .05); };
+  if (kind === 'launch') noise(t, .45, 'bandpass', 500, 2600, .16);
+  if (kind === 'boom') { noise(t + .04, 1.5, 'lowpass', 1600, 90, .9); const o = AC.createOscillator(), g = AC.createGain(); o.frequency.setValueAtTime(120, t + .04); o.frequency.exponentialRampToValueAtTime(36, t + .8);
+    g.gain.setValueAtTime(.7, t + .04); g.gain.exponentialRampToValueAtTime(.001, t + .9); o.connect(g); g.connect(out); o.start(t + .04); o.stop(t + 1); }
+  if (kind === 'crackle') for (let i = 0; i < 12; i++) noise(t + .3 + R() * 1.2, .05, 'highpass', 3500, 6000, .25);
+}
+$('#snd').onclick = e => { muted = !muted; e.target.textContent = '声音：' + (muted ? '关' : '开'); };
+
+/* ---------- 主循环 ---------- */
+let last = performance.now(), fps = 60, tt = 0;
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1e3); last = now; tt += dt; fps += (1 / Math.max(dt, .001) - fps) * .05;
+  ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.fillRect(0, 0, W, H);   // 余辉衰减 = 拖尾
+  ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+  for (let i = RK.length; i--;) {                          // 升空礼花弹：先快后慢，尾部持续迸溅火花
+    const r = RK[i]; r.u += dt / r.dur; const e = 1 - (1 - Math.min(1, r.u)) ** 2, x = r.x0 + (r.x1 - r.x0) * e + Math.sin(r.w + r.u * 9) * 5 * (1 - e), y = H + 10 + (r.y1 - H - 10) * e;
+    for (let k = 0; k < 3; k++) add(x, y, (R() - .5) * 50, 30 + R() * 60, .3 + R() * .3, 2.5, 1.5, 6, 0);
+    ctx.fillStyle = 'rgba(255,240,200,.95)'; ctx.beginPath(); ctx.arc(x, y, 2.6, 0, TAU); ctx.fill(); ctx.fillStyle = 'rgba(255,190,110,.22)'; ctx.beginPath(); ctx.arc(x, y, 9, 0, TAU); ctx.fill();
+    if (r.u >= 1) { RK.splice(i, 1); burst(r.x1, r.y1); }
+  }
+  live = 0; const G = 150 * sc;
+  for (let i = 0; i < MAX; i++) {
+    if (P.l[i] <= 0) continue; live++; const f = P.f[i], k = Math.exp(-P.k[i] * dt);
+    P.vx[i] *= k; P.vy[i] = P.vy[i] * k + G * dt * (f & 8 ? 1.7 : f & 2 ? .3 : 1); P.x[i] += P.vx[i] * dt; P.y[i] += P.vy[i] * dt; P.l[i] -= dt;
+    if (P.l[i] <= 0) { if (f & 1) for (let j = 0; j < 4; j++) add(P.x[i], P.y[i], (R() - .5) * 170, (R() - .5) * 170, .3 + R() * .25, 3, 1.4, 36, 4); continue; }
+    let a = Math.min(1, P.l[i] / P.m[i] * 2.2); if (f & 4 && P.l[i] < P.m[i] * .4) a *= .5 + .5 * Math.sin(tt * 45 + i);
+    const tail = f & 8 ? .09 : .03; ctx.strokeStyle = PAL[P.c[i]]; ctx.globalAlpha = a; ctx.lineWidth = P.s[i] * (.55 + .45 * a) * Math.max(.7, sc);
+    ctx.beginPath(); ctx.moveTo(P.x[i] - P.vx[i] * tail, P.y[i] - P.vy[i] * tail); ctx.lineTo(P.x[i], P.y[i]); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  gctx.setTransform(1, 0, 0, 1, 0, 0); gctx.globalCompositeOperation = 'source-over'; gctx.clearRect(0, 0, gl.width, gl.height);
+  gctx.imageSmoothingQuality = 'high'; gctx.drawImage(cv, 0, 0, gl.width, gl.height);   // 低分辨率回贴 = 廉价泛光
+  gctx.setTransform(gl.width / W, 0, 0, gl.height / H, 0, 0); gctx.globalCompositeOperation = 'lighter';
+  if (light.a > .01) { const g = gctx.createLinearGradient(0, H * .4, 0, H); g.addColorStop(0, PALA(light.c, 0)); g.addColorStop(1, PALA(light.c, light.a * .2)); gctx.fillStyle = g; gctx.fillRect(0, 0, W, H); light.a *= Math.exp(-dt * 3); }
+  for (let i = FL.length; i--;) {                          // 爆炸闪光与天空补光画在每帧清空的泛光层上，不会在拖尾缓冲里累积
+    const f = FL[i]; f.t += dt; if (f.t > .5) { FL.splice(i, 1); continue; }
+    const r = 70 + f.t * 420 * sc, u = 1 - f.t * 2, g = gctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, r);
+    g.addColorStop(0, `rgba(255,255,255,${.85 * u * u})`); g.addColorStop(.25, PALA(f.c, .5 * u)); g.addColorStop(1, PALA(f.c, 0)); gctx.fillStyle = g; gctx.fillRect(f.x - r, f.y - r, r * 2, r * 2);
+  }
+  if (now - lastIn > 9000 && now - (frame.auto || 0) > 2400) { frame.auto = now; launch(W * (.15 + R() * .7), H * (.15 + R() * .4)); }
+  if (now - (frame.hud || 0) > 250) { frame.hud = now; $('#st').textContent = `已绽放 ${shots} · 粒子 ${live} · ${Math.round(fps)} fps`; }
+  requestAnimationFrame(frame);
+}
+let down = false, lastMove = 0;
+addEventListener('pointerdown', e => {
+  if (e.target.closest?.('button')) return; down = true; lastIn = performance.now(); $('#hint').style.opacity = 0; launch(e.clientX, e.clientY);
+});
+addEventListener('pointermove', e => { if (down && performance.now() - lastMove > 150) { lastMove = performance.now(); lastIn = lastMove; launch(e.clientX, e.clientY); } });
+addEventListener('pointerup', () => down = false); addEventListener('pointercancel', () => down = false);
+[.35, 1.05, 1.75].forEach((d, i) => setTimeout(() => launch(W * (.28 + i * .22), H * (.26 + (i % 2) * .1)), d * 1000));   // 开场演示
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>天气卡片</title>
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{display:grid;place-items:center;color:#fff;background:radial-gradient(circle at 30% 20%,#1e2b4a,#080c16 70%);
+  font-family:-apple-system,"SF Pro Display","PingFang TC","PingFang SC","Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased;text-shadow:0 1px 10px rgba(8,24,60,.3)}
+.card{position:relative;isolation:isolate;overflow:hidden;width:min(100vw,430px);height:min(100dvh,780px);border-radius:34px;padding:18px 18px 14px;
+  display:flex;flex-direction:column;justify-content:space-between;gap:10px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.14)}
+@media(max-width:440px){.card{border-radius:0;height:100dvh}}
+#fx{position:absolute;inset:0;width:100%;height:100%;z-index:-1}
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:none}
+.tabs button{flex:none;font:500 14px/1.2 inherit;font-family:inherit;color:#fff;padding:7px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.28);
+  background:rgba(255,255,255,.1);backdrop-filter:blur(8px);cursor:pointer;transition:.25s}
+.tabs button[aria-selected=true]{background:#fff;color:#1b2a44;border-color:#fff;font-weight:600}
+[data-sw]{transition:opacity .24s,transform .24s}
+[data-swap] [data-sw]{opacity:0;transform:translateY(12px)}
+.place{display:flex;align-items:baseline;gap:10px;font-size:26px;font-weight:600;text-shadow:0 2px 12px rgba(0,0,0,.25)}
+.place small{font-size:13px;font-weight:400;opacity:.8;letter-spacing:.06em}
+.temp{font-size:clamp(80px,16vh,120px);font-weight:200;line-height:1;letter-spacing:-.04em;text-shadow:0 4px 24px rgba(0,0,0,.25);margin:2px 0}
+.temp sup{font-size:.28em;font-weight:300;vertical-align:top;position:relative;top:.35em;margin-left:.08em;letter-spacing:0}
+.desc{font-size:19px;font-weight:500}.desc span{opacity:.75;font-weight:400;font-size:15px;margin-left:10px}
+.glass{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:22px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);padding:11px 6px;margin-top:12px;text-align:center}
+.stats div+div{border-left:1px solid rgba(255,255,255,.2)}
+.stats small{display:block;font-size:12px;opacity:.75;margin-bottom:3px}.stats b{font-size:18px;font-weight:600}
+.fc{padding:12px 4px 6px}
+.cols{display:grid;grid-template-columns:repeat(5,1fr);text-align:center}
+.cols b{display:block;font-size:14px}.cols small{font-size:11px;opacity:.7}.cols span{display:block;font-size:12px;opacity:.9;margin-top:1px}
+.ic{width:38px;height:38px;margin:2px 0 -2px}
+.fc>svg{display:block;width:100%;margin-top:2px}
+.hi,.lo{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;animation:dr 1s ease-out both}
+.hi{stroke:#fff;stroke-width:3.5}.lo{stroke:rgba(255,255,255,.6);stroke-width:2.5}
+@keyframes dr{from{stroke-dashoffset:1}}
+.fc svg text{font-family:inherit;font-size:19px;font-weight:600;fill:#fff;text-anchor:middle;paint-order:stroke;stroke:rgba(10,30,70,.3);stroke-width:4px;stroke-linejoin:round}.fc svg text.l{font-weight:400;fill:rgba(255,255,255,.75)}
+.foot{display:flex;justify-content:space-between;font-size:12px;opacity:.85;padding:0 4px}
+.foot button{font:inherit;color:#fff;background:none;border:0;cursor:pointer;padding:2px 4px;text-decoration:underline dotted;text-underline-offset:3px}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <symbol id="cl" viewBox="0 0 48 48"><path d="M14 35a8 8 0 0 1 .8-15.9A10.5 10.5 0 0 1 35 18a8.6 8.6 0 0 1 .5 17Z" fill="#fff"/></symbol>
+  <symbol id="sun" viewBox="0 0 48 48"><circle cx="24" cy="24" r="9" fill="#ffd15c"/><path d="M24 5v5M24 38v5M5 24h5M38 24h5M10.5 10.5l3.5 3.5M34 34l3.5 3.5M37.5 10.5L34 14M14 34l-3.5 3.5" stroke="#ffd15c" stroke-width="3" stroke-linecap="round"/></symbol>
+  <symbol id="part" viewBox="0 0 48 48"><circle cx="19" cy="17" r="7.5" fill="#ffd15c"/><path d="M19 3v3M5 17h3M9 7l2 2M29 7l-2 2" stroke="#ffd15c" stroke-width="2.6" stroke-linecap="round"/><use href="#cl" x="4" y="6" width="42" height="42"/></symbol>
+  <symbol id="cloud" viewBox="0 0 48 48"><use href="#cl"/></symbol>
+  <symbol id="rain" viewBox="0 0 48 48"><use href="#cl" y="-5"/><path d="M17 34l-2 6M25 34l-2 6M33 34l-2 6" stroke="#9fd3ff" stroke-width="3" stroke-linecap="round"/></symbol>
+  <symbol id="snow" viewBox="0 0 48 48"><use href="#cl" y="-5"/><g fill="#fff"><circle cx="16" cy="37" r="2.4"/><circle cx="25" cy="41" r="2.4"/><circle cx="33" cy="36" r="2.4"/></g></symbol>
+  <symbol id="storm" viewBox="0 0 48 48"><use href="#cl" y="-6"/><path d="M26 29l-7 9h5l-3 8 9-11h-5z" fill="#ffe066"/></symbol>
+</defs></svg>
+<main class="card" id="card">
+  <canvas id="fx"></canvas>
+  <nav class="tabs" id="tabs" role="tablist"></nav>
+  <section>
+    <div class="place" data-sw><span id="city"></span><small id="en"></small><small id="clk" style="margin-left:auto"></small></div>
+    <div class="temp" data-sw><span id="tp">--</span><sup id="un">°C</sup></div>
+    <div class="desc" data-sw><b id="ds" style="font-weight:500"></b><span id="fl"></span></div>
+    <div class="stats glass" data-sw><div><small>风速</small><b id="wd"></b></div><div><small>湿度</small><b id="hm"></b></div><div><small>降水概率</small><b id="pp"></b></div></div>
+  </section>
+  <section class="fc glass" data-sw><div class="cols" id="cols"></div><div id="chart"></div></section>
+  <div class="foot"><button id="unit">切换 °C / °F</button><span id="src">本地模拟数据</span><button id="mode">昼夜：自动</button></div>
+</main>
+<script>
+const $ = s => document.querySelector(s), R = Math.random, TAU = Math.PI * 2;
+const DESC = { sun: '晴朗', part: '晴间多云', cloud: '多云', rain: '阵雨', storm: '雷暴', snow: '小雪' };
+const CITIES = [  // w: 当前天气；fc: 未来 5 天 [图标, 最高, 最低]（℃）
+  { n: '台北', e: 'TAIPEI', w: 'rain', t: 26, f: 29, wd: 14, hm: 84, pp: 80, fc: [['rain', 29, 24], ['storm', 30, 25], ['cloud', 31, 25], ['part', 33, 26], ['sun', 34, 26]] },
+  { n: '高雄', e: 'KAOHSIUNG', w: 'sun', t: 33, f: 37, wd: 9, hm: 62, pp: 5, fc: [['sun', 34, 27], ['sun', 35, 27], ['part', 33, 27], ['rain', 30, 25], ['cloud', 31, 26]] },
+  { n: '东京', e: 'TOKYO', w: 'cloud', t: 23, f: 24, wd: 11, hm: 71, pp: 20, fc: [['cloud', 24, 19], ['part', 26, 20], ['sun', 27, 20], ['rain', 22, 18], ['cloud', 21, 17]] },
+  { n: '札幌', e: 'SAPPORO', w: 'snow', t: -2, f: -6, wd: 18, hm: 78, pp: 60, fc: [['snow', -1, -6], ['snow', 0, -5], ['cloud', 1, -4], ['part', 2, -3], ['snow', -2, -7]] },
+  { n: '伦敦', e: 'LONDON', w: 'storm', t: 16, f: 14, wd: 26, hm: 88, pp: 90, fc: [['storm', 17, 12], ['rain', 15, 11], ['cloud', 16, 10], ['part', 18, 11], ['sun', 19, 12]] }];
+let ci = 0, unit = 'C', mode = 0, shown = 0;   // mode: 0 自动(6-18 点为白天) / 1 白天 / 2 夜间
+const night = () => mode ? mode === 2 : (h => h < 6 || h >= 18)(new Date().getHours());
+const deg = c => Math.round(unit === 'C' ? c : c * 9 / 5 + 32) || 0;
+
+/* ---------- 界面渲染 ---------- */
+CITIES.forEach((c, i) => $('#tabs').insertAdjacentHTML('beforeend', `<button role="tab" data-i="${i}">${c.n}</button>`));
+function count(to) {                                   // 温度数字 countUp 过渡
+  const from = shown, t0 = performance.now(); shown = to;
+  (function step(n) { const p = Math.min(1, (n - t0) / 900); $('#tp').textContent = Math.round(from + (to - from) * (1 - (1 - p) ** 3)); if (p < 1) requestAnimationFrame(step); })(t0);
+}
+function render() {
+  const c = CITIES[ci], d = new Date().getDay(), md = i => { const x = new Date(Date.now() + i * 864e5); return `${x.getMonth() + 1}/${x.getDate()}`; };
+  $('#city').textContent = c.n; $('#en').textContent = c.e; $('#un').textContent = '°' + unit;
+  $('#ds').textContent = DESC[c.w]; $('#fl').textContent = `体感 ${deg(c.f)}°`;
+  $('#wd').textContent = c.wd + ' km/h'; $('#hm').textContent = c.hm + '%'; $('#pp').textContent = c.pp + '%';
+  $('#cols').innerHTML = c.fc.map((f, i) => `<div><b>${i ? '周' + '日一二三四五六'[(d + i) % 7] : '今天'}</b><small>${md(i)}</small><br><svg class="ic"><use href="#${f[0]}"/></svg><span>${DESC[f[0]]}</span></div>`).join('');
+  const hi = c.fc.map(f => deg(f[1])), lo = c.fc.map(f => deg(f[2])), mx = Math.max(...hi), mn = Math.min(...lo);
+  const X = i => i * 100 + 50, Y = v => 34 + (mx - v) / (mx - mn || 1) * 56, P = a => 'M' + a.map((v, i) => `${X(i)} ${Y(v)}`).join('L');
+  $('#chart').innerHTML = `<svg viewBox="0 0 500 128"><path class="hi" pathLength="1" d="${P(hi)}"/><path class="lo" pathLength="1" d="${P(lo)}"/>` +
+    hi.map((v, i) => `<circle cx="${X(i)}" cy="${Y(v)}" r="5" fill="#fff"/><text x="${X(i)}" y="${Y(v) - 13}">${v}°</text>`).join('') +
+    lo.map((v, i) => `<circle cx="${X(i)}" cy="${Y(v)}" r="4" fill="#ffffffb0"/><text class="l" x="${X(i)}" y="${Y(v) + 25}">${v}°</text>`).join('') + '</svg>';
+  count(deg(c.t)); aim();
+}
+const sel = () => document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', +b.dataset.i === ci));
+function go(i) {                                       // 切换城市：旧内容淡出 → 换数据 → 新内容淡入；背景/粒子立即开始渐变
+  if (i === ci) return; ci = i; sel(); aim(); $('#card').dataset.swap = 1;
+  setTimeout(() => { render(); delete $('#card').dataset.swap; }, 260);
+}
+$('#tabs').onclick = e => e.target.dataset.i && go(+e.target.dataset.i);
+addEventListener('keydown', e => { if (e.key === 'ArrowRight') go((ci + 1) % 5); if (e.key === 'ArrowLeft') go((ci + 4) % 5); });
+$('#unit').onclick = () => { unit = unit === 'C' ? 'F' : 'C'; render(); };
+$('#mode').onclick = () => { mode = (mode + 1) % 3; $('#mode').textContent = '昼夜：' + ['自动', '白天', '夜间'][mode]; aim(); };
+const tick = () => { const d = new Date(); $('#clk').textContent = `周${'日一二三四五六'[d.getDay()]} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+tick(); setInterval(tick, 15000);
+
+/* ---------- 天气动效（Canvas）：各效果强度 K 向目标 T 平滑过渡，切城市不闪白 ---------- */
+const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const PAL = {   // [白天, 夜间] 三色纵向渐变
+  sun: [['#1f78e6', '#4db2f7', '#8fd6ff'], ['#050b24', '#101f4f', '#2c3b7c']], cloud: [['#4f709a', '#84a0c0', '#c2d1e3'], ['#141b2c', '#25314a', '#3d4c66']],
+  rain: [['#34465e', '#54708c', '#8da5ba'], ['#0b111d', '#182335', '#2b3a51']], snow: [['#587296', '#8ba4c3', '#c9d9ec'], ['#141d31', '#2a3a58', '#566a90']],
+  storm: [['#1c2230', '#39415a', '#5c667d'], ['#06080e', '#121726', '#242b40']] };
+const CFG = { sun: { sun: 1, cloud: .1, mix: .9 }, cloud: { sun: .3, cloud: 1, mix: .8 }, rain: { rain: 1, cloud: .9, mix: .25 }, snow: { snow: 1, cloud: .75, mix: .6 }, storm: { rain: 1.3, storm: 1, cloud: 1, mix: .1 } };
+const K = { sun: 0, cloud: 0, rain: 0, snow: 0, storm: 0, night: 0, mix: .5 }, T = { ...K }, G = PAL.sun[0].map(hex), GT = G.map(c => c.slice());
+function aim() {                                       // 根据当前城市天气 + 昼夜设定目标
+  const w = CITIES[ci].w, n = night(); Object.assign(T, { sun: 0, cloud: 0, rain: 0, snow: 0, storm: 0 }, CFG[w], { night: +n });
+  T.mix = CFG[w].mix * (n ? .3 : 1); PAL[w][+n].forEach((c, i) => GT[i] = hex(c));
+}
+const cv = $('#fx'), ctx = cv.getContext('2d'); let W = 1, H = 1, dpr = 1, last = 0, t = 0;
+new ResizeObserver(() => { dpr = Math.min(2, devicePixelRatio || 1); W = cv.clientWidth; H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr; }).observe(cv);
+const arr = (n, f) => Array.from({ length: n }, f);
+const CL = arr(9, (_, i) => ({ x: R() * 1.6, y: .03 + R() * .5, s: .35 + R() * .3, v: 2 + R() * 4 + i % 3 * 2, o: .6 + R() * .4, b: arr(6, (_, j) => [j * .12 - .3 + R() * .06, R() * .06, .16 + R() * .1]) }));
+const DR = arr(170, () => ({ x: R() * 1.3, y: R(), v: .9 + R() * .9, l: 14 + R() * 20, z: .6 + R() * .9, ly: .7 + R() * .3 }));
+const FL = arr(120, () => ({ x: R(), y: R(), v: .04 + R() * .09, r: 1 + R() * 3.2, w: .8 + R() * 1.6, p: R() * TAU, a: .006 + R() * .02 }));
+const ST = arr(80, () => ({ x: R(), y: R() * .7, r: .5 + R() * 1.3, p: R() * TAU }));
+const MO = arr(50, () => ({ x: R(), y: R(), r: .8 + R() * 2.4, v: .01 + R() * .03, p: R() * TAU }));
+const SP = []; let fl = { a: 0, next: 2, pts: [] };
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1e3 || .016); last = now; t += dt; const e = Math.min(1, dt * 2.4);
+  for (const k in K) K[k] += (T[k] - K[k]) * e;
+  G.forEach((c, i) => c.forEach((v, j) => c[j] = v + (GT[i][j] - v) * e));
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.globalCompositeOperation = 'source-over';
+  const bg = ctx.createLinearGradient(0, 0, 0, H); G.forEach((c, i) => bg.addColorStop(i / 2, `rgb(${c.map(Math.round)})`)); ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  const sx = W * .8, sy = H * .115, sv = (1 - K.night) * K.sun, calm = 1 - Math.min(1, K.rain + K.snow + K.storm);
+  for (const s of ST) { ctx.fillStyle = `rgba(255,255,255,${K.night * calm * (1 - K.cloud * .6) * (.35 + .65 * Math.abs(Math.sin(t * .8 + s.p)))})`; ctx.fillRect(s.x * W, s.y * H, s.r, s.r); }
+  if (K.night > .02) {                                 // 月亮
+    const mv = K.night * (1 - .8 * (1 - calm)), g = ctx.createRadialGradient(sx, sy, 0, sx, sy, W * .5);
+    g.addColorStop(0, `rgba(190,210,255,${.35 * mv})`); g.addColorStop(1, 'rgba(190,210,255,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = `rgba(245,247,255,${.95 * mv})`; ctx.save(); ctx.beginPath(); ctx.arc(sx, sy, 22, 0, TAU); ctx.clip();   // 月牙 = 圆内挖去偏移的小圆
+    ctx.beginPath(); ctx.rect(sx - 30, sy - 30, 60, 60); ctx.arc(sx + 9, sy - 6, 19, 0, TAU); ctx.fill('evenodd'); ctx.restore();
+  }
+  if (sv > .01) {                                      // 太阳：光晕呼吸 + 旋转光束 + 漂浮光尘
+    const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, W * (.95 + .04 * Math.sin(t * 1.2)));
+    g.addColorStop(0, `rgba(255,240,180,${.9 * sv})`); g.addColorStop(.16, `rgba(255,205,110,${.4 * sv})`); g.addColorStop(1, 'rgba(255,190,90,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.save(); ctx.translate(sx, sy); ctx.rotate(t * .05); ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 18; i++) {
+      ctx.rotate(TAU / 18); const L = H * 1.1, w = .035 + .02 * Math.sin(t * .6 + i * 1.7), q = ctx.createLinearGradient(0, 0, L, 0);
+      q.addColorStop(0, `rgba(255,240,205,${.17 * sv * sv})`); q.addColorStop(1, 'rgba(255,240,205,0)'); ctx.fillStyle = q; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(L, -L * w); ctx.lineTo(L, L * w); ctx.fill();
+    }
+    ctx.restore(); ctx.fillStyle = `rgba(255,252,235,${sv})`; ctx.beginPath(); ctx.arc(sx, sy, 24, 0, TAU); ctx.fill();
+    for (const m of MO) { m.y -= m.v * dt; if (m.y < -.05) { m.y = 1.05; m.x = R(); } ctx.fillStyle = `rgba(255,244,210,${sv * .55 * (.5 + .5 * Math.sin(t * 1.5 + m.p))})`; ctx.beginPath(); ctx.arc(m.x * W, m.y * H, m.r, 0, TAU); ctx.fill(); }
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  const tint = G[1].map(v => Math.round(v + (255 - v) * K.mix));   // 云的颜色 = 天空中段色向白色混合
+  for (const c of CL) {                                // 云层：多个径向渐变叠成云团，按视差缓慢漂移
+    const span = W * 1.7, x = (((c.x * W - t * c.v * 3) % span) + span) % span - W * .35, y = c.y * H, s = c.s * W;
+    for (const b of c.b) {
+      const bx = x + b[0] * s * 2.2, by = y + b[1] * s, r = b[2] * s * 1.9, g = ctx.createRadialGradient(bx, by, 0, bx, by, r);
+      g.addColorStop(0, `rgba(${tint},${.68 * K.cloud * c.o})`); g.addColorStop(1, `rgba(${tint},0)`); ctx.fillStyle = g; ctx.fillRect(bx - r, by - r, r * 2, r * 2);
+    }
+  }
+  if (K.rain > .02) {                                  // 雨：远近不同的落点，落地溅起水圈
+    ctx.lineCap = 'round'; const sl = .2 + .14 * K.storm;
+    for (const d of DR) {
+      d.y += d.v * dt * (1 + .3 * K.storm); d.x -= d.v * dt * sl * .5 * H / W;
+      if (d.y >= d.ly) { if (R() < .5 && SP.length < 70) SP.push({ x: d.x * W, y: d.ly * H, a: 1 }); d.y = -R() * .2; d.x = R() * 1.3; d.ly = .7 + R() * .3; }
+      const px = d.x * W, py = d.y * H; ctx.strokeStyle = `rgba(215,232,255,${K.rain * .55 * d.z})`; ctx.lineWidth = d.z;
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + d.l * sl, py - d.l); ctx.stroke();
+    }
+    for (let i = SP.length; i--;) { const s = SP[i]; s.a -= dt * 3; if (s.a <= 0) { SP.splice(i, 1); continue; }
+      ctx.strokeStyle = `rgba(220,235,255,${s.a * .5 * K.rain})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(s.x, s.y, 2 + (1 - s.a) * 14, .8 + (1 - s.a) * 4, 0, 0, TAU); ctx.stroke(); }
+  }
+  if (K.snow > .02) for (const f of FL) {              // 雪：大小决定速度与摇摆
+    f.y += f.v * dt * (.6 + f.r * .3); if (f.y > 1.03) { f.y = -.03; f.x = R(); }
+    const x = (f.x + Math.sin(t * f.w + f.p) * f.a) * W, y = f.y * H;
+    ctx.fillStyle = `rgba(255,255,255,${.22 * K.snow})`; ctx.beginPath(); ctx.arc(x, y, f.r * 2, 0, TAU); ctx.fill();
+    ctx.fillStyle = `rgba(255,255,255,${.9 * K.snow})`; ctx.beginPath(); ctx.arc(x, y, f.r, 0, TAU); ctx.fill();
+  }
+  if (K.storm > .5) {                                  // 雷暴：随机间隔的闪电（中点位移折线）+ 全屏闪光
+    fl.next -= dt;
+    if (fl.next < 0) { fl.a = 1; fl.next = 2.2 + R() * 4; let x = W * (.15 + R() * .7), y = -5; fl.pts = [[x, y]]; const ye = H * (.35 + R() * .3); while (y < ye) { y += 10 + R() * 22; x += (R() - .5) * 36; fl.pts.push([x, y]); } }
+    fl.a = Math.max(0, fl.a - dt * 2.4);
+    if (fl.a > 0) {
+      ctx.fillStyle = `rgba(210,225,255,${fl.a * fl.a * .28})`; ctx.fillRect(0, 0, W, H); ctx.lineJoin = 'round';
+      for (const [lw, al] of [[7, .3], [2.2, 1]]) { ctx.strokeStyle = `rgba(235,242,255,${fl.a * al})`; ctx.lineWidth = lw; ctx.beginPath(); fl.pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); }
+    }
+  }
+  requestAnimationFrame(frame);
+}
+sel(); render(); G.forEach((c, i) => c.forEach((_, j) => c[j] = GT[i][j])); Object.assign(K, T); requestAnimationFrame(frame);
+</script>
+</body>
+</html>

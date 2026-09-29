@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="day">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chronos 时钟</title>
+<style>
+:root{--bg1:#fff1d6;--bg2:#f8c99a;--bg3:#e9906b;--face1:#fffbf2;--face2:#eddcbd;--ink:#2a2018;--mute:#8b7761;--accent:#e4472a;
+  --glass:rgba(255,255,255,.5);--line:rgba(60,40,20,.16);--b1:#fff1c9;--b2:#a9793b;--b3:#f7e3b1;--orb:rgba(255,196,110,.55)}
+:root[data-theme=night]{--face1:#181f4c;--face2:#0b1029;--ink:#eaeeff;--mute:#8d96cc;--accent:#ff8e5e;--glass:rgba(18,24,64,.55);
+  --line:rgba(160,175,255,.2);--b1:#dfe5ff;--b2:#3f4a9a;--b3:#aab4f0;--orb:rgba(120,140,255,.4)}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:ui-rounded,"SF Pro Rounded","PingFang TC","Helvetica Neue",system-ui,sans-serif;color:var(--ink);overflow:hidden;
+  background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%,var(--bg3));transition:color .9s}
+#sky,#stars,#glow{position:fixed;inset:0;pointer-events:none}
+#sky{background:linear-gradient(160deg,#0a0f2e,#171d4d 55%,#2d2568);opacity:0;transition:opacity 1.2s}
+#stars{opacity:0;transition:opacity 1.6s}
+:root[data-theme=night] :is(#sky,#stars){opacity:1}
+#stars i{position:absolute;width:var(--s);height:var(--s);border-radius:50%;background:#fff;animation:tw 3.6s var(--d) infinite ease-in-out}
+@keyframes tw{50%{opacity:.15;transform:scale(.6)}}
+#glow{background:radial-gradient(circle at 50% 40%,var(--orb),transparent 52%);animation:br 6s infinite ease-in-out;transition:background 1s}
+@keyframes br{50%{transform:scale(1.12);opacity:.75}}
+main{position:relative;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 16px}
+svg{width:min(90vw,60vh,540px);aspect-ratio:1;overflow:visible}
+svg text{font:500 25px ui-serif,"Iowan Old Style","Palatino Linotype","Songti TC",Georgia,serif;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+svg text.q{font-size:34px;font-weight:700}
+.brand{font:600 11px system-ui,sans-serif;letter-spacing:.42em;fill:var(--mute)!important}
+.dig{margin-top:clamp(10px,2.2vh,22px);padding:14px 28px 12px;border-radius:26px;text-align:center;background:var(--glass);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);box-shadow:0 14px 44px rgba(20,10,50,.16)}
+.hi{font-size:13px;color:var(--mute);letter-spacing:.2em}
+.tm{font-size:clamp(40px,11vw,58px);font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.tm small{font-size:.42em;color:var(--accent);margin-left:.2em}
+.tm b{font-weight:600;transition:opacity .3s}.tm b.dim{opacity:.15}
+.dt{font-size:14px;color:var(--mute);margin:2px 0 10px}
+button{font:inherit;font-size:12px;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:99px;padding:5px 14px;margin:0 3px;cursor:pointer;transition:.2s}
+button:hover{background:var(--line)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div id="sky"></div><div id="stars"></div><div id="glow"></div>
+<main>
+<svg viewBox="-220 -220 440 440" role="img" aria-label="模拟时钟">
+  <defs>
+    <linearGradient id="path" gradientUnits="userSpaceOnUse" x1="0" y1="-210" x2="0" y2="210">
+      <stop offset="0" stop-color="#ffd66b"/><stop offset=".35" stop-color="#ff9d6b"/><stop offset=".65" stop-color="#6c63c9"/><stop offset="1" stop-color="#1e2a78"/></linearGradient>
+    <linearGradient id="bez" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" style="stop-color:var(--b1)"/><stop offset=".45" style="stop-color:var(--b2)"/><stop offset=".7" style="stop-color:var(--b3)"/><stop offset="1" style="stop-color:var(--b2)"/></linearGradient>
+    <radialGradient id="face" cx=".42" cy=".36" r=".75"><stop offset="0" style="stop-color:var(--face1)"/><stop offset="1" style="stop-color:var(--face2)"/></radialGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="3" dy="6" stdDeviation="4" flood-color="#000" flood-opacity=".32"/></filter>
+    <mask id="cres"><rect x="-20" y="-20" width="40" height="40" fill="#fff"/><circle cx="5" cy="-3" r="9" fill="#000"/></mask>
+  </defs>
+  <circle r="207" fill="none" stroke="url(#path)" stroke-width="5" opacity=".9"/>
+  <circle r="194" fill="url(#bez)" filter="url(#sh)"/>
+  <circle r="182" fill="none" stroke="rgba(0,0,0,.25)" stroke-width="3"/>
+  <circle r="178" fill="url(#face)"/>
+  <circle r="171" fill="none" stroke="var(--line)"/>
+  <g id="ticks" stroke="var(--ink)"></g>
+  <g id="nums"></g>
+  <text class="brand" y="-70">CHRONOS</text><text class="brand" y="92" id="tz" style="letter-spacing:.2em;font-size:10px"></text>
+  <g id="hands" filter="url(#sh)">
+    <g id="hh"><path d="M-7 10L-4.5 -92L0 -106L4.5 -92L7 10Z" fill="var(--ink)" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/><path d="M0 -12V-92" stroke="var(--face1)" stroke-opacity=".5" stroke-width="1.6"/></g>
+    <g id="mm"><path d="M-4.5 14L-2.6 -142L0 -156L2.6 -142L4.5 14Z" fill="var(--ink)" stroke="var(--ink)" stroke-width="2.6" stroke-linejoin="round"/><path d="M0 -12V-140" stroke="var(--face1)" stroke-opacity=".5" stroke-width="1.4"/></g>
+    <g id="ss" style="color:var(--accent)"><path d="M0 40V-168" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cy="-128" r="7" fill="none" stroke="currentColor" stroke-width="2.2"/>
+      <circle cy="26" r="7" fill="currentColor"/></g>
+    <circle r="10" fill="var(--ink)"/><circle r="4.4" fill="var(--accent)"/>
+  </g>
+  <path d="M-150 -68A164 164 0 0 1 48 -158Q-52 -122 -150 -68Z" fill="url(#shine)" opacity=".55"/>
+  <g id="orb"><circle id="sun" r="9" fill="#ffb627" stroke="#fff" stroke-opacity=".8" stroke-width="2"/>
+    <g id="moon"><circle r="17" fill="#9aa7ff" opacity=".28"/><circle r="10" fill="#eef1ff" mask="url(#cres)"/></g></g>
+</svg>
+<div class="dig">
+  <div class="hi" id="hi"></div>
+  <div class="tm"><span id="hm"></span><small id="sc"></small></div>
+  <div class="dt" id="dt"></div>
+  <button id="fmt">24 小时制</button><button id="mode">自动昼夜</button>
+</div>
+</main>
+<script>
+const $ = s => document.querySelector(s), NS = 'http://www.w3.org/2000/svg';
+const mk = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; };
+const pad = n => String(n).padStart(2, '0');
+
+// 60 刻度 + 12 数字（动态生成，避免手写重复）
+const ticks = [...Array(60)].map((_, i) => mk('line', {
+  y1: -168, y2: i % 5 ? -158 : -148, transform: `rotate(${i * 6})`, 'stroke-width': i % 5 ? 1.4 : 3.6, 'stroke-linecap': 'round' }, $('#ticks')));
+for (let h = 1; h <= 12; h++) {
+  const a = h * Math.PI / 6, q = h % 3 === 0, r = q ? 122 : 124;
+  mk('text', { x: Math.sin(a) * r, y: -Math.cos(a) * r, class: q ? 'q' : '' }, $('#nums')).textContent = h;
+}
+for (let i = 0; i < 72; i++) $('#stars').insertAdjacentHTML('beforeend',
+  `<i style="left:${Math.random() * 100}%;top:${Math.random() * 100}%;--s:${1 + Math.random() * 2}px;--d:-${Math.random() * 4}s"></i>`);
+const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'LOCAL', off = -new Date().getTimezoneOffset() / 60;
+$('#tz').textContent = `${tz.split('/').pop().replace(/_/g, ' ').toUpperCase()} · UTC${off >= 0 ? '+' : '−'}${Math.abs(off)}`;
+
+let mode = 0, h24 = true, lastSec = -1;             // mode: 0 自动 / 1 白天 / 2 夜晚
+const MODES = ['自动昼夜', '白天', '夜晚'];
+$('#fmt').onclick = () => { h24 = !h24; $('#fmt').textContent = h24 ? '24 小时制' : '12 小时制'; lastSec = -1; };
+$('#mode').onclick = () => { mode = (mode + 1) % 3; $('#mode').textContent = MODES[mode]; lastSec = -1; };
+
+function greet(h) {
+  return h < 5 ? '夜深了' : h < 9 ? '早安' : h < 12 ? '上午好' : h < 14 ? '午安' : h < 18 ? '下午好' : h < 22 ? '晚上好' : '夜深了';
+}
+
+function frame() {
+  const d = new Date(), sec = d.getSeconds(), s = sec + d.getMilliseconds() / 1000, m = d.getMinutes() + s / 60, h = d.getHours() + m / 60;
+  $('#hh').setAttribute('transform', `rotate(${h % 12 * 30})`);          // 时针：每小时 30°，含分钟连续量
+  $('#mm').setAttribute('transform', `rotate(${m * 6})`);                // 分针：每分钟 6°，含秒的连续量
+  $('#ss').setAttribute('transform', `rotate(${s * 6})`);                // 秒针：毫秒级连续扫秒
+  ticks.forEach((t, i) => {                                              // 秒针身后的刻度亮起，形成彗尾
+    const k = (s - i + 60) % 60, g = k < 10 ? 1 - k / 10 : 0;
+    t.style.stroke = g ? 'var(--accent)' : 'var(--ink)';
+    t.style.opacity = g ? .3 + .7 * g : i % 5 ? .38 : .9;
+  });
+  const th = -Math.PI + h / 24 * 2 * Math.PI, night = mode ? mode === 2 : h < 6 || h >= 18;
+  $('#orb').setAttribute('transform', `translate(${(Math.sin(th) * 207).toFixed(1)} ${(-Math.cos(th) * 207).toFixed(1)})`);
+  $('#sun').style.display = night ? 'none' : ''; $('#moon').style.display = night ? '' : 'none';
+  if (sec !== lastSec) {                                                 // 数字部分每秒只刷新一次
+    lastSec = sec;
+    document.documentElement.dataset.theme = night ? 'night' : 'day';
+    const H = d.getHours(), hh = h24 ? pad(H) : pad(H % 12 || 12);
+    $('#hm').innerHTML = `${hh}<b class="${sec % 2 ? 'dim' : ''}">:</b>${pad(d.getMinutes())}`;
+    $('#sc').textContent = pad(sec) + (h24 ? '' : H < 12 ? ' AM' : ' PM');
+    $('#hi').textContent = greet(H);
+    $('#dt').textContent = d.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+    document.title = `${hh}:${pad(d.getMinutes())}:${pad(sec)} · Chronos`;
+  }
+  requestAnimationFrame(frame);
+}
+frame();
+</script>
+</body>
+</html>

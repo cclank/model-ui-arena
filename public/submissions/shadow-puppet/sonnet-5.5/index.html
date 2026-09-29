@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>皮影戏 · 硅谷论剑</title>
+<!--
+  《硅谷论剑 · Sam 大战 Dario》— 单文件 · 零依赖 · Canvas 2D + WebAudio
+  ── 投影模型（全部由几何算出，没有固定模糊/随意缩放）──────────────────────────────────
+     灯 L = (Lx, Ly)，灯到幕的距离 zL；人偶所在平面平行于幕，离幕 z（= 灯到人偶 zL − z）。
+     放大率  m = zL / (zL − z)           影点 S = L + (P − L)·m      → 移动油灯时，离幕的影子反向移动，贴幕布景（z≈0, m≈1）不动
+     半影    w = 2·r·z / (zL − z)        r = 灯焰半径（相似三角形）  → 离幕越远越虚
+     半影用“对灯焰圆盘取样”得到：每个样本点是一次硬影（灯位偏移 δ 使影平移 δ·(1−m)），N 张硬影平均即软影。
+  ── 透光：每层皮先在暂存层内相乘（两层叠压更暗），N 个样本累加成覆盖率+颜色，再与已被灯光照亮的纸相乘：
+     镂空处不画（最亮）、彩绘 = 半透明有色、墨线 ≈ 不透光。
+  ── 人偶：脖签控身体、两根手签控双手；肘/膝由重力驱动的 Verlet 粒子 + 关节限位（不能反折）；脚踩台口，走动时自动迈步。
+-->
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;overflow:hidden;background:#0a0605;color:#f4e8d0;font-family:"Kaiti TC","STKaiti","KaiTi",-apple-system,"PingFang TC","PingFang SC",serif;-webkit-user-select:none;user-select:none}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#title{position:fixed;left:0;right:0;top:32%;text-align:center;pointer-events:none;transition:opacity 1.2s;letter-spacing:.35em;text-shadow:0 0 30px rgba(255,180,90,.6)}
+#title b{display:block;font-size:clamp(28px,6vw,64px);color:#f7d98a;font-weight:700}
+#title span{display:block;margin-top:10px;font-size:clamp(14px,2.2vw,22px);color:#e9cfa0;letter-spacing:.5em}
+#sub{position:fixed;left:50%;bottom:64px;transform:translateX(-50%);width:min(94vw,920px);text-align:center;pointer-events:none;transition:opacity .4s;font-size:clamp(17px,2.6vw,28px);line-height:1.5;text-shadow:0 2px 10px #000,0 0 3px #000}
+#sub b{display:inline-block;margin-right:.6em;padding:0 .55em;border-radius:6px;font-size:.62em;vertical-align:.12em;color:#1a0d05;letter-spacing:.2em}
+#sub i{font-style:normal;color:rgba(255,255,255,.28)}#sub u{text-decoration:none;color:#fff}
+#hud{position:fixed;top:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+button{font:600 13px -apple-system,"PingFang TC",sans-serif;color:#f4e8d0;background:rgba(30,18,10,.7);border:1px solid rgba(255,220,150,.3);border-radius:10px;padding:8px 12px;cursor:pointer;backdrop-filter:blur(8px)}
+button:hover{border-color:#f7d98a}button[aria-pressed=true]{background:#e2a94b;color:#241205;border-color:#e2a94b}
+#panel{position:fixed;left:10px;bottom:64px;width:min(330px,calc(100vw - 20px));padding:10px 12px;border-radius:12px;background:rgba(20,12,8,.78);border:1px solid rgba(255,220,150,.25);backdrop-filter:blur(10px);font:11px/1.55 ui-monospace,Menlo,Consolas,monospace;color:#f0dcb8;display:none}
+#panel h4{font:600 12px -apple-system,sans-serif;color:#f7d98a;margin-bottom:4px;letter-spacing:.1em}#panel td{padding:1px 6px 1px 0;white-space:nowrap}#panel td:first-child{color:#fff}
+#ctl{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);width:min(96vw,760px);padding:8px 12px;border-radius:14px;background:rgba(20,12,8,.82);border:1px solid rgba(255,220,150,.25);display:none;gap:6px 16px;flex-wrap:wrap;font:12px -apple-system,"PingFang TC",sans-serif;align-items:center}
+#ctl label{display:flex;gap:6px;align-items:center;color:#f0dcb8}#ctl input{width:110px;accent-color:#e2a94b}#ctl output{min-width:34px;font-family:ui-monospace,monospace;color:#fff}
+#hint{position:fixed;left:0;right:0;bottom:18px;text-align:center;pointer-events:none;font-size:13px;color:#f7d98a;letter-spacing:.2em;animation:bl 1.8s ease-in-out infinite}
+@keyframes bl{50%{opacity:.35}}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="title"><b>硅谷论剑</b><span>Sam 大战 Dario</span></div>
+<div id="sub"></div>
+<div id="hud"><button id="bplay">重演</button><button id="bop" aria-pressed="false">自己演</button><button id="bsnd" aria-pressed="false">锣鼓：关</button><button id="bpan" aria-pressed="false">投影数据</button></div>
+<aside id="panel"></aside>
+<div id="ctl">
+  <label>Sam 离幕<input id="zs" type="range" min="0" max="52" step=".5" value="12"><output id="zso"></output></label>
+  <label>Dario 离幕<input id="zd" type="range" min="0" max="52" step=".5" value="12"><output id="zdo"></output></label>
+  <label>灯距幕<input id="zl" type="range" min="45" max="110" step="1" value="72"><output id="zlo"></output></label>
+  <label>灯焰半径<input id="fr" type="range" min=".4" max="4" step=".1" value="1.6"><output id="fro"></output></label>
+  <button id="bbump">撞灯</button><span style="color:#c9b48a">拖：人偶脖/手（金/蓝点）· 灯（橙点）</span>
+</div>
+<div id="hint">轻触任意处 · 开启锣鼓，并从头开演</div>
+<script>
+'use strict';
+const $ = s => document.querySelector(s), TAU = Math.PI * 2;
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x)), lerp = (a, b, t) => a + (b - a) * t, sst = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const rngf = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const RN = rngf(31), nz = (t, s = 0) => Math.sin(t * 1.7 + s) * .5 + Math.sin(t * 2.9 + s * 1.7 + 1.3) * .3 + Math.sin(t * 5.3 + s * .6 + 2.1) * .2;
+
+/* ═══════════ 1. 灯与投影 ═══════════ */
+const LAMP = { x: 80, y: 36, z: 72, r: 1.6, ox: 0, oy: 0, vx: 0, vy: 0, fx: 0, fy: 0, br: 1 };
+const lampPos = () => ({ x: LAMP.x + LAMP.ox + LAMP.fx, y: LAMP.y + LAMP.oy + LAMP.fy });
+const magOf = z => LAMP.z / Math.max(2, LAMP.z - z);                     // 放大率 m = zL / (zL − z)
+const penOf = z => 2 * LAMP.r * z / Math.max(2, LAMP.z - z);              // 半影全宽（屏幕上的长度）
+const toScreen = (x, y, z, L = lampPos()) => { const m = magOf(z); return { x: L.x + (x - L.x) * m, y: L.y + (y - L.y) * m }; };
+const toPlane = (sx, sy, z, L = lampPos()) => { const m = magOf(z); return { x: L.x + (sx - L.x) / m, y: L.y + (sy - L.y) / m }; };
+const toPlaneRef = (sx, sy, z) => toPlane(sx, sy, z, { x: LAMP.x, y: LAMP.y });        // 编排用：以静止灯位为参考
+const SCR_W = 160, SCR_H = 96;
+
+/* ═══════════ 2. 画布、视野与静态层 ═══════════ */
+const cv = $('#cv'), ctx = cv.getContext('2d'), mkc = () => { const c = document.createElement('canvas'); return [c, c.getContext('2d')]; };
+const [scr, sctx] = mkc(), [tmp, tctx] = mkc(), [acc, actx] = mkc(), [bd, bctx] = mkc(), [tex, xctx] = mkc();
+let VIEW = { x0: 0, x1: 160 }, SR = { x: 0, y: 0, w: 1, h: 1 }, KP = 6, W = 1, H = 1, DPR = 1;
+const PAL = { leather: [.96, .80, .55], skin: [.95, .70, .46], red: [.90, .24, .18], green: [.24, .66, .40], teal: [.22, .68, .64], blue: [.28, .46, .84], yellow: [.99, .88, .40], grey: [.68, .76, .86], brown: [.60, .36, .20], hair: [.14, .10, .08], ink: [.05, .045, .04], gold: [.98, .78, .30], orange: [.97, .55, .20], sage: [.74, .88, .68], white: [.99, .97, .92] };
+const rgb = c => `rgb(${c.map(v => v * 255 | 0)})`;
+function layout() {
+  DPR = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  const portrait = W / H < .95; VIEW = portrait ? { x0: 26, x1: 134 } : { x0: 0, x1: 160 }; const vw = VIEW.x1 - VIEW.x0, asp = vw / SCR_H;
+  const availW = W - 22, availH = H - (portrait ? 190 : 150); const w = Math.min(availW, availH * asp), h = w / asp; SR = { x: (W - w) / 2, y: Math.max(52, (H - h) / 2 - (portrait ? 24 : 26)), w, h };
+  const dp = Math.min(DPR, 1.5), pw = Math.round(w * dp), ph = Math.round(h * dp); KP = pw / vw; for (const c of [scr, tmp, acc, bd, tex]) { c.width = pw; c.height = ph; }
+  buildTexture(); buildBackdrop();
+}
+function buildTexture() {                                                   // 纸的纤维与斑：相乘用（白色 = 不变）
+  const c = xctx, w = tex.width, h = tex.height, r = rngf(7); c.fillStyle = '#fff'; c.fillRect(0, 0, w, h);
+  for (let i = 0; i < 70; i++) { const x = r() * w, y = r() * h, rad = (30 + r() * 120) * KP / 6, g = c.createRadialGradient(x, y, 0, x, y, rad); g.addColorStop(0, `rgba(190,150,90,${.05 + r() * .06})`); g.addColorStop(1, 'rgba(190,150,90,0)'); c.fillStyle = g; c.fillRect(x - rad, y - rad, rad * 2, rad * 2); }
+  c.lineCap = 'round'; for (let i = 0; i < 2600; i++) { const x = r() * w, y = r() * h, a = r() * TAU, l = (3 + r() * 10) * KP / 6; c.strokeStyle = `rgba(${r() < .5 ? '120,84,40' : '255,255,255'},${.04 + r() * .07})`; c.lineWidth = .5 + r() * .8; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); c.stroke(); }
+}
+/* 路径小工具 */
+function crS(pts, closed, per = 8) {
+  const n = pts.length, out = [], g = i => closed ? pts[((i % n) + n) % n] : pts[clamp(i, 0, n - 1)], segs = closed ? n : n - 1;
+  for (let i = 0; i < segs; i++) { const p0 = g(i - 1), p1 = g(i), p2 = g(i + 1), p3 = g(i + 2); for (let k = 0; k < per; k++) { const t = k / per, t2 = t * t, t3 = t2 * t; out.push([0, 1].map(d => .5 * (2 * p1[d] + (-p0[d] + p2[d]) * t + (2 * p0[d] - 5 * p1[d] + 4 * p2[d] - p3[d]) * t2 + (-p0[d] + 3 * p1[d] - 3 * p2[d] + p3[d]) * t3))); } }
+  if (!closed) out.push(pts[n - 1]); return out;
+}
+function addPoly(p, pts, per = 1, closed = true) { const s = per > 1 ? crS(pts, closed, per) : pts; s.forEach((q, i) => i ? p.lineTo(q[0], q[1]) : p.moveTo(q[0], q[1])); if (closed) p.closePath(); }
+const poly = (pts, per = 1) => { const p = new Path2D(); addPoly(p, pts, per); return p; };
+const circ = (p, x, y, r) => { p.moveTo(x + r, y); p.arc(x, y, r, 0, TAU); };
+const ell = (p, x, y, rx, ry, rot = 0) => { p.moveTo(x + rx * Math.cos(rot), y + rx * Math.sin(rot)); p.ellipse(x, y, rx, ry, rot, 0, TAU); };
+const rect = (p, x, y, w, h) => { p.moveTo(x, y); p.lineTo(x + w, y); p.lineTo(x + w, y + h); p.lineTo(x, y + h); p.closePath(); };
+
+/* ═══════════ 3. 布景：贴幕的镂空剪纸（硅谷元素，z≈0，永远锐利、灯移它不动）═══════════ */
+function buildBackdrop() {
+  const c = bctx; c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, bd.width, bd.height); c.setTransform(KP, 0, 0, KP, -VIEW.x0 * KP, 0); c.globalCompositeOperation = 'multiply'; c.lineJoin = 'round';
+  const fill = (k, p, rule = 'evenodd') => { c.fillStyle = rgb(PAL[k]); c.fill(p, rule); }, ink = (p, w = .26) => { c.strokeStyle = rgb(PAL.ink); c.lineWidth = w; c.stroke(p); };
+  // 远山（浅绿）+ 等高线镂空
+  let p = new Path2D(); addPoly(p, [[-6, 84], [-6, 62], [14, 52], [34, 60], [58, 46], [84, 58], [110, 44], [136, 56], [166, 48], [166, 84]], 6); for (let i = 0; i < 7; i++) ell(p, 20 + i * 22, 66 + (i % 2) * 5, 6, .55, -.05); fill('sage', p); ink(p, .22);
+  // 芯片“月亮”（金）：外壳 + 引脚 + 晶圆方窗 + 十字线
+  { const cx = 80, cy = 25, s = 8; p = new Path2D(); rect(p, cx - s, cy - s, 2 * s, 2 * s); rect(p, cx - s + 2.2, cy - s + 2.2, 2 * s - 4.4, 2 * s - 4.4); fill('gold', p); const q = new Path2D(); for (let i = 0; i < 7; i++) { const t = -s + 1.6 + i * (2 * s - 3.2) / 6; rect(q, cx + t - .45, cy - s - 2.4, .9, 2.4); rect(q, cx + t - .45, cy + s, .9, 2.4); rect(q, cx - s - 2.4, cy + t - .45, 2.4, .9); rect(q, cx + s, cy + t - .45, 2.4, .9); } fill('gold', q);
+    const d = new Path2D(); rect(d, cx - s + 2.2, cy - s + 2.2, 2 * s - 4.4, 2 * s - 4.4); ink(d, .3); const cr = new Path2D(); cr.moveTo(cx - s + 2.2, cy); cr.lineTo(cx + s - 2.2, cy); cr.moveTo(cx, cy - s + 2.2); cr.lineTo(cx, cy + s - 2.2); ink(cr, .22);
+    const o = new Path2D(); rect(o, cx - s, cy - s, 2 * s, 2 * s); ink(o, .3); c.save(); c.globalAlpha = .55; const glow = c.createRadialGradient(cx, cy, 4, cx, cy, 20); glow.addColorStop(0, 'rgba(255,214,120,.55)'); glow.addColorStop(1, 'rgba(255,214,120,0)'); c.fillStyle = glow; c.fillRect(cx - 22, cy - 22, 44, 44); c.restore(); }
+  // 祥云（黄，带螺旋镂空）
+  const cloud = (x, y, s) => { const q = new Path2D(); addPoly(q, [[-9, 2], [-8, -2], [-5, -3.5], [-3, -6], [1, -6.5], [4, -4.5], [7, -4], [10, -1], [9, 2], [4, 3.2], [-4, 3.2]].map(v => [x + v[0] * s, y + v[1] * s]), 5); for (const [dx, dy, r] of [[-4, -.4, 1.4], [1, -2.4, 1.6], [6, -.8, 1.2]]) { circ(q, x + dx * s, y + dy * s, r * s * .55); } fill('yellow', q); ink(q, .24); const sp = new Path2D(); for (const [dx, dy, r] of [[-4, -.4, 1.4], [1, -2.4, 1.6], [6, -.8, 1.2]]) { sp.moveTo(x + (dx + r) * s * .9, y + dy * s); sp.arc(x + dx * s, y + dy * s, r * s * .9, 0, Math.PI * 1.6); } ink(sp, .2); };
+  cloud(46, 13, 1.25); cloud(118, 11, 1.1); cloud(24, 31, .9); cloud(140, 30, .85);
+  // 机房宝塔（红瓦、服务器机柜、LED 镂空点）
+  { const px = 19; let y = 84; for (let t = 0; t < 5; t++) { const bw = 15 - t * 1.9, bh = 6.2; p = new Path2D(); rect(p, px - bw / 2, y - bh, bw, bh); for (let r = 0; r < 2; r++) for (let i = 0; i < Math.floor(bw / 1.5) - 1; i++) circ(p, px - bw / 2 + 1.5 + i * 1.5, y - bh + 1.8 + r * 2.2, .42); fill('brown', p); ink(p, .24);
+      const e = new Path2D(); addPoly(e, [[px - bw / 2 - 4.6, y - bh + .8], [px - bw / 2 - 1.6, y - bh - .6], [px, y - bh - 3.4], [px + bw / 2 + 1.6, y - bh - .6], [px + bw / 2 + 4.6, y - bh + .8], [px + bw / 2 + 2, y - bh + 1.4], [px - bw / 2 - 2, y - bh + 1.4]], 5); for (let i = 0; i < 6; i++) { const tx = px - bw / 2 - 1 + i * (bw + 2) / 5; rect(e, tx - .18, y - bh - .3, .36, 1.3); } fill('red', e); ink(e, .24); y -= bh + 3.1; }
+    p = new Path2D(); rect(p, px - .35, y - 5, .7, 5); circ(p, px, y - 5.6, 1); fill('gold', p); ink(p, .2); }
+  // 吊桥（红橙，主缆 + 吊索）与海浪
+  { const t1 = 126, t2 = 152, top = 44, deck = 79; p = new Path2D(); for (const tx of [t1, t2]) { rect(p, tx - 1.1, top, 2.2, deck - top + 5); for (let k = 0; k < 4; k++) rect(p, tx - 3, top + 6 + k * 8, 6, 1.1); } rect(p, 96, deck, 70, 1.8); fill('orange', p); ink(p, .22);
+    p = new Path2D(); for (const [xa, xb, sag] of [[96, t1, 12], [t1, t2, 26], [t2, 166, 12]]) { p.moveTo(xa, deck - (xa === 96 ? 2 : 0)); for (let i = 1; i <= 24; i++) { const u = i / 24, x = lerp(xa, xb, u), y0 = xa === 96 ? deck : top, y1 = xb === 166 ? deck : top; p.lineTo(x, lerp(y0, y1, u) + sag * Math.sin(Math.PI * u) * (xa === t1 ? 1 : .55)); } } ink(p, .3);
+    p = new Path2D(); for (let x = 100; x < 166; x += 2.4) { const u = (x - t1) / (t2 - t1), y = u >= 0 && u <= 1 ? top + 26 * Math.sin(Math.PI * u) : deck - 6; if (y < deck - .5) { p.moveTo(x, y); p.lineTo(x, deck); } } ink(p, .16);
+    p = new Path2D(); for (let i = 0; i < 9; i++) { const wx = 100 + i * 8, wy = 82.4 + (i % 2) * 1; p.moveTo(wx, wy); p.quadraticCurveTo(wx + 2, wy - 1.6, wx + 4, wy); p.quadraticCurveTo(wx + 5.2, wy + 1.2, wx + 7, wy); } ink(p, .3); }
+  // 棕榈
+  const palm = (x, y, h, lean) => { p = new Path2D(); addPoly(p, [[x - .7, y], [x + lean * .3 - .5, y - h * .5], [x + lean - .4, y - h], [x + lean + .4, y - h], [x + lean * .3 + .5, y - h * .5], [x + .7, y]], 4); fill('brown', p); const f = new Path2D(); for (let k = 0; k < 7; k++) { const a = -Math.PI * .95 + k * Math.PI * .95 / 3, tx = x + lean + Math.cos(a) * 6.5, ty = y - h + Math.sin(a) * 4 + 3.4; f.moveTo(x + lean, y - h); f.quadraticCurveTo(x + lean + Math.cos(a) * 3.6, y - h - 2.6, tx, ty); f.quadraticCurveTo(x + lean + Math.cos(a) * 3.4, y - h - .6, x + lean, y - h); } fill('green', f, 'nonzero'); ink(f, .2); };
+  palm(37, 84, 17, 2.5); palm(42, 84, 12, -2); palm(104, 84, 15, -2.2);
+  // 灯笼：红色，刻“算”“力”
+  const lantern = (x, ch) => { p = new Path2D(); ell(p, x, 10.6, 3.3, 4.2); fill('red', p); ink(p, .26); p = new Path2D(); rect(p, x - 1.6, 5.2, 3.2, 1); rect(p, x - 1.6, 14.8, 3.2, 1); fill('gold', p); p = new Path2D(); p.moveTo(x, 15.8); p.lineTo(x, 20); ink(p, .3); c.save(); c.globalCompositeOperation = 'destination-out'; c.fillStyle = '#000'; c.font = '700 4px "PingFang SC","Microsoft YaHei",serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(ch, x, 10.9); c.restore(); p = new Path2D(); p.moveTo(x, 0); p.lineTo(x, 5.2); ink(p, .3); };
+  lantern(9, '算'); lantern(151, '力');
+  // 回纹边 + 台口（地面）
+  p = new Path2D(); rect(p, 0, 0, 160, 3.4); for (let x = 0; x < 160; x += 3.4) rect(p, x + .95, .95, 1.5, 1.5); fill('red', p);
+  p = new Path2D(); rect(p, 0, 84, 160, 12); for (let x = 3; x < 160; x += 8) rect(p, x, 87, .5, 8); fill('brown', p); p = new Path2D(); rect(p, 0, 84, 160, 1.1); fill('red', p); p = new Path2D(); p.moveTo(0, 84); p.lineTo(160, 84); ink(p, .3);
+}
+
+/* ═══════════ 4. 人偶：部件几何（镂空 + 彩绘 + 墨线）═══════════ */
+const DIM = { T: 11, UA: 8.1, FA: 9.0, TH: 8.4, SH: 8.8, FT: 1.9 };
+const part = (paints, o = {}) => ({ paints, fillInk: o.fillInk || null, ink: o.ink || null, inkW: o.inkW || .3 });
+const outlineOf = pts => { const p = new Path2D(); addPoly(p, pts); return p; };
+const UA = [[-1.1, -1.8], [2, -2], [6, -1.6], [8.4, -1.2], [9, 0], [8.4, 1.2], [6, 1.6], [2, 2], [-1.1, 1.8], [-1.6, 0]];
+const FA = [[-1.1, -1.6], [3, -1.5], [6.4, -1.2], [6.9, -1.7], [8.4, -1.8], [9, -2.9], [10.2, -3], [10.5, -1.8], [11.5, -.8], [11.8, .4], [10.9, 1.3], [9, 1.6], [7.2, 1.4], [6.6, 1.2], [3, 1.5], [-1.1, 1.6], [-1.6, 0]];
+const TH = [[-1.2, -2.2], [3, -2.3], [7.8, -1.9], [9, -1.4], [9.2, 0], [9, 1.4], [7.8, 1.9], [3, 2.3], [-1.2, 2.2], [-1.8, 0]];
+const SHN = [[-1, -1.9], [3, -1.6], [7.6, -1.2], [8.6, -1.5], [9.4, -1.4], [9.5, 0], [9.4, 1.4], [8.6, 1.5], [7.6, 1.2], [3, 1.6], [-1, 1.9], [-1.5, 0]];
+const FOOT = [[-1.7, -1.4], [1, -1.6], [2.2, -.6], [3.6, .2], [5.4, .9], [5.6, 1.9], [-1.9, 1.9], [-2.2, .2]];
+const TORSO = [[-3.4, -.8], [-4.3, 1.4], [-4.5, 4.8], [-4, 8.2], [-3.5, 11.6], [-1.5, 12.2], [1.5, 12.2], [3.5, 11.6], [4, 8.2], [4.5, 4.8], [4.3, 1.4], [3.4, -.8], [1.7, -1.2], [-1.7, -1.2]];
+const HEAD_S = [[-2.2, .8], [-2.6, -1.8], [-3.7, -3.6], [-4.1, -6.3], [-3.3, -9], [-1.3, -10.9], [1.5, -11.5], [3.3, -9.7], [3.9, -8.1], [3.4, -7.2], [4.2, -6.2], [5.7, -4.9], [4.5, -4.1], [4.4, -3.2], [5, -2.5], [4.3, -1.85], [4.75, -1.2], [3.8, -.1], [3.9, 1], [2.5, 1.7], [.9, 1.6], [.5, 2.6], [1.4, 3.4], [-1.7, 3.4], [-1.6, 1.4]];
+const HEAD_D = [[-2.2, .8], [-2.7, -1.8], [-3.8, -3.6], [-4.2, -6.3], [-3.5, -9], [-1.5, -10.8], [1.4, -11.3], [3.2, -9.8], [3.8, -8.2], [3.4, -7.4], [4.4, -6.2], [6, -4.6], [4.7, -3.9], [4.5, -3], [5, -2.4], [4.3, -1.8], [4.6, -1.1], [3.7, 0], [3.8, 1.1], [2.4, 1.8], [.9, 1.6], [.5, 2.6], [1.4, 3.4], [-1.7, 3.4], [-1.6, 1.4]];
+function limbParts(k) {                                                    // k：袖 / 裤色
+  const ua = new Path2D(); addPoly(ua, UA); circ(ua, 0, 0, .42); circ(ua, 8.1, 0, .42); for (const x of [3, 4.8, 6.4]) addPoly(ua, [[x - .5, 0], [x, -.5], [x + .5, 0], [x, .5]]);
+  const fa = new Path2D(); addPoly(fa, FA); circ(fa, 0, 0, .42); circ(fa, 4.2, 0, .38); const th = new Path2D(); addPoly(th, TH); circ(th, 0, 0, .42); circ(th, 8.4, 0, .42); for (const x of [3.2, 5.2]) addPoly(th, [[x - .45, 0], [x, -.6], [x + .45, 0], [x, .6]]);
+  const sh = new Path2D(); addPoly(sh, SHN); circ(sh, 0, 0, .42); circ(sh, 8.8, 0, .4); for (const x of [3.4, 5.4]) circ(sh, x, 0, .34);
+  const ft = new Path2D(); addPoly(ft, FOOT);
+  return { ua: part([['leather', ua], [k.sleeve, ua]], { ink: outlineOf(UA) }), fa: part([['leather', fa], [k.sleeve, fa]], { ink: outlineOf(FA) }), th: part([['leather', th], [k.pants, th]], { ink: outlineOf(TH) }), sh: part([['leather', sh], [k.pants, sh]], { ink: outlineOf(SHN) }), ft: part([['ink', ft]], { ink: outlineOf(FOOT), inkW: .2 }) };
+}
+function torsoParts(kind) {
+  const base = new Path2D(); addPoly(base, TORSO); circ(base, .9, 1.7, .45); circ(base, -.9, 1.7, .45); circ(base, .8, 11.5, .45); circ(base, -.8, 11.5, .45);
+  const cover = new Path2D(); let paints;
+  if (kind === 'S') {                                                       // Sam：抓绒背心 + 拉链
+    addPoly(cover, [[-3.9, 1.5], [-4.5, 4.8], [-4, 8.2], [-3.5, 11.5], [3.5, 11.5], [4, 8.2], [4.5, 4.8], [3.9, 1.5], [1.2, 1], [-1.2, 1]]); rect(cover, 1.3, 2, .38, 8.8); for (let i = 0; i < 7; i++) circ(cover, -2.8 + i * .95, 10.6, .3); for (const [x, y] of [[2.9, 4], [3.4, 4.9], [2.6, 5]]) circ(cover, x, y, .28);
+    paints = [['leather', base], ['teal', cover]];
+  } else {                                                                  // Dario：开衫 + 纽扣 + 口袋
+    addPoly(cover, [[-3.6, .4], [-4.5, 4.8], [-4, 8.2], [-3.5, 11.5], [3.5, 11.5], [4, 8.2], [4.5, 4.8], [3.6, .4], [2.4, .4], [1.2, 4.6], [-.2, 1.2]]); for (const y of [5.6, 7.4, 9.2]) circ(cover, 1.5, y, .32); for (let i = 0; i < 5; i++) circ(cover, -3 + i * 1.3, 10.8, .28);
+    paints = [['leather', base], ['orange', cover]];
+  }
+  const pk = new Path2D(); pk.moveTo(-3, 8); pk.lineTo(-1, 8.2); pk.lineTo(-1.1, 10); pk.lineTo(-3, 9.8); return part(paints, { ink: (() => { const p = outlineOf(TORSO); p.addPath(pk); return p; })() });
+}
+function headParts(kind) {
+  const P = kind === 'S' ? HEAD_S : HEAD_D, face = new Path2D(); addPoly(face, P); const eyeY = -6.5; ell(face, 2.5, eyeY, .8, .38, .05);
+  const ink = new Path2D(), fi = new Path2D(); ink.moveTo(1.5, -7.6 - (kind === 'S' ? .1 : -.25)); ink.lineTo(3.7, kind === 'S' ? -8.2 : -7.4); circ(fi, 2.85, eyeY, .3);            // 眉 / 瞳
+  circ(ink, -.7, -4.6, 1); ink.moveTo(-1.1, -4.9); ink.quadraticCurveTo(-.6, -4.2, -.2, -4.9);                                               // 耳
+  const paints = [['skin', face]], extra = new Path2D();
+  if (kind === 'S') {                                                       // 短发（露额、斜刘海）+ 发丝镂空
+    const hair = new Path2D(); addPoly(hair, [[-4.3, -6], [-4.2, -9.2], [-2.9, -11.4], [-.4, -12.5], [2.3, -12.1], [4.2, -10.6], [4.6, -9.2], [3.4, -9], [2.2, -9.9], [.6, -9.6], [-1, -8.8], [-2.6, -7.4], [-3.1, -5.2]]); for (const [x, y, r] of [[.8, -11, -.5], [-1.2, -10.7, -.2], [2.6, -10.8, -.9], [-2.6, -9, .3]]) ell(hair, x, y, .9, .16, r); paints.push(['hair', hair]);
+    ink.moveTo(3.2, -2.5); ink.quadraticCurveTo(4, -1.7, 4.65, -2.15);                                                                       // 笑
+  } else {                                                                  // 卷发（云朵状）+ 圆框眼镜 + 胡茬
+    const hair = new Path2D(), curls = [[-3.6, -7], [-4, -9.2], [-3, -11.4], [-1, -12.6], [1.4, -12.6], [3.2, -11.6], [4.1, -9.8], [-2.2, -9.6], [.2, -10.4], [2, -9.9], [-3.2, -5.4]];
+    for (const [x, y] of curls) circ(hair, x, y, 2.2); paints.push(['brown', hair, 'nonzero']); for (const [x, y] of curls) { extra.moveTo(x + 1.2, y); extra.arc(x, y, 1.2, 0, Math.PI * 1.55); }
+    circ(ink, 2.6, -6.4, 1.6); ink.moveTo(1, -6.4); ink.lineTo(-.6, -6.6); ink.moveTo(4.2, -6.3); ink.lineTo(4.55, -6.1);                    // 镜框 / 镜腿 / 鼻托
+    for (let i = 0; i < 12; i++) circ(fi, 2.4 + (i % 4) * .55 + (i > 7 ? .3 : 0), -.9 + Math.floor(i / 4) * .8 + ((i * 7) % 3) * .12, .11);   // 胡茬
+    ink.moveTo(3.4, -2.1); ink.lineTo(4.5, -2.15);                                                                                           // 抿嘴
+  }
+  const inkAll = new Path2D(); inkAll.addPath(ink); inkAll.addPath(outlineOf(P)); return { ...part(paints, { fillInk: fi, ink: inkAll, inkW: .28 }), extra };
+}
+const MAKE = {
+  S: () => ({ ...limbParts({ sleeve: 'grey', pants: 'blue' }), torso: torsoParts('S'), head: headParts('S') }),
+  D: () => ({ ...limbParts({ sleeve: 'orange', pants: 'brown' }), torso: torsoParts('D'), head: headParts('D') })
+};
+function drawGeom(c, g) {
+  for (const [k, p, rule] of g.paints) { c.fillStyle = rgb(PAL[k]); c.fill(p, rule || 'evenodd'); }
+  if (g.fillInk) { c.fillStyle = rgb(PAL.ink); c.fill(g.fillInk); }
+  if (g.ink) { c.strokeStyle = rgb(PAL.ink); c.lineWidth = g.inkW; c.lineJoin = 'round'; c.lineCap = 'round'; c.stroke(g.ink); }
+  if (g.extra) { c.strokeStyle = rgb(PAL.ink); c.lineWidth = .22; c.stroke(g.extra); }
+}
+
+/* ═══════════ 5. 人偶物理：签子 → 躯干；手签 → 手；重力 Verlet 肘/膝 + 限位；迈步 ═══════════ */
+const fol = v => ({ p: v, v: 0, t: v, w: 13 }), stepF = (o, h) => { o.v += (o.w * o.w * (o.t - o.p) - 2 * o.w * o.v) * h; o.p += o.v * h; };
+const Rm = (a, x, y) => [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)];
+function mkPuppet(cfg) {
+  const F = cfg.face, p = { ...cfg, z: 12, mouth: 0, sw: { a: 0, v: 0 }, hd: { a: 0, v: 0 }, flap: 0, prevVx: 0, walk: null, held: { F: null, B: null }, hand: { F: { dx: 6, dy: 9.5, abs: null }, B: { dx: -3, dy: 10, abs: null } }, pose: {}, parts: MAKE[cfg.kind](), baseY: cfg.floorY - 29.4, dragging: null };
+  p.f = { nx: fol(cfg.x), ny: fol(p.baseY), tilt: fol(0), hFx: fol(cfg.x + F * 6), hFy: fol(p.baseY + 9), hBx: fol(cfg.x - F * 3), hBy: fol(p.baseY + 10) };
+  p.el = { F: { x: cfg.x + F * 4, y: p.baseY + 8, px: cfg.x + F * 4, py: p.baseY + 8 }, B: { x: cfg.x - F * 2, y: p.baseY + 9, px: cfg.x - F * 2, py: p.baseY + 9 } };
+  p.foot = { F: { x: cfg.x + F * 3, y: cfg.floorY, state: 'plant', t: 0 }, B: { x: cfg.x - F * 2.6, y: cfg.floorY, state: 'plant', t: 0 } };
+  return p;
+}
+function verlet(ch, root, tip, l1, l2, sign, h) {
+  const g = 118, vx = (ch.x - ch.px) * .985, vy = (ch.y - ch.py) * .985; ch.px = ch.x; ch.py = ch.y; ch.x += vx; ch.y += vy + g * h * h;
+  for (let it = 0; it < 5; it++) { for (const [q, l] of [[root, l1], [tip, l2]]) { let dx = ch.x - q.x, dy = ch.y - q.y, d = Math.hypot(dx, dy) || 1e-6; ch.x = q.x + dx / d * l; ch.y = q.y + dy / d * l; } }
+  const vx1 = tip.x - root.x, vy1 = tip.y - root.y, wx = ch.x - root.x, wy = ch.y - root.y, cr = wx * vy1 - wy * vx1;   // 关节限位：肘只能朝一侧弯，越界则镜像回来
+  if (cr * sign < 0) { const l2v = vx1 * vx1 + vy1 * vy1 || 1, k = (wx * vx1 + wy * vy1) / l2v, fx = vx1 * k, fy = vy1 * k; ch.x = root.x + 2 * fx - wx; ch.y = root.y + 2 * fy - wy; ch.px = ch.x; ch.py = ch.y; }
+}
+function ik2(r, t, l1, l2, side) { let dx = t.x - r.x, dy = t.y - r.y, d = clamp(Math.hypot(dx, dy), Math.abs(l1 - l2) + .01, l1 + l2 - .01), a = Math.atan2(dy, dx), ang = Math.acos(clamp((l1 * l1 + d * d - l2 * l2) / (2 * l1 * d), -1, 1)); return { x: r.x + Math.cos(a + side * ang) * l1, y: r.y + Math.sin(a + side * ang) * l1 }; }
+function stepPuppet(p, h, t) {
+  const F = p.face, f = p.f;
+  if (p.walk && !p.dragging) { const s = clamp(p.walk.x - f.nx.t, -p.walk.v * h, p.walk.v * h); f.nx.t += s; }
+  stepF(f.nx, h); stepF(f.ny, h); stepF(f.tilt, h);
+  for (const k of ['F', 'B']) { const hd = p.hand[k]; f['h' + k + 'x'].t = hd.abs ? hd.abs.x : f.nx.p + F * hd.dx; f['h' + k + 'y'].t = hd.abs ? hd.abs.y : f.ny.p + hd.dy; stepF(f['h' + k + 'x'], h); stepF(f['h' + k + 'y'], h); }
+  const ax = (f.nx.v - p.prevVx) / h; p.prevVx = f.nx.v;
+  p.sw.v += (-26 * p.sw.a - 4.2 * p.sw.v - .03 * ax * F) * h; p.sw.a = clamp(p.sw.a + p.sw.v * h, -.28, .28);
+  const th = f.tilt.p + p.sw.a, N = { x: f.nx.p, y: f.ny.p };
+  p.hd.v += (-34 * p.hd.a - 5 * p.hd.v - .35 * p.sw.v - .02 * ax * F) * h; p.hd.a = clamp(p.hd.a + p.hd.v * h, -.45, .45);
+  const at = (dx, dy) => { const q = Rm(th, F * dx, dy); return { x: N.x + q[0], y: N.y + q[1] }; };
+  const P = p.pose; P.N = N; P.th = th; P.shF = at(.9, 1.7); P.shB = at(-.9, 1.7); P.hipF = at(.8, DIM.T + .4); P.hipB = at(-.8, DIM.T + .4);
+  const reach = DIM.UA + DIM.FA - .4;
+  for (const k of ['F', 'B']) { const sh = k === 'F' ? P.shF : P.shB; let tx = f['h' + k + 'x'].p, ty = f['h' + k + 'y'].p, dx = tx - sh.x, dy = ty - sh.y, d = Math.hypot(dx, dy); if (d > reach) { tx = sh.x + dx / d * reach; ty = sh.y + dy / d * reach; } const tip = { x: tx, y: ty }; verlet(p.el[k], sh, tip, DIM.UA, DIM.FA, -F, h); P['h' + k] = tip; P['el' + k] = { x: p.el[k].x, y: p.el[k].y }; }
+  // 脚：踩台口；髋太高则腾空；偏离过远则迈步
+  const floor = p.floorY - DIM.FT, legR = DIM.TH + DIM.SH - .5, other = { F: 'B', B: 'F' };
+  for (const k of ['F', 'B']) {
+    const ft = p.foot[k], hip = k === 'F' ? P.hipF : P.hipB, sgn = k === 'F' ? 1 : -1;
+    if (ft.state === 'step') { ft.t += h / .15; const u = Math.min(1, ft.t); ft.x = lerp(ft.x0, ft.x1, sst(0, 1, u)); ft.y = p.floorY - Math.sin(u * Math.PI) * 3.4; if (u >= 1) { ft.state = 'plant'; ft.y = p.floorY; if (p.onStep) p.onStep(p); } }
+    else if (floor - hip.y > legR + .5) { ft.state = 'air'; ft.x = lerp(ft.x, hip.x + sgn * F * 1.2, .14); ft.y = lerp(ft.y, hip.y + legR * .86 + DIM.FT, .14); }
+    else { if (ft.state === 'air') { ft.state = 'plant'; ft.x = hip.x + sgn * F * 2.4; ft.y = p.floorY; }
+      const dx = hip.x - ft.x; if (Math.abs(dx) > 6.4 && p.foot[other[k]].state !== 'step') { ft.state = 'step'; ft.t = 0; ft.x0 = ft.x; ft.x1 = hip.x + Math.sign(dx) * 2.8; } else if (ft.state === 'plant') ft.y = p.floorY; }
+    const an = { x: ft.x, y: ft.y - DIM.FT }; P['an' + k] = an; P['kn' + k] = ik2(hip, an, DIM.TH, DIM.SH, -F); P['ft' + k] = { x: ft.x, y: ft.y };
+  }
+  p.flap += h * (2.2 + Math.min(5, Math.abs(f.nx.v) * .35)); p.mouth += ((p.speaking ? .5 + .5 * Math.abs(Math.sin(t * 17)) : 0) - p.mouth) * .2;
+}
+function limb(c, g, a, b, F) { c.save(); c.translate(a.x, a.y); c.rotate(Math.atan2(b.y - a.y, b.x - a.x)); c.scale(1, F); drawGeom(c, g); c.restore(); }
+function upright(c, g, N, a, F, after) { c.save(); c.translate(N.x, N.y); c.rotate(a); c.scale(F, 1); drawGeom(c, g); if (after) after(c); c.restore(); }
+function drawFlag(c, p) {
+  const F = p.face, P = p.pose, bw = p.flagText.length > 6 ? 17 : 13.5, ph = -15.2, am = .5 + Math.min(2, p.flap * .06 + Math.abs(p.f.nx.v) * .05); c.save(); c.translate(P.N.x, P.N.y); c.rotate(P.th); c.scale(F, 1);
+  const pole = new Path2D(); pole.moveTo(-3.4, 3); pole.lineTo(-4.4, ph - 1); pole.lineTo(-4.05, ph - 1); pole.lineTo(-3.05, 3); pole.closePath(); c.fillStyle = rgb(PAL.ink); c.fill(pole);
+  const top = [], bot = []; for (let i = 0; i <= 6; i++) { const u = i / 6, w = Math.sin(p.flap * 3 - u * 4) * am * u; top.push([-4.4 - bw * u, ph + w]); bot.push([-4.4 - bw * u, ph + 5.6 * (1 - .15 * u) + w * 1.25]); }
+  const flag = new Path2D(); addPoly(flag, [...top, ...bot.reverse()]); c.fillStyle = rgb(PAL[p.flagKey]); c.fill(flag); c.strokeStyle = rgb(PAL.ink); c.lineWidth = .3; c.lineJoin = 'round'; c.stroke(flag);
+  c.save(); c.globalCompositeOperation = 'destination-out'; c.fillStyle = '#000'; c.translate(-4.4 - bw * .5, ph + 2.9 + Math.sin(p.flap * 3 - 2) * am * .5); c.scale(F, 1); c.font = '700 2.7px "PingFang SC","Microsoft YaHei",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(p.flagText, 0, 0); c.restore(); c.restore();
+}
+function drawPuppet(c) {
+  const p = this, F = p.face, P = p.pose, pt = p.parts; c.globalCompositeOperation = 'source-over'; drawFlag(c, p); c.globalCompositeOperation = 'multiply';
+  c.strokeStyle = rgb(PAL.ink); c.lineWidth = .32; c.lineCap = 'round'; c.beginPath(); c.moveTo(P.N.x, P.N.y + 1); c.lineTo(P.N.x - 2 * F, 120); c.moveTo(P.hF.x, P.hF.y); c.lineTo(P.hF.x + 4 * F, 120); c.moveTo(P.hB.x, P.hB.y); c.lineTo(P.hB.x - 2 * F, 120); c.stroke();
+  limb(c, pt.ua, P.shB, P.elB, F); limb(c, pt.fa, P.elB, P.hB, F);
+  limb(c, pt.th, P.hipB, P.knB, F); limb(c, pt.sh, P.knB, P.anB, F); c.save(); c.translate(P.anB.x, P.anB.y); c.scale(F, 1); drawGeom(c, pt.ft); c.restore();
+  upright(c, pt.torso, P.N, P.th, F); upright(c, pt.head, P.N, P.th + p.hd.a, F, cc => { if (p.mouth > .02) { cc.fillStyle = rgb(PAL.ink); cc.beginPath(); cc.ellipse(4, -2.05, .25 + .55 * p.mouth, .15 + .5 * p.mouth, 0, 0, TAU); cc.fill(); } });
+  limb(c, pt.th, P.hipF, P.knF, F); limb(c, pt.sh, P.knF, P.anF, F); c.save(); c.translate(P.anF.x, P.anF.y); c.scale(F, 1); drawGeom(c, pt.ft); c.restore();
+  limb(c, pt.ua, P.shF, P.elF, F); limb(c, pt.fa, P.elF, P.hF, F);
+  if (p.held.F) { c.save(); c.translate(P.hF.x + F * 3.5, P.hF.y - 1); p.held.F(c, F); c.restore(); }
+}
+
+/* ═══════════ 6. 法宝（独立图层：各有各的离幕距离 z）═══════════ */
+const props = [];
+const CHIP = (() => { const p = new Path2D(); rect(p, -1.8, -1.8, 3.6, 3.6); rect(p, -.9, -.9, 1.8, 1.8); for (let i = 0; i < 4; i++) { const t = -1.3 + i * .87; rect(p, t - .2, -3, .4, 1.2); rect(p, t - .2, 1.8, .4, 1.2); rect(p, -3, t - .2, 1.2, .4); rect(p, 1.8, t - .2, 1.2, .4); } return p; })();
+const PAW = (() => { const p = new Path2D(); addPoly(p, [[-6, 6], [-7, 0], [-6.4, -4], [-4.8, -5], [-4, -9.5], [-2.6, -10], [-2, -5.4], [-.6, -12], [.8, -12], [1.2, -5.6], [2.8, -11], [4.2, -10.4], [3.8, -4.6], [5.6, -7.6], [6.8, -6.8], [5.6, -1.4], [7.6, .6], [6.6, 2.6], [4, 6], [3, 9], [-3, 9]]); circ(p, 0, 2, 1.5); circ(p, -3, 4, .7); circ(p, 3, 4.2, .7); for (let i = 0; i < 4; i++) ell(p, -3.4 + i * 2.3, -6.6, .4, 1.6, 0); return p; })();
+function spawn(o) { o.age = 0; o.dead = false; o.alpha = o.alpha ?? 1; o.r = o.r || 6; props.push(o); return o; }
+function chipDraw(c) { c.save(); c.translate(this.px, this.py); c.rotate(this.rot); c.fillStyle = rgb(PAL.gold); c.fill(CHIP); c.strokeStyle = rgb(PAL.ink); c.lineWidth = .25; c.stroke(CHIP); c.restore(); }
+function tagDraw(c) { c.save(); c.translate(this.px, this.py); c.rotate(this.rot); const p = new Path2D(); addPoly(p, [[-7, -1.8], [6, -1.8], [7.4, 0], [6, 1.8], [-7, 1.8]]); c.fillStyle = rgb(PAL[this.col]); c.fill(p); c.strokeStyle = rgb(PAL.ink); c.lineWidth = .28; c.stroke(p); c.globalCompositeOperation = 'destination-out'; c.fillStyle = '#000'; c.font = '700 1.9px ui-monospace,Menlo,monospace'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(this.txt, -.3, .15); c.restore(); c.globalCompositeOperation = 'multiply'; }
+function scrollDraw(c) { c.save(); c.translate(this.px, this.py); c.rotate(this.rot); const L = this.len * this.u; if (this._u !== this.u) { this._u = this.u; const p = new Path2D(); rect(p, -L / 2, -2.4, L, 4.8); for (let i = 0; i < 4; i++) for (let x = -L / 2 + 2; x < L / 2 - 2; x += 2.6) rect(p, x, -1.9 + i * 1.05, 1.7, .32); this._p = p; } const p = this._p; c.fillStyle = rgb(PAL.leather); c.fill(p); c.strokeStyle = rgb(PAL.ink); c.lineWidth = .3; c.stroke(p); const e = new Path2D(); circ(e, -L / 2, 0, 2.6); circ(e, L / 2, 0, 2.6); circ(e, -L / 2, 0, 1); circ(e, L / 2, 0, 1); c.fillStyle = rgb(PAL.brown); c.fill(e); c.stroke(e); c.restore(); }
+function pawDraw(c) { c.save(); c.translate(this.px, this.py); c.rotate(this.rot); c.scale(this.sc, this.sc); c.fillStyle = rgb(PAL.orange); c.fill(PAW); c.strokeStyle = rgb(PAL.ink); c.lineWidth = .3; c.stroke(PAW); c.restore(); }
+function shieldDraw(c, F) { const p = new Path2D(); circ(p, 0, 0, 6.6); circ(p, 0, 0, 5.4); const q = new Path2D(); circ(q, 0, 0, 5.4); c.fillStyle = rgb(PAL.gold); c.fill(p); c.fillStyle = rgb(PAL.red); c.fill(q); c.strokeStyle = rgb(PAL.ink); c.lineWidth = .3; c.stroke(p); c.save(); c.globalCompositeOperation = 'destination-out'; c.fillStyle = '#000'; c.font = '700 6.4px "PingFang SC","Microsoft YaHei",serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.scale(F, 1); c.fillText('拒', 0, .4); c.restore(); c.globalCompositeOperation = 'multiply'; }
+
+/* ═══════════ 7. 角色与舞台状态 ═══════════ */
+const FLOOR_SH = 84, Z0 = 12;                                                // 屏幕上台口 y = 84
+const m0 = magOf(Z0), floorPlane = toPlaneRef(80, FLOOR_SH, Z0).y;
+const sam = mkPuppet({ kind: 'S', name: 'Sam', face: 1, x: toPlaneRef(-30, 0, Z0).x, floorY: floorPlane, flagText: 'OPENAI', flagKey: 'teal' });
+const dario = mkPuppet({ kind: 'D', name: 'Dario', face: -1, x: toPlaneRef(190, 0, Z0).x, floorY: floorPlane, flagText: 'ANTHROPIC', flagKey: 'orange' });
+const PUP = [sam, dario]; dario.held.F = null;
+const POSE = { rest: { F: [6, 9.5], B: [-3, 10] }, point: { F: [16, 4], B: [-3, 10] }, up2: { F: [9, -9], B: [3, -10] }, guard: { F: [11, 3], B: [6, 6] }, scratch: { F: [3.5, -11], B: [-3, 10] }, push: { F: [16, 7], B: [9, 5] }, wave: { F: [10, -6], B: [-3, 10] }, shake: { F: [15, 7.5], B: [-3, 10] }, fist: { F: [14, 1], B: [-2, 9] } };
+const pose = (p, n) => { const q = POSE[n]; p.hand.F.dx = q.F[0]; p.hand.F.dy = q.F[1]; p.hand.B.dx = q.B[0]; p.hand.B.dy = q.B[1]; p.hand.F.abs = p.hand.B.abs = null; };
+const goto_ = (p, sx, v = 26) => { p.walk = { x: toPlaneRef(sx, 0, p.z).x, v: v / magOf(p.z) }; };
+const lean = (p, a) => { p.f.tilt.t = a * p.face; };
+const jump = (p, hgt = 9) => { p.f.ny.t = p.baseY - hgt; setTimeout(() => p.f.ny.t = p.baseY, 0); };
+function setZ(p, z) { p.z = z; }
+function bumpLamp(s = 1, dir = 1) { LAMP.vx += 30 * s * dir; LAMP.vy -= 10 * s; SND.wood(); }
+
+/* ═══════════ 8. 渲染：纸 → 布景 → 各层（火焰采样半影）→ 舞台外框 ═══════════ */
+function drawLit() {
+  const c = sctx, L = lampPos(), hx = (L.x - VIEW.x0) * KP, hy = L.y * KP, R = Math.hypot(SCR_W, SCR_H) * KP * 1.1, br = LAMP.br;
+  c.globalCompositeOperation = 'source-over'; const g = c.createRadialGradient(hx, hy, 0, hx, hy, R);
+  for (const r of [0, 16, 32, 50, 72, 100, 140]) { const E = Math.pow(LAMP.z / Math.sqrt(LAMP.z * LAMP.z + r * r), 3), f = (.26 + .74 * E) * br; g.addColorStop(Math.min(1, r * KP / R), `rgb(${Math.min(255, 255 * f * .99) | 0},${Math.min(255, 238 * f) | 0},${Math.min(255, 190 * f) | 0})`); }
+  c.fillStyle = g; c.fillRect(0, 0, scr.width, scr.height); c.globalCompositeOperation = 'multiply'; c.drawImage(tex, 0, 0); c.drawImage(bd, 0, 0);
+}
+function flameSample(i, n) { const a = i * 2.39996 + .5, rr = Math.sqrt((i + .5) / n); return [Math.cos(a) * rr * LAMP.r * .75, Math.sin(a) * rr * LAMP.r * 1.25]; }
+function drawLayer(o) {
+  const L = lampPos(), m = magOf(o.z), pen = LAMP.r * o.z / Math.max(2, LAMP.z - o.z), c = toScreen(o.cx, o.cy, o.z, L), R = o.r * m + pen * 1.4 + 2;
+  let x0 = Math.floor((c.x - R - VIEW.x0) * KP), y0 = Math.floor((c.y - R) * KP), x1 = Math.ceil((c.x + R - VIEW.x0) * KP), y1 = Math.ceil((c.y + R) * KP); x0 = Math.max(0, x0); y0 = Math.max(0, y0); x1 = Math.min(scr.width, x1); y1 = Math.min(scr.height, y1); if (x1 <= x0 || y1 <= y0) return;
+  const w = x1 - x0, h = y1 - y0, n = pen * KP < .9 ? 1 : clamp(Math.round(4 + pen * KP * .45), 5, 12);
+  actx.setTransform(1, 0, 0, 1, 0, 0); actx.globalCompositeOperation = 'source-over'; actx.globalAlpha = 1; actx.clearRect(x0, y0, w, h);
+  for (let i = 0; i < n; i++) {
+    const [dx, dy] = n === 1 ? [0, 0] : flameSample(i, n), Lx = L.x + dx, Ly = L.y + dy;
+    tctx.setTransform(1, 0, 0, 1, 0, 0); tctx.globalCompositeOperation = 'source-over'; tctx.clearRect(x0, y0, w, h); tctx.save(); tctx.beginPath(); tctx.rect(x0, y0, w, h); tctx.clip();
+    const s = KP * m; tctx.setTransform(s, 0, 0, s, (Lx * (1 - m) - VIEW.x0) * KP, Ly * (1 - m) * KP); tctx.globalCompositeOperation = 'multiply'; o.draw(tctx); tctx.restore();
+    actx.globalCompositeOperation = n === 1 ? 'source-over' : 'lighter'; actx.globalAlpha = 1 / n; actx.drawImage(tmp, x0, y0, w, h, x0, y0, w, h);
+  }
+  sctx.globalCompositeOperation = 'multiply'; sctx.globalAlpha = o.alpha ?? 1; if (n > 1 && pen * KP > 5 && 'filter' in sctx) sctx.filter = `blur(${clamp(pen * KP * .3, .5, 26).toFixed(1)}px)`; sctx.drawImage(acc, x0, y0, w, h, x0, y0, w, h); sctx.filter = 'none'; sctx.globalAlpha = 1;   // 取样得到的软影再做一次与半影同尺度的平滑，消除有限采样的重影
+}
+function layers() {
+  const out = []; for (const p of PUP) out.push({ z: p.z, cx: p.pose.N.x, cy: p.pose.N.y + 20, r: 46, draw: drawPuppet.bind(p), alpha: 1, name: p.name });
+  for (const o of props) if (!o.dead) out.push({ z: o.z, cx: o.px, cy: o.py, r: o.r, draw: o.draw.bind(o), alpha: o.alpha, name: o.name });
+  return out;
+}
+function renderScreen() {
+  drawLit(); const LY = layers(); for (const o of LY) drawLayer(o);
+  const L = lampPos(), hx = (L.x - VIEW.x0) * KP, hy = L.y * KP, g = sctx.createRadialGradient(hx, hy, 0, hx, hy, 26 * KP);           // 灯眩光（加亮）
+  sctx.globalCompositeOperation = 'lighter'; g.addColorStop(0, 'rgba(255,225,150,.16)'); g.addColorStop(1, 'rgba(255,225,150,0)'); sctx.fillStyle = g; sctx.fillRect(0, 0, scr.width, scr.height); sctx.globalCompositeOperation = 'source-over'; return LY;
+}
+function drawStage() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); const bg = ctx.createRadialGradient(W / 2, SR.y + SR.h / 2, 60, W / 2, SR.y + SR.h / 2, Math.max(W, H) * .8); bg.addColorStop(0, '#2a1710'); bg.addColorStop(1, '#070302'); ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  const fw = Math.max(8, SR.w * .022);                                       // 木框
+  ctx.fillStyle = '#3a2113'; ctx.fillRect(SR.x - fw, SR.y - fw, SR.w + 2 * fw, SR.h + 2 * fw); ctx.strokeStyle = '#7a4a26'; ctx.lineWidth = 2; ctx.strokeRect(SR.x - fw + 1, SR.y - fw + 1, SR.w + 2 * fw - 2, SR.h + 2 * fw - 2);
+  ctx.save(); ctx.shadowColor = 'rgba(255,190,110,.35)'; ctx.shadowBlur = 40; ctx.fillStyle = '#000'; ctx.fillRect(SR.x, SR.y, SR.w, SR.h); ctx.restore();
+  ctx.drawImage(scr, SR.x, SR.y, SR.w, SR.h);
+  const vg = ctx.createLinearGradient(0, SR.y, 0, SR.y + SR.h); vg.addColorStop(0, 'rgba(30,8,4,.30)'); vg.addColorStop(.12, 'rgba(30,8,4,0)'); vg.addColorStop(.88, 'rgba(30,8,4,0)'); vg.addColorStop(1, 'rgba(30,8,4,.28)'); ctx.fillStyle = vg; ctx.fillRect(SR.x, SR.y, SR.w, SR.h);   // 幕边微暗
+  ctx.fillStyle = '#5a1712'; ctx.fillRect(SR.x - fw, SR.y - fw - 9, SR.w + 2 * fw, 9); ctx.fillStyle = '#d8a545'; ctx.fillRect(SR.x - fw, SR.y - fw - 3, SR.w + 2 * fw, 3);   // 上檐
+}
+const s2px = (sx, sy) => ({ x: SR.x + (sx - VIEW.x0) / (VIEW.x1 - VIEW.x0) * SR.w, y: SR.y + sy / SCR_H * SR.h });
+const px2s = (x, y) => ({ x: VIEW.x0 + (x - SR.x) / SR.w * (VIEW.x1 - VIEW.x0), y: (y - SR.y) / SR.h * SCR_H });
+function drawHandles() {
+  if (!OP.on) return; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); const dot = (sx, sy, col, r = 6) => { const q = s2px(sx, sy); ctx.fillStyle = col; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, TAU); ctx.fill(); ctx.stroke(); };
+  for (const p of PUP) { const P = p.pose; for (const [pt, col] of [[P.N, '#ffd25a'], [P.hF, '#5ab5ff'], [P.hB, '#5ab5ff']]) { const s = toScreen(pt.x, pt.y, p.z); dot(s.x, s.y, col); } }
+  const L = lampPos(); dot(L.x, L.y, '#ff8a2a', 8);
+}
+
+/* ═══════════ 9. 声音：板鼓、锣、钹、法宝音效（全部 WebAudio 合成）═══════════ */
+let AC = null, NB = null, SOUND = false;
+function au() { if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); NB = AC.createBuffer(1, AC.sampleRate, AC.sampleRate); const d = NB.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; } if (AC.state === 'suspended') AC.resume(); return AC; }
+function tone(f0, f1, d, v, type = 'sine', at = 0) { if (!SOUND) return; const a = au(), t = a.currentTime + at, o = a.createOscillator(), g = a.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + d); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + d + .05); }
+function noise(d, f0, type, v, at = 0, f1) { if (!SOUND) return; const a = au(), t = a.currentTime + at, s = a.createBufferSource(), fl = a.createBiquadFilter(), g = a.createGain(); s.buffer = NB; fl.type = type; fl.frequency.setValueAtTime(f0, t); if (f1) fl.frequency.exponentialRampToValueAtTime(f1, t + d); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + d); s.connect(fl); fl.connect(g); g.connect(a.destination); s.start(t, Math.random()); s.stop(t + d + .05); }
+const SND = {
+  bangu(v = 1, at = 0) { noise(.05, 2600, 'highpass', .55 * v, at); tone(560, 210, .09, .5 * v, 'triangle', at); },              // 板鼓：干脆的“啪”
+  luo(v = 1, at = 0) { [[1, 1], [1.52, .6], [2.11, .5], [2.64, .35], [3.4, .25]].forEach(([r, g]) => tone(180 * r * .94, 180 * r, 2.6 / (r * .8 + .4), .22 * g * v, 'sine', at)); noise(.4, 900, 'bandpass', .18 * v, at); },   // 大锣：非谐泛音 + 上滑
+  xiao(v = 1, at = 0) { [[1, 1], [1.6, .6], [2.3, .4]].forEach(([r, g]) => tone(620 * r * .95, 620 * r, .8, .16 * g * v, 'sine', at)); },       // 小锣
+  bo(v = 1, at = 0) { noise(.9, 7200, 'bandpass', .3 * v, at, 5200); noise(.25, 3000, 'highpass', .25 * v, at); },                              // 钹
+  wood(v = 1, at = 0) { tone(320, 180, .12, .5 * v, 'square', at); noise(.06, 1500, 'bandpass', .3 * v, at); },
+  whoosh(v = 1, at = 0) { noise(.6, 300, 'bandpass', .3 * v, at, 3400); },
+  zap(v = 1, at = 0) { tone(1800, 200, .25, .18 * v, 'sawtooth', at); },
+  boom(v = 1, at = 0) { tone(110, 32, 1.2, .6 * v, 'sine', at); noise(.5, 400, 'lowpass', .4 * v, at); },
+  step() { tone(200, 110, .05, .12, 'triangle'); }
+};
+const PERC = {
+  open() { for (let i = 0; i < 14; i++) SND.bangu(.35 + i / 22, i * (.2 - i * .008)); SND.luo(1, 1.9); SND.bo(.8, 1.9); },
+  clash() { SND.bo(1); SND.luo(.9); SND.bangu(1, .05); },
+  roll(n = 8) { for (let i = 0; i < n; i++) SND.bangu(.4 + i * .06, i * .09); },
+  small() { SND.xiao(1); SND.bangu(.8, .12); },
+  hit() { SND.bangu(1); SND.bo(.6, .04); },
+  end() { SND.luo(1); SND.bo(1); SND.bangu(1, .3); SND.luo(.7, .5); }
+};
+sam.onStep = dario.onStep = () => SND.step();
+
+/* ═══════════ 10. 演出剧本（顺序编排，台词时长按字数折算）═══════════ */
+const SHOW = { t: 0, idx: 0, items: [], timers: [], line: null, dur: 0, done: false, paused: false };
+const say = (who, txt, par, extra = {}) => ({ say: [who, txt], par, ...extra });
+const NAME = { N: '旁白', S: 'Sam', D: 'Dario' }, COLOR = { N: '#f2cf7a', S: '#7fe0d0', D: '#ffb070' };
+function scriptItems() {
+  const S_ = sam, D_ = dario, SX = 42, DX = 118, at = (sx, z = Z0) => toPlaneRef(sx, 0, z).x, chipsFrom = () => {
+    for (let i = 0; i < 6; i++) setTimeout(() => { if (SHOW.paused) return; const z0 = 50 + Math.random() * 8, hs = toScreen(sam.pose.hF.x, sam.pose.hF.y, sam.z), ty = 50 + (Math.random() - .5) * 26;
+      const o = spawn({ name: '芯片', z: z0, sx0: hs.x, sy0: hs.y - 6 + Math.random() * 8, sx1: 100 + Math.random() * 10, sy1: ty, T: 1.3 + Math.random() * .3, rot: Math.random() * 6, vr: (Math.random() - .5) * 8, r: 4, draw: chipDraw, hit: false,
+        upd(dt) { this.age += dt; const u = clamp(this.age / this.T, 0, 1); if (!this.bounced) { this.z = lerp(z0, 4, sst(0, 1, u)); const sx = lerp(this.sx0, this.sx1, u), sy = lerp(this.sy0, this.sy1, u) - Math.sin(Math.PI * u) * 14, q = toPlaneRef(sx, sy, this.z); this.px = q.x; this.py = q.y; this.rot += this.vr * dt; if (u >= 1) { this.bounced = true; this.bt = 0; this.vx = -20 - Math.random() * 20; this.vy = -25 - Math.random() * 20; if (!chipsFrom.hit) { chipsFrom.hit = true; PERC.clash(); SND.zap(.6); } } } else { this.bt += dt; this.px += this.vx * dt; this.py += this.vy * dt; this.vy += 60 * dt; this.rot += 9 * dt; if (this.bt > 1.4) this.dead = true; } } }); const q = toPlaneRef(o.sx0, o.sy0, o.z); o.px = q.x; o.py = q.y; }, i * 140);
+    SND.whoosh(.8); PERC.roll(10); };
+  const tags = () => { const T = ['GPT-4o', 'o3-mini-high', 'GPT-4.5', 'o1-pro', 'GPT-4.1-nano', 'o4-mini'], ds = toScreen(dario.pose.N.x, dario.pose.N.y, dario.z); T.forEach((txt, i) => spawn({ name: '模型名', z: 10 + (i % 3) * 8, txt, col: ['teal', 'yellow', 'blue'][i % 3], sx: ds.x, sy: ds.y - 10, ph: i * 1.05, life: 5.4, rot: 0, r: 8, draw: tagDraw,
+    upd(dt) { this.age += dt; const u = this.age; const sx = this.sx + Math.cos(u * 1.4 + this.ph) * (14 + i * 2.4), sy = this.sy - 4 + Math.sin(u * 1.7 + this.ph) * (9 + i), q = toPlaneRef(sx, sy, this.z); this.px = q.x; this.py = q.y; this.rot = Math.sin(u * 2 + this.ph) * .5; this.alpha = clamp(Math.min(this.age, this.life - this.age) * 3, 0, 1); if (this.age > this.life) this.dead = true; } })); PERC.roll(8); SND.zap(.5); };
+  const scroll = () => { const hs = toScreen(dario.pose.hF.x, dario.pose.hF.y, dario.z); spawn({ name: '长文', z: 9, len: 74, u: .05, sx0: hs.x - 4, sy0: hs.y, T: 2.6, rot: -.08, r: 40, draw: scrollDraw,
+    upd(dt) { this.age += dt; const u = clamp(this.age / this.T, 0, 1); this.u = lerp(.05, 1, sst(0, .7, u)); const sx = lerp(this.sx0, 60, sst(0, 1, u)) - this.len * this.u / 2 * 0 - 6 * (1 - u), sy = lerp(this.sy0, 52, sst(0, 1, u)) + Math.sin(u * 9) * .6, q = toPlaneRef(sx, sy, this.z); this.px = q.x - this.len * this.u * .2; this.py = q.y; this.rot = -.1 + u * .14; if (this.age > this.T + 2.4) { this.alpha = 1 - (this.age - this.T - 2.4) * 2; if (this.alpha <= 0) this.dead = true; } } }); SND.whoosh(1); PERC.hit(); };
+  const paw = () => { const ds = toScreen(dario.pose.hF.x, dario.pose.hF.y, dario.z); spawn({ name: '巨爪', z: 6, sx0: ds.x, sy0: ds.y, T: 2.8, sc: 1, rot: .25, r: 14, draw: pawDraw,
+    upd(dt) { this.age += dt; const u = clamp(this.age / this.T, 0, 1), e = sst(0, 1, u); this.z = lerp(6, 58, e); const sx = lerp(this.sx0, 44, e) + Math.sin(this.age * 1.3) * 3, sy = lerp(this.sy0, 40, e), q = toPlaneRef(sx, sy, this.z); this.px = q.x; this.py = q.y; this.rot = lerp(.25, -.1, e); if (this.age > this.T + 3.4) { this.alpha = 1 - (this.age - this.T - 3.4) * 1.5; if (this.alpha <= 0) this.dead = true; } } }); SND.boom(1); SND.luo(1); PERC.roll(12); };
+  const kick = () => { S_.hand.F.dx = 12; S_.hand.F.dy = 4; setTimeout(() => { bumpLamp(1.3, 1); PERC.clash(); }, 350); };
+  return [
+    { d: .2 }, { fn: () => { for (const p of PUP) { p.z = Z0; p.hand.F.abs = p.hand.B.abs = null; } sam.walk = dario.walk = null; sam.f.nx.p = sam.f.nx.t = at(-30); dario.f.nx.p = dario.f.nx.t = at(190); sam.foot.F.x = sam.f.nx.p + 3; sam.foot.B.x = sam.f.nx.p - 3; dario.foot.F.x = dario.f.nx.p - 3; dario.foot.B.x = dario.f.nx.p + 3; sam.f.tilt.p = sam.f.tilt.t = dario.f.tilt.p = dario.f.tilt.t = 0; pose(sam, 'rest'); pose(dario, 'rest'); dario.held.F = null; $('#title').style.opacity = 1; PERC.open(); } }, { d: 2.6 },
+    say('N', '话说硅谷之巅，两大门派，一言不合，便要斗法！', [[.3, () => $('#title').style.opacity = 0], [1.6, () => { goto_(sam, SX, 22); goto_(dario, DX, 22); }]]),
+    say('N', '左首，OpenAI 掌门，山姆。', [[.2, () => { pose(sam, 'wave'); PERC.small(); }], [1.6, () => pose(sam, 'rest')]]),
+    say('N', '右首，Anthropic 掌门，达里奥。', [[.2, () => { pose(dario, 'scratch'); PERC.small(); }], [1.6, () => pose(dario, 'rest')]]),
+    say('S', '达里奥！听说你的模型，又婉言谢绝了一位客人？', [[.1, () => { pose(sam, 'point'); lean(sam, .12); SND.wood(); }], [3.2, () => { pose(sam, 'rest'); lean(sam, 0); }]]),
+    say('D', '山姆！听说你的新版本，又“马上”就要发布了？', [[.1, () => { pose(dario, 'wave'); lean(dario, .1); SND.wood(); }], [3.4, () => { pose(dario, 'rest'); lean(dario, 0); }]]),
+    say('N', '第一回合。', [[0, () => { PERC.hit(); }]]),
+    say('S', '接招！算力洪流，万卡齐发！', [[.3, () => { pose(sam, 'up2'); jump(sam, 6); }], [1.2, () => { chipsFrom.hit = false; chipsFrom(); pose(sam, 'push'); lean(sam, .18); }]]),
+    say('D', '宪法之盾！很抱歉，这一招，我不能接。', [[.2, () => { dario.held.F = shieldDraw; pose(dario, 'guard'); lean(dario, -.1); SND.wood(); }], [2.6, () => { pose(sam, 'rest'); lean(sam, 0); }], [4.6, () => { dario.held.F = null; pose(dario, 'rest'); lean(dario, 0); }]]),
+    say('N', '第二回合。', [[0, () => PERC.hit()]]),
+    say('D', '看我万字长文——《爱的机器》！', [[.3, () => { pose(dario, 'push'); lean(dario, .15); }], [1.4, scroll], [3.4, () => { pose(dario, 'rest'); lean(dario, 0); }]]),
+    say('S', '命名迷阵！GPT 四欧，o 三迷你高配！', [[.3, () => { pose(sam, 'up2'); jump(sam, 5); }], [1, tags], [3.2, () => { pose(dario, 'scratch'); }], [5.4, () => { pose(dario, 'rest'); pose(sam, 'rest'); }]]),
+    say('N', '一个越写越长，一个越改越乱。', []),
+    say('N', '第三回合！', [[0, () => PERC.hit()]]),
+    say('D', '克劳德巨爪，离幕三尺——压！', [[.2, () => { pose(dario, 'push'); lean(dario, .2); }], [1, paw], [3.4, () => { pose(dario, 'rest'); lean(dario, 0); }]]),
+    say('S', '灯——晃起来！', [[.2, () => { pose(sam, 'fist'); lean(sam, .2); }], [.7, kick], [2, () => { pose(sam, 'rest'); lean(sam, 0); }]]),
+    say('N', '灯焰乱晃，影随灯动，巨爪也失了准头。', [[1.5, () => bumpLamp(.8, -1)]]),
+    say('D', '其实……我们都想让 AI 造福世人。', [[.2, () => { pose(dario, 'shake'); goto_(dario, 88, 14); }]]),
+    say('S', '英雄所见略同！握手言和！', [[.2, () => { goto_(sam, 72, 14); pose(sam, 'shake'); }], [1.6, () => { PERC.small(); jump(sam, 4); jump(dario, 4); }]]),
+    say('N', '胜负未分，下回分解。', [[1.4, () => PERC.end()]]),
+    { d: 2.4 }, { fn: () => { SHOW.done = true; $('#sub').style.opacity = 0; } }
+  ];
+}
+function compile() {
+  let t = 0; SHOW.items = scriptItems(); SHOW.timers = []; SHOW.idx = 0; SHOW.t = 0; SHOW.done = false; SHOW.line = null;
+  for (const it of SHOW.items) { it.t0 = t; if (it.say) { it.dur = .6 + it.say[1].length * .2; t += it.dur + .35; } else if (it.d != null) t += it.d; }
+  SHOW.dur = t;
+}
+function fire(it) {
+  if (it.fn) it.fn();
+  if (it.say) { const [w, txt] = it.say; SHOW.line = { who: w, txt, t0: it.t0, dur: it.dur }; $('#sub').style.opacity = 1; for (const p of PUP) p.speaking = (w === 'S' && p === sam) || (w === 'D' && p === dario); if (w !== 'N') SND.bangu(.5); for (const [dt, fn] of it.par || []) SHOW.timers.push({ at: SHOW.t + dt, fn }); }
+}
+function stepShow(dt) {
+  if (SHOW.paused || SHOW.done) return; SHOW.t += dt; while (SHOW.idx < SHOW.items.length && SHOW.items[SHOW.idx].t0 <= SHOW.t) fire(SHOW.items[SHOW.idx++]);
+  for (let i = SHOW.timers.length - 1; i >= 0; i--) if (SHOW.timers[i].at <= SHOW.t) { const fn = SHOW.timers[i].fn; SHOW.timers.splice(i, 1); fn(); }
+  const L = SHOW.line; if (L) { const u = clamp((SHOW.t - L.t0) / L.dur, 0, 1), n = Math.floor(u * L.txt.length); $('#sub').innerHTML = `<b style="background:${COLOR[L.who]}">${NAME[L.who]}</b><u>${L.txt.slice(0, n)}</u><i>${L.txt.slice(n)}</i>`; if (SHOW.t > L.t0 + L.dur + .3) for (const p of PUP) p.speaking = false; }
+}
+function startShow() { props.length = 0; SHOW.paused = false; OP.set(false); compile(); LAMP.ox = LAMP.oy = LAMP.vx = LAMP.vy = 0; $('#sub').innerHTML = ''; }
+
+/* ═══════════ 11. 主更新循环、灯焰摇曳与撞灯 ═══════════ */
+let T_ = 0;
+function update(dt) {
+  T_ += dt; stepShow(dt);
+  LAMP.fx = nz(T_ * 3.1, 1) * .28; LAMP.fy = nz(T_ * 2.3, 4) * .34; LAMP.br = 1 + nz(T_ * 4.7, 7) * .035;                                   // 灯焰摇曳
+  const w2 = 9.5, c = 1.0; LAMP.vx += (-w2 * LAMP.ox - c * LAMP.vx) * dt; LAMP.vy += (-w2 * LAMP.oy - c * LAMP.vy) * dt; LAMP.ox += LAMP.vx * dt; LAMP.oy += LAMP.vy * dt;   // 灯悬着，被撞后单摆式衰减摆动
+  const n = Math.max(1, Math.ceil(dt / (1 / 120))), h = dt / n; for (let i = 0; i < n; i++) for (const p of PUP) stepPuppet(p, h, T_);
+  for (const o of props) o.upd && o.upd(dt); for (let i = props.length - 1; i >= 0; i--) if (props[i].dead) props.splice(i, 1);
+}
+
+/* ═══════════ 12. 操演模式：拖签子 / 手 / 灯；调离幕远近 ═══════════ */
+const OP = { on: false, drag: null, set(v) { this.on = v; $('#bop').setAttribute('aria-pressed', v); $('#ctl').style.display = v ? 'flex' : 'none'; SHOW.paused = v; if (!v) { for (const p of PUP) { p.hand.F.abs = p.hand.B.abs = null; p.dragging = false; } } else { $('#zs').value = sam.z; $('#zd').value = dario.z; $('#zl').value = LAMP.z; $('#fr').value = LAMP.r; syncOut(); } } };
+function syncOut() { $('#zso').textContent = sam.z.toFixed(0); $('#zdo').textContent = dario.z.toFixed(0); $('#zlo').textContent = LAMP.z.toFixed(0); $('#fro').textContent = LAMP.r.toFixed(1); }
+$('#zs').oninput = e => { sam.z = +e.target.value; syncOut(); }; $('#zd').oninput = e => { dario.z = +e.target.value; syncOut(); }; $('#zl').oninput = e => { LAMP.z = +e.target.value; syncOut(); }; $('#fr').oninput = e => { LAMP.r = +e.target.value; syncOut(); };
+$('#bbump').onclick = () => bumpLamp(1.4, Math.random() < .5 ? 1 : -1);
+cv.addEventListener('pointerdown', e => {
+  unlock(); if (!OP.on) return; cv.setPointerCapture(e.pointerId); const s = px2s(e.clientX, e.clientY); let best = null, bd_ = 5.5;
+  const cand = (id, pt, z, p, kind) => { const q = toScreen(pt.x, pt.y, z), d = Math.hypot(q.x - s.x, q.y - s.y); if (d < bd_) { bd_ = d; best = { id, p, kind }; } };
+  for (const p of PUP) { cand('n', p.pose.N, p.z, p, 'neck'); cand('F', p.pose.hF, p.z, p, 'hand'); cand('B', p.pose.hB, p.z, p, 'hand'); }
+  const L = lampPos(), dl = Math.hypot(L.x - s.x, L.y - s.y); if (dl < Math.max(bd_, 6)) best = { kind: 'lamp' }; OP.drag = best; if (best && best.p) best.p.dragging = true; if (best && best.p) best.p.walk = null;
+});
+cv.addEventListener('pointermove', e => {
+  if (!OP.drag) return; const s = px2s(e.clientX, e.clientY), d = OP.drag;
+  if (d.kind === 'lamp') { LAMP.x = clamp(s.x, 10, 150); LAMP.y = clamp(s.y, 6, 80); return; }
+  const pl = toPlane(s.x, s.y, d.p.z); if (d.kind === 'neck') { d.p.f.nx.t = pl.x; d.p.f.ny.t = clamp(pl.y, 22, d.p.baseY + 8); } else d.p.hand[d.id].abs = { x: pl.x, y: pl.y };
+});
+const endDrag = () => { if (OP.drag && OP.drag.p) OP.drag.p.dragging = false; OP.drag = null; }; cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
+$('#bop').onclick = () => { unlock(); OP.set(!OP.on); }; $('#bplay').onclick = () => { unlock(); startShow(); };
+$('#bsnd').onclick = e => { SOUND = !SOUND; e.target.setAttribute('aria-pressed', SOUND); e.target.textContent = '锣鼓：' + (SOUND ? '开' : '关'); if (SOUND) { au(); SND.bangu(); } };
+$('#bpan').onclick = e => { const p = $('#panel'), on = p.style.display !== 'block'; p.style.display = on ? 'block' : 'none'; e.target.setAttribute('aria-pressed', on); };
+let unlocked = false;
+function unlock() { if (unlocked) return; unlocked = true; $('#hint').style.display = 'none'; SOUND = true; $('#bsnd').setAttribute('aria-pressed', true); $('#bsnd').textContent = '锣鼓：开'; au(); startShow(); }
+addEventListener('keydown', unlock);
+
+/* ═══════════ 13. 数据面板（人工验算放大率 / 半影）═══════════ */
+let panT = 0;
+function refreshPanel(LY, now) {
+  if ($('#panel').style.display !== 'block' || now - panT < 250) return; panT = now; const L = lampPos();
+  const row = (n, z) => `<tr><td>${n}</td><td>z=${z.toFixed(1)}</td><td>m=${magOf(z).toFixed(3)}</td><td>半影 ${penOf(z).toFixed(2)}</td></tr>`;
+  $('#panel').innerHTML = `<h4>投影数据 · m = zL/(zL−z) · 半影 = 2r·z/(zL−z)</h4><table>${row('Sam', sam.z)}${row('Dario', dario.z)}${row('布景', .3)}${LY.filter(o => o.name && o.name !== 'Sam' && o.name !== 'Dario').slice(0, 5).map(o => row(o.name, o.z)).join('')}</table><div style="margin-top:4px;color:#c9b48a">灯 (${L.x.toFixed(1)}, ${L.y.toFixed(1)}) zL=${LAMP.z} · 焰半径 r=${LAMP.r.toFixed(1)}<br>影点 S = L + (P−L)·m：灯左移 → 离幕的影子右移，布景不动</div>`;
+}
+
+/* ═══════════ 14. 启动 ═══════════ */
+let last = performance.now();
+function frame(now) { requestAnimationFrame(frame); const dt = Math.min(.05, (now - last) / 1e3); last = now; update(dt); const LY = renderScreen(); drawStage(); drawHandles(); refreshPanel(LY, now); }
+addEventListener('resize', layout); layout(); compile(); for (let i = 0; i < 40; i++) update(1 / 60); requestAnimationFrame(frame);
+window.__sp = { sam, dario, LAMP, SHOW, props, update, magOf, penOf, toScreen, toPlane, OP, startShow, seek(t) { startShow(); while (SHOW.t < t) update(1 / 60); },
+  cost(n = 20) { const t0 = performance.now(); for (let i = 0; i < n; i++) { update(1 / 60); const LY = renderScreen(); drawStage(); } ctx.getImageData(0, 0, 1, 1); return +((performance.now() - t0) / n).toFixed(1); } };   // 调试：平均每帧毫秒数
+</script>
+</body>
+</html>

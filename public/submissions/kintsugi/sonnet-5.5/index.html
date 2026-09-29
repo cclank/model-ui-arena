@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>金缮 · 碎而复合的青瓷碗</title>
+<!--
+  金缮 KINTSUGI —— 一只会被打碎、又以金缮之法自我修复的青瓷碗（单文件 · 零依赖 · Canvas 2D + WebAudio）
+  ─ 断裂：每次点击都以点击点为中心实时生成种子（放射环 + 泊松补点，越近越密），对碗的剪影多边形做 Voronoi 剖分
+    （逐个半平面裁剪），共享边加入确定性抖动后同时写入相邻两片，因此碎片严丝合缝、拼起来就是原碗；15–60 片。
+  ─ 坠落：碎片是刚体（质心/转动惯量由多边形算出），凸包 SAT + 参考面裁剪求接触流形，序列冲量求解摩擦与弹跳，
+    与案几/边界碰撞；速度阈值内静止，不再抖动。
+  ─ 修复：碎片按目标高度自下而上飞回原位；随后每条裂缝以一条“液态金线”从靠近碰撞点的一端向另一端生长，
+    完成后一次金光扫过，金线烘焙进碗釉贴图，下一次碎裂时旧金线随碎片一起碎、新裂纹再叠加新的金线。
+-->
+<style>
+:root{--gold:#e2c07a;--gold2:#b98a3c;--ink:#f2ece0;--mute:rgba(242,236,224,.55);--jade:#8fc1ab;
+  --kai:"Kaiti TC","Kaiti SC","STKaiti","KaiTi","BiauKai","DFKai-SB",serif;--sans:-apple-system,"SF Pro Text","PingFang TC","PingFang SC","Helvetica Neue",sans-serif}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;overflow:hidden;background:#0d0a08;color:var(--ink);font:13px/1.5 var(--sans);-webkit-user-select:none;user-select:none;touch-action:manipulation}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:pointer}
+#hud{position:fixed;top:max(14px,env(safe-area-inset-top));left:16px;right:16px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none}
+#brand b{font:700 26px var(--kai);letter-spacing:.3em;color:var(--gold);text-shadow:0 2px 18px rgba(226,192,122,.35)}
+#brand span{display:block;font-size:10px;letter-spacing:.5em;color:var(--mute);margin-top:2px}
+#stats{display:flex;gap:16px;text-align:center}
+#stats i{display:block;font:600 22px/1.1 ui-serif,"Songti TC",Georgia,serif;font-style:normal;color:var(--ink);font-variant-numeric:tabular-nums}
+#stats small{font-size:10px;letter-spacing:.3em;color:var(--mute)}
+#ti{position:fixed;right:clamp(14px,5vw,64px);top:24%;writing-mode:vertical-rl;font:400 clamp(15px,2.4vh,22px)/1.9 var(--kai);letter-spacing:.34em;color:rgba(242,232,210,.78);pointer-events:none;text-shadow:0 1px 10px rgba(0,0,0,.6)}
+#ti u{display:inline-block;text-decoration:none;margin-top:.9em;width:1.7em;height:1.7em;line-height:1.7em;text-align:center;letter-spacing:0;font-size:.85em;border-radius:3px;background:#b3372b;color:#f7e9dc;transform:rotate(-3deg);box-shadow:0 0 0 1px rgba(255,255,255,.1) inset}
+#hint{position:fixed;left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom));text-align:center;font:400 15px var(--kai);letter-spacing:.42em;text-indent:.42em;color:var(--ink);text-shadow:0 2px 14px #000;pointer-events:none;transition:opacity .5s}
+#hint.pulse{animation:hp 2.6s ease-in-out infinite}
+@keyframes hp{50%{opacity:.4}}
+#bar{position:fixed;left:0;right:0;bottom:calc(20px + env(safe-area-inset-bottom));display:flex;justify-content:center;gap:10px}
+button{font:500 13px var(--sans);letter-spacing:.24em;text-indent:.24em;color:var(--ink);background:rgba(20,16,12,.55);border:1px solid rgba(226,192,122,.42);border-radius:99px;padding:9px 20px;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:.25s}
+button:hover:not(:disabled){border-color:var(--gold);color:#fff;box-shadow:0 0 18px rgba(226,192,122,.3)}
+button:disabled{opacity:.35;cursor:default}
+#repair:not(:disabled){background:linear-gradient(180deg,rgba(226,192,122,.3),rgba(185,138,60,.22));border-color:var(--gold)}
+@media(max-width:520px){#brand b{font-size:21px}#stats{gap:11px}#stats i{font-size:18px}#ti{top:20%;right:10px;font-size:14px}button{padding:8px 14px;letter-spacing:.14em}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud"><div id="brand"><b>金缮</b><span>KINTSUGI</span></div>
+  <div id="stats"><div><i id="s-shard">0</i><small>碎片</small></div><div><i id="s-crack">0</i><small>裂缝</small></div><div><i id="s-fix">0</i><small>修复</small></div></div></div>
+<div id="ti">不问碎成几片，只看缝出几痕。<u>缮</u></div>
+<div id="hint" class="pulse">点击碗身任意处，令其碎裂</div>
+<div id="bar"><button id="repair" disabled>修复</button><button id="reset">重新来过</button><button id="snd">声音 开</button></div>
+<script>
+'use strict';
+const $ = s => document.querySelector(s), TAU = Math.PI * 2, R = Math.random, clamp = (x, a, b) => Math.min(b, Math.max(a, x)), lerp = (a, b, t) => a + (b - a) * t;
+const eio = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2, eout = t => 1 - Math.pow(1 - t, 3), sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const hash = (a, b) => { let h = Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b + 0x7f4a7c15, 0xc2b2ae35); h ^= h >>> 15; h = Math.imul(h, 0x2c1b3c6d); h ^= h >>> 12; return (h >>> 0) / 4294967296; };
+const cv = $('#c'), ctx = cv.getContext('2d');
+let W, H, dpr, D, BX, BY, floorY, G = null, tex = null, texBox = null, bg = null;
+const S = { state: 'idle', t: 0, seams: [], shards: [], cracks: [], newSeams: [], click: null, fixes: 0, restT: 0, shake: 0, sweep: 0 };
+const parts = [], motes = Array.from({ length: 46 }, () => ({ x: R(), y: R(), z: R(), p: R() * TAU }));
+
+/* ═════════════ 几何：碗的剪影、点在多边形内、面积/质心/凸包 ═════════════ */
+function bowlGeom(D) {
+  const Rr = D / 2, Hh = .47 * D, rf = .175 * D, hf = .05 * D, ry = .2 * Rr;
+  const xOf = t => rf + (Rr - rf) * Math.pow(Math.sin(t * Math.PI / 2), .82), yOf = t => -(hf + (Hh - hf) * t);
+  const poly = [{ x: -rf * .94, y: 0 }, { x: -rf, y: -hf }];
+  for (let i = 1; i <= 34; i++) poly.push({ x: -xOf(i / 34), y: yOf(i / 34) });                       // 左侧碗壁：圈足 → 碗口
+  for (let i = 1; i <= 30; i++) { const a = Math.PI + i / 30 * Math.PI; poly.push({ x: Rr * Math.cos(a), y: -Hh + ry * Math.sin(a) }); }   // 碗口后半圈椭圆
+  for (let i = 33; i >= 1; i--) poly.push({ x: xOf(i / 34), y: yOf(i / 34) });                         // 右侧碗壁
+  poly.push({ x: rf, y: -hf }, { x: rf * .94, y: 0 });
+  return { R: Rr, Hh, rf, hf, ry, xOf, yOf, poly };
+}
+function inside(poly, p) { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const a = poly[i], b = poly[j]; if ((a.y > p.y) !== (b.y > p.y) && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x) c = !c; } return c; }
+const area = p => { let a = 0; for (let i = 0; i < p.length; i++) { const q = p[(i + 1) % p.length]; a += p[i].x * q.y - q.x * p[i].y; } return a / 2; };
+function centroid(p) { let a = 0, x = 0, y = 0; for (let i = 0; i < p.length; i++) { const q = p[(i + 1) % p.length], c = p[i].x * q.y - q.x * p[i].y; a += c; x += (p[i].x + q.x) * c; y += (p[i].y + q.y) * c; } return { x: x / (3 * a), y: y / (3 * a) }; }
+function hull(pts) {
+  const s = pts.map(p => ({ x: p.x, y: p.y })).sort((a, b) => a.x - b.x || a.y - b.y), cr = (o, a, b) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x), lo = [], up = [];
+  for (const p of s) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+  for (let i = s.length - 1; i >= 0; i--) { const p = s[i]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+  up.pop(); lo.pop(); return lo.concat(up);
+}
+
+/* ═════════════ 断裂：Voronoi（半平面裁剪）+ 共享边抖动 ═════════════ */
+// 多边形顶点带 e：从该顶点出发的这条边的归属（-1 = 碗的外轮廓；j ≥ 0 = 与第 j 个种子所在碎片的裂缝）
+function clipHalf(poly, m, n, j) {
+  const out = [], d = p => (p.x - m.x) * n.x + (p.y - m.y) * n.y;
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i], b = poly[(i + 1) % poly.length], da = d(a), db = d(b), I = () => { const t = da / (da - db); return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }; };
+    if (da <= 0) { out.push({ x: a.x, y: a.y, e: a.e }); if (db > 0) { const p = I(); out.push({ x: p.x, y: p.y, e: j }); } }
+    else if (db <= 0) { const p = I(); out.push({ x: p.x, y: p.y, e: a.e }); }
+  }
+  return out;
+}
+function voronoi(seeds, sil) {
+  return seeds.map((s, i) => {
+    let poly = sil.map(p => ({ x: p.x, y: p.y, e: -1 }));
+    for (let j = 0; j < seeds.length && poly.length >= 3; j++) {
+      if (j === i) continue; const t = seeds[j], dx = t.x - s.x, dy = t.y - s.y, l = Math.hypot(dx, dy) || 1;
+      poly = clipHalf(poly, { x: (s.x + t.x) / 2, y: (s.y + t.y) / 2 }, { x: dx / l, y: dy / l }, j);
+    }
+    return poly;
+  });
+}
+function makeSeeds(c, g) {                                    // 越靠近点击点越密：放射环状种子 + 距离相关最小间距的泊松补点
+  const D = g.R * 2, seeds = [{ x: c.x, y: c.y }], ok = p => inside(g.poly, p);
+  const rings = [[.055, 3 + (R() * 2 | 0)], [.125, 5 + (R() * 2 | 0)], [.22, 6 + (R() * 3 | 0)], [.34, 7 + (R() * 3 | 0)]];
+  for (const [rf, n] of rings) { const a0 = R() * TAU; for (let k = 0; k < n; k++) { const a = a0 + (k + (R() - .5) * .7) / n * TAU, r = rf * D * (.85 + R() * .3), p = { x: c.x + Math.cos(a) * r, y: c.y + Math.sin(a) * r }; if (ok(p)) seeds.push(p); } }
+  const sp = d => D * (.085 + .13 * sstep(.12 * D, .75 * D, d));
+  for (let i = 0; i < 700; i++) {
+    const p = { x: (R() * 2 - 1) * g.R, y: -(R() * (g.Hh + g.ry)) }; if (!ok(p)) continue;
+    const d = Math.hypot(p.x - c.x, p.y - c.y); if (seeds.every(s => Math.hypot(s.x - p.x, s.y - p.y) > sp(d) * .9)) seeds.push(p);
+  }
+  return seeds.slice(0, 58);
+}
+function fracture(c, g) {
+  const D = g.R * 2; let seeds = makeSeeds(c, g), cells;
+  for (let it = 0; it < 6; it++) {                             // 迭代剔除过小的碎片（离点击点越近，允许的碎片越小）
+    cells = voronoi(seeds, g.poly); let drop = -1, worst = 1e9;
+    cells.forEach((p, i) => { const a = p.length < 3 ? 0 : Math.abs(area(p)), d = Math.hypot(seeds[i].x - c.x, seeds[i].y - c.y), need = D * D * (.0009 + .0045 * sstep(0, .5 * D, d)); if (i && a < need && a / need < worst) { worst = a / need; drop = i; } });
+    if (drop < 0 || seeds.length <= 16) break; seeds.splice(drop, 1);
+  }
+  const keep = cells.map((p, i) => p.length >= 3 && Math.abs(area(p)) > 6 ? i : -1).filter(i => i >= 0), remap = new Map(keep.map((i, k) => [i, k]));
+  const shards = [], cracks = [];
+  keep.forEach((i, k) => {
+    const src = cells[i], out = [];
+    for (let v = 0; v < src.length; v++) {                    // 共享边插入抖动点：以 (小序号, 大序号) 为键的确定性噪声，相邻两片得到完全相同的折线
+      const a = src[v], b = src[(v + 1) % src.length], j = a.e; out.push({ x: a.x, y: a.y, e: j >= 0 ? remap.get(j) ?? -1 : -1 });
+      if (j < 0) continue; const nj = remap.get(j); if (nj === undefined) continue;
+      const len = Math.hypot(b.x - a.x, b.y - a.y), n = clamp(Math.round(len / (.05 * D)), 1, 8); if (n < 2) continue;
+      const fwd = a.x < b.x - .01 || (Math.abs(a.x - b.x) <= .01 && a.y < b.y), p0 = fwd ? a : b, p1 = fwd ? b : a, dx = (p1.x - p0.x) / len, dy = (p1.y - p0.y) / len, key = Math.min(k, nj) * 100 + Math.max(k, nj), amp = Math.min(len * .1, .012 * D);
+      const pts = []; for (let q = 1; q < n; q++) { const t = q / n, off = (hash(key, q) - .5) * 2 * amp; pts.push({ x: p0.x + (p1.x - p0.x) * t - dy * off, y: p0.y + (p1.y - p0.y) * t + dx * off, e: nj }); }
+      if (!fwd) pts.reverse(); out.push(...pts);
+    }
+    shards.push(out);
+  });
+  shards.forEach((poly, k) => poly.forEach((p, v) => { if (p.e > k) { const q = poly[(v + 1) % poly.length]; cracks.push({ a: k, b: p.e, x0: p.x, y0: p.y, x1: q.x, y1: q.y }); } }));
+  return { shards, cracks: chainCracks(cracks, c) };
+}
+function chainCracks(segs, c) {                               // 把首尾相接的小段串成折线（同一对碎片之间的整条裂缝），起点取靠近点击点的一端
+  const map = new Map(); segs.forEach(s => { const k = s.a + '_' + s.b; (map.get(k) || map.set(k, []).get(k)).push(s); });
+  const out = []; for (const list of map.values()) {
+    const rest = list.slice(); while (rest.length) {
+      let ch = [rest.shift()], grow = true; while (grow) { grow = false; for (let i = 0; i < rest.length; i++) { const s = rest[i], h = ch[0], t = ch[ch.length - 1];
+        if (Math.hypot(s.x0 - t.x1, s.y0 - t.y1) < .6) { ch.push(s); rest.splice(i, 1); grow = true; break; } if (Math.hypot(s.x1 - h.x0, s.y1 - h.y0) < .6) { ch.unshift(s); rest.splice(i, 1); grow = true; break; } } }
+      let pts = [{ x: ch[0].x0, y: ch[0].y0 }, ...ch.map(s => ({ x: s.x1, y: s.y1 }))];
+      if (Math.hypot(pts[0].x - c.x, pts[0].y - c.y) > Math.hypot(pts[pts.length - 1].x - c.x, pts[pts.length - 1].y - c.y)) pts.reverse();
+      let len = 0; const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(len += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y));
+      if (len > 2) out.push({ pts, cum, len, d: Math.hypot(pts[0].x - c.x, pts[0].y - c.y) });
+    }
+  } return out;
+}
+
+/* ═════════════ 刚体物理：凸包 SAT + 参考面裁剪 + 序列冲量 ═════════════ */
+const GRAV = () => 2600 * D / 400;
+function makeBody(poly, g) {
+  const c = centroid(poly), rel = poly.map(p => ({ x: p.x - c.x, y: p.y - c.y, e: p.e })), A = Math.abs(area(rel));
+  let I = 0; for (let i = 0; i < rel.length; i++) { const a = rel[i], b = rel[(i + 1) % rel.length]; I += Math.abs(a.x * b.y - a.y * b.x) * (a.x * a.x + a.y * a.y + a.x * b.x + a.y * b.y + b.x * b.x + b.y * b.y) / 12; }
+  let h = hull(rel); if (area(h) < 0) h.reverse();
+  const m = A / 900; return { poly: rel, hull: h, home: c, x: BX + c.x, y: BY + c.y, a: 0, vx: 0, vy: 0, w: 0, m, im: 1 / m, I: I / 900, iI: 900 / I, r: Math.max(...rel.map(p => Math.hypot(p.x, p.y))), st: 0, wv: [], wn: [], pen: 0 };
+}
+function world(b) {
+  const cs = Math.cos(b.a), sn = Math.sin(b.a), n = b.hull.length; b.wv = b.hull.map(p => ({ x: b.x + p.x * cs - p.y * sn, y: b.y + p.x * sn + p.y * cs }));
+  b.wn = b.wv.map((p, i) => { const q = b.wv[(i + 1) % n], dx = q.x - p.x, dy = q.y - p.y, l = Math.hypot(dx, dy) || 1; return { x: dy / l, y: -dx / l }; });
+}
+function sep(A, B) { let best = -1e9, idx = 0; for (let i = 0; i < A.wv.length; i++) { const n = A.wn[i], v = A.wv[i]; let mn = 1e9; for (const p of B.wv) { const d = n.x * (p.x - v.x) + n.y * (p.y - v.y); if (d < mn) mn = d; } if (mn > best) { best = mn; idx = i; } } return [best, idx]; }
+function clipSeg(p, n, c) { const o = [], d1 = n.x * p[0].x + n.y * p[0].y - c, d2 = n.x * p[1].x + n.y * p[1].y - c; if (d1 >= 0) o.push(p[0]); if (d2 >= 0) o.push(p[1]); if (d1 * d2 < 0) { const t = d1 / (d1 - d2); o.push({ x: p[0].x + (p[1].x - p[0].x) * t, y: p[0].y + (p[1].y - p[0].y) * t }); } return o; }
+function collide(A, B) {
+  const [sa, ia] = sep(A, B); if (sa >= 0) return null; const [sb, ib] = sep(B, A); if (sb >= 0) return null;
+  let ref = A, inc = B, ri = ia, flip = false; if (sb > sa + 1e-3) { ref = B; inc = A; ri = ib; flip = true; }
+  const n = ref.wn[ri]; let ii = 0, md = 1e9; for (let i = 0; i < inc.wv.length; i++) { const d = n.x * inc.wn[i].x + n.y * inc.wn[i].y; if (d < md) { md = d; ii = i; } }
+  const r1 = ref.wv[ri], r2 = ref.wv[(ri + 1) % ref.wv.length]; let tx = r2.x - r1.x, ty = r2.y - r1.y; const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
+  let pts = clipSeg([inc.wv[ii], inc.wv[(ii + 1) % inc.wv.length]], { x: tx, y: ty }, tx * r1.x + ty * r1.y); if (pts.length < 2) return null;
+  pts = clipSeg(pts, { x: -tx, y: -ty }, -(tx * r2.x + ty * r2.y)); if (pts.length < 2) return null;
+  const off = n.x * r1.x + n.y * r1.y, cs = []; for (const p of pts) { const s = n.x * p.x + n.y * p.y - off; if (s <= 0) cs.push({ p, d: -s }); }
+  return cs.length ? { A, B, n: flip ? { x: -n.x, y: -n.y } : n, cs } : null;
+}
+const GROUND = { im: 0, iI: 0, x: 0, y: 0, vx: 0, vy: 0, w: 0 };
+function contactsFor(bodies, floor, xl, xr) {
+  const out = [];
+  for (let i = 0; i < bodies.length; i++) {
+    const a = bodies[i];
+    for (const [nx, ny, test, dep] of [[0, -1, p => p.y > floor, p => p.y - floor], [1, 0, p => p.x < xl, p => xl - p.x], [-1, 0, p => p.x > xr, p => p.x - xr]]) {
+      const cs = a.wv.filter(test).map(p => ({ p, d: dep(p) })); if (cs.length) out.push({ A: GROUND, B: a, n: { x: nx, y: ny }, cs });
+    }
+    for (let j = i + 1; j < bodies.length; j++) { const b = bodies[j], dx = a.x - b.x, dy = a.y - b.y, rr = a.r + b.r; if (dx * dx + dy * dy > rr * rr) continue; const c = collide(a, b); if (c) out.push(c); }
+  }
+  return out;
+}
+let lastClink = 0;
+function solve(cons, dt) {
+  for (const c of cons) {
+    const { A, B, n } = c, t = { x: -n.y, y: n.x };
+    for (const k of c.cs) {
+      k.ra = { x: k.p.x - A.x, y: k.p.y - A.y }; k.rb = { x: k.p.x - B.x, y: k.p.y - B.y };
+      const rna = k.ra.x * n.y - k.ra.y * n.x, rnb = k.rb.x * n.y - k.rb.y * n.x, rta = k.ra.x * t.y - k.ra.y * t.x, rtb = k.rb.x * t.y - k.rb.y * t.x;
+      k.nm = 1 / (A.im + B.im + rna * rna * A.iI + rnb * rnb * B.iI); k.tm = 1 / (A.im + B.im + rta * rta * A.iI + rtb * rtb * B.iI);
+      const vn = relv(A, B, k).x * n.x + relv(A, B, k).y * n.y; k.bias = vn < -110 ? -.26 * vn : 0; k.jn = k.jt = 0; k.vn = vn;
+      if (vn < -160 && performance.now() - lastClink > 55) { lastClink = performance.now(); clink(-vn); }
+    }
+  }
+  for (let it = 0; it < 9; it++) for (const c of cons) {
+    const { A, B, n } = c, t = { x: -n.y, y: n.x };
+    for (const k of c.cs) {
+      let rv = relv(A, B, k), jn = -(rv.x * n.x + rv.y * n.y - k.bias) * k.nm, nj = Math.max(k.jn + jn, 0); jn = nj - k.jn; k.jn = nj; imp(A, B, k, n.x * jn, n.y * jn);
+      rv = relv(A, B, k); let jt = -(rv.x * t.x + rv.y * t.y) * k.tm; const mx = .55 * k.jn, nt = clamp(k.jt + jt, -mx, mx); jt = nt - k.jt; k.jt = nt; imp(A, B, k, t.x * jt, t.y * jt);
+    }
+  }
+}
+function relv(A, B, k) { return { x: B.vx - B.w * k.rb.y - A.vx + A.w * k.ra.y, y: B.vy + B.w * k.rb.x - A.vy - A.w * k.ra.x }; }
+function imp(A, B, k, px, py) { A.vx -= px * A.im; A.vy -= py * A.im; A.w -= (k.ra.x * py - k.ra.y * px) * A.iI; B.vx += px * B.im; B.vy += py * B.im; B.w += (k.rb.x * py - k.rb.y * px) * B.iI; }
+function physics(dt) {
+  const bodies = S.shards, g = GRAV(), xl = BX - W * .47, xr = BX + W * .47;
+  const sub = Math.max(1, Math.ceil(dt / (1 / 170))), h = dt / sub;
+  for (let s = 0; s < sub; s++) {
+    for (const b of bodies) { b.vy += g * h; b.vx *= 1 - .05 * h; b.w *= 1 - .8 * h; world(b); }
+    const cons = contactsFor(bodies, floorY, xl, xr); solve(cons, h);
+    for (const b of bodies) { b.x += b.vx * h; b.y += b.vy * h; b.a += b.w * h; }
+    for (const c of cons) { const tot = c.A.im + c.B.im; if (!tot) { for (const k of c.cs) { const d = Math.max(k.d - .4, 0) * .5; c.B.x += c.n.x * d; c.B.y += c.n.y * d; } continue; } const d = Math.max(Math.max(...c.cs.map(k => k.d)) - .5, 0) * .35 / tot; c.A.x -= c.n.x * d * c.A.im; c.A.y -= c.n.y * d * c.A.im; c.B.x += c.n.x * d * c.B.im; c.B.y += c.n.y * d * c.B.im; }
+  }
+  const thr = 2.4 * g / 170;                                   // 静止判据：速度低于约 2.4 个子步的重力增量（接触求解的残余速度量级），持续 0.3 秒即“睡眠”，速度清零，不再抖动
+  let mv = 0; for (const b of bodies) { const sp = Math.hypot(b.vx, b.vy), ok = sp < thr && Math.abs(b.w) < .5; b.st = ok ? b.st + dt : 0; if (b.st > .3) b.vx = b.vy = b.w = 0; else mv = Math.max(mv, sp + Math.abs(b.w) * b.r * .5); }
+  return mv;
+}
+
+/* ═════════════ 绘制：碗釉贴图、金线、静态场景 ═════════════ */
+function goldStyle(c, g) { const gr = c.createLinearGradient(-g.R, -g.Hh, g.R, 0); [[0, '#fff3c0'], [.28, '#f4d276'], [.6, '#c9922f'], [1, '#8a5a14']].forEach(s => gr.addColorStop(...s)); return gr; }
+function drawSeam(c, sm, f, g, glow) {                        // 液态金线：沿裂缝的“丝带”多边形，粗细随长度缓慢起伏，带暗部、金属渐变与高光；f = 已生长比例
+  const Dn = g.R * 2, target = sm.len * f, pts = sm.pts; if (target <= 0) return null;
+  const P = [], Sx = [];
+  for (let i = 0; i < pts.length; i++) {
+    if (sm.cum[i] <= target) { P.push(pts[i]); Sx.push(sm.cum[i]); }
+    else { const a = pts[i - 1], b = pts[i], t = (target - sm.cum[i - 1]) / (sm.cum[i] - sm.cum[i - 1] || 1); P.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }); Sx.push(target); break; }
+  }
+  if (P.length < 2) return P[0] || null;
+  const w0 = Dn * sm.w, ph = sm.id * 1.7, n = P.length, N = [], H = [];
+  for (let i = 0; i < n; i++) {
+    const a = P[Math.max(0, i - 1)], b = P[Math.min(n - 1, i + 1)], dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy) || 1; N.push({ x: -dy / l, y: dx / l });
+    const sx = Sx[i], tp = Math.min(1, .5 + sx / (w0 * 3), .5 + (target - sx) / (w0 * 3)); H.push(.5 * w0 * (.86 + .2 * Math.sin(sx * .046 + ph) + .1 * Math.sin(sx * .13 + ph * 2)) * tp);
+  }
+  const rib = (k, ox, oy, fill) => {
+    c.fillStyle = fill; c.beginPath(); for (let i = 0; i < n; i++) { const x = P[i].x + N[i].x * H[i] * k + ox, y = P[i].y + N[i].y * H[i] * k + oy; i ? c.lineTo(x, y) : c.moveTo(x, y); }
+    for (let i = n - 1; i >= 0; i--) c.lineTo(P[i].x - N[i].x * H[i] * k + ox, P[i].y - N[i].y * H[i] * k + oy); c.closePath(); c.fill();
+    for (const i of [0, n - 1]) { c.beginPath(); c.arc(P[i].x + ox, P[i].y + oy, H[i] * k, 0, TAU); c.fill(); }
+  };
+  if (glow) { c.lineCap = c.lineJoin = 'round'; c.strokeStyle = 'rgba(255,204,96,.2)'; c.lineWidth = w0 * 3.4; c.beginPath(); P.forEach((p, i) => i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y)); c.stroke(); }
+  rib(1.25, .7, 1.1, 'rgba(28,16,0,.5)'); rib(1, 0, 0, goldStyle(c, g)); rib(.3, -w0 * .12, -w0 * .16, 'rgba(255,250,222,.92)');
+  return P[n - 1];
+}
+function renderBowl(g) {                                      // 碗的釉面贴图（含已有金线），碎裂时每个碎片都从这张图里“剪”出来
+  const pad = 24, w = g.R * 2 + pad * 2, h = g.Hh + g.ry + pad * 2;
+  texBox = { x: -g.R - pad, y: -g.Hh - g.ry - pad, w, h }; tex = document.createElement('canvas'); tex.width = Math.ceil(w * dpr); tex.height = Math.ceil(h * dpr);
+  const c = tex.getContext('2d'); c.scale(dpr, dpr); c.translate(-texBox.x, -texBox.y);
+  const { R: Rr, Hh, rf, hf, ry, xOf, yOf } = g, body = new Path2D();
+  body.moveTo(-rf, -hf); for (let i = 1; i <= 34; i++) body.lineTo(-xOf(i / 34), yOf(i / 34)); body.ellipse(0, -Hh, Rr, ry, 0, Math.PI, TAU); for (let i = 33; i >= 1; i--) body.lineTo(xOf(i / 34), yOf(i / 34)); body.lineTo(rf, -hf); body.closePath();
+  // 圈足：铁褐色露胎
+  let gr = c.createLinearGradient(0, -hf, 0, 0); gr.addColorStop(0, '#8d5e44'); gr.addColorStop(1, '#4a2c1e'); c.fillStyle = gr; c.beginPath(); c.moveTo(-rf * .94, 0); c.lineTo(-rf, -hf - 1); c.lineTo(rf, -hf - 1); c.lineTo(rf * .94, 0); c.fill();
+  c.fillStyle = 'rgba(255,220,180,.22)'; c.fillRect(-rf, -hf, rf * 2, 1.4);
+  // 釉面：左上受光
+  gr = c.createLinearGradient(-Rr, -Hh, Rr * .9, -hf); [[0, '#c4e3d1'], [.32, '#96c3ad'], [.7, '#649c86'], [1, '#41786a']].forEach(s => gr.addColorStop(...s)); c.fillStyle = gr; c.fill(body);
+  c.save(); c.clip(body);
+  gr = c.createLinearGradient(0, -Hh, 0, -hf); gr.addColorStop(0, 'rgba(255,255,255,.1)'); gr.addColorStop(.55, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(14,44,34,.5)'); c.fillStyle = gr; c.fillRect(-Rr, -Hh - ry, Rr * 2, Hh + ry);
+  gr = c.createLinearGradient(0, -hf - Rr * .32, 0, -hf); gr.addColorStop(0, 'rgba(20,60,46,0)'); gr.addColorStop(1, 'rgba(22,62,44,.55)'); c.fillStyle = gr; c.fillRect(-Rr, -hf - Rr * .32, Rr * 2, Rr * .32);   // 釉积聚
+  // 碗口内壁：后壁较暗、近处受光
+  c.beginPath(); c.ellipse(0, -Hh, Rr * .96, ry * .96, 0, 0, TAU); gr = c.createLinearGradient(0, -Hh - ry, 0, -Hh + ry); [[0, '#2f5f50'], [.5, '#4f8a75'], [1, '#88b8a3']].forEach(s => gr.addColorStop(...s)); c.fillStyle = gr; c.fill();
+  gr = c.createRadialGradient(-Rr * .25, -Hh + ry * .55, 0, -Rr * .25, -Hh + ry * .55, Rr * .55); gr.addColorStop(0, 'rgba(255,255,255,.28)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gr; c.fill();
+  // 莲瓣刻纹：按方位角投影到碗壁，越靠侧面越窄越淡
+  for (let k = -3; k <= 3; k++) {
+    const ph = k * .44, vis = Math.cos(ph); if (vis < .12) continue; const pts = [], t0 = .07, t1 = .58;
+    for (let i = 0; i <= 22; i++) { const t = t0 + (t1 - t0) * i / 22, wd = .23 * Math.pow(Math.sin(Math.PI * i / 22), .75); pts.push([xOf(t) * Math.sin(ph - wd), yOf(t)]); }
+    for (let i = 22; i >= 0; i--) { const t = t0 + (t1 - t0) * i / 22, wd = .23 * Math.pow(Math.sin(Math.PI * i / 22), .75); pts.push([xOf(t) * Math.sin(ph + wd), yOf(t)]); }
+    c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(...p) : c.moveTo(...p)); c.closePath(); c.lineWidth = 1.5; c.strokeStyle = `rgba(28,74,58,${.34 * vis})`; c.stroke();
+    c.save(); c.translate(1, 1.2); c.strokeStyle = `rgba(230,255,240,${.18 * vis})`; c.lineWidth = 1; c.stroke(); c.restore();
+  }
+  // 高光：窗格反光 + 竖向柔光
+  c.save(); c.translate(-Rr * .5, -Hh * .58); c.rotate(-.1); gr = c.createLinearGradient(-Rr * .14, 0, Rr * .14, 0); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(.5, 'rgba(255,255,255,.3)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  c.fillStyle = gr; c.beginPath(); c.ellipse(0, 0, Rr * .1, Hh * .3, 0, 0, TAU); c.fill(); c.restore();
+  c.strokeStyle = 'rgba(255,255,255,.22)'; c.lineWidth = 2.4; c.lineCap = 'round'; c.beginPath(); c.ellipse(0, -Hh, Rr * .93, ry * 1.25, 0, Math.PI * .58, Math.PI * .86); c.stroke();
+  c.restore();
+  // 碗口：紫口（釉薄处透出胎色）
+  c.beginPath(); c.ellipse(0, -Hh, Rr, ry, 0, 0, TAU); c.strokeStyle = 'rgba(96,74,52,.85)'; c.lineWidth = 3; c.stroke();
+  c.beginPath(); c.ellipse(0, -Hh - .6, Rr * .985, ry * .985, 0, .1 * Math.PI, .9 * Math.PI); c.strokeStyle = 'rgba(255,255,240,.42)'; c.lineWidth = 1; c.stroke();
+  c.save(); c.translate(0, 0); for (const sm of S.seams) drawSeam(c, sm, 1, g, false); c.restore();
+}
+function buildStatic() {                                      // 静态背景：暗墙、窗光、案几漆面与木纹、暗角
+  bg = document.createElement('canvas'); bg.width = W * dpr; bg.height = H * dpr; const c = bg.getContext('2d'); c.scale(dpr, dpr);
+  const top = floorY - H * .13, front = floorY + H * .17; let gr = c.createLinearGradient(0, 0, 0, top);
+  gr.addColorStop(0, '#0e0b09'); gr.addColorStop(1, '#2a211a'); c.fillStyle = gr; c.fillRect(0, 0, W, top + 2);
+  gr = c.createRadialGradient(W * .22, H * .16, 0, W * .22, H * .16, W * .85); gr.addColorStop(0, 'rgba(255,226,180,.24)'); gr.addColorStop(.5, 'rgba(255,226,180,.06)'); gr.addColorStop(1, 'rgba(255,226,180,0)'); c.fillStyle = gr; c.fillRect(0, 0, W, top);
+  gr = c.createLinearGradient(W * .05, 0, W * .78, 0); gr.addColorStop(0, 'rgba(255,236,205,0)'); gr.addColorStop(.45, 'rgba(255,236,205,.045)'); gr.addColorStop(1, 'rgba(255,236,205,0)'); c.fillStyle = gr; c.beginPath(); c.moveTo(W * .05, 0); c.lineTo(W * .32, 0); c.lineTo(W * .78, top + (front - top) * .8); c.lineTo(W * .5, top + (front - top) * .8); c.fill();   // 窗光光束（渐变边缘）
+  gr = c.createLinearGradient(0, top, 0, front); gr.addColorStop(0, '#3b261b'); gr.addColorStop(.55, '#26160f'); gr.addColorStop(1, '#170d08'); c.fillStyle = gr; c.fillRect(0, top, W, front - top);
+  for (let i = 0; i < 70; i++) { const y = top + (front - top) * (i / 70) ** 1.1 + R() * 3, a = .03 + R() * .05; c.strokeStyle = `rgba(${R() < .5 ? '255,215,170' : '0,0,0'},${a})`; c.lineWidth = .6 + R() * 1.2; c.beginPath(); c.moveTo(0, y);
+    for (let x = 0; x <= W; x += 60) c.lineTo(x, y + Math.sin(x * .011 + i) * 2.2 + (R() - .5) * .8); c.stroke(); }
+  gr = c.createRadialGradient(BX - D * .15, floorY + D * .05, 0, BX - D * .15, floorY + D * .05, D * 1.5); gr.addColorStop(0, 'rgba(255,214,168,.2)'); gr.addColorStop(1, 'rgba(255,214,168,0)'); c.fillStyle = gr; c.fillRect(0, top, W, front - top);   // 漆面反光
+  c.fillStyle = '#0f0806'; c.fillRect(0, front, W, H - front); c.fillStyle = 'rgba(160,110,70,.55)'; c.fillRect(0, front, W, 2); c.fillStyle = 'rgba(255,220,180,.12)'; c.fillRect(0, front + 2, W, 1);
+  gr = c.createRadialGradient(W / 2, H * .5, Math.min(W, H) * .35, W / 2, H * .5, Math.max(W, H) * .78); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,.66)'); c.fillStyle = gr; c.fillRect(0, 0, W, H);
+}
+
+/* ═════════════ 音效：全部由 WebAudio 合成（瓷裂、落地清音、归位钟音） ═════════════ */
+let AC = null, muted = false, NB = null;
+function ac() { if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); NB = AC.createBuffer(1, AC.sampleRate, AC.sampleRate); const d = NB.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = R() * 2 - 1; } if (AC.state === 'suspended') AC.resume(); return AC; }
+function tone(f, at, dur, vol, type = 'sine') { const a = ac(), o = a.createOscillator(), g = a.createGain(); o.type = type; o.frequency.value = f; g.gain.setValueAtTime(0, a.currentTime + at); g.gain.linearRampToValueAtTime(vol, a.currentTime + at + .004); g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + at + dur); o.connect(g); g.connect(a.destination); o.start(a.currentTime + at); o.stop(a.currentTime + at + dur + .05); }
+function noise(at, dur, f0, f1, vol, type = 'bandpass') { const a = ac(), s = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain(); s.buffer = NB; f.type = type; f.frequency.setValueAtTime(f0, a.currentTime + at); f.frequency.exponentialRampToValueAtTime(f1, a.currentTime + at + dur); g.gain.setValueAtTime(vol, a.currentTime + at); g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + at + dur); s.connect(f); f.connect(g); g.connect(a.destination); s.start(a.currentTime + at, R()); s.stop(a.currentTime + at + dur + .05); }
+function crackSnd() { if (muted) return; noise(0, .16, 6500, 1800, .5, 'highpass'); noise(0, .3, 3200, 700, .4); for (let i = 0; i < 6; i++) tone(1800 + R() * 3200, R() * .09, .2 + R() * .2, .07 + R() * .05); }
+function clink(v) { if (muted) return; const k = clamp(v / 1200, .12, 1); tone(1500 + R() * 2600, 0, .16 + .2 * k, .07 * k + .015); noise(0, .03, 5000, 3000, .09 * k, 'highpass'); }
+function bellSnd() { if (muted) return; [[523.25, 1, 3.4], [1046.5 * 1.003, .5, 3], [1567.98, .32, 2.4], [2093, .18, 2]].forEach(([f, v, d], i) => tone(f, i * .012, d, .11 * v)); }
+function ping() { if (muted) return; tone(1800 + R() * 800, 0, .35, .035); }
+$('#snd').onclick = e => { muted = !muted; e.target.textContent = '声音 ' + (muted ? '关' : '开'); };
+
+/* ═════════════ 粒子：釉屑、金星、浮尘 ═════════════ */
+function chips(x, y, n) { for (let i = 0; i < n && parts.length < 420; i++) { const a = R() * TAU, v = 120 + R() * 520 * D / 400; parts.push({ k: 0, x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 140, l: .9 + R() * .9, m: 1.5, s: 2 + R() * 4.5, r: R() * TAU, vr: (R() - .5) * 18, c: R() < .8 ? '#9ccab5' : '#e9f4ea' }); } }
+function sparks(x, y, n, sp = 90) { for (let i = 0; i < n && parts.length < 420; i++) { const a = R() * TAU, v = R() * sp; parts.push({ k: 1, x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40, l: .4 + R() * .6, m: 1, s: 1 + R() * 2.2, r: 0, vr: 0 }); } }
+function stepParts(dt) {
+  for (let i = parts.length; i--;) { const p = parts[i]; p.l -= dt; if (p.l <= 0) { parts.splice(i, 1); continue; } p.vy += (p.k ? 220 : GRAV() * .7) * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.r += p.vr * dt; if (!p.k && p.y > floorY) { p.y = floorY; p.vy *= -.35; p.vx *= .7; } }
+}
+function drawParts(t) {
+  for (const p of parts) { const a = clamp(p.l / p.m, 0, 1); if (p.k) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(255,214,120,${a})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.s * a + .4, 0, TAU); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; }
+    else { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.globalAlpha = Math.min(1, a * 1.5); ctx.fillStyle = p.c; ctx.beginPath(); ctx.moveTo(-p.s, p.s * .5); ctx.lineTo(p.s * 1.2, 0); ctx.lineTo(-p.s * .3, -p.s); ctx.fill(); ctx.restore(); } }
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'lighter';
+  for (const m of motes) { const x = (m.x * W + t * 6 * (.4 + m.z) + Math.sin(t * .3 + m.p) * 12) % W, y = (m.y * H * .8 + Math.sin(t * .2 + m.p * 2) * 14 + t * 3 * m.z) % (H * .8); const inBeam = sstep(.05, .5, x / W) * (1 - sstep(.5, .95, x / W));
+    ctx.fillStyle = `rgba(255,232,190,${(.05 + .16 * m.z) * inBeam * (.6 + .4 * Math.sin(t * 1.4 + m.p))})`; ctx.beginPath(); ctx.arc(x, y, .6 + m.z * 1.5, 0, TAU); ctx.fill(); }
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+/* ═════════════ 状态机：idle → cracking → falling → rest → returning → gilding → sweep → idle ═════════════ */
+const hintEl = $('#hint'), say = (t, pulse) => { hintEl.textContent = t; hintEl.className = pulse ? 'pulse' : ''; };
+function counters() { $('#s-shard').textContent = S.shards.length; $('#s-crack').textContent = S.cracks.length; $('#s-fix').textContent = S.fixes; }
+function setBtn() { $('#repair').disabled = S.state !== 'rest'; }
+function reset(hard) {
+  S.state = 'idle'; S.t = 0; S.shards = []; S.cracks = []; S.newSeams = []; S.sweep = 0; parts.length = 0; if (hard) { S.seams = []; S.fixes = 0; } renderBowl(G); counters(); setBtn(); say('点击碗身任意处，令其碎裂', true);
+}
+function layout() {
+  dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  D = Math.min(W * .7, H * .44, 430); BX = W / 2; floorY = Math.round(H * (W < H ? .64 : .69)); BY = floorY; G = bowlGeom(D);
+  S.seams.forEach(s => s.pts.forEach(p => { p.x = p.nx * D; p.y = p.ny * D; })); S.seams.forEach(s => { s.cum = [0]; let l = 0; for (let i = 1; i < s.pts.length; i++) s.cum.push(l += Math.hypot(s.pts[i].x - s.pts[i - 1].x, s.pts[i].y - s.pts[i - 1].y)); s.len = l; });
+  buildStatic(); reset(false);
+}
+function onClick(px, py) {
+  if (S.state !== 'idle') return; const lx = px - BX, ly = py - BY; let ok = inside(G.poly, { x: lx, y: ly }); if (!ok) for (const [dx, dy] of [[8, 0], [-8, 0], [0, 8], [0, -8]]) ok = ok || inside(G.poly, { x: lx + dx, y: ly + dy }); if (!ok) return;
+  ac(); const c = { x: clamp(lx, -G.R * .96, G.R * .96), y: ly }, res = fracture(c, G);
+  S.click = c; S.shards = res.shards.map(p => makeBody(p, G)); S.shards.forEach(world); S.cracks = res.cracks; S.cracks.forEach((k, i) => { k.t0 = k.d / (D * 5); });
+  S.newSeams = S.cracks.map((k, i) => ({ id: S.fixes * 977 + i + 1, pts: k.pts.map(p => ({ x: p.x, y: p.y, nx: p.x / D, ny: p.y / D })), cum: k.cum.slice(), len: k.len, w: .0125 + R() * .005, d: k.d }));
+  S.state = 'cracking'; S.t = 0; S.shake = 1; counters(); setBtn(); say('裂', false); crackSnd(); chips(BX + c.x, BY + c.y, 34); sparks(BX + c.x, BY + c.y, 20, 220);
+}
+function release() {                                          // 裂纹走满后碎片脱离：近点击处飞得快，其余受自身重力与应力向外散开
+  const cx = BX + S.click.x, cy = BY + S.click.y;
+  for (const b of S.shards) {
+    const dx = b.x - cx, dy = b.y - cy, d = Math.hypot(dx, dy) + 1, k = Math.exp(-d / (.33 * D)), sc = D / 400;
+    b.vx = (dx / d * (110 + 430 * k) * (.7 + .6 * R()) + (b.x - BX) * .9) * sc; b.vy = (dy / d * (90 + 300 * k) - 80 * R()) * sc; b.w = (R() - .5) * (3 + 14 * k);
+  }
+  S.state = 'falling'; S.t = 0; S.restT = 0; say('坠落', false);
+}
+function startReturn() {
+  S.state = 'returning'; S.t = 0; setBtn(); say('归位', false);
+  const ys = S.shards.map(b => b.home.y), mn = Math.min(...ys), mx = Math.max(...ys);
+  S.shards.forEach(b => { b.x0 = b.x; b.y0 = b.y; b.a0 = Math.atan2(Math.sin(b.a), Math.cos(b.a)); b.dl = (mx - b.home.y) / (mx - mn + 1) * .95 + R() * .22; b.du = .95 + R() * .35; b.done = false; b.vx = b.vy = b.w = 0; });
+  S.retDur = Math.max(...S.shards.map(b => b.dl + b.du));
+}
+function startGild() {
+  S.state = 'gilding'; S.t = 0; say('以金缮之', false);
+  const order = S.newSeams.slice().sort((a, b) => a.d - b.d); order.forEach((s, i) => { s.g0 = i / order.length * 1.5 + R() * .1; s.gd = clamp(s.len / (D * .75), .45, 1.5); s.f = 0; });
+  S.gildDur = Math.max(...order.map(s => s.g0 + s.gd)) + .2;
+}
+function finish() {
+  S.seams.push(...S.newSeams); S.newSeams = []; S.fixes++; S.state = 'idle'; renderBowl(G); S.shards = []; counters(); setBtn(); say('又添一道金痕 · 可再次点击', true);
+}
+$('#repair').onclick = () => { if (S.state === 'rest') startReturn(); };
+$('#reset').onclick = () => reset(true);
+cv.addEventListener('pointerdown', e => { const r = cv.getBoundingClientRect(); onClick(e.clientX - r.left, e.clientY - r.top); });
+addEventListener('resize', layout);
+
+/* ═════════════ 主循环 ═════════════ */
+function drawShard(c, b, o = {}) {
+  c.save(); c.translate(b.x, b.y); c.rotate(b.a); if (o.scale) c.scale(o.scale, o.scale);
+  c.beginPath(); b.poly.forEach((p, i) => i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y)); c.closePath(); c.save(); c.clip();
+  c.drawImage(tex, texBox.x - b.home.x, texBox.y - b.home.y, texBox.w, texBox.h); c.restore();
+  if (!o.plain) {                                             // 断口：米色胎体薄边 + 深色裂缝线
+    c.lineJoin = 'round'; for (let i = 0; i < b.poly.length; i++) { const p = b.poly[i], q = b.poly[(i + 1) % b.poly.length]; if (p.e < 0) continue;
+      c.strokeStyle = 'rgba(236,228,200,.75)'; c.lineWidth = 1.8; c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(q.x, q.y); c.stroke();
+      c.strokeStyle = 'rgba(26,36,30,.75)'; c.lineWidth = .9; c.stroke(); }
+  }
+  c.restore();
+}
+function drawObjects(c, plain) {                              // 完整的碗 或 所有碎片
+  if (S.state === 'idle' || S.state === 'cracking') c.drawImage(tex, BX + texBox.x, BY + texBox.y, texBox.w, texBox.h);
+  else for (const b of S.shards) drawShard(c, b, { scale: 1 + (b.lift || 0) * .08, plain });
+}
+function drawShadows() {
+  for (const b of S.shards) { let low = -1e9; for (const p of b.wv) low = Math.max(low, p.y); const h = Math.max(0, floorY - low), k = 1 - clamp(h / (D * .6), 0, 1), rx = b.r * (.7 + .5 * (1 - k)) + 4;
+    ctx.save(); ctx.translate(b.x + h * .18 + 3, floorY + 3); ctx.scale(1, .2); const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx * 1.3); g.addColorStop(0, `rgba(0,0,0,${.5 * k + .06})`); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, rx * 1.3, 0, TAU); ctx.fill(); ctx.restore(); }
+}
+function drawIntactShadow() {
+  ctx.save(); ctx.translate(BX + D * .06, floorY + 2); ctx.scale(1, .16); const g = ctx.createRadialGradient(0, 0, D * .05, 0, 0, D * .78); g.addColorStop(0, 'rgba(0,0,0,.6)'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, D * .78, 0, TAU); ctx.fill(); ctx.restore();
+}
+let refl = null;
+function drawReflection() {                                   // 案几漆面倒影：以桌面为镜面翻转重绘，再叠一层自上而下渐隐的遮罩
+  const h = Math.ceil(D * .62), ym = floorY + 1; if (!refl || refl.width !== cv.width || refl.height !== Math.ceil(h * dpr)) { refl = document.createElement('canvas'); refl.width = cv.width; refl.height = Math.ceil(h * dpr); }
+  const rc = refl.getContext('2d'); rc.setTransform(1, 0, 0, 1, 0, 0); rc.clearRect(0, 0, refl.width, refl.height);
+  rc.setTransform(dpr, 0, 0, -dpr, 0, ym * dpr); drawObjects(rc, true);
+  rc.setTransform(1, 0, 0, 1, 0, 0); rc.globalCompositeOperation = 'destination-in'; const g = rc.createLinearGradient(0, 0, 0, refl.height); g.addColorStop(0, 'rgba(0,0,0,.36)'); g.addColorStop(1, 'rgba(0,0,0,0)'); rc.fillStyle = g; rc.fillRect(0, 0, refl.width, refl.height); rc.globalCompositeOperation = 'source-over';
+  ctx.save(); ctx.beginPath(); ctx.rect(0, ym, W, floorY + H * .17 - ym); ctx.clip(); ctx.drawImage(refl, 0, 0, refl.width, refl.height, 0, ym, W, refl.height / dpr); ctx.restore();
+}
+function tipAt(s, f) { const target = s.len * f; let i = 1; while (i < s.pts.length - 1 && s.cum[i] < target) i++; const a = s.pts[i - 1], b = s.pts[i], t = clamp((target - s.cum[i - 1]) / (s.cum[i] - s.cum[i - 1] || 1), 0, 1); return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }; }
+function drawCracks() {                                       // 碎裂前的一瞬：暗色裂纹从点击点向外扩展
+  ctx.save(); ctx.translate(BX, BY); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (const k of S.cracks) { const f = clamp((S.t - k.t0) / .13, 0, 1); if (f <= 0) continue; const tgt = k.len * f; ctx.beginPath(); ctx.moveTo(k.pts[0].x, k.pts[0].y);
+    for (let i = 1; i < k.pts.length && k.cum[i - 1] < tgt; i++) { const t = clamp((tgt - k.cum[i - 1]) / (k.cum[i] - k.cum[i - 1]), 0, 1), a = k.pts[i - 1], b = k.pts[i]; ctx.lineTo(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t); }
+    ctx.strokeStyle = 'rgba(20,30,26,.85)'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.strokeStyle = 'rgba(240,235,210,.55)'; ctx.lineWidth = .6; ctx.stroke(); }
+  ctx.restore();
+}
+function drawHairlines() { ctx.save(); ctx.translate(BX, BY); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; for (const s of S.newSeams) { ctx.beginPath(); s.pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.strokeStyle = 'rgba(20,30,26,.7)'; ctx.lineWidth = 1.1; ctx.stroke(); } ctx.restore(); }
+function drawSweep() {                                        // 金光扫过：沿所有金线移动的高亮带
+  const x = -D * .7 + S.sweep * D * 1.6; ctx.save(); ctx.translate(BX, BY); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+  for (const s of [...S.seams, ...S.newSeams]) { const g = ctx.createLinearGradient(x - D * .12, -D * .3, x + D * .12, -D * .1); g.addColorStop(0, 'rgba(255,240,180,0)'); g.addColorStop(.5, 'rgba(255,248,215,.95)'); g.addColorStop(1, 'rgba(255,240,180,0)');
+    ctx.strokeStyle = g; ctx.lineWidth = D * s.w * 1.6; ctx.beginPath(); s.pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); }
+  ctx.restore();
+}
+let last = performance.now(), T = 0;
+function frame(now) {
+  requestAnimationFrame(frame); const dt = Math.min(.033, (now - last) / 1e3); last = now; T += dt; S.t += dt; S.shake = Math.max(0, S.shake - dt * 3.2);
+  // —— 更新
+  if (S.state === 'cracking' && S.t > .3) release();
+  else if (S.state === 'falling') {
+    const mv = physics(dt); S.restT = mv < 20 && S.t > .9 ? S.restT + dt : 0;
+    if (S.restT > .55 || S.t > 9) { S.shards.forEach(b => { b.vx = b.vy = b.w = 0; }); S.state = 'rest'; S.t = 0; setBtn(); say('静候片刻，碎片将自行归位 · 或点「修复」', true); }
+  } else if (S.state === 'rest') { if (S.t > 2.6) startReturn(); }
+  else if (S.state === 'returning') {
+    for (const b of S.shards) {
+      const u = clamp((S.t - b.dl) / b.du, 0, 1), e = eio(u), tx = BX + b.home.x, ty = BY + b.home.y; b.x = lerp(b.x0, tx, e); b.y = lerp(b.y0, ty, e) - Math.sin(u * Math.PI) * D * .16; b.a = lerp(b.a0, 0, e); b.lift = Math.sin(u * Math.PI); world(b);
+      if (u >= 1 && !b.done) { b.done = true; clink(700 + R() * 500); if (parts.length < 300) sparks(tx, ty, 2, 40); }
+    }
+    if (S.t > S.retDur) { S.shards.forEach(b => { b.x = BX + b.home.x; b.y = BY + b.home.y; b.a = 0; b.lift = 0; world(b); }); startGild(); }
+  } else if (S.state === 'gilding') {
+    for (const s of S.newSeams) { const f = clamp((S.t - s.g0) / s.gd, 0, 1), prev = s.f; s.f = eout(f); if (f > 0 && f < 1 && parts.length < 380) { const tp = tipAt(s, s.f); sparks(BX + tp.x, BY + tp.y, 2, 70); if (R() < .04) ping(); } if (prev < 1 && f >= 1 && R() < .35) ping(); }
+    if (S.t > S.gildDur) { S.state = 'sweep'; S.t = 0; bellSnd(); say('金缮成', false); }
+  } else if (S.state === 'sweep') { S.sweep = S.t / 1.3; if (S.t > 1.3) { S.sweep = 0; finish(); } }
+  stepParts(dt);
+  // —— 绘制
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.drawImage(bg, 0, 0, W, H); ctx.save(); if (S.shake > 0) ctx.translate((R() - .5) * 6 * S.shake, (R() - .5) * 6 * S.shake);
+  const broken = S.state !== 'idle' && S.state !== 'cracking';
+  drawReflection(); if (broken) drawShadows(); else drawIntactShadow(); drawObjects(ctx, false);
+  if (S.state === 'cracking') drawCracks();
+  if (S.state === 'gilding' || S.state === 'sweep') {
+    if (S.state === 'gilding') drawHairlines();
+    ctx.save(); ctx.translate(BX, BY); for (const s of S.newSeams) drawSeam(ctx, s, S.state === 'gilding' ? s.f : 1, G, S.state === 'gilding' && s.f < 1); ctx.restore();
+  }
+  if (S.state === 'sweep') drawSweep();
+  ctx.restore(); drawParts(T);
+  if (S.state === 'cracking') { const a = 1 - S.t / .16; if (a > 0) { const x = BX + S.click.x, y = BY + S.click.y, g = ctx.createRadialGradient(x, y, 0, x, y, D * .3); g.addColorStop(0, `rgba(255,250,235,${a * .8})`); g.addColorStop(1, 'rgba(255,250,235,0)'); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = g; ctx.fillRect(x - D * .3, y - D * .3, D * .6, D * .6); ctx.globalCompositeOperation = 'source-over'; } }
+}
+window.__k = { S, get D() { return D; }, get BX() { return BX; }, get BY() { return BY; }, click(dx, dy) { onClick(BX + dx, BY + dy); } };   // 调试钩子
+layout(); requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -15,6 +15,7 @@
     "^gpt-5\\.4-mini$",
     "^gpt-5\\.3-codex$",
     "^claude-opus-5$",
+    "^sonnet-5\\.5$",
     "^claude-opus-4-8$",
     "^claude-opus-4\\.6$",
     "^opus-4\\.7$",
@@ -67,7 +68,7 @@
   ],
   "referenceGroups": [
     ["^gpt-5\\.6-sol$", "^gpt-5\\.5$", "^gpt-5\\.4$", "^gpt-5\\.3-codex$"],
-    ["^claude-opus-5$", "^claude-opus-4-8$", "^claude-opus-4\\.6$", "^opus-4\\.7$", "^claude-sonnet-4-6$"],
+    ["^claude-opus-5$", "^sonnet-5\\.5$", "^claude-opus-4-8$", "^claude-opus-4\\.6$", "^opus-4\\.7$", "^claude-sonnet-4-6$"],
     ["^Gemini-3\\.1-Pro-High$", "^gemini-3\\.5-flash-high$"],
     ["^qwen3\\.8-max-0902$", "^qwen3\\.8-max-new$", "^qwen3\\.8-max$", "^qwen3\\.8-max-pre$", "^qwen3\\.8-flash$", "^qwen-3\\.7-max$", "^qwen-3\\.6-plus$", "^qwen3\\.7-plus$"],
     ["^deepseek-v4-pro-GA$", "^deepseek-v4-pro$", "^deepseek-v4-flash$"],
