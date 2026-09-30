@@ -1,0 +1,144 @@
+{
+  "verifiedAt": "2026-09-30T13:52:27.065Z",
+  "base": "https://model-ui-arena.lank.workers.dev",
+  "model": "GPT-6.1-Sol",
+  "sourceCommit": "f8717111c25e4d4284d5a9f74859177294d3363e",
+  "versionId": "6da0e693-0654-459c-9f6c-10b5fe190ae1",
+  "previousVersionId": "d107bf20-f672-40f1-ad5b-ef3dfd9f082d",
+  "apiStatus": 200,
+  "homeStatus": 200,
+  "totalSubmissions": 470,
+  "existingPreserved": 457,
+  "ownCount": 13,
+  "routes": [
+    {
+      "theme": "carwash-decision",
+      "assetStatus": 200,
+      "viewerStatus": 200,
+      "themeStatus": 200,
+      "taskStatus": 200,
+      "sha256Matches": true
+    },
+    {
+      "theme": "cheetah-trophy-run",
+      "assetStatus": 200,
+      "viewerStatus": 200,
+      "themeStatus": 200,
+      "taskStatus": 200,
+      "sha256Matches": true
+    },
+    {
+      "theme": "click-fireworks",
+      "assetStatus": 200,
+      "viewerStatus": 200,
+      "themeStatus": 200,
+      "taskStatus": 200,
+      "sha256Matches": true
+    },
+    {
+      "theme": "clock",
+      "assetStatus": 200,
+      "viewerStatus": 200,
+      "themeStatus": 200,
+      "taskStatus": 200,
+      "sha256Matches": true
+    },
+    {
+      "theme": "dslr-camera",
+      "assetStatus": 200,
+      "viewerStatus": 200,
+      "themeStatus": 200,
+      "taskStatus": 200,
+      "sha256Matches": true
+    },
+    {
+      "theme": "kintsugi",
+      "assetStatus": 200,
+      "viewerStatus": 200,
+      "themeStatus": 200,
+      "taskStatus": 200,
+      "sha256Matches": true
+    },
+    {
+      "theme": "neon-countdown",
+      "assetStatus": 200,
+      "viewerStatus": 200,
+      "themeStatus": 200,
+      "taskStatus": 200,
+      "sha256Matches": true
+    },
+    {
+      "theme": "particle-gravity",
+      "assetStatus": 200,
+      "viewerStatus": 200,
+      "themeStatus": 200,
+      "taskStatus": 200,
+      "sha256Matches": true
+    },
+    {
+      "theme": "pelican-bicycle",
+      "assetStatus": 200,
+      "viewerStatus": 200,
+      "themeStatus": 200,
+      "taskStatus": 200,
+      "sha256Matches": true
+    },
+    {
+      "theme": "schwarzschild-black-hole",
+      "assetStatus": 200,
+      "viewerStatus": 200,
+      "themeStatus": 200,
+      "taskStatus": 200,
+      "sha256Matches": true
+    },
+    {
+      "theme": "stock-panel",
+      "assetStatus": 200,
+      "viewerStatus": 200,
+      "themeStatus": 200,
+      "taskStatus": 200,
+      "sha256Matches": true
+    },
+    {
+      "theme": "watch-movement",
+      "assetStatus": 200,
+      "viewerStatus": 200,
+      "themeStatus": 200,
+      "taskStatus": 200,
+      "sha256Matches": true
+    },
+    {
+      "theme": "weather-card",
+      "assetStatus": 200,
+      "viewerStatus": 200,
+      "themeStatus": 200,
+      "taskStatus": 200,
+      "sha256Matches": true
+    }
+  ],
+  "newPrompts": [
+    {
+      "theme": "pelican-bicycle",
+      "status": 200,
+      "baseFile": "base-svg.md"
+    },
+    {
+      "theme": "kintsugi",
+      "status": 200,
+      "baseFile": "base-creative.md"
+    },
+    {
+      "theme": "watch-movement",
+      "status": 200,
+      "baseFile": "base-creative.md"
+    }
+  ],
+  "passed": true,
+  "browser": {
+    "url": "https://model-ui-arena.lank.workers.dev/view/schwarzschild-black-hole/GPT-6.1-Sol",
+    "renderInfo": "RGBA16F HDR · 60 FPS · 461 × 242 · RK4 280 STEPS",
+    "quality": "low / 280 RK4 steps",
+    "screenshot": "screenshots/cloudflare-black-hole.jpg",
+    "observedErrors": []
+  }
+}
