@@ -4,10 +4,14 @@ import path from "node:path";
 const noCodeLimitThemes = new Set([
   "cheetah-trophy-run",
   "dslr-camera",
-  "schwarzschild-black-hole"
+  "schwarzschild-black-hole",
+  "pelican-bicycle",
+  "kintsugi",
+  "watch-movement"
 ]);
 const replicaThemes = new Set(["dslr-camera"]);
 const webglThemes = new Set(["schwarzschild-black-hole"]);
+const creativeThemes = new Set(["kintsugi", "watch-movement"]);
 
 function parseArgs(argv) {
   const args = {};
@@ -44,6 +48,8 @@ async function run() {
       ? "base-reasoning.md"
       : webglThemes.has(theme)
         ? "base-webgl.md"
+      : creativeThemes.has(theme)
+        ? "base-creative.md"
       : replicaThemes.has(theme)
         ? "base-replica.md"
         : noCodeLimitThemes.has(theme)
