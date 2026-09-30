@@ -11,7 +11,10 @@ const lineLimit = 220;
 const unlimitedLineThemes = new Set([
   "cheetah-trophy-run",
   "dslr-camera",
-  "schwarzschild-black-hole"
+  "schwarzschild-black-hole",
+  "pelican-bicycle",
+  "kintsugi",
+  "watch-movement"
 ]);
 const themeOrder = [
   "clock",
@@ -22,8 +25,11 @@ const themeOrder = [
   "neon-countdown",
   "particle-gravity",
   "cheetah-trophy-run",
+  "pelican-bicycle",
   "dslr-camera",
   "schwarzschild-black-hole",
+  "kintsugi",
+  "watch-movement",
   "carwash-decision"
 ];
 const themeRank = new Map(themeOrder.map((theme, index) => [theme, index]));

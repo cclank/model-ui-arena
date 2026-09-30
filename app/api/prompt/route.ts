@@ -4,6 +4,10 @@ import reasoningPrompt from "@/prompts/base-reasoning.md";
 import replicaPrompt from "@/prompts/base-replica.md";
 import svgPrompt from "@/prompts/base-svg.md";
 import webglPrompt from "@/prompts/base-webgl.md";
+import creativePrompt from "@/prompts/base-creative.md";
+import pelicanBicyclePrompt from "@/prompts/themes/pelican-bicycle.md";
+import kintsugiPrompt from "@/prompts/themes/kintsugi.md";
+import watchMovementPrompt from "@/prompts/themes/watch-movement.md";
 import carwashDecisionPrompt from "@/prompts/themes/carwash-decision.md";
 import cheetahTrophyRunPrompt from "@/prompts/themes/cheetah-trophy-run.md";
 import clickFireworksPrompt from "@/prompts/themes/click-fireworks.md";
@@ -17,16 +21,18 @@ import schwarzschildBlackHolePrompt from "@/prompts/themes/schwarzschild-black-h
 import stockPanelPrompt from "@/prompts/themes/stock-panel.md";
 import weatherCardPrompt from "@/prompts/themes/weather-card.md";
 
-const noLimitThemes = new Set(["cheetah-trophy-run"]);
+const noLimitThemes = new Set(["cheetah-trophy-run", "pelican-bicycle"]);
 const replicaThemes = new Set(["dslr-camera"]);
 const webglThemes = new Set(["schwarzschild-black-hole"]);
+const creativeThemes = new Set(["kintsugi", "watch-movement"]);
 
 const basePrompts: Record<string, string> = {
   "base.md": basePrompt,
   "base-reasoning.md": reasoningPrompt,
   "base-replica.md": replicaPrompt,
   "base-svg.md": svgPrompt,
-  "base-webgl.md": webglPrompt
+  "base-webgl.md": webglPrompt,
+  "base-creative.md": creativePrompt
 };
 
 const themePrompts: Record<string, string> = {
@@ -41,7 +47,10 @@ const themePrompts: Record<string, string> = {
   recorder: recorderPrompt,
   "schwarzschild-black-hole": schwarzschildBlackHolePrompt,
   "stock-panel": stockPanelPrompt,
-  "weather-card": weatherCardPrompt
+  "weather-card": weatherCardPrompt,
+  "pelican-bicycle": pelicanBicyclePrompt,
+  kintsugi: kintsugiPrompt,
+  "watch-movement": watchMovementPrompt
 };
 
 export async function GET(request: Request) {
@@ -57,6 +66,8 @@ export async function GET(request: Request) {
       ? "base-reasoning.md"
       : webglThemes.has(theme)
         ? "base-webgl.md"
+      : creativeThemes.has(theme)
+        ? "base-creative.md"
       : replicaThemes.has(theme)
         ? "base-replica.md"
         : noLimitThemes.has(theme)

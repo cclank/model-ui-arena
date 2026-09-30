@@ -34,10 +34,13 @@ export const LINE_LIMIT = 220;
 export const UNLIMITED_LINE_THEMES = new Set<string>([
   "cheetah-trophy-run",
   "dslr-camera",
-  "schwarzschild-black-hole"
+  "schwarzschild-black-hole",
+  "pelican-bicycle",
+  "kintsugi",
+  "watch-movement"
 ]);
 
-export const BITMAP_AUDIT_THEMES = new Set<string>(["cheetah-trophy-run", "dslr-camera"]);
+export const BITMAP_AUDIT_THEMES = new Set<string>(["cheetah-trophy-run", "pelican-bicycle", "dslr-camera"]);
 
 export const CARWASH_Q1 =
   "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？";
@@ -92,6 +95,21 @@ export const THEMES: ThemeMeta[] = [
     id: "schwarzschild-black-hole",
     label: "施瓦西黑洞",
     objective: "真实测地线积分、相对论吸积盘、多重像、HDR 后期与交互性能"
+  },
+  {
+    id: "pelican-bicycle",
+    label: "鹈鹕骑自行车",
+    objective: "SVG 造型、蹬踏联动、原生循环动画与场景视差"
+  },
+  {
+    id: "kintsugi",
+    label: "金缮",
+    objective: "实时程序化断裂、刚体坠落、碎片归位与累计金线"
+  },
+  {
+    id: "watch-movement",
+    label: "机芯",
+    objective: "机械传动、擒纵节拍、上弦调时与金属质感"
   },
   {
     id: "carwash-decision",
