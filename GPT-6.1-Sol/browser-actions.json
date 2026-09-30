@@ -1,0 +1,213 @@
+[
+  {
+    "task": "weather-card",
+    "city": "上海",
+    "animation": "card rain",
+    "condition": "小雨 · 记得带伞",
+    "days": 5,
+    "displayed": "上海",
+    "particles": 42
+  },
+  {
+    "task": "weather-card",
+    "city": "札幌",
+    "animation": "card snow",
+    "condition": "小雪 · 轻轻落下",
+    "days": 5,
+    "displayed": "札幌",
+    "particles": 42
+  },
+  {
+    "task": "weather-card",
+    "city": "杭州",
+    "animation": "card sunny",
+    "condition": "晴朗 · 微风适宜",
+    "days": 5,
+    "displayed": "杭州",
+    "particles": 42
+  },
+  {
+    "task": "weather-card",
+    "fahrenheit": "true"
+  },
+  {
+    "task": "stock-panel",
+    "changeClass": "change down",
+    "path": 2242,
+    "rows": 3,
+    "stock": "AAPL / Apple Inc.",
+    "trend": "本月"
+  },
+  {
+    "task": "clock",
+    "format": "12 小时制",
+    "hand": "rotate(221.928deg)",
+    "second": "36",
+    "time": "10:25"
+  },
+  {
+    "task": "dslr-camera",
+    "exposures": "1",
+    "mode": "A / 光圈优先",
+    "status": "快门已释放 · 第 1 次曝光"
+  },
+  {
+    "task": "pelican-bicycle",
+    "animationCount": 18,
+    "crankDuration": "1.2s",
+    "legKeyframes": 97,
+    "night": true,
+    "pause": "继续",
+    "speed": "巡航 ×2"
+  },
+  {
+    "task": "neon-countdown",
+    "paused": "paused"
+  },
+  {
+    "task": "neon-countdown",
+    "note": "倒计时完成 · 新的开始就在此刻。",
+    "number": "0",
+    "state": "complete"
+  },
+  {
+    "task": "neon-countdown",
+    "restart": {
+      "number": "10",
+      "state": "running"
+    }
+  },
+  {
+    "task": "click-fireworks",
+    "bursts": "6",
+    "palette": "冷蓝 · 配色",
+    "particles": "809"
+  },
+  {
+    "task": "particle-gravity",
+    "energy": "135.3",
+    "fps": "60",
+    "mode": "REPEL / 排斥模式",
+    "particles": "1500",
+    "paused": "true"
+  },
+  {
+    "task": "watch-movement",
+    "operation": "drag barrel by 45 degrees",
+    "timeChange": 3594.9863713367813,
+    "setting": true,
+    "meshes": [
+      {
+        "child": "center",
+        "distance": 99,
+        "parent": "barrel",
+        "required": 99
+      },
+      {
+        "child": "third",
+        "distance": 72,
+        "parent": "center",
+        "required": 72
+      },
+      {
+        "child": "seconds",
+        "distance": 70.125,
+        "parent": "third",
+        "required": 70.125
+      },
+      {
+        "child": "escape",
+        "distance": 44,
+        "parent": "seconds",
+        "required": 44
+      }
+    ],
+    "hourRatio": 12
+  },
+  {
+    "task": "watch-movement",
+    "operation": "wind and accelerate",
+    "mode": "stopped",
+    "reserve": "0.0 h",
+    "speed": "3600",
+    "status": "动力耗尽 · 摆轮逐渐停摆"
+  },
+  {
+    "task": "schwarzschild-black-hole",
+    "operation": "quality and wheel zoom",
+    "dilation": "0.9789",
+    "distance": "24.00 rₛ",
+    "render": "running",
+    "velocity": "0.1443 c"
+  },
+  {
+    "task": "schwarzschild-black-hole",
+    "operation": "context loss",
+    "error": "图形上下文已中断",
+    "render": "error",
+    "visible": true
+  },
+  {
+    "task": "schwarzschild-black-hole",
+    "operation": "context recovery",
+    "errorVisible": false,
+    "render": "running"
+  },
+  {
+    "task": "schwarzschild-black-hole",
+    "operation": "capability fixture ldr",
+    "details": "",
+    "diagnostics": "{\"ready\":true,\"hdr\":false,\"distance\":16,\"timeDilation\":0.9682458365518543,\"orbitalBeta\":0.1767766952966369,\"quality\":\"high\",\"fps\":54.3102597017873,\"contextLosses\":0,\"passes\":5,\"integrator\":\"RK4 affine Schwarzschild null geodesics\",\"resolution\":[1075,605],\"glError\":0}",
+    "errorTitle": "暂时无法抵达视界。",
+    "errorVisible": false,
+    "render": "running"
+  },
+  {
+    "task": "schwarzschild-black-hole",
+    "operation": "capability fixture no-webgl",
+    "details": "",
+    "diagnostics": "{\"ready\":false,\"hdr\":false,\"distance\":16,\"timeDilation\":0.9682458365518543,\"orbitalBeta\":0.1767766952966369,\"quality\":\"high\",\"fps\":0,\"contextLosses\":0,\"passes\":5,\"integrator\":\"RK4 affine Schwarzschild null geodesics\",\"resolution\":null,\"glError\":0}",
+    "errorTitle": "需要 WebGL2 支持",
+    "errorVisible": true,
+    "render": "error"
+  },
+  {
+    "task": "schwarzschild-black-hole",
+    "operation": "capability fixture shader-failure",
+    "details": "着色器编译失败：ERROR: 0:24: 'INVALID_SHADER_TOKEN' : syntax error\n",
+    "diagnostics": "{\"ready\":false,\"hdr\":true,\"distance\":16,\"timeDilation\":0.9682458365518543,\"orbitalBeta\":0.1767766952966369,\"quality\":\"high\",\"fps\":0,\"contextLosses\":0,\"passes\":5,\"integrator\":\"RK4 affine Schwarzschild null geodesics\",\"resolution\":null,\"glError\":0}",
+    "errorTitle": "着色器初始化失败",
+    "errorVisible": true,
+    "render": "error"
+  },
+  {
+    "task": "kintsugi",
+    "operation": "repeat fracture",
+    "shards": 40,
+    "seams": 100,
+    "oldGoldSeams": 95,
+    "areaError": -2.764863893389702e-10,
+    "differentGeometry": true
+  },
+  {
+    "task": "kintsugi",
+    "operation": "manual repair",
+    "state": "returning"
+  },
+  {
+    "task": "kintsugi",
+    "operation": "final per-shard gold cache fracture",
+    "state": "falling",
+    "oldGoldSeams": 98,
+    "shards": 40,
+    "areaError": -5.238689482212067e-10
+  },
+  {
+    "task": "kintsugi",
+    "operation": "final cached-gold repair complete",
+    "state": "healed",
+    "repairs": 2,
+    "goldSeams": 200,
+    "areaError": -5.238689482212067e-10
+  }
+]

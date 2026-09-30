@@ -1,0 +1,7 @@
+{
+  "viewerUrl": "http://127.0.0.1:3000/view/schwarzschild-black-hole/GPT-6.1-Sol",
+  "renderInfo": "RGBA16F HDR · 49 FPS · 691 × 363 · RK4 280 STEPS",
+  "qualityValue": "low",
+  "qualityChangeConfirmed": true,
+  "browserConsoleObservation": "One source-less MutationObserver observation occurred during iframe inspection; standalone submission pages had no page-script errors."
+}

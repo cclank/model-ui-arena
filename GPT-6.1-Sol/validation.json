@@ -1,0 +1,311 @@
+{
+  "model": "GPT-6.1-Sol",
+  "verifiedAt": "2026-09-30T04:48:44.586Z",
+  "submissionCount": 13,
+  "submissions": [
+    {
+      "theme": "clock",
+      "filename": "index.html",
+      "lines": 18,
+      "unlimited": false,
+      "scripts": 1,
+      "bytes": 6440,
+      "sha256": "bac61584cbc53b3bdf5aedba7df3dc601a30a69ef24415b0b10b18077b2910f3",
+      "passed": true
+    },
+    {
+      "theme": "weather-card",
+      "filename": "index.html",
+      "lines": 11,
+      "unlimited": false,
+      "scripts": 1,
+      "bytes": 9856,
+      "sha256": "a6a7bffa7958ddd30387537597cf6e35b637719536274ed3d8f3b1626877c878",
+      "passed": true
+    },
+    {
+      "theme": "stock-panel",
+      "filename": "index.html",
+      "lines": 11,
+      "unlimited": false,
+      "scripts": 1,
+      "bytes": 8747,
+      "sha256": "9657f42bcc291bc08edfad23bae05dbf46f6cb4a84eac86ce27a756e946cfe3e",
+      "passed": true
+    },
+    {
+      "theme": "click-fireworks",
+      "filename": "index.html",
+      "lines": 12,
+      "unlimited": false,
+      "scripts": 1,
+      "bytes": 7273,
+      "sha256": "1b33155c542053e309fc5c6cd0298da01c14ba590437aa428e919f57e37b8965",
+      "passed": true
+    },
+    {
+      "theme": "neon-countdown",
+      "filename": "index.html",
+      "lines": 11,
+      "unlimited": false,
+      "scripts": 1,
+      "bytes": 8169,
+      "sha256": "6c6c802a8bc34185418703384533ac38afa19a86a723a7a79c6e880464502349",
+      "passed": true
+    },
+    {
+      "theme": "particle-gravity",
+      "filename": "index.html",
+      "lines": 11,
+      "unlimited": false,
+      "scripts": 1,
+      "bytes": 7760,
+      "sha256": "e958e05bdc14db2ae2dd3dc8312001f6d609d9b6a7a7f253718d6bddf494b10f",
+      "passed": true
+    },
+    {
+      "theme": "cheetah-trophy-run",
+      "filename": "index.html",
+      "lines": 43,
+      "unlimited": true,
+      "scripts": 0,
+      "bytes": 14061,
+      "sha256": "74a97459d5b34b7983e389ce5663a91cf0355bd9cec17b49555c289dc53879a7",
+      "passed": true
+    },
+    {
+      "theme": "pelican-bicycle",
+      "filename": "index.html",
+      "lines": 41,
+      "unlimited": true,
+      "scripts": 1,
+      "bytes": 14461,
+      "sha256": "864e3ab1eb0266e0726975b02f1dac58d05d3ab67f79e9a785b37d8dc2f4569a",
+      "passed": true
+    },
+    {
+      "theme": "dslr-camera",
+      "filename": "index.html",
+      "lines": 33,
+      "unlimited": true,
+      "scripts": 1,
+      "bytes": 15612,
+      "sha256": "a03aca801c7e868fc3c8984c1bb88b69090c8d063768396fbca3f457edea0393",
+      "passed": true
+    },
+    {
+      "theme": "schwarzschild-black-hole",
+      "filename": "index.html",
+      "lines": 63,
+      "unlimited": true,
+      "scripts": 1,
+      "bytes": 21885,
+      "sha256": "54500d47c3dd77c6c86594d593a72aa395daed79f94434b7d57fd55c813b1ffc",
+      "passed": true
+    },
+    {
+      "theme": "kintsugi",
+      "filename": "index.html",
+      "lines": 42,
+      "unlimited": true,
+      "scripts": 1,
+      "bytes": 16829,
+      "sha256": "d2b6118876eca1079c6f68a2f5291826d1c76862fac5928f3c0ba1323ce628a2",
+      "passed": true
+    },
+    {
+      "theme": "watch-movement",
+      "filename": "index.html",
+      "lines": 48,
+      "unlimited": true,
+      "scripts": 1,
+      "bytes": 23772,
+      "sha256": "832234259b77c5fbfd0e18a6ecb01b5d27139fd16318a2efd52948f84529bed2",
+      "passed": true
+    },
+    {
+      "theme": "carwash-decision",
+      "filename": "response.md",
+      "lines": 5,
+      "unlimited": false,
+      "scripts": 0,
+      "bytes": 400,
+      "sha256": "3417c9447490445387d5dc565bb133600f3878594997d2f1d7c73a85693c8568",
+      "passed": true
+    }
+  ],
+  "browser": {
+    "layouts": 24,
+    "allLayoutsPassed": true,
+    "actions": 25
+  },
+  "physics": {
+    "seed": 6131,
+    "impacts": 20,
+    "passed": true
+  },
+  "api": {
+    "status": 200,
+    "count": 13,
+    "entries": [
+      {
+        "theme": "clock",
+        "filename": "index.html",
+        "withinLineLimit": true,
+        "usesBitmap": false
+      },
+      {
+        "theme": "weather-card",
+        "filename": "index.html",
+        "withinLineLimit": true,
+        "usesBitmap": false
+      },
+      {
+        "theme": "stock-panel",
+        "filename": "index.html",
+        "withinLineLimit": true,
+        "usesBitmap": false
+      },
+      {
+        "theme": "click-fireworks",
+        "filename": "index.html",
+        "withinLineLimit": true,
+        "usesBitmap": false
+      },
+      {
+        "theme": "neon-countdown",
+        "filename": "index.html",
+        "withinLineLimit": true,
+        "usesBitmap": false
+      },
+      {
+        "theme": "particle-gravity",
+        "filename": "index.html",
+        "withinLineLimit": true,
+        "usesBitmap": false
+      },
+      {
+        "theme": "cheetah-trophy-run",
+        "filename": "index.html",
+        "withinLineLimit": true,
+        "usesBitmap": false
+      },
+      {
+        "theme": "pelican-bicycle",
+        "filename": "index.html",
+        "withinLineLimit": true,
+        "usesBitmap": false
+      },
+      {
+        "theme": "dslr-camera",
+        "filename": "index.html",
+        "withinLineLimit": true,
+        "usesBitmap": false
+      },
+      {
+        "theme": "schwarzschild-black-hole",
+        "filename": "index.html",
+        "withinLineLimit": true,
+        "usesBitmap": false
+      },
+      {
+        "theme": "kintsugi",
+        "filename": "index.html",
+        "withinLineLimit": true,
+        "usesBitmap": false
+      },
+      {
+        "theme": "watch-movement",
+        "filename": "index.html",
+        "withinLineLimit": true,
+        "usesBitmap": false
+      },
+      {
+        "theme": "carwash-decision",
+        "filename": "response.md",
+        "withinLineLimit": true,
+        "usesBitmap": false
+      }
+    ]
+  },
+  "routes": [
+    {
+      "theme": "clock",
+      "submissionStatus": 200,
+      "viewerStatus": 200,
+      "contentHashMatches": true
+    },
+    {
+      "theme": "weather-card",
+      "submissionStatus": 200,
+      "viewerStatus": 200,
+      "contentHashMatches": true
+    },
+    {
+      "theme": "stock-panel",
+      "submissionStatus": 200,
+      "viewerStatus": 200,
+      "contentHashMatches": true
+    },
+    {
+      "theme": "click-fireworks",
+      "submissionStatus": 200,
+      "viewerStatus": 200,
+      "contentHashMatches": true
+    },
+    {
+      "theme": "neon-countdown",
+      "submissionStatus": 200,
+      "viewerStatus": 200,
+      "contentHashMatches": true
+    },
+    {
+      "theme": "particle-gravity",
+      "submissionStatus": 200,
+      "viewerStatus": 200,
+      "contentHashMatches": true
+    },
+    {
+      "theme": "cheetah-trophy-run",
+      "submissionStatus": 200,
+      "viewerStatus": 200,
+      "contentHashMatches": true
+    },
+    {
+      "theme": "pelican-bicycle",
+      "submissionStatus": 200,
+      "viewerStatus": 200,
+      "contentHashMatches": true
+    },
+    {
+      "theme": "dslr-camera",
+      "submissionStatus": 200,
+      "viewerStatus": 200,
+      "contentHashMatches": true
+    },
+    {
+      "theme": "schwarzschild-black-hole",
+      "submissionStatus": 200,
+      "viewerStatus": 200,
+      "contentHashMatches": true
+    },
+    {
+      "theme": "kintsugi",
+      "submissionStatus": 200,
+      "viewerStatus": 200,
+      "contentHashMatches": true
+    },
+    {
+      "theme": "watch-movement",
+      "submissionStatus": 200,
+      "viewerStatus": 200,
+      "contentHashMatches": true
+    },
+    {
+      "theme": "carwash-decision",
+      "submissionStatus": 200,
+      "viewerStatus": 200,
+      "contentHashMatches": true
+    }
+  ]
+}
