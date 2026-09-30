@@ -1,5 +1,22 @@
 [
   {
+    "id": "clock:GPT-6.1-Sol",
+    "theme": "clock",
+    "model": "GPT-6.1-Sol",
+    "filename": "index.html",
+    "path": "/submissions/clock/GPT-6.1-Sol/",
+    "publicPath": "/submissions/clock/GPT-6.1-Sol/index.html",
+    "renderKind": "html",
+    "linesTotal": 19,
+    "linesCss": 1,
+    "linesJs": 5,
+    "sizeBytes": 6440,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-30T01:40:32.717Z"
+  },
+  {
     "id": "clock:fable-5.1",
     "theme": "clock",
     "model": "fable-5.1",
@@ -1836,6 +1853,23 @@
     "updatedAt": "2026-09-03T14:06:02.262Z"
   },
   {
+    "id": "weather-card:GPT-6.1-Sol",
+    "theme": "weather-card",
+    "model": "GPT-6.1-Sol",
+    "filename": "index.html",
+    "path": "/submissions/weather-card/GPT-6.1-Sol/",
+    "publicPath": "/submissions/weather-card/GPT-6.1-Sol/index.html",
+    "renderKind": "html",
+    "linesTotal": 12,
+    "linesCss": 1,
+    "linesJs": 4,
+    "sizeBytes": 9856,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-30T02:24:05.521Z"
+  },
+  {
     "id": "weather-card:fable-5.1",
     "theme": "weather-card",
     "model": "fable-5.1",
@@ -2752,6 +2786,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-09-03T14:08:15.916Z"
+  },
+  {
+    "id": "stock-panel:GPT-6.1-Sol",
+    "theme": "stock-panel",
+    "model": "GPT-6.1-Sol",
+    "filename": "index.html",
+    "path": "/submissions/stock-panel/GPT-6.1-Sol/",
+    "publicPath": "/submissions/stock-panel/GPT-6.1-Sol/index.html",
+    "renderKind": "html",
+    "linesTotal": 12,
+    "linesCss": 1,
+    "linesJs": 5,
+    "sizeBytes": 8747,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-30T01:40:32.766Z"
   },
   {
     "id": "stock-panel:fable-5.1",
@@ -3672,6 +3723,23 @@
     "updatedAt": "2026-09-03T14:06:12.284Z"
   },
   {
+    "id": "click-fireworks:GPT-6.1-Sol",
+    "theme": "click-fireworks",
+    "model": "GPT-6.1-Sol",
+    "filename": "index.html",
+    "path": "/submissions/click-fireworks/GPT-6.1-Sol/",
+    "publicPath": "/submissions/click-fireworks/GPT-6.1-Sol/index.html",
+    "renderKind": "html",
+    "linesTotal": 13,
+    "linesCss": 1,
+    "linesJs": 6,
+    "sizeBytes": 7273,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-30T01:45:04.426Z"
+  },
+  {
     "id": "click-fireworks:fable-5.1",
     "theme": "click-fireworks",
     "model": "fable-5.1",
@@ -4590,6 +4658,23 @@
     "updatedAt": "2026-09-03T14:05:12.538Z"
   },
   {
+    "id": "neon-countdown:GPT-6.1-Sol",
+    "theme": "neon-countdown",
+    "model": "GPT-6.1-Sol",
+    "filename": "index.html",
+    "path": "/submissions/neon-countdown/GPT-6.1-Sol/",
+    "publicPath": "/submissions/neon-countdown/GPT-6.1-Sol/index.html",
+    "renderKind": "html",
+    "linesTotal": 12,
+    "linesCss": 1,
+    "linesJs": 5,
+    "sizeBytes": 8169,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-30T01:45:04.447Z"
+  },
+  {
     "id": "neon-countdown:fable-5.1",
     "theme": "neon-countdown",
     "model": "fable-5.1",
@@ -5064,6 +5149,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-09-03T14:05:12.552Z"
+  },
+  {
+    "id": "particle-gravity:GPT-6.1-Sol",
+    "theme": "particle-gravity",
+    "model": "GPT-6.1-Sol",
+    "filename": "index.html",
+    "path": "/submissions/particle-gravity/GPT-6.1-Sol/",
+    "publicPath": "/submissions/particle-gravity/GPT-6.1-Sol/index.html",
+    "renderKind": "html",
+    "linesTotal": 12,
+    "linesCss": 1,
+    "linesJs": 5,
+    "sizeBytes": 7760,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-30T01:45:04.465Z"
   },
   {
     "id": "particle-gravity:fable-5.1",
@@ -5542,6 +5644,23 @@
     "updatedAt": "2026-09-03T14:05:30.896Z"
   },
   {
+    "id": "cheetah-trophy-run:GPT-6.1-Sol",
+    "theme": "cheetah-trophy-run",
+    "model": "GPT-6.1-Sol",
+    "filename": "index.html",
+    "path": "/submissions/cheetah-trophy-run/GPT-6.1-Sol/",
+    "publicPath": "/submissions/cheetah-trophy-run/GPT-6.1-Sol/index.html",
+    "renderKind": "html",
+    "linesTotal": 44,
+    "linesCss": 1,
+    "linesJs": 0,
+    "sizeBytes": 14061,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-30T01:51:43.601Z"
+  },
+  {
     "id": "cheetah-trophy-run:fable-5.1",
     "theme": "cheetah-trophy-run",
     "model": "fable-5.1",
@@ -6016,6 +6135,23 @@
     "unlimitedLines": true,
     "usesBitmap": false,
     "updatedAt": "2026-09-03T14:21:54.600Z"
+  },
+  {
+    "id": "dslr-camera:GPT-6.1-Sol",
+    "theme": "dslr-camera",
+    "model": "GPT-6.1-Sol",
+    "filename": "index.html",
+    "path": "/submissions/dslr-camera/GPT-6.1-Sol/",
+    "publicPath": "/submissions/dslr-camera/GPT-6.1-Sol/index.html",
+    "renderKind": "html",
+    "linesTotal": 34,
+    "linesCss": 1,
+    "linesJs": 1,
+    "sizeBytes": 15612,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-30T02:24:05.520Z"
   },
   {
     "id": "dslr-camera:fable-5.1",
@@ -6494,6 +6630,23 @@
     "updatedAt": "2026-09-03T14:38:13.450Z"
   },
   {
+    "id": "schwarzschild-black-hole:GPT-6.1-Sol",
+    "theme": "schwarzschild-black-hole",
+    "model": "GPT-6.1-Sol",
+    "filename": "index.html",
+    "path": "/submissions/schwarzschild-black-hole/GPT-6.1-Sol/",
+    "publicPath": "/submissions/schwarzschild-black-hole/GPT-6.1-Sol/index.html",
+    "renderKind": "html",
+    "linesTotal": 64,
+    "linesCss": 1,
+    "linesJs": 57,
+    "sizeBytes": 21885,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-30T02:17:21.020Z"
+  },
+  {
     "id": "schwarzschild-black-hole:fable-5.1",
     "theme": "schwarzschild-black-hole",
     "model": "fable-5.1",
@@ -6849,6 +7002,25 @@
     "unlimitedLines": true,
     "usesBitmap": false,
     "updatedAt": "2026-09-03T15:44:22.792Z"
+  },
+  {
+    "id": "carwash-decision:GPT-6.1-Sol",
+    "theme": "carwash-decision",
+    "model": "GPT-6.1-Sol",
+    "filename": "response.md",
+    "path": "/submissions/carwash-decision/GPT-6.1-Sol/response.md",
+    "publicPath": "/submissions/carwash-decision/GPT-6.1-Sol/response.md",
+    "renderKind": "text",
+    "linesTotal": 6,
+    "linesCss": 0,
+    "linesJs": 0,
+    "sizeBytes": 400,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-30T01:40:32.789Z",
+    "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
+    "answerText": "结论：开车过去。\n理由1：洗车店需要洗的是你的车，要把车送到店里才能开始洗。\n理由2：虽然只有50米，开车过去仍能直接把车交给店员，避免走到店后再回家取车。\n理由3：先确认店铺营业且可以接单，再将车缓慢开到店里，按店员指引停好。\n建议：带上车钥匙，开车过去；等洗车时可以走回家。"
   },
   {
     "id": "carwash-decision:fable-5.1",
@@ -7875,5 +8047,56 @@
     "updatedAt": "2026-09-03T13:59:18.503Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去\n理由1：50米走路只需要一两分钟，上车、启动、停车的功夫早就走到了。\n理由2：这么短的距离开车，发动机刚冷启动就要熄火，反而增加磨损和油耗。\n理由3：开车过去还要找车位、掉头、挪车，而洗车店门口未必方便停车，纯属自找麻烦。\n理由4：走过去顺便活动活动身体，回来时车也洗好了，一举两得。\n建议：直接迈开腿走过去，省油又省心。"
+  },
+  {
+    "id": "pelican-bicycle:GPT-6.1-Sol",
+    "theme": "pelican-bicycle",
+    "model": "GPT-6.1-Sol",
+    "filename": "index.html",
+    "path": "/submissions/pelican-bicycle/GPT-6.1-Sol/",
+    "publicPath": "/submissions/pelican-bicycle/GPT-6.1-Sol/index.html",
+    "renderKind": "html",
+    "linesTotal": 42,
+    "linesCss": 1,
+    "linesJs": 6,
+    "sizeBytes": 14461,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-30T01:51:43.624Z"
+  },
+  {
+    "id": "kintsugi:GPT-6.1-Sol",
+    "theme": "kintsugi",
+    "model": "GPT-6.1-Sol",
+    "filename": "index.html",
+    "path": "/submissions/kintsugi/GPT-6.1-Sol/",
+    "publicPath": "/submissions/kintsugi/GPT-6.1-Sol/index.html",
+    "renderKind": "html",
+    "linesTotal": 43,
+    "linesCss": 1,
+    "linesJs": 35,
+    "sizeBytes": 16829,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-30T02:35:41.856Z"
+  },
+  {
+    "id": "watch-movement:GPT-6.1-Sol",
+    "theme": "watch-movement",
+    "model": "GPT-6.1-Sol",
+    "filename": "index.html",
+    "path": "/submissions/watch-movement/GPT-6.1-Sol/",
+    "publicPath": "/submissions/watch-movement/GPT-6.1-Sol/index.html",
+    "renderKind": "html",
+    "linesTotal": 49,
+    "linesCss": 1,
+    "linesJs": 28,
+    "sizeBytes": 23772,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-09-30T02:28:08.646Z"
   }
 ]

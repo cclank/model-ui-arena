@@ -1,0 +1,208 @@
+{
+  "sourceSha256": "d2b6118876eca1079c6f68a2f5291826d1c76862fac5928f3c0ba1323ce628a2",
+  "seed": 6131,
+  "impacts": 20,
+  "passed": true,
+  "results": [
+    {
+      "impact": 1,
+      "shards": 40,
+      "seams": 93,
+      "areaError": -1.1641532182693481e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 535,
+      "repairs": 1,
+      "goldSeams": 93
+    },
+    {
+      "impact": 2,
+      "shards": 40,
+      "seams": 99,
+      "areaError": -4.3655745685100555e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 528,
+      "repairs": 2,
+      "goldSeams": 192
+    },
+    {
+      "impact": 3,
+      "shards": 40,
+      "seams": 99,
+      "areaError": 2.0372681319713593e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 525,
+      "repairs": 3,
+      "goldSeams": 291
+    },
+    {
+      "impact": 4,
+      "shards": 40,
+      "seams": 99,
+      "areaError": 5.384208634495735e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 526,
+      "repairs": 4,
+      "goldSeams": 390
+    },
+    {
+      "impact": 5,
+      "shards": 40,
+      "seams": 99,
+      "areaError": -2.3283064365386963e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 529,
+      "repairs": 5,
+      "goldSeams": 489
+    },
+    {
+      "impact": 6,
+      "shards": 40,
+      "seams": 94,
+      "areaError": -5.093170329928398e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 529,
+      "repairs": 6,
+      "goldSeams": 583
+    },
+    {
+      "impact": 7,
+      "shards": 40,
+      "seams": 96,
+      "areaError": 3.2014213502407074e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 529,
+      "repairs": 7,
+      "goldSeams": 679
+    },
+    {
+      "impact": 8,
+      "shards": 40,
+      "seams": 99,
+      "areaError": -2.9103830456733704e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 527,
+      "repairs": 8,
+      "goldSeams": 778
+    },
+    {
+      "impact": 9,
+      "shards": 40,
+      "seams": 100,
+      "areaError": 6.984919309616089e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 525,
+      "repairs": 9,
+      "goldSeams": 878
+    },
+    {
+      "impact": 10,
+      "shards": 40,
+      "seams": 102,
+      "areaError": -6.984919309616089e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 525,
+      "repairs": 10,
+      "goldSeams": 980
+    },
+    {
+      "impact": 11,
+      "shards": 40,
+      "seams": 99,
+      "areaError": 1.3096723705530167e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 525,
+      "repairs": 11,
+      "goldSeams": 1079
+    },
+    {
+      "impact": 12,
+      "shards": 40,
+      "seams": 98,
+      "areaError": -3.4924596548080444e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 525,
+      "repairs": 12,
+      "goldSeams": 1177
+    },
+    {
+      "impact": 13,
+      "shards": 40,
+      "seams": 102,
+      "areaError": -1.8917489796876907e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 525,
+      "repairs": 13,
+      "goldSeams": 1279
+    },
+    {
+      "impact": 14,
+      "shards": 40,
+      "seams": 99,
+      "areaError": -1.3096723705530167e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 525,
+      "repairs": 14,
+      "goldSeams": 1378
+    },
+    {
+      "impact": 15,
+      "shards": 40,
+      "seams": 98,
+      "areaError": 8.003553375601768e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 525,
+      "repairs": 15,
+      "goldSeams": 1476
+    },
+    {
+      "impact": 16,
+      "shards": 40,
+      "seams": 97,
+      "areaError": -1.8917489796876907e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 529,
+      "repairs": 16,
+      "goldSeams": 1573
+    },
+    {
+      "impact": 17,
+      "shards": 40,
+      "seams": 96,
+      "areaError": -2.0372681319713593e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 529,
+      "repairs": 17,
+      "goldSeams": 1669
+    },
+    {
+      "impact": 18,
+      "shards": 40,
+      "seams": 100,
+      "areaError": 9.604264050722122e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 529,
+      "repairs": 18,
+      "goldSeams": 1769
+    },
+    {
+      "impact": 19,
+      "shards": 40,
+      "seams": 101,
+      "areaError": -3.2014213502407074e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 529,
+      "repairs": 19,
+      "goldSeams": 1870
+    },
+    {
+      "impact": 20,
+      "shards": 40,
+      "seams": 95,
+      "areaError": 4.94765117764473e-10,
+      "maxPenetration": 5.684341886080802e-14,
+      "frames": 529,
+      "repairs": 20,
+      "goldSeams": 1965
+    }
+  ]
+}
