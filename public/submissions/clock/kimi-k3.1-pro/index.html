@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title> Meridian — Local Time Observatory</title>
+<style>
+:root{color-scheme:dark;--bg:#080d17;--panel:#101925;--ink:#edf4ef;--muted:#82918f;--line:#ffffff16;--accent:#e6b86a;--glow:#e6b86a30;--dial:#111d28}
+*{box-sizing:border-box}
+body{margin:0;min-height:100svh;display:grid;place-items:center;overflow-x:hidden;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;transition:background .8s,color .8s}
+body[data-theme=light]{color-scheme:light;--bg:#dce5df;--panel:#f0f3ed;--ink:#14231f;--muted:#64756e;--line:#183d3018;--accent:#a86128;--glow:#c8814530;--dial:#e8eee7}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 18% 12%,var(--glow),transparent 34%),linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:auto,64px 64px,64px 64px;mask-image:linear-gradient(to bottom,#0009,transparent 85%)}
+.ambient{position:fixed;width:44vw;aspect-ratio:1;border:1px solid var(--line);border-radius:50%;right:-18vw;top:-18vw;animation:orbit 24s linear infinite}
+.ambient:after{content:"";position:absolute;width:7px;height:7px;border-radius:50%;background:var(--accent);left:14%;top:14%;box-shadow:0 0 24px var(--accent)}
+@keyframes orbit{to{transform:rotate(360deg)}}
+main{position:relative;width:min(1060px,calc(100% - 40px));margin:32px auto;padding:clamp(22px,4vw,48px);background:color-mix(in srgb,var(--panel) 91%,transparent);border:1px solid var(--line);border-radius:28px;box-shadow:0 30px 100px #0004;backdrop-filter:blur(18px)}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding-bottom:28px;border-bottom:1px solid var(--line)}
+.brand{display:flex;gap:12px;align-items:center;font-size:12px;font-weight:750;letter-spacing:.24em}
+.brand-mark{width:26px;height:26px;border:1px solid var(--accent);border-radius:50%;position:relative}
+.brand-mark:before,.brand-mark:after{content:"";position:absolute;background:var(--accent);left:50%;top:50%;transform-origin:left center}
+.brand-mark:before{width:8px;height:1px;transform:rotate(-90deg)}.brand-mark:after{width:6px;height:1px;transform:rotate(35deg)}
+.eyebrow{margin:0 0 5px;color:var(--muted);font-size:10px;letter-spacing:.22em;text-transform:uppercase}
+button{border:1px solid var(--line);border-radius:99px;background:transparent;color:var(--ink);padding:9px 14px;font:600 10px/1 inherit;letter-spacing:.12em;cursor:pointer;transition:.2s}
+button:hover{border-color:var(--accent);color:var(--accent)}button:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.layout{display:grid;grid-template-columns:1fr 1.08fr;gap:clamp(30px,6vw,72px);align-items:center;padding-top:36px}
+.dial{position:relative;width:100%;max-width:440px;aspect-ratio:1;margin:auto;border-radius:50%;background:radial-gradient(circle at 40% 32%,#ffffff09,transparent 45%),var(--dial);border:1px solid var(--line);box-shadow:inset 0 0 0 9px var(--panel),inset 0 0 0 10px var(--line),0 24px 60px #0003}
+.dial:after{content:"LOCAL / 24H";position:absolute;left:50%;top:68%;transform:translateX(-50%);font-size:8px;letter-spacing:.24em;color:var(--muted);white-space:nowrap}
+.tick{position:absolute;left:calc(50% - .5px);top:5.5%;bottom:50%;width:1px;transform-origin:50% 100%;background:linear-gradient(to bottom,var(--muted) 0 7%,transparent 7%);opacity:.55}
+.tick.major{width:2px;left:calc(50% - 1px);background:linear-gradient(to bottom,var(--ink) 0 12%,transparent 12%);opacity:.9}
+.numeral{position:absolute;font:500 clamp(12px,2vw,18px)/1 Georgia,serif;color:var(--ink)}.n12{top:12%;left:50%;transform:translateX(-50%)}.n3{right:12%;top:50%;transform:translateY(-50%)}.n6{bottom:11%;left:50%;transform:translateX(-50%)}.n9{left:12%;top:50%;transform:translateY(-50%)}
+.hand{position:absolute;left:50%;bottom:50%;transform-origin:50% 100%;border-radius:99px;will-change:transform;pointer-events:none}
+.hour{height:24%;width:7px;margin-left:-3.5px;background:var(--ink)}.minute{height:34%;width:4px;margin-left:-2px;background:var(--ink)}
+.second{height:38%;width:1.5px;margin-left:-.75px;background:var(--accent);box-shadow:0 0 12px var(--glow)}.second:after{content:"";position:absolute;top:100%;left:0;width:1.5px;height:12%;background:var(--accent)}
+.pin{position:absolute;left:50%;top:50%;width:15px;height:15px;transform:translate(-50%,-50%);border:4px solid var(--dial);border-radius:50%;background:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.digital-zone{min-width:0}.kicker{display:flex;align-items:center;gap:8px;color:var(--accent);font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);animation:breathe 2s ease-in-out infinite}@keyframes breathe{50%{opacity:.35}}
+.digits{margin:16px 0 4px;font:300 clamp(48px,7vw,86px)/.95 ui-monospace,"SFMono-Regular",Consolas,monospace;letter-spacing:-.085em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.seconds-guide{color:var(--muted);font-size:10px;letter-spacing:.18em}.date{margin:28px 0 6px;font:400 clamp(18px,2vw,25px)/1.3 Georgia,"Songti SC",serif}.zone{color:var(--muted);font-size:11px;letter-spacing:.13em;text-transform:uppercase}
+.meta{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin-top:32px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}.metric{background:var(--panel);padding:15px}.metric span{display:block;color:var(--muted);font-size:9px;letter-spacing:.16em;margin-bottom:6px}.metric strong{font:500 12px/1.2 ui-monospace,monospace}
+footer{display:flex;justify-content:space-between;gap:20px;margin-top:36px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:9px;letter-spacing:.14em;text-transform:uppercase}
+@media(max-width:720px){main{width:min(480px,calc(100% - 24px));margin:12px auto;padding:22px;border-radius:22px}.layout{grid-template-columns:1fr;gap:32px;padding-top:26px}.dial{max-width:310px}.digital-zone{text-align:center}.kicker{justify-content:center}.digits{font-size:clamp(46px,14vw,64px)}.date{margin-top:20px}.meta{text-align:left}header{padding-bottom:20px}.brand{font-size:10px}footer{margin-top:26px}.ambient{width:90vw;right:-55vw}}
+@media(prefers-reduced-motion:reduce){.ambient,.live-dot{animation:none}}
+</style>
+</head>
+<body>
+<div class="ambient" aria-hidden="true"></div>
+<main>
+<header><div><p class="eyebrow">Meridian / Time observatory</p><div class="brand"><i class="brand-mark"></i>LOCAL CHRONOMETER</div></div><button id="theme" type="button" aria-label="切换昼夜外观">AUTO · DAY</button></header>
+<section class="layout" aria-label="本地时钟">
+<div class="dial" id="dial" role="img" aria-label="模拟时钟">
+<span class="numeral n12">12</span><span class="numeral n3">3</span><span class="numeral n6">6</span><span class="numeral n9">9</span>
+<div class="hand hour" id="hour"></div><div class="hand minute" id="minute"></div><div class="hand second" id="second"></div><i class="pin"></i>
+</div>
+<div class="digital-zone">
+<div class="kicker"><i class="live-dot"></i><span id="period">DAYLIGHT</span> / LIVE</div>
+<div class="digits" id="digits" aria-live="off">00:00:00</div><div class="seconds-guide">HOURS &nbsp; MINUTES &nbsp; SECONDS</div>
+<p class="date" id="date">—</p><div class="zone" id="zone">LOCAL TIME</div>
+<div class="meta"><div class="metric"><span>UTC OFFSET</span><strong id="offset">UTC+00:00</strong></div><div class="metric"><span>DAY OF YEAR</span><strong id="doy">001 / 365</strong></div></div>
+</div>
+</section>
+<footer><span>Precision in every passing second</span><span id="epoch">EPOCH —</span></footer>
+</main>
+<script>
+const $=id=>document.getElementById(id),hands=[$('hour'),$('minute'),$('second')];
+for(let i=0;i<60;i++){const t=document.createElement('i');t.className='tick'+(i%5===0?' major':'');t.style.transform=`rotate(${i*6}deg)`;$('dial').prepend(t)}
+let mode='auto',lastSecond=-1;
+const pad=n=>String(n).padStart(2,'0');
+function applyTheme(d){const night=d.getHours()<6||d.getHours()>=18,theme=mode==='auto'?(night?'dark':'light'):mode;document.body.dataset.theme=theme;$('theme').textContent=mode==='auto'?`AUTO · ${night?'NIGHT':'DAY'}`:mode.toUpperCase();$('period').textContent=night?'NIGHT CYCLE':'DAYLIGHT'}
+$('theme').addEventListener('click',()=>{mode=mode==='auto'?'light':mode==='light'?'dark':'auto';applyTheme(new Date())});
+function render(){const d=new Date(),ms=d.getMilliseconds(),s=d.getSeconds()+ms/1000,m=d.getMinutes()+s/60,h=d.getHours()%12+m/60;
+hands[0].style.transform=`rotate(${h*30}deg)`;hands[1].style.transform=`rotate(${m*6}deg)`;hands[2].style.transform=`rotate(${s*6}deg)`;
+if(d.getSeconds()!==lastSecond){lastSecond=d.getSeconds();applyTheme(d);$('digits').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;$('dial').setAttribute('aria-label',`模拟时钟，${$('digits').textContent}`);$('date').textContent=new Intl.DateTimeFormat('zh-CN',{month:'long',day:'numeric',weekday:'long'}).format(d);const start=new Date(d.getFullYear(),0,0),day=Math.floor((d-start)/864e5),leap=new Date(d.getFullYear(),1,29).getMonth()===1;$('doy').textContent=`${String(day).padStart(3,'0')} / ${leap?366:365}`;$('epoch').textContent=`EPOCH ${Math.floor(d.getTime()/1000)}`}
+requestAnimationFrame(render)}
+const now=new Date(),off=-now.getTimezoneOffset(),zone=Intl.DateTimeFormat().resolvedOptions().timeZone;
+$('zone').textContent=zone.replaceAll('_',' ');$('offset').textContent=`UTC${off>=0?'+':'−'}${pad(Math.floor(Math.abs(off)/60))}:${pad(Math.abs(off)%60)}`;requestAnimationFrame(render);
+</script>
+</body>
+</html>

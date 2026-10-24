@@ -61,6 +61,7 @@
     "^DeepSeek-V4\\.1-Flash-1017$",
     "^deepseek-v4-flash$",
     "^kimi-k3$",
+    "^kimi-k3\\.1-pro$",
     "^kimi-k2\\.7$",
     "^kimi-k2\\.6$",
     "^glm-5\\.3$",
@@ -130,6 +131,7 @@
     ],
     [
       "^kimi-k3$",
+      "^kimi-k3\\.1-pro$",
       "^kimi-k2\\.7$",
       "^kimi-k2\\.6$"
     ],
