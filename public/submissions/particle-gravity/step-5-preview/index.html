@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>粒子引力场</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #04060d; overflow: hidden; font-family: "Avenir Next", "PingFang SC", sans-serif; }
+  #c { position: fixed; inset: 0; }
+  .hud {
+    position: fixed; left: 14px; top: 14px; z-index: 2; color: #a8c6e8;
+    background: rgba(8,14,26,.55); border: 1px solid rgba(110,170,255,.18); border-radius: 14px;
+    padding: 12px 16px; font-size: 12px; line-height: 1.9; backdrop-filter: blur(8px); user-select: none;
+  }
+  .hud b { color: #e8f4ff; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .hud .k { display: inline-block; width: 4.2em; color: #5f7ea3; }
+  .bar { height: 4px; border-radius: 2px; background: rgba(110,170,255,.15); margin-top: 7px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 40%; border-radius: 2px; background: linear-gradient(90deg, #37b6ff, #7a5cff); transition: width .2s; }
+  .ctrl { position: fixed; right: 14px; bottom: 14px; z-index: 2; display: flex; gap: 8px; }
+  .ctrl button {
+    color: #cfe4ff; background: rgba(8,14,26,.6); border: 1px solid rgba(110,170,255,.3);
+    border-radius: 999px; padding: 9px 16px; font-size: 12px; cursor: pointer; backdrop-filter: blur(8px);
+    transition: all .25s;
+  }
+  .ctrl button:hover { background: rgba(50,110,220,.35); }
+  .tips { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 2; color: rgba(168,198,232,.55); font-size: 11px; letter-spacing: .12em; white-space: nowrap; pointer-events: none; }
+  @media (max-width: 390px) { .hud { font-size: 11px; padding: 9px 12px; } .tips { display: none; } }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud">
+  <div><span class="k">粒子</span><b id="hN">0</b></div>
+  <div><span class="k">总能量</span><b id="hE">0</b></div>
+  <div><span class="k">帧率</span><b id="hF">60</b> FPS</div>
+  <div><span class="k">模式</span><b id="hM">引力吸引</b></div>
+  <div class="bar"><i id="hB"></i></div>
+</div>
+<div class="ctrl">
+  <button id="bMode">切换模式</button>
+  <button id="bAdd">+200 粒子</button>
+  <button id="bReset">重置</button>
+</div>
+<div class="tips">移动鼠标产生牵引力场 · 点击释放冲击波</div>
+<script>
+  const $ = id => document.getElementById(id);
+  const cv = document.getElementById('c'), cx = cv.getContext('2d');
+  let W, H, CX, CY, parts = [], waves = [];
+  const G = 900, MAX = 1400;
+  let mode = 1, pointer = null, fps = 60;
+  function resize() { W = cv.width = innerWidth; H = cv.height = innerHeight; CX = W / 2; CY = H / 2; }
+  addEventListener('resize', resize); resize();
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  function spawn(n, cx0, cy0, tangent) {
+    for (let i = 0; i < n && parts.length < MAX; i++) {
+      const a = Math.random() * Math.PI * 2, d = rnd(60, Math.min(W, H) * .46);
+      const x = (cx0 ?? CX) + Math.cos(a) * d, y = (cy0 ?? CY) + Math.sin(a) * d;
+      const v = Math.sqrt(G / d) * rnd(.55, .95) * (tangent ?? 1);
+      const ta = a + Math.PI / 2 * (Math.random() < .5 ? 1 : -1);
+      parts.push({ x, y, vx: Math.cos(ta) * v, vy: Math.sin(ta) * v, m: rnd(.6, 1.8), hue: rnd(190, 265), life: 1 });
+    }
+  }
+  function reset() { parts = []; waves = []; spawn(560); }
+  cv.addEventListener('pointermove', e => { pointer = { x: e.clientX, y: e.clientY }; });
+  cv.addEventListener('pointerleave', () => pointer = null);
+  cv.addEventListener('pointerdown', e => {
+    waves.push({ x: e.clientX, y: e.clientY, r: 4, life: 1 });
+    for (let i = 0; i < 26; i++) {
+      const a = Math.random() * Math.PI * 2, v = rnd(2, 6);
+      parts.push({ x: e.clientX, y: e.clientY, vx: Math.cos(a) * v, vy: Math.sin(a) * v, m: rnd(.4, 1), hue: rnd(20, 60), life: 1 });
+    }
+  });
+  $('bMode').addEventListener('click', () => { mode *= -1; $('hM').textContent = mode > 0 ? '引力吸引' : '斥力排斥'; });
+  $('bAdd').addEventListener('click', () => spawn(200));
+  $('bReset').addEventListener('click', reset);
+  let t0 = performance.now();
+  function frame(t) {
+    const dt = Math.min((t - t0) / 16.7, 3); t0 = t;
+    fps += ((1000 / Math.max(t - (frame.last || t - 16.7)) ) - fps) * .05; frame.last = t;
+    cx.fillStyle = 'rgba(4,6,13,.24)'; cx.fillRect(0, 0, W, H);
+    const core = cx.createRadialGradient(CX, CY, 0, CX, CY, 90);
+    core.addColorStop(0, 'rgba(140,200,255,.9)'); core.addColorStop(.25, 'rgba(90,140,255,.35)'); core.addColorStop(1, 'rgba(90,140,255,0)');
+    cx.fillStyle = core; cx.beginPath(); cx.arc(CX, CY, 90, 0, 7); cx.fill();
+    let energy = 0;
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i];
+      const dx = CX - p.x, dy = CY - p.y, d2 = dx * dx + dy * dy + 400, d = Math.sqrt(d2);
+      const f = G * p.m / d2 * mode;
+      p.vx += dx / d * f * dt * .016; p.vy += dy / d * f * dt * .016;
+      if (pointer) {
+        const px = pointer.x - p.x, py = pointer.y - p.y, pd2 = px * px + py * py + 900, pd = Math.sqrt(pd2);
+        const pf = 2600 * p.m / pd2;
+        p.vx += px / pd * pf * dt * .016; p.vy += py / pd * pf * dt * .016;
+      }
+      for (const w of waves) {
+        const ring = Math.abs(Math.hypot(p.x - w.x, p.y - w.y) - w.r);
+        if (ring < 26) { const a = Math.atan2(p.y - w.y, p.x - w.x); p.vx += Math.cos(a) * 2.6; p.vy += Math.sin(a) * 2.6; }
+      }
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      energy += .5 * p.m * (p.vx * p.vx + p.vy * p.vy) + G * p.m / d;
+      if (p.x < -80 || p.x > W + 80 || p.y < -80 || p.y > H + 80) { parts.splice(i, 1); continue; }
+      const sp = Math.hypot(p.vx, p.vy);
+      cx.fillStyle = `hsla(${p.hue + Math.min(sp * 6, 90)}, 95%, ${58 + Math.min(sp * 3, 22)}%, .92)`;
+      cx.beginPath(); cx.arc(p.x, p.y, p.m * 1.5, 0, 7); cx.fill();
+    }
+    waves.forEach(w => { w.r += 9 * dt; w.life -= .016 * dt;
+      cx.strokeStyle = `rgba(150,210,255,${w.life * .55})`; cx.lineWidth = 2;
+      cx.beginPath(); cx.arc(w.x, w.y, w.r, 0, 7); cx.stroke(); });
+    waves = waves.filter(w => w.life > 0);
+    if (parts.length < 300 && Math.random() < .1) spawn(4);
+    $('hN').textContent = parts.length;
+    $('hE').textContent = (energy / 1000).toFixed(1) + 'k';
+    $('hF').textContent = Math.round(fps);
+    $('hB').style.width = (energy / 9000 * 100).toFixed(1) + '%';
+    requestAnimationFrame(frame);
+  }
+  reset(); requestAnimationFrame(frame);
+</script>
+</body>
+</html>

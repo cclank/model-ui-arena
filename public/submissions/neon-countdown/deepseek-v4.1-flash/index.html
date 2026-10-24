@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Neon Countdown · 最炫倒计时</title>
+<style>
+:root{--hue:195;--bg:#05070f}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100svh;display:grid;place-items:center;overflow:hidden;background:radial-gradient(100vmax 80vmax at 50% 110%,hsl(var(--hue) 80% 22% / .5),var(--bg) 62%);color:#eaf3ff;font-family:"SF Pro Display",-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;transition:background .8s}
+.grid{position:fixed;inset:0;background-image:linear-gradient(hsl(var(--hue) 90% 60% / .13) 1px,transparent 1px),linear-gradient(90deg,hsl(var(--hue) 90% 60% / .13) 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(80vmax 60vmax at 50% 55%,#000 20%,transparent 75%);animation:drift 14s linear infinite}
+@keyframes drift{to{background-position:0 44px}}
+.flash{position:fixed;inset:0;pointer-events:none;background:radial-gradient(60vmax 60vmax at 50% 50%,hsl(var(--hue) 100% 70% / .55),transparent 60%);opacity:0}
+.flash.go{animation:fl .55s ease-out}
+@keyframes fl{0%{opacity:.65}100%{opacity:0}}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+.stage{position:relative;display:grid;justify-items:center;gap:22px;padding:30px 16px}
+.tag{font-size:11px;letter-spacing:.5em;color:hsl(var(--hue) 90% 72%);text-shadow:0 0 14px hsl(var(--hue) 100% 60% / .8)}
+.dial{position:relative;width:min(72vw,300px);aspect-ratio:1}
+.dial svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.track{fill:none;stroke:#ffffff12;stroke-width:9}
+.prog{fill:none;stroke:hsl(var(--hue) 100% 62%);stroke-width:9;stroke-linecap:round;filter:drop-shadow(0 0 10px hsl(var(--hue) 100% 60%));transition:stroke .4s}
+.num{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(96px,30vw,150px);font-weight:200;font-variant-numeric:tabular-nums;color:#fff;text-shadow:0 0 18px hsl(var(--hue) 100% 64%),0 0 60px hsl(var(--hue) 100% 50% / .7);transition:color .3s,text-shadow .3s}
+.num.pop{animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{0%{transform:scale(.7);opacity:.35;filter:blur(3px)}100%{transform:scale(1);filter:blur(0)}}
+.bars{display:flex;gap:7px;align-items:flex-end;height:46px}
+.bars i{width:15px;height:100%;border-radius:5px;background:hsl(var(--hue) 100% 60% / .9);box-shadow:0 0 14px hsl(var(--hue) 100% 60% / .55);transform-origin:bottom;transition:transform .35s cubic-bezier(.3,1.5,.5,1),opacity .35s,background .35s}
+.bars i.off{transform:scaleY(.16);opacity:.16;box-shadow:none}
+.caption{font-size:13px;letter-spacing:.3em;color:#9fb2d8;min-height:20px}
+.done{position:fixed;inset:0;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity .4s}
+.done.on{opacity:1}
+.done b{font-size:clamp(30px,9vw,46px);font-weight:300;letter-spacing:.3em;color:#fff;text-shadow:0 0 24px hsl(var(--hue) 100% 65%),0 0 80px hsl(var(--hue) 100% 50% / .8);animation:breathe 1.8s ease-in-out infinite alternate}
+.done span{display:block;text-align:center;margin-top:14px;font-size:12px;letter-spacing:.5em;color:hsl(var(--hue) 90% 75%)}
+@keyframes breathe{to{transform:scale(1.06);filter:brightness(1.25)}}
+button{position:relative;margin-top:6px;padding:13px 42px;border-radius:999px;border:1px solid hsl(var(--hue) 100% 65% / .6);background:hsl(var(--hue) 100% 60% / .1);color:#fff;font:inherit;font-size:14px;letter-spacing:.36em;cursor:pointer;transition:.25s;-webkit-tap-highlight-color:transparent}
+button:hover{background:hsl(var(--hue) 100% 60% / .3);box-shadow:0 0 30px hsl(var(--hue) 100% 60% / .5)}
+body.urgent{--hue:0}
+body.urgent .stage{animation:shake .5s linear infinite}
+@keyframes shake{25%{transform:translate(-2px,1px)}50%{transform:translate(2px,-1px)}75%{transform:translate(-1px,-2px)}}
+body.finished .num{font-size:clamp(72px,22vw,110px)}
+@media (max-width:400px){.stage{gap:16px}.bars{height:38px}.bars i{width:12px}}
+</style>
+</head>
+<body>
+<div class="grid"></div><div class="flash" id="flash"></div>
+<main class="stage" id="stage">
+  <div class="tag">LAUNCH SEQUENCE · 10s</div>
+  <div class="dial">
+    <svg viewBox="0 0 300 300"><circle class="track" cx="150" cy="150" r="128"/><circle class="prog" id="ring" cx="150" cy="150" r="128"/></svg>
+    <div class="num" id="num">10</div>
+  </div>
+  <div class="bars" id="bars"></div>
+  <div class="caption" id="cap">点火倒计时进行中</div>
+  <button id="restart">重新开始</button>
+</main>
+<div class="done" id="done"><div><b>TIME'S UP</b><span>倒计时结束 · 点火完成</span></div></div>
+<canvas id="fx"></canvas>
+<script>
+const $=(id)=>document.getElementById(id),TOTAL=10,C=2*Math.PI*128;
+const ring=$("ring"),num=$("num"),flash=$("flash"),bars=$("bars"),fx=$("fx"),fctx=fx.getContext("2d");
+ring.style.strokeDasharray=C;ring.style.strokeDashoffset=0;
+for(let i=0;i<TOTAL;i++)bars.append(document.createElement("i"));
+let deadline=0,running=false,lastShown=TOTAL,raf=0,parts=[],bursting=false;
+const rnd=(a,b=0)=>b+Math.random()*(a-b);
+function size(){const d=Math.min(devicePixelRatio||1,2);fx.width=innerWidth*d;fx.height=innerHeight*d;fctx.setTransform(d,0,0,d,0,0);}
+addEventListener("resize",size);size();
+function paint(s){const remain=Math.max(0,deadline-performance.now()),frac=remain/(TOTAL*1000);
+  ring.style.strokeDashoffset=(C*(1-frac)).toFixed(2);
+  if(remain<=0){running=false;finish();return;}
+  const sec=Math.ceil(remain/1000);
+  if(sec!==lastShown){lastShown=sec;num.textContent=sec;num.classList.remove("pop");void num.offsetWidth;num.classList.add("pop");
+    flash.classList.remove("go");void flash.offsetWidth;flash.classList.add("go");
+    document.documentElement.style.setProperty("--hue",sec<=3?0:190+(TOTAL-sec)*13);
+    document.body.classList.toggle("urgent",sec<=3);
+    [...bars.children].forEach((b,i)=>b.classList.toggle("off",i<sec?false:true));
+    $("cap").textContent=sec<=3?"最后 "+sec+" 秒 · 即将点火":"点火倒计时进行中";}
+  raf=requestAnimationFrame(paint);}
+function start(){cancelAnimationFrame(raf);parts=[];bursting=false;$("done").classList.remove("on");
+  document.body.classList.remove("urgent");document.body.classList.remove("finished");
+  document.documentElement.style.setProperty("--hue",190);lastShown=TOTAL;num.textContent=TOTAL;
+  [...bars.children].forEach((b)=>b.classList.remove("off"));$("cap").textContent="点火倒计时进行中";
+  deadline=performance.now()+TOTAL*1000;running=true;raf=requestAnimationFrame(paint);}
+function finish(){num.textContent="0";$("done").classList.add("on");$("cap").textContent="倒计时结束";
+  document.body.classList.add("finished");
+  ring.style.strokeDashoffset=C;document.body.classList.remove("urgent");
+  const cx=innerWidth/2,cy=innerHeight/2;
+  for(let i=0;i<190;i++){const a=rnd(Math.PI*2),sp=rnd(11,.8);
+    parts.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-3,s:rnd(3.6,1.2),life:rnd(120,50),max:130,h:rnd(50,-40)});}
+  if(!bursting){bursting=true;requestAnimationFrame(onBurst);}}
+function onBurst(){fctx.clearRect(0,0,innerWidth,innerHeight);fctx.globalCompositeOperation="lighter";
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.vx*=.985;p.vy=p.vy*.985+.16;p.x+=p.vx;p.y+=p.vy;p.life--;
+    if(p.life<=0){parts.splice(i,1);continue;}
+    const a=Math.min(1,p.life/p.max);
+    fctx.fillStyle=`hsla(${(document.body.classList.contains("finished")?35:200)+p.h},100%,65%,${a.toFixed(3)})`;
+    fctx.fillRect(p.x-p.s/2,p.y-p.s/2,p.s,p.s);}
+  fctx.globalCompositeOperation="source-over";
+  if(parts.length)requestAnimationFrame(onBurst);else{bursting=false;fctx.clearRect(0,0,innerWidth,innerHeight);}}
+$("restart").onclick=start;
+setTimeout(start,350);
+</script>
+</body>
+</html>

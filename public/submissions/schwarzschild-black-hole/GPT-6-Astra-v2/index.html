@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Umbra — A study in curved spacetime</title>
+<!-- 以天文观测站为视觉方向，保留黑洞与非对称吸积盘的绝对主体地位。
+     光子路径由片元着色器中的四阶 Runge–Kutta 积分产生，包含薄盘多重交点。
+     浮点 HDR、独立高亮提取与双向高斯模糊、ACES 映射；拖拽、捏合、自动降档与异常恢复。 -->
+<style>
+*{box-sizing:border-box}:root{color-scheme:dark;--text:#e5e1d6;--muted:#817f78;--accent:#cfab80;--line:#cfab802b}body{margin:0;background:#070a0e;color:var(--text);font-family:Arial,Helvetica,sans-serif;overflow:hidden;min-height:100svh}canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none;outline:none}canvas:focus-visible{outline:1px solid var(--accent);outline-offset:-6px}main{position:relative;min-height:100svh;padding:29px 34px;pointer-events:none;display:flex;flex-direction:column}header{display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{font:12px monospace;letter-spacing:4px;display:flex;align-items:center;gap:10px}.brand i{width:14px;height:14px;border:1px solid var(--accent);border-radius:50%;box-shadow:0 0 0 3px #cfab8014;display:inline-block}.classification{font:8px monospace;letter-spacing:1.5px;color:#a49e91}.intro{margin-top:38px}.eyebrow{font:8px monospace;letter-spacing:2.2px;color:#9b856b}h1{font:normal clamp(36px,6vw,58px)/1.02 Georgia,serif;letter-spacing:-2px;margin:13px 0 14px}h1 em{font-weight:normal;color:#bcb3a0}.intro p{font-size:10px;color:#93908a;line-height:1.8;margin:0}.controls{position:absolute;right:34px;bottom:95px;width:263px;padding:19px 20px;background:linear-gradient(145deg,#18201cd9,#0c1110d9);border:1px solid #b5c29b25;border-radius:10px;backdrop-filter:blur(17px);pointer-events:auto}.panel-head{font:8px monospace;letter-spacing:1.5px;color:#ada18d;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.panel-head span:last-child{font-size:7px;color:#809480}.control{margin-top:14px}.control label{display:flex;justify-content:space-between;font:9px monospace;color:#a7aaa0;letter-spacing:.2px}.control output{color:var(--accent)}input[type=range]{appearance:none;width:100%;height:2px;border-radius:2px;background:#424b3d;margin:13px 0 5px;display:block;cursor:pointer}input[type=range]::-webkit-slider-thumb{appearance:none;width:9px;height:9px;border:2px solid #d8c2a2;border-radius:50%;background:#d8c2a2;box-shadow:0 0 0 4px #d8c2a20d}input[type=range]::-moz-range-thumb{width:7px;height:7px;border:1px solid #d8c2a2;border-radius:50%;background:#d8c2a2}.quality-row{display:flex;justify-content:space-between;align-items:center;margin-top:19px;border-top:1px solid var(--line);padding-top:13px;font:9px monospace;color:#a7aaa0}select{font:9px monospace;color:#d4c4ac;background:#202a21;border:1px solid #5c675042;border-radius:4px;padding:6px 8px;cursor:pointer}button{font:8px monospace;letter-spacing:.7px;color:#bcb6a5;background:#151c1799;border:1px solid #a6b29433;border-radius:20px;padding:10px 14px;cursor:pointer}button:hover{background:#394130}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #d8bd97;outline-offset:5px}.hint{margin-top:auto;margin-bottom:75px;font:9px monospace;line-height:1.9;letter-spacing:.6px;color:#9b998d}.hint .actions{display:flex;gap:7px;margin-bottom:12px;pointer-events:auto}.hint small{display:block;color:#666b63;font:8px monospace}.telemetry{position:absolute;left:34px;right:34px;bottom:26px;display:grid;grid-template-columns:1fr 1.3fr 1.3fr .8fr;border-top:1px solid var(--line);padding-top:16px;gap:20px}.metric label{display:block;font:7px monospace;letter-spacing:1.2px;color:#84887d}.metric output{display:block;font:19px monospace;letter-spacing:-.7px;color:#d3d3bd;margin-top:8px;font-variant-numeric:tabular-nums}.metric output small{font:8px monospace;letter-spacing:0;color:#8f9581}.toast{position:absolute;top:64px;right:34px;padding:9px 12px;border-radius:5px;background:#263224e8;border:1px solid #9fa67b40;color:#c5c8ab;font:9px monospace;opacity:0;transition:opacity .4s;max-width:260px;line-height:1.6;pointer-events:none}.toast.show{opacity:1}.error{position:fixed;inset:0;display:grid;place-items:center;background:#0b1112ed;z-index:20;padding:25px;backdrop-filter:blur(12px)}.error[hidden]{display:none}.error-box{width:min(100%,440px);background:#19211b;border:1px solid #78836644;border-radius:14px;padding:30px}.error h2{font:28px Georgia;margin:0 0 16px;color:#d6c7ae}.error p{font-size:12px;line-height:1.8;color:#a6b29c}.error button{margin-top:13px}.error details{font:10px monospace;color:#788671;margin-top:17px}.error pre{white-space:pre-wrap;word-break:break-word;max-height:150px;overflow:auto;font-size:9px}
+@media(max-width:590px){main{padding:24px}.brand{font-size:10px;letter-spacing:3px}.classification{font-size:6px;letter-spacing:1px}.intro{margin-top:33px}h1{font-size:37px;letter-spacing:-1.4px}.intro p{font-size:9px}.controls{left:23px;right:23px;bottom:97px;width:auto;padding:15px 17px}.panel-head{margin-bottom:0;font-size:7px}.sliders{display:grid;grid-template-columns:1fr 1fr;gap:21px}.control{margin-top:16px}.control label{font-size:8px}.quality-row{margin-top:13px;padding-top:10px;font-size:8px}.quality-row select{font-size:8px}.hint{position:absolute;top:232px;left:24px;font-size:7px;margin:0}.hint .actions{margin:0;gap:6px}.hint button{font-size:7px;padding:7px 10px}.hint>span,.hint>small{display:none}.telemetry{left:24px;right:24px;bottom:25px;gap:12px;grid-template-columns:.8fr 1.2fr 1.2fr .6fr;padding-top:12px}.metric label{font-size:6px;letter-spacing:.4px}.metric output{font-size:15px;margin-top:9px}.metric output small{font-size:6px}.toast{left:24px;right:24px;top:271px;max-width:none;font-size:8px;padding:8px 10px}.error-box{padding:24px}}
+@media(max-height:650px) and (min-width:591px){.intro{margin-top:25px}h1{font-size:40px}.controls{bottom:95px}.hint{margin-bottom:67px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto;transition:none!important}}
+</style>
+<canvas id="universe" tabindex="0" role="img" aria-label="Interactive Schwarzschild black hole. Drag to orbit, scroll or pinch to zoom. Arrow keys orbit and plus or minus zoom."></canvas>
+<main><header><span class="brand"><i></i> UMBRA</span><span class="classification">FIELD OBSERVATORY / SCHWARZSCHILD</span></header><section class="intro"><div class="eyebrow">A STUDY IN CURVED SPACETIME</div><h1>Where light<br><em>loses its way.</em></h1><p>At the edge of everything,<br>gravity writes the rules.</p></section>
+<aside class="controls" aria-label="Rendering controls"><div class="panel-head"><span>OBSERVATION CONTROLS</span><span id="pipeline">INITIALIZING</span></div><div class="sliders"><div class="control"><label for="accretion">Disk brightness <output id="accretion-value">2.7</output></label><input id="accretion" type="range" min="0.2" max="6" step="0.1" value="2.7"></div><div class="control"><label for="exposure">Exposure <output id="exposure-value">1.10</output></label><input id="exposure" type="range" min="0.3" max="3" step="0.05" value="1.1"></div></div><div class="quality-row"><label for="quality">Image quality</label><select id="quality"><option value="0">Efficient</option><option value="1" selected>Balanced</option><option value="2">Fine</option></select></div></aside>
+<div class="hint"><div class="actions"><button id="reset">Reset view</button><button id="motion" aria-pressed="false">Pause disk</button></div><span>DRAG TO ORBIT · SCROLL TO EXPLORE</span><small>rₛ = 1 · ISCO = 3rₛ · NON-ROTATING SPACETIME</small></div><div class="toast" id="toast" role="status"></div>
+<section class="telemetry" aria-label="Live physical measurements"><div class="metric"><label>CAMERA DISTANCE</label><output id="distance">22.00 <small>rₛ</small></output></div><div class="metric"><label>TIME DILATION √(1−1/r)</label><output id="dilation">0.97701</output></div><div class="metric"><label>ORBIT SPEED √(1/2r)</label><output id="beta">0.15076 <small>c</small></output></div><div class="metric"><label>FRAME RATE</label><output id="fps">— <small>FPS</small></output></div></section></main>
+<section class="error" id="error" hidden role="alert"><div class="error-box"><h2>Our window needs a moment.</h2><p id="error-message"></p><button id="retry">Restore renderer</button><details><summary>Rendering details</summary><pre id="error-details"></pre></details></div></section>
+<script id="vertex-shader" type="x-shader/x-vertex">#version 300 es
+precision highp float;
+out vec2 uv;
+void main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));uv=p;gl_Position=vec4(p*2.0-1.0,0.0,1.0);}
+</script>
+<script id="scene-shader" type="x-shader/x-fragment">#version 300 es
+precision highp float;
+in vec2 uv;out vec4 fragColor;
+uniform vec2 uResolution;
+uniform vec3 uCamera,uRight,uUp,uForward;
+uniform float uTime,uBrightness,uStep;
+uniform int uSteps,uEncoded;
+const float PI=3.141592653589793;
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+1.0),f.x),f.y);}
+// The equatorial null-geodesic effective potential gives x'' = -3 h² x / (2 r⁵), r_s = 1.
+// h² is conserved at launch. RK4 evolves both position and affine velocity, without renormalizing.
+vec3 acceleration(vec3 p,float h2){float r2=dot(p,p);return -1.5*h2*p/(r2*r2*sqrt(r2));}
+void rk4(inout vec3 p,inout vec3 v,float dt,float h2){
+vec3 a1=acceleration(p,h2),v2=v+a1*(dt*.5),a2=acceleration(p+v*(dt*.5),h2);
+vec3 v3=v+a2*(dt*.5),a3=acceleration(p+v2*(dt*.5),h2);
+vec3 v4=v+a3*dt,a4=acceleration(p+v3*dt,h2);
+p+=dt/6.0*(v+2.0*v2+2.0*v3+v4);v+=dt/6.0*(a1+2.0*a2+2.0*a3+a4);
+}
+vec3 blackbody(float temperature){
+// Three visible Planck samples (micrometres), normalized into a continuous approximate RGB chromaticity.
+vec3 wavelength=vec3(.700,.546,.435);
+vec3 radiance=pow(wavelength,vec3(-5.0))/(exp(14387.77/(wavelength*clamp(temperature,900.0,40000.0)))-1.0);
+radiance*=vec3(1.5,1.1,1.0);return radiance/max(max(radiance.r,radiance.g),max(radiance.b,.000001));
+}
+vec3 diskEmission(vec3 p,vec3 traceVelocity){
+float r=length(p),f=1.0-1.0/r;
+// Reverse the backward-traced ray, transformed from coordinate to local static-frame direction.
+vec3 radial=p/r;float vr=dot(traceVelocity,radial);
+vec3 toObserver=-normalize(vr*radial+sqrt(f)*(traceVelocity-vr*radial));
+vec3 tangent=normalize(vec3(-p.z,0.0,p.x));
+// Circular geodesic speed in the local static frame. Telemetry separately shows the requested sqrt(1/2r).
+float beta=sqrt(1.0/(2.0*(r-1.0))),gamma=inversesqrt(1.0-beta*beta);
+float delta=1.0/(gamma*(1.0-beta*dot(tangent,toObserver)));
+// Gravitational redshift to the camera and relativistic Doppler beaming I_nu ∝ delta³.
+float gravitational=sqrt(f)/sqrt(1.0-1.0/length(uCamera));
+float shift=gravitational*delta;
+float angle=atan(p.z,p.x),omega=1.0/sqrt(2.0*r*r*r);
+float phase=angle-uTime*omega*2.2;
+float bands=.76+.16*sin(phase*15.0+log(r)*18.0)+.08*sin(phase*37.0-r*5.0);
+float filaments=.8+.4*noise(vec2(phase*9.0,r*9.0));
+float inner=smoothstep(3.0,3.35,r),outer=1.0-smoothstep(8.8,11.0,r);
+float temperature=10500.0*pow(r/3.0,-.75);
+float emission=uBrightness*2.0*pow(3.0/r,2.1)*inner*outer*bands*filaments;
+return blackbody(temperature*shift)*emission*pow(shift,3.0);
+}
+vec3 celestial(vec3 d){
+vec2 sphere=vec2(atan(d.z,d.x)/(2.0*PI)+.5,asin(clamp(d.y,-1.0,1.0))/PI+.5);
+vec3 color=vec3(.0009,.0014,.0021);
+float band=pow(max(0.0,1.0-abs(dot(d,normalize(vec3(.17,.94,.3))))),25.0);
+color+=vec3(.009,.012,.017)*band*(.3+.7*noise(sphere*31.0));
+for(int layer=0;layer<2;layer++){
+float density=layer==0?490.0:250.0;
+vec2 cell=sphere*vec2(density,density*.5),id=floor(cell),offset=fract(cell)-vec2(hash(id+3.4),hash(id+8.9));
+float chance=hash(id+float(layer)*13.7);
+float star=exp(-dot(offset,offset)*(layer==0?370.0:280.0))*step(layer==0?.983:.986,chance);
+color+=mix(vec3(.62,.77,1.0),vec3(1.0,.85,.64),hash(id+23.0))*star*(layer==0?1.4:2.6);
+}return color;
+}
+void main(){
+vec2 screen=(gl_FragCoord.xy*2.0-uResolution)/min(uResolution.x,uResolution.y);
+vec3 direction=normalize(uForward+.50*(screen.x*uRight+screen.y*uUp));
+vec3 p=uCamera,radial=normalize(p);float mu=dot(direction,radial),f=1.0-1.0/length(p);
+// A static-observer tetrad launches an E=1 null ray: radial mu, tangential sin(alpha)/sqrt(f).
+vec3 v=mu*radial+(direction-mu*radial)/sqrt(f);
+vec3 angular=cross(p,v);float h2=dot(angular,angular);
+vec3 radiance=vec3(0.0);float transmittance=1.0;bool escaped=false;
+for(int i=0;i<600;i++){
+if(i>=uSteps)break;
+float r=length(p);
+if(r<1.0)break; // Captured rays contribute no celestial light: a genuinely black event-horizon shadow.
+if(r>max(34.0,length(uCamera)*1.7)&&dot(p,v)>0.0){escaped=true;break;}
+// Radius-relative step, divided by affine speed. Smaller near r=1.5; a far-field cap prevents skipping the thin disk.
+float dt=clamp(uStep*r/max(length(v),1.0),.006,.7);
+vec3 previous=p,previousVelocity=v;rk4(p,v,dt,h2);
+if(previous.y*p.y<0.0){
+float fraction=previous.y/(previous.y-p.y);
+vec3 crossing=mix(previous,p,fraction);float diskRadius=length(crossing);
+if(diskRadius>3.0&&diskRadius<11.0){
+// Every equatorial crossing is examined: primary, secondary and higher images arise from the same geodesic.
+float opacity=.92;
+radiance+=transmittance*opacity*diskEmission(crossing,mix(previousVelocity,v,fraction));
+transmittance*=1.0-opacity;if(transmittance<.005)break;
+}}
+}
+if(escaped)radiance+=transmittance*celestial(normalize(v));
+// Log-encoded RGBA8 is the fallback when renderable floating-point textures are unavailable.
+radiance=clamp(radiance,vec3(0.0),vec3(500.0));
+fragColor=vec4(uEncoded==1?log2(1.0+radiance)/10.0:radiance,1.0);
+}
+</script>
+<script id="bright-shader" type="x-shader/x-fragment">#version 300 es
+precision highp float;in vec2 uv;out vec4 fragColor;uniform sampler2D uScene;uniform int uEncoded;
+vec3 decode(vec3 c){return uEncoded==1?exp2(c*10.0)-1.0:c;}vec3 encode(vec3 c){return uEncoded==1?log2(1.0+c)/10.0:c;}
+void main(){vec3 c=decode(texture(uScene,uv).rgb);float l=dot(c,vec3(.2126,.7152,.0722));float excess=max(l-.85,0.0);fragColor=vec4(encode(c*excess/max(l,.0001)),1.0);}
+</script>
+<script id="blur-shader" type="x-shader/x-fragment">#version 300 es
+precision highp float;in vec2 uv;out vec4 fragColor;uniform sampler2D uSource;uniform vec2 uDirection;uniform int uEncoded;
+vec3 readAt(vec2 p){vec3 c=texture(uSource,p).rgb;return uEncoded==1?exp2(c*10.0)-1.0:c;}
+void main(){vec3 c=readAt(uv)*.227027;c+=(readAt(uv+uDirection*1.384615)+readAt(uv-uDirection*1.384615))*.316216;c+=(readAt(uv+uDirection*3.230769)+readAt(uv-uDirection*3.230769))*.070270;fragColor=vec4(uEncoded==1?log2(1.0+c)/10.0:c,1.0);}
+</script>
+<script id="composite-shader" type="x-shader/x-fragment">#version 300 es
+precision highp float;in vec2 uv;out vec4 fragColor;uniform sampler2D uScene,uBloom;uniform float uExposure;uniform int uEncoded;
+vec3 decode(vec3 c){return uEncoded==1?exp2(c*10.0)-1.0:c;}
+vec3 aces(vec3 x){return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.0,1.0);}
+void main(){vec3 c=decode(texture(uScene,uv).rgb)+decode(texture(uBloom,uv).rgb)*.7;c=pow(aces(c*uExposure),vec3(1.0/2.2));float vignette=1.0-.19*dot(uv-.5,uv-.5);fragColor=vec4(c*vignette,1.0);}
+</script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id),canvas=$('universe');
+const profiles=[{scale:.40,steps:240,step:.054,name:'Efficient'},{scale:.60,steps:380,step:.035,name:'Balanced'},{scale:.83,steps:580,step:.023,name:'Fine'}];
+let gl,programs={},targets=[],vao,encoded=false,quality=1,adaptive=1,frame=0,active=false,clock=0,diskPaused=false;
+let angle=.35,elevation=.16,distance=22,targetAngle=angle,targetElevation=elevation,targetDistance=distance;
+let last=0,sampleStart=0,sampleFrames=0,slowSeconds=0,lastQualityChange=0,lastTelemetry=0,toastTimeout;
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+function notify(message){clearTimeout(toastTimeout);$('toast').textContent=message;$('toast').classList.add('show');toastTimeout=setTimeout(()=>$('toast').classList.remove('show'),6200)}
+function fail(message,detail=''){active=false;cancelAnimationFrame(frame);$('error-message').textContent=message;$('error-details').textContent=detail;$('error').hidden=false;$('pipeline').textContent='RENDERER PAUSED'}
+function compile(type,source){const shader=gl.createShader(type);if(!shader)throw Error('Unable to allocate a shader.');gl.shaderSource(shader,source);gl.compileShader(shader);if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS)){const log=gl.getShaderInfoLog(shader);gl.deleteShader(shader);throw Error(log||'Shader compilation failed.')}return shader}
+function link(vertex,fragmentId){const fragment=compile(gl.FRAGMENT_SHADER,$(fragmentId).textContent),program=gl.createProgram();gl.attachShader(program,vertex);gl.attachShader(program,fragment);gl.linkProgram(program);gl.deleteShader(fragment);if(!gl.getProgramParameter(program,gl.LINK_STATUS)){const log=gl.getProgramInfoLog(program);gl.deleteProgram(program);throw Error(log||'Program linking failed.')}const uniforms={};for(let i=0;i<gl.getProgramParameter(program,gl.ACTIVE_UNIFORMS);i++){const u=gl.getActiveUniform(program,i);uniforms[u.name]=gl.getUniformLocation(program,u.name)}return{program,uniforms}}
+function destroyTargets(){for(const t of targets){gl.deleteFramebuffer(t.framebuffer);gl.deleteTexture(t.texture)}targets=[]}
+function makeTarget(width,height){const texture=gl.createTexture(),framebuffer=gl.createFramebuffer();gl.bindTexture(gl.TEXTURE_2D,texture);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,encoded?gl.RGBA8:gl.RGBA16F,width,height,0,gl.RGBA,encoded?gl.UNSIGNED_BYTE:gl.HALF_FLOAT,null);gl.bindFramebuffer(gl.FRAMEBUFFER,framebuffer);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,texture,0);if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE){gl.deleteFramebuffer(framebuffer);gl.deleteTexture(texture);throw Error('This device cannot allocate the requested render target.')}return{width,height,texture,framebuffer}}
+function allocate(){destroyTargets();const d=Math.min(devicePixelRatio||1,1.35),scale=profiles[quality].scale*adaptive*d,w=Math.max(128,Math.round(innerWidth*scale)),h=Math.max(128,Math.round(innerHeight*scale));canvas.width=Math.round(innerWidth*d);canvas.height=Math.round(innerHeight*d);targets.push(makeTarget(w,h));for(let i=0;i<3;i++)targets.push(makeTarget(Math.max(64,w>>1),Math.max(64,h>>1)));gl.bindFramebuffer(gl.FRAMEBUFFER,null);$('pipeline').textContent=(encoded?'LOG FALLBACK':'FLOAT HDR')+' / '+w+'×'+h}
+function resize(){if(!gl||gl.isContextLost())return;try{allocate()}catch(e){if(!encoded){encoded=true;try{allocate();notify('Using the compatible color pipeline for this device.');return}catch(f){e=f}}if(quality>0){quality--;$('quality').value=quality;try{allocate();notify('Reduced render size to fit available graphics memory.');return}catch(f){e=f}}fail('There is not enough graphics memory for this view. Close another graphics-heavy tab, then restore the renderer.',e.message)}}
+function usePass(name,target){const p=programs[name];gl.useProgram(p.program);gl.bindFramebuffer(gl.FRAMEBUFFER,target?target.framebuffer:null);gl.viewport(0,0,target?target.width:canvas.width,target?target.height:canvas.height);if(p.uniforms.uEncoded!==undefined)gl.uniform1i(p.uniforms.uEncoded,encoded?1:0);return p.uniforms}
+function texture(uniform,unit,target){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,target.texture);gl.uniform1i(uniform,unit)}
+function triangle(){gl.drawArrays(gl.TRIANGLES,0,3)}
+function render(now){if(!active||gl.isContextLost())return;try{
+const delta=Math.min(.08,Math.max(.001,(now-last)/1000));last=now;if(!diskPaused)clock+=delta;
+const smooth=1-Math.exp(-delta*10);angle+=(targetAngle-angle)*smooth;elevation+=(targetElevation-elevation)*smooth;distance+=(targetDistance-distance)*smooth;
+const ca=Math.cos(angle),sa=Math.sin(angle),ce=Math.cos(elevation),se=Math.sin(elevation),position=[sa*ce*distance,se*distance,ca*ce*distance];
+// HDR frame graph: 1. integrated scene -> 2. highlight extraction -> 3. horizontal Gaussian ->
+// 4. vertical Gaussian -> 5. scene + bloom, exposure, ACES, display gamma. No feedback attachments.
+let u=usePass('scene',targets[0]);gl.uniform2f(u.uResolution,targets[0].width,targets[0].height);gl.uniform3fv(u.uCamera,position);gl.uniform3f(u.uRight,ca,0,-sa);gl.uniform3f(u.uUp,-sa*se,ce,-ca*se);gl.uniform3f(u.uForward,-sa*ce,-se,-ca*ce);gl.uniform1f(u.uTime,clock);gl.uniform1f(u.uBrightness,+$('accretion').value);gl.uniform1f(u.uStep,profiles[quality].step);gl.uniform1i(u.uSteps,profiles[quality].steps);triangle();
+u=usePass('bright',targets[1]);texture(u.uScene,0,targets[0]);triangle();
+u=usePass('blur',targets[2]);texture(u.uSource,0,targets[1]);gl.uniform2f(u.uDirection,1.6/targets[1].width,0);triangle();
+u=usePass('blur',targets[3]);texture(u.uSource,0,targets[2]);gl.uniform2f(u.uDirection,0,1.6/targets[1].height);triangle();
+u=usePass('composite',null);texture(u.uScene,0,targets[0]);texture(u.uBloom,1,targets[3]);gl.uniform1f(u.uExposure,+$('exposure').value);triangle();
+if(now-lastTelemetry>100){$('distance').innerHTML=distance.toFixed(2)+' <small>rₛ</small>';$('dilation').textContent=Math.sqrt(1-1/distance).toFixed(5);$('beta').innerHTML=Math.sqrt(1/(2*distance)).toFixed(5)+' <small>c</small>';lastTelemetry=now}
+sampleFrames++;if(now-sampleStart>=1200){const seconds=(now-sampleStart)/1000,fps=sampleFrames/seconds;$('fps').innerHTML=Math.round(fps)+' <small>FPS</small>';slowSeconds=fps<24?slowSeconds+seconds:Math.max(0,slowSeconds-seconds);sampleFrames=0;sampleStart=now;if(slowSeconds>3.5&&now-lastQualityChange>6000){if(quality>0){quality--;$('quality').value=quality;notify('Adaptive quality: '+profiles[quality].name+' keeps this orbit responsive.');resize()}else if(adaptive>.55){adaptive=Math.max(.55,adaptive*.8);notify('Adaptive resolution reduced to keep the renderer responsive.');resize()}lastQualityChange=now;slowSeconds=0}}
+frame=requestAnimationFrame(render);
+}catch(e){fail('The graphics renderer stopped unexpectedly. Your observation settings are preserved; try restoring the renderer.',e.message)}}
+function init(){cancelAnimationFrame(frame);active=false;$('error').hidden=true;try{
+gl=canvas.getContext('webgl2',{alpha:false,antialias:false,depth:false,stencil:false,powerPreference:'high-performance',preserveDrawingBuffer:false});
+if(!gl){fail('This browser cannot open a WebGL 2 window. Enable hardware acceleration or open this file in a current browser.');return}
+encoded=!gl.getExtension('EXT_color_buffer_float');gl.disable(gl.DEPTH_TEST);gl.disable(gl.BLEND);gl.disable(gl.CULL_FACE);
+for(const p of Object.values(programs))gl.deleteProgram(p.program);if(vao)gl.deleteVertexArray(vao);vao=gl.createVertexArray();gl.bindVertexArray(vao);
+const vertex=compile(gl.VERTEX_SHADER,$('vertex-shader').textContent);programs={scene:link(vertex,'scene-shader'),bright:link(vertex,'bright-shader'),blur:link(vertex,'blur-shader'),composite:link(vertex,'composite-shader')};gl.deleteShader(vertex);
+resize();if(!$('error').hidden)return;active=true;last=sampleStart=performance.now();sampleFrames=0;slowSeconds=0;lastQualityChange=last;frame=requestAnimationFrame(render);
+if(encoded)notify('Compatible color pipeline active. All light paths still use numerical integration.');
+}catch(e){fail('The graphics driver could not prepare the renderer. Try a current browser with hardware acceleration enabled.',e.message)}}
+const pointers=new Map();canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});canvas.style.cursor='grabbing'});
+canvas.addEventListener('pointermove',e=>{const previous=pointers.get(e.pointerId);if(!previous)return;const oldPoints=[...pointers.values()],oldGap=oldPoints.length>=2?Math.hypot(oldPoints[0].x-oldPoints[1].x,oldPoints[0].y-oldPoints[1].y):0;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1){targetAngle-=(e.clientX-previous.x)*.006;targetElevation=clamp(targetElevation+(e.clientY-previous.y)*.005,-1.25,1.25)}else{const pair=[...pointers.values()],gap=Math.hypot(pair[0].x-pair[1].x,pair[0].y-pair[1].y);if(gap>5&&oldGap>5)targetDistance=clamp(targetDistance*oldGap/gap,6.5,45)}});
+function pointerEnd(e){pointers.delete(e.pointerId);if(!pointers.size)canvas.style.cursor='grab'}canvas.addEventListener('pointerup',pointerEnd);canvas.addEventListener('pointercancel',pointerEnd);canvas.style.cursor='grab';
+canvas.addEventListener('wheel',e=>{e.preventDefault();targetDistance=clamp(targetDistance*Math.exp(e.deltaY*.0013),6.5,45)},{passive:false});
+canvas.addEventListener('keydown',e=>{let handled=true;switch(e.key){case'ArrowLeft':targetAngle-=.12;break;case'ArrowRight':targetAngle+=.12;break;case'ArrowUp':targetElevation=clamp(targetElevation+.08,-1.25,1.25);break;case'ArrowDown':targetElevation=clamp(targetElevation-.08,-1.25,1.25);break;case'+':case'=':targetDistance=clamp(targetDistance*.88,6.5,45);break;case'-':targetDistance=clamp(targetDistance/ .88,6.5,45);break;case'Home':resetView();break;default:handled=false}if(handled)e.preventDefault()});
+function resetView(){targetAngle=.35;targetElevation=.16;targetDistance=22}$('reset').onclick=resetView;
+$('motion').onclick=()=>{diskPaused=!diskPaused;$('motion').textContent=diskPaused?'Resume disk':'Pause disk';$('motion').setAttribute('aria-pressed',diskPaused)};
+for(const id of ['accretion','exposure'])$(id).oninput=()=>$(id+'-value').textContent=(+$(id).value).toFixed(id==='exposure'?2:1);
+$('quality').onchange=()=>{quality=+$('quality').value;adaptive=1;lastQualityChange=performance.now();slowSeconds=0;resize();notify(profiles[quality].name+' quality selected.')};
+addEventListener('resize',resize);document.addEventListener('visibilitychange',()=>{cancelAnimationFrame(frame);pointers.clear();if(!document.hidden&&active){last=sampleStart=performance.now();sampleFrames=0;frame=requestAnimationFrame(render)}});
+canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();pointers.clear();fail('The graphics connection was interrupted. We have paused the view. Restore the renderer to continue exploring.','WebGL context lost; restoration is supported.');});
+canvas.addEventListener('webglcontextrestored',()=>{targets=[];programs={};vao=null;init();notify('Graphics connection restored. Welcome back.')});
+$('retry').onclick=()=>{if(gl?.isContextLost()){const ext=gl.getExtension('WEBGL_lose_context');if(ext){ext.restoreContext();return}location.reload()}else init()};
+init();
+</script>
+</html>

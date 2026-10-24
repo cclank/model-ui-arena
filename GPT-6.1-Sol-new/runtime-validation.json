@@ -1,0 +1,440 @@
+{
+  "model": "GPT-6.1-Sol-new",
+  "scope": "Only target model submissions, offline file:// execution",
+  "testedAt": "2026-10-09T09:36:53.863Z",
+  "checks": [
+    {
+      "name": "clock / desktop + 390px offline render",
+      "result": "pass",
+      "evidence": {
+        "desktop": {
+          "viewport": 1280,
+          "width": 1280
+        },
+        "mobile": {
+          "viewport": 390,
+          "width": 390
+        }
+      }
+    },
+    {
+      "name": "weather-card / desktop + 390px offline render",
+      "result": "pass",
+      "evidence": {
+        "desktop": {
+          "viewport": 1280,
+          "width": 1280
+        },
+        "mobile": {
+          "viewport": 390,
+          "width": 390
+        }
+      }
+    },
+    {
+      "name": "stock-panel / desktop + 390px offline render",
+      "result": "pass",
+      "evidence": {
+        "desktop": {
+          "viewport": 1280,
+          "width": 1280
+        },
+        "mobile": {
+          "viewport": 390,
+          "width": 390
+        }
+      }
+    },
+    {
+      "name": "click-fireworks / desktop + 390px offline render",
+      "result": "pass",
+      "evidence": {
+        "desktop": {
+          "viewport": 1280,
+          "width": 1280
+        },
+        "mobile": {
+          "viewport": 390,
+          "width": 390
+        }
+      }
+    },
+    {
+      "name": "neon-countdown / desktop + 390px offline render",
+      "result": "pass",
+      "evidence": {
+        "desktop": {
+          "viewport": 1280,
+          "width": 1280
+        },
+        "mobile": {
+          "viewport": 390,
+          "width": 390
+        }
+      }
+    },
+    {
+      "name": "particle-gravity / desktop + 390px offline render",
+      "result": "pass",
+      "evidence": {
+        "desktop": {
+          "viewport": 390,
+          "width": 390
+        },
+        "mobile": {
+          "viewport": 390,
+          "width": 390
+        }
+      }
+    },
+    {
+      "name": "cheetah-trophy-run / desktop + 390px offline render",
+      "result": "pass",
+      "evidence": {
+        "desktop": {
+          "viewport": 1280,
+          "width": 1280
+        },
+        "mobile": {
+          "viewport": 390,
+          "width": 390
+        }
+      }
+    },
+    {
+      "name": "pelican-bicycle / desktop + 390px offline render",
+      "result": "pass",
+      "evidence": {
+        "desktop": {
+          "viewport": 1280,
+          "width": 1280
+        },
+        "mobile": {
+          "viewport": 390,
+          "width": 390
+        }
+      }
+    },
+    {
+      "name": "dslr-camera / desktop + 390px offline render",
+      "result": "pass",
+      "evidence": {
+        "desktop": {
+          "viewport": 1280,
+          "width": 1280
+        },
+        "mobile": {
+          "viewport": 390,
+          "width": 390
+        }
+      }
+    },
+    {
+      "name": "schwarzschild-black-hole / desktop + 390px offline render",
+      "result": "pass",
+      "evidence": {
+        "desktop": {
+          "viewport": 1280,
+          "width": 1280
+        },
+        "mobile": {
+          "viewport": 390,
+          "width": 390
+        }
+      }
+    },
+    {
+      "name": "kintsugi / desktop + 390px offline render",
+      "result": "pass",
+      "evidence": {
+        "desktop": {
+          "viewport": 1280,
+          "width": 1280
+        },
+        "mobile": {
+          "viewport": 390,
+          "width": 390
+        }
+      }
+    },
+    {
+      "name": "watch-movement / desktop + 390px offline render",
+      "result": "pass",
+      "evidence": {
+        "desktop": {
+          "viewport": 1280,
+          "width": 1280
+        },
+        "mobile": {
+          "viewport": 390,
+          "width": 390
+        }
+      }
+    },
+    {
+      "name": "clock / local time, moving analog hands, manual theme",
+      "result": "pass",
+      "evidence": {
+        "actual": "173710",
+        "expected": "173710"
+      }
+    },
+    {
+      "name": "weather / three cities, five forecasts, C/F, rain and snow",
+      "result": "pass",
+      "evidence": {
+        "cities": 3,
+        "forecasts": 5,
+        "sapporoF": 28
+      }
+    },
+    {
+      "name": "stock / streaming, pause, selection and chart range",
+      "result": "pass",
+      "evidence": {
+        "stocks": 3,
+        "paused": true,
+        "chartSwitched": true
+      }
+    },
+    {
+      "name": "fireworks / continuous clicks and bounded particles",
+      "result": "pass",
+      "evidence": {
+        "particles": 2200,
+        "cap": 2200
+      }
+    },
+    {
+      "name": "countdown / automatic ten seconds, completion and restart",
+      "result": "pass",
+      "evidence": {
+        "completed": true,
+        "restartedAt": 10
+      }
+    },
+    {
+      "name": "gravity / pointer force, shockwave, repel and reset",
+      "result": "pass",
+      "evidence": {
+        "particles": 1000,
+        "waves": 1,
+        "energy": 0.6
+      }
+    },
+    {
+      "name": "pelican / native SVG leg-foot alignment across complete cycle",
+      "result": "pass",
+      "evidence": {
+        "maxEndpointError": 0,
+        "nativeAnimations": 5
+      }
+    },
+    {
+      "name": "camera / hand-drawn constraints, dial and shutter",
+      "result": "pass",
+      "evidence": {
+        "bitmapElements": 0,
+        "dial": true,
+        "shutter": true
+      }
+    },
+    {
+      "name": "kintsugi / random partition conservation and full automatic repair",
+      "result": "pass",
+      "evidence": {
+        "partition": {
+          "state": "falling",
+          "shards": 40,
+          "seams": 100,
+          "repairs": 0,
+          "bowlArea": 64197.23509385393,
+          "shardArea": 64197.23509385431,
+          "maxPenetration": 0
+        },
+        "automaticRepair": {
+          "state": "whole",
+          "shards": 40,
+          "seams": 100,
+          "repairs": 1,
+          "bowlArea": 64197.23509385393,
+          "shardArea": 64197.23509385431,
+          "maxPenetration": 0
+        },
+        "secondRepair": true,
+        "reset": true
+      }
+    },
+    {
+      "name": "watch / mesh distances, phases, transmission periods and beat rate",
+      "result": "pass",
+      "evidence": {
+        "pairs": [
+          {
+            "a": "barrel",
+            "b": "center",
+            "za": 72,
+            "zb": 12,
+            "m": 2,
+            "actualDistance": 84,
+            "expectedDistance": 84
+          },
+          {
+            "a": "center",
+            "b": "third",
+            "za": 80,
+            "zb": 10,
+            "m": 2,
+            "actualDistance": 90,
+            "expectedDistance": 90
+          },
+          {
+            "a": "third",
+            "b": "seconds",
+            "za": 75,
+            "zb": 10,
+            "m": 1.6,
+            "actualDistance": 68.00000000000001,
+            "expectedDistance": 68
+          },
+          {
+            "a": "seconds",
+            "b": "escape",
+            "za": 80,
+            "zb": 8,
+            "m": 1.2,
+            "actualDistance": 52.80000000000001,
+            "expectedDistance": 52.8
+          },
+          {
+            "a": "center",
+            "b": "intermediate",
+            "za": 12,
+            "zb": 36,
+            "m": 1.2,
+            "actualDistance": 28.79999999999998,
+            "expectedDistance": 28.799999999999997
+          },
+          {
+            "a": "intermediate",
+            "b": "hour",
+            "za": 10,
+            "zb": 40,
+            "m": 1.152,
+            "actualDistance": 28.79999999999998,
+            "expectedDistance": 28.799999999999997
+          }
+        ],
+        "bph": 18000,
+        "balanceHz": 2.5
+      }
+    },
+    {
+      "name": "watch / winding, hacking, crown setting and every gear dragging",
+      "result": "pass",
+      "evidence": {
+        "windingAdded": 1919.1333000000304,
+        "settingDelta": 840,
+        "secondsPreserved": true,
+        "drags": [
+          {
+            "gear": "barrel",
+            "deltaSeconds": -790.647739053762
+          },
+          {
+            "gear": "center",
+            "deltaSeconds": 131.79704735046835
+          },
+          {
+            "gear": "third",
+            "deltaSeconds": -16.45593837290653
+          },
+          {
+            "gear": "seconds",
+            "deltaSeconds": 2.213046320794092
+          },
+          {
+            "gear": "escape",
+            "deltaSeconds": -0.20293412627506768
+          },
+          {
+            "gear": "intermediate",
+            "deltaSeconds": -395.323815967844
+          },
+          {
+            "gear": "hour",
+            "deltaSeconds": 1581.3842857449854
+          }
+        ]
+      }
+    },
+    {
+      "name": "watch / accelerated depletion, amplitude decay and rewinding",
+      "result": "pass",
+      "evidence": {
+        "stopped": true,
+        "amplitude": 0.010574231072778799,
+        "rewound": true
+      }
+    },
+    {
+      "name": "black hole / HDR, zoom telemetry, drag and mobile pinch",
+      "result": "pass",
+      "evidence": {
+        "pipeline": "60 FPS / RGBA16F / RK4",
+        "r": 24.3,
+        "dilation": 0.9792,
+        "beta": 0.1435,
+        "pinchDistance": 16.62
+      }
+    },
+    {
+      "name": "black hole / context loss and restoration",
+      "result": "pass",
+      "evidence": {
+        "lostErrorVisible": true,
+        "restored": true
+      }
+    },
+    {
+      "name": "black hole / no-webgl",
+      "result": "pass",
+      "evidence": {
+        "message": "请在支持 WebGL2 的浏览器中启用图形加速，再重新连接。"
+      }
+    },
+    {
+      "name": "black hole / shader-failure",
+      "result": "pass",
+      "evidence": {
+        "message": "着色器编译或帧缓冲初始化失败。可以重试，或换用支持 WebGL2 的浏览器。"
+      }
+    },
+    {
+      "name": "black hole / rgba8-fallback",
+      "result": "pass",
+      "evidence": {
+        "message": "已启用 RGBA8 压缩 HDR 兼容模式，完整保留后期 pass。"
+      }
+    },
+    {
+      "name": "submission gallery / all thirteen isolated entries",
+      "result": "pass",
+      "evidence": {
+        "entries": 13
+      }
+    },
+    {
+      "name": "zero runtime exceptions and zero external requests",
+      "result": "pass",
+      "evidence": {
+        "exceptions": 0,
+        "networkRequests": 0
+      }
+    }
+  ],
+  "runtimeErrors": [],
+  "externalRequests": [],
+  "passed": 31,
+  "failed": 0
+}

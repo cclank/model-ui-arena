@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>天气 · 三城</title>
+<style>
+  :root {
+    --fg: #f2f7ff; --muted: #a8b6cc; --dim: #6d7c94; --line: rgba(255,255,255,.13);
+    --accent: #ffd479;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 28px 14px;
+    background: radial-gradient(90% 70% at 50% 0%, #1a2438 0%, #080c14 60%, #05070c 100%);
+    color: var(--fg); font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .app { width: min(94vw, 720px); display: flex; flex-direction: column; gap: 16px; }
+  .bar { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; }
+  .brand { font-size: 11px; letter-spacing: .34em; color: var(--dim); text-transform: uppercase; }
+  .units { display: flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; }
+  .units button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 11px; padding: 5px 11px; border-radius: 999px; cursor: pointer; transition: .25s; }
+  .units button.on { background: rgba(255,255,255,.92); color: #101722; font-weight: 600; }
+  .tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex: 0 0 auto; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: var(--muted); font: inherit; font-size: 12.5px; letter-spacing: .08em; padding: 8px 16px; border-radius: 999px; cursor: pointer; transition: .28s ease; }
+  .tab.on { background: rgba(255,255,255,.94); color: #0c1220; border-color: transparent; box-shadow: 0 6px 22px rgba(0,0,0,.35); }
+  .card { position: relative; border-radius: 26px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 34px 80px rgba(0,0,0,.6); isolation: isolate; }
+  .sky { position: absolute; inset: 0; z-index: -1; }
+  .layer { position: absolute; inset: 0; opacity: 0; transition: opacity .85s ease;
+    background: radial-gradient(120% 90% at 76% 2%, var(--g1) 0%, transparent 58%), linear-gradient(180deg, var(--g2) 0%, #0a0f18 88%); }
+  .veil { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(4,7,14,.15), rgba(4,7,14,.82)); }
+  .card.night .veil { background: linear-gradient(180deg, rgba(2,4,10,.55), rgba(2,4,10,.9)); }
+  .fx { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .content { position: relative; padding: 26px clamp(18px, 4vw, 30px) 22px; display: flex; flex-direction: column; gap: 26px;
+    transition: opacity .24s ease, transform .24s ease; }
+  .content.out { opacity: 0; transform: translateY(7px); }
+  .now { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; }
+  .city { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 500; letter-spacing: .06em; }
+  .badge { font-size: 11px; font-weight: 400; letter-spacing: .1em; padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); }
+  .temp { display: flex; align-items: flex-start; line-height: .9; margin: 12px 0 4px; font-variant-numeric: tabular-nums; }
+  .temp b { font-size: clamp(66px, 13vw, 92px); font-weight: 200; letter-spacing: -.06em; }
+  .temp span { font-size: 30px; font-weight: 300; color: var(--accent); margin-top: 6px; }
+  .range { font-size: 12.5px; color: var(--muted); letter-spacing: .08em; }
+  .stats { display: grid; gap: 6px; min-width: 118px; padding-top: 2px; }
+  .stat { display: flex; justify-content: space-between; gap: 12px; font-size: 11.5px; color: var(--muted); letter-spacing: .06em; padding: 6px 9px; border-radius: 9px; background: rgba(6,10,18,.46); border: 1px solid rgba(255,255,255,.07); }
+  .stat b { color: var(--fg); font-weight: 500; font-variant-numeric: tabular-nums; }
+  .forecast { border-top: 1px solid rgba(255,255,255,.1); padding-top: 16px; }
+  .fhead { display: flex; justify-content: space-between; font-size: 10.5px; letter-spacing: .22em; color: var(--dim); text-transform: uppercase; margin-bottom: 14px; }
+  .days { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .day { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 6px 2px; border-radius: 14px; transition: background .3s; }
+  .day.today { background: rgba(255,255,255,.06); }
+  .dow { font-size: 11px; color: var(--muted); letter-spacing: .06em; }
+  .ico { width: 26px; height: 26px; }
+  .ico svg { width: 100%; height: 100%; overflow: visible; }
+  .hi, .lo { font-size: 12px; font-variant-numeric: tabular-nums; }
+  .hi { color: var(--fg); font-weight: 600; } .lo { color: var(--dim); font-size: 11px; }
+  .track { position: relative; width: 6px; height: 52px; border-radius: 4px; background: rgba(255,255,255,.1); }
+  .track i { position: absolute; left: 0; width: 100%; border-radius: 4px; background: linear-gradient(180deg, #ffd08a, #7fd3ff); box-shadow: 0 0 10px rgba(255,208,138,.35); transition: top .55s cubic-bezier(.2,.7,.2,1), height .55s cubic-bezier(.2,.7,.2,1); }
+  .sun { position: absolute; top: -58px; right: -46px; width: 210px; height: 210px; border-radius: 50%; filter: blur(2px); animation: sunbreath 6s ease-in-out infinite;
+    background: radial-gradient(circle, rgba(255,226,160,.95) 0%, rgba(255,196,102,.55) 26%, rgba(255,180,80,.12) 52%, transparent 70%); }
+  .sun::after { content: ""; position: absolute; inset: -30%; border-radius: 50%; animation: spin 32s linear infinite;
+    background: conic-gradient(from 0deg, rgba(255,214,140,.24), transparent 22%, rgba(255,214,140,.18) 47%, transparent 70%, rgba(255,214,140,.22)); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes sunbreath { 0%, 100% { transform: scale(1); opacity: .92; } 50% { transform: scale(1.08); opacity: 1; } }
+  .mote, .drop, .flake { position: absolute; top: -12%; animation-timing-function: linear; animation-iteration-count: infinite; }
+  .mote { width: 3px; height: 3px; border-radius: 50%; background: rgba(255,232,170,.8); box-shadow: 0 0 6px rgba(255,220,150,.8); animation-name: drift; }
+  @keyframes drift { 0% { transform: translate3d(0,-10vh,0); opacity: 0; } 12% { opacity: .9; } 100% { transform: translate3d(26px, 105vh, 0); opacity: 0; } }
+  .drop { width: 1.5px; height: 26px; background: linear-gradient(180deg, transparent, rgba(214,238,255,.92)); box-shadow: 0 0 5px rgba(150,205,255,.45); animation-name: fall; }
+  .card[data-w="rain"] .sky::after { content: ""; position: absolute; inset: 0; background: rgba(205,228,255,.9); opacity: 0; mix-blend-mode: screen; animation: flash 8s infinite; }
+  @keyframes flash { 0%, 91%, 100% { opacity: 0; } 92% { opacity: .45; } 93% { opacity: .04; } 94% { opacity: .3; } 95% { opacity: 0; } }
+  @keyframes fall { 0% { transform: translate3d(0,-12vh,0); opacity: 0; } 10% { opacity: .9; } 100% { transform: translate3d(-20px, 88vh, 0); opacity: 0; } }
+  .flake { width: 4px; height: 4px; border-radius: 50%; background: rgba(240,248,255,.9); box-shadow: 0 0 7px rgba(210,235,255,.8); animation-name: snow; }
+  @keyframes snow { 0% { transform: translate3d(0,-10vh,0); opacity: 0; } 10% { opacity: .95; } 50% { transform: translate3d(22px, 50vh, 0); } 100% { transform: translate3d(-10px, 108vh, 0); opacity: 0; } }
+  @media (max-width: 520px) {
+    .content { padding: 20px 16px 18px; gap: 20px; } .now { gap: 10px; } .temp b { font-size: 62px; }
+    .stats { min-width: 96px; gap: 7px; } .stat { font-size: 10.5px; } .day { gap: 5px; padding: 5px 0; } .track { height: 44px; } .ico { width: 22px; height: 22px; }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <div class="bar"><span class="brand">Atmos · 天气</span><div class="units" role="group" aria-label="温度单位"><button data-unit="c" class="on">°C</button><button data-unit="f">°F</button></div></div>
+    <div class="tabs" id="tabs" role="tablist" aria-label="城市"></div>
+    <main class="card" id="card" data-w="sun">
+      <div class="sky"><div class="layer" id="layerA"></div><div class="layer" id="layerB"></div><div class="veil"></div></div>
+      <div class="fx" id="fx"></div>
+      <div class="content" id="content">
+        <section class="now">
+          <div>
+            <div class="city"><span id="cityName"></span><span class="badge" id="cond"></span></div>
+            <div class="temp"><b id="temp">--</b><span>°</span></div>
+            <div class="range" id="range"></div>
+          </div>
+          <div class="stats">
+            <div class="stat"><span>风速</span><b id="wind"></b></div><div class="stat"><span>湿度</span><b id="hum"></b></div><div class="stat"><span>体感</span><b id="feels"></b></div>
+          </div>
+        </section>
+        <section class="forecast">
+          <div class="fhead"><span>未来 5 天</span><span id="stamp"></span></div>
+          <div class="days" id="days"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+<script>
+  (() => {
+    const $ = (id) => document.getElementById(id);
+    const WEEK = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+    const SKY = { sun: ["rgba(255,196,102,.42)", "#2b4c86"], rain: ["rgba(120,164,220,.3)", "#1b2838"], snow: ["rgba(200,224,255,.28)", "#33465f"] };
+    const CITIES = [
+      { name: "北京", cond: "晴", w: "sun", t: 24, hi: 26, lo: 18, wind: "3 级", hum: "38%", feels: 25,
+        days: [["sun", 26, 18], ["sun", 27, 19], ["cloud", 25, 17], ["rain", 21, 15], ["sun", 23, 16]] },
+      { name: "上海", cond: "小雨", w: "rain", t: 19, hi: 21, lo: 16, wind: "4 级", hum: "82%", feels: 20,
+        days: [["rain", 21, 16], ["rain", 20, 15], ["cloud", 23, 17], ["sun", 25, 18], ["cloud", 24, 18]] },
+      { name: "哈尔滨", cond: "小雪", w: "snow", t: -3, hi: -1, lo: -8, wind: "2 级", hum: "76%", feels: -6,
+        days: [["snow", -1, -8], ["snow", -2, -9], ["cloud", 0, -7], ["sun", 2, -5], ["snow", -1, -8]] }
+    ];
+    const ICONS = {
+      sun: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.4" fill="#ffd479"/><g stroke="#ffd479" stroke-width="1.5" stroke-linecap="round"><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.5 1.5M17.1 17.1l1.5 1.5M18.6 5.4l-1.5 1.5M6.9 17.1l-1.5 1.5"/></g></svg>',
+      cloud: '<svg viewBox="0 0 24 24"><path d="M7 18.5h10a3.6 3.6 0 0 0 .4-7.18A5.6 5.6 0 0 0 6.7 10.6 4 4 0 0 0 7 18.5Z" fill="none" stroke="#cfe0f5" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+      rain: '<svg viewBox="0 0 24 24"><path d="M7 15.5h10a3.4 3.4 0 0 0 .3-6.78A5.4 5.4 0 0 0 6.8 8.2 3.8 3.8 0 0 0 7 15.5Z" fill="none" stroke="#cfe0f5" stroke-width="1.6" stroke-linejoin="round"/><g stroke="#8fd0ff" stroke-width="1.5" stroke-linecap="round"><path d="M8.6 18.2l-.9 2.4M12.4 18.2l-.9 2.4M16.2 18.2l-.9 2.4"/></g></svg>',
+      snow: '<svg viewBox="0 0 24 24"><path d="M7 15h10a3.4 3.4 0 0 0 .3-6.78A5.4 5.4 0 0 0 6.8 7.7 3.8 3.8 0 0 0 7 15Z" fill="none" stroke="#e3eeff" stroke-width="1.6" stroke-linejoin="round"/><g fill="#e3eeff"><circle cx="8.4" cy="18.4" r="1.1"/><circle cx="12.2" cy="20.2" r="1.1"/><circle cx="16" cy="18.4" r="1.1"/></g></svg>'
+    };
+    let unit = "c", city = 0, swapping = false, skyFlip = false;
+
+    const conv = (v) => Math.round(unit === "f" ? v * 9 / 5 + 32 : v);
+    const label = (v) => `${conv(v)}°`;
+    const nowHour = new Date().getHours();
+    const night = nowHour < 6 || nowHour >= 18;
+    $("card").classList.toggle("night", night);
+
+    function paintSky(w) {
+      skyFlip = !skyFlip;
+      const a = skyFlip ? $("layerA") : $("layerB"), b = skyFlip ? $("layerB") : $("layerA");
+      a.style.setProperty("--g1", SKY[w][0]); a.style.setProperty("--g2", SKY[w][1]); a.style.opacity = 1; b.style.opacity = 0;
+    }
+    function paintFx(w) {
+      const fx = $("fx");
+      fx.innerHTML = "";
+      if (w === "sun") {
+        const sun = document.createElement("div"); sun.className = "sun"; fx.appendChild(sun);
+        for (let i = 0; i < 14; i++) {
+          const m = document.createElement("i"); m.className = "mote"; m.style.left = Math.random() * 100 + "%";
+          m.style.animationDuration = 9 + Math.random() * 9 + "s"; m.style.animationDelay = -Math.random() * 14 + "s"; fx.appendChild(m);
+        }
+      } else if (w === "rain") {
+        for (let i = 0; i < 46; i++) {
+          const d = document.createElement("i"); d.className = "drop"; d.style.left = Math.random() * 104 + "%";
+          d.style.height = 16 + Math.random() * 30 + "px"; d.style.opacity = .55 + Math.random() * .45;
+          d.style.animationDuration = .7 + Math.random() * .7 + "s"; d.style.animationDelay = -Math.random() * 2 + "s"; fx.appendChild(d);
+        }
+      } else {
+        for (let i = 0; i < 34; i++) {
+          const f = document.createElement("i"); f.className = "flake"; f.style.left = Math.random() * 100 + "%";
+          f.style.width = f.style.height = 2.5 + Math.random() * 3.5 + "px"; f.style.animationDuration = 6 + Math.random() * 8 + "s";
+          f.style.animationDelay = -Math.random() * 12 + "s"; fx.appendChild(f);
+        }
+      }
+    }
+    function renderTabs() {
+      $("tabs").innerHTML = CITIES.map((c, i) => `<button class="tab${i === city ? " on" : ""}" role="tab" aria-selected="${i === city}" data-i="${i}">${c.name}</button>`).join("");
+    }
+    function renderDays(c) {
+      const all = c.days.flatMap((d) => [d[1], d[2]]);
+      const max = Math.max(...all), min = Math.min(...all), span = Math.max(1, max - min);
+      const today = new Date().getDay();
+      $("days").innerHTML = c.days.map((d, i) => {
+        const dow = i === 0 ? "今天" : WEEK[(today + i) % 7];
+        const top = (1 - (d[1] - min) / span) * 100, h = ((d[1] - d[2]) / span) * 100;
+        return `<div class="day${i === 0 ? " today" : ""}"><span class="dow">${dow}</span><span class="ico">${ICONS[d[0]]}</span>
+          <b class="hi">${label(d[1])}</b><div class="track"><i style="top:${top}%;height:${Math.max(6, h)}%"></i></div><b class="lo">${label(d[2])}</b></div>`;
+      }).join("");
+    }
+    function paint(rebuild = true) {
+      const c = CITIES[city];
+      $("cityName").textContent = c.name;
+      $("cond").textContent = c.cond;
+      $("temp").textContent = conv(c.t);
+      $("range").textContent = `最高 ${label(c.hi)} · 最低 ${label(c.lo)}`;
+      $("wind").textContent = c.wind;
+      $("hum").textContent = c.hum;
+      $("feels").textContent = label(c.feels);
+      const d = new Date();
+      $("stamp").textContent = `${night ? "夜间" : "白天"} · ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+      renderDays(c);
+      if (rebuild) { paintSky(c.w); paintFx(c.w); }
+      $("card").dataset.w = c.w;
+    }
+    function select(i) {
+      if (swapping || i === city) return;
+      swapping = true; city = i; renderTabs();
+      const box = $("content");
+      box.classList.add("out");
+      setTimeout(() => { paint(); box.classList.remove("out"); swapping = false; }, 230);
+    }
+    $("tabs").addEventListener("click", (e) => {
+      const btn = e.target.closest(".tab"); if (btn) select(Number(btn.dataset.i));
+    });
+    document.querySelector(".units").addEventListener("click", (e) => {
+      const btn = e.target.closest("button"); if (!btn) return;
+      unit = btn.dataset.unit;
+      document.querySelectorAll(".units button").forEach((b) => b.classList.toggle("on", b === btn));
+      paint(false);
+    });
+    renderTabs();
+    paint();
+  })();
+</script>
+</body>
+</html>

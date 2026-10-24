@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>股票监控面板</title>
+<style>
+:root{--bg:#0a0e16;--card:#121a27;--line:#1f2b3d;--txt:#e8eef7;--mut:#7d8aa2;--up:#ff5c5c;--dn:#2ed18b;--warn:#f7b84b;--acc:#38bdf8}
+*{box-sizing:border-box;margin:0}
+body{min-height:100vh;padding:16px;color:var(--txt);background:radial-gradient(900px 420px at 50% -140px,#1a2740,var(--bg) 70%);font:14px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:760px;margin:0 auto;display:grid;gap:12px}
+.hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+h1{font-size:20px;letter-spacing:.5px}
+.sum{margin-top:4px;font-size:12px;color:var(--mut)}
+.bar{display:flex;gap:2px;width:160px;height:4px;margin-top:6px;border-radius:2px;overflow:hidden}
+.bar i:first-child{background:var(--up)}
+.bar i:last-child{background:var(--dn)}
+.ctl{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut);white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--acc);animation:pulse 1.6s infinite}
+.ctl.off .dot{background:var(--mut);animation:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(56,189,248,.6)}100%{box-shadow:0 0 0 8px rgba(56,189,248,0)}}
+button{font:inherit;color:inherit;background:none;border:1px solid var(--line);border-radius:8px;padding:4px 10px;cursor:pointer}
+svg{display:block}
+.card{padding:14px;background:var(--card);border:1px solid var(--line);border-radius:14px}
+.row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.rt{text-align:right}
+.nm{display:block;font-size:15px;font-weight:600}
+small{margin-left:4px;font-size:12px;font-weight:400;color:var(--mut)}
+.cd{display:block;font-size:12px;color:var(--mut)}
+.big{display:inline-block;padding:0 4px;border-radius:6px;font-size:30px;font-weight:700;font-variant-numeric:tabular-nums}
+.chg{display:block;font-size:13px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.up{color:var(--up)}
+.dn{color:var(--dn)}
+.flat{color:var(--mut)}
+.tk{animation:tk .9s ease-out}
+@keyframes tk{from{background:rgba(232,238,247,.18)}to{background:transparent}}
+.foot{display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+.list{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.stock{display:grid;grid-template-columns:1fr 84px auto;align-items:center;gap:10px;width:100%;padding:12px;text-align:left;background:var(--card);border-radius:12px;transition:border-color .2s,box-shadow .2s}
+.stock:hover{border-color:#34445e}
+.stock.on{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+.stock:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.tag{display:inline-block;margin-top:4px;padding:0 5px;border:1px solid var(--warn);border-radius:4px;font-size:11px;color:var(--warn)}
+.px{text-align:right}
+.pr{display:inline-block;padding:0 3px;border-radius:4px;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+footer{padding:0 2px;font-size:12px;line-height:1.6;color:var(--mut)}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<linearGradient id="gU" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5c5c" stop-opacity=".35"/><stop offset="1" stop-color="#ff5c5c" stop-opacity="0"/></linearGradient>
+<linearGradient id="gD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2ed18b" stop-opacity=".35"/><stop offset="1" stop-color="#2ed18b" stop-opacity="0"/></linearGradient>
+</defs></svg>
+<div class="wrap">
+<header class="hd">
+<div><h1>股票监控</h1><div class="sum" id="sum"></div><div class="bar" id="bar"></div></div>
+<div class="ctl" id="ctl"><span class="dot"></span><span id="lbl">实时</span><span id="ts"></span><button id="tg">暂停</button></div>
+</header>
+<section class="card" id="main"></section>
+<section class="list" id="list"></section>
+<footer>风险提示：本页行情为本地生成的模拟数据，仅用于界面演示，不代表任何真实股票的价格，也不构成投资建议。单日涨跌幅绝对值达 4% 以上会标记为「高波动」，请留意波动风险。</footer>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const HOT = 4, UP = '#ff5c5c', DN = '#2ed18b', MUT = '#7d8aa2';
+const ARW = { up: '▲', dn: '▼', flat: '•' };
+const dirOf = d => (d > 0 ? 'up' : d < 0 ? 'dn' : 'flat');
+const sgn = v => (v > 0 ? '+' : v < 0 ? '-' : '');
+const S = [
+  { code: 'CHB', name: '澄海半导体', sector: '半导体', prev: 186.2, price: 195.6, vol: 0.004, amp: 0.012 },
+  { code: 'YLN', name: '云岭能源', sector: '能源', prev: 42.85, price: 41.9, vol: 0.006, amp: 0.015 },
+  { code: 'JHF', name: '嘉禾食品', sector: '消费', prev: 73.1, price: 73.94, vol: 0.002, amp: 0.005 },
+  { code: 'RXD', name: '瑞鑫电子', sector: '电子', prev: 28.6, price: 27.02, vol: 0.007, amp: 0.02 },
+];
+let sel = 0, live = true;
+S.forEach((s, k) => {
+  s.fl = '';
+  s.hist = Array.from({ length: 40 }, (_, i) => +(s.prev + ((s.price - s.prev) * i) / 39 + Math.sin(i * 0.8 + k * 1.7) * s.prev * s.amp).toFixed(2));
+  s.hist[39] = s.price;
+});
+const list = $('list');
+list.innerHTML = S.map((_, i) => `<button data-i="${i}"></button>`).join('');
+const cards = [...list.children];
+list.onclick = e => { const b = e.target.closest('button'); if (b) { sel = +b.dataset.i; render(); } };
+$('tg').onclick = () => {
+  live = !live;
+  $('tg').textContent = live ? '暂停' : '继续';
+  $('ctl').classList.toggle('off', !live);
+  $('lbl').textContent = live ? '实时' : '已暂停';
+};
+
+function spark(h, prev, w, ht) {
+  const big = ht > 60, p = big ? 14 : 4, lo = Math.min(prev, ...h), hi = Math.max(prev, ...h), r = hi - lo || 1;
+  const y = v => (ht - p - ((v - lo) / r) * (ht - 2 * p)).toFixed(1);
+  const pts = h.map((v, i) => `${((i / (h.length - 1)) * w).toFixed(1)} ${y(v)}`);
+  const line = 'M' + pts.join(' L'), last = pts[pts.length - 1].split(' ');
+  const up = h[h.length - 1] >= prev, col = up ? UP : DN;
+  return `<svg width="${w}" height="${ht}" viewBox="0 0 ${w} ${ht}" aria-hidden="true">
+<path d="${line} L${w} ${ht} L0 ${ht}Z" fill="url(#${up ? 'gU' : 'gD'})"/>
+<line x1="0" x2="${w}" y1="${y(prev)}" y2="${y(prev)}" stroke="${MUT}" stroke-dasharray="4 4" opacity=".5"/>
+<path d="${line}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="${last[0]}" cy="${last[1]}" r="${big ? 4 : 2.5}" fill="${col}"/></svg>`;
+}
+
+function renderMain() {
+  const s = S[sel], d = s.price - s.prev, p = (d / s.prev) * 100, c = dirOf(d);
+  const hot = Math.abs(p) >= HOT ? ' <span class="tag">高波动</span>' : '';
+  $('main').innerHTML = `<div class="row">
+<div><div class="nm">${s.name}<small>${s.code}</small></div><div class="cd">${s.sector}${hot}</div></div>
+<div class="rt"><span class="big ${c} ${s.fl}">${s.price.toFixed(2)}</span>
+<span class="chg ${c}">${ARW[c]} ${sgn(d)}${Math.abs(d).toFixed(2)} (${sgn(p)}${Math.abs(p).toFixed(2)}%)</span></div></div>
+${spark(s.hist, s.prev, Math.max(200, $('main').clientWidth - 28), 150)}
+<div class="foot"><span>昨收 ${s.prev.toFixed(2)}</span><span>区间高 ${Math.max(...s.hist).toFixed(2)}</span><span>区间低 ${Math.min(...s.hist).toFixed(2)}</span></div>`;
+}
+
+function renderList() {
+  S.forEach((s, i) => {
+    const d = s.price - s.prev, p = (d / s.prev) * 100, c = dirOf(d), b = cards[i];
+    b.className = 'stock' + (i === sel ? ' on' : '');
+    b.setAttribute('aria-pressed', i === sel);
+    b.innerHTML = `<span><span class="nm">${s.name}</span><span class="cd">${s.code} · ${s.sector}</span>${Math.abs(p) >= HOT ? '<span class="tag">高波动</span>' : ''}</span>
+${spark(s.hist, s.prev, 84, 34)}
+<span class="px"><span class="pr ${c} ${s.fl}">${s.price.toFixed(2)}</span><span class="chg ${c}">${ARW[c]} ${sgn(p)}${Math.abs(p).toFixed(2)}%</span></span>`;
+  });
+}
+
+function renderSum() {
+  const up = S.filter(s => s.price > s.prev).length, dn = S.filter(s => s.price < s.prev).length;
+  $('sum').innerHTML = `${S.length} 支自选 · <span class="up">上涨 ${up}</span> · <span class="dn">下跌 ${dn}</span>`;
+  $('bar').innerHTML = `<i style="flex:${up}"></i><i style="flex:${dn}"></i>`;
+}
+
+function render() { renderMain(); renderList(); renderSum(); }
+
+function tick() {
+  S.forEach(s => {
+    const np = +(s.price + (Math.random() * 2 - 1) * s.vol * s.price + (s.prev - s.price) * 0.01).toFixed(2);
+    s.fl = np === s.price ? '' : 'tk';
+    s.price = np;
+    s.hist = [...s.hist.slice(-59), np];
+  });
+  $('ts').textContent = new Date().toTimeString().slice(0, 8);
+  render();
+}
+
+$('ts').textContent = new Date().toTimeString().slice(0, 8);
+render();
+addEventListener('resize', render);
+setInterval(() => { if (live) tick(); }, 1500);
+</script>
+</body>
+</html>

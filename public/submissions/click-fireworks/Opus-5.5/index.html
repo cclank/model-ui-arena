@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Opus-5.5 · 江畔烟火</title>
+<!-- 设计说明：
+1. 江畔夜景：星空、明月、塔楼与城市天际线（窗灯逐盏随机），江面实时倒映烟火，并按条带做水波错位。
+2. 点击任意处：礼花弹从江岸升空，按弹道恰好在点击点爆开；牡丹、菊花、垂柳、圆环、爱心、分裂星、闪烁七种花型随机组合、多色随机半径。
+3. 粒子含重力、空气阻力、衰减与闪烁，拖尾靠逐帧“擦除式”淡出，爆点照亮夜空；按住可连发，闲置时自动表演。
+4. 粒子上限与对象回收避免内存增长，DPR 限到 2；首次点击后启用 WebAudio 合成的升空哨音与爆炸声，可静音。 -->
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;overflow:hidden;background:#05060f;touch-action:none;user-select:none;-webkit-user-select:none}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+#rf{-webkit-mask:linear-gradient(#000 0,rgba(0,0,0,.25) 100%);mask:linear-gradient(#000 0,rgba(0,0,0,.25) 100%);opacity:.55}
+.hud{position:fixed;top:16px;left:18px;color:#f5e6c8;font:13px/1.5 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:1px;text-shadow:0 1px 8px #000;pointer-events:none}
+.hud b{font-size:26px;font-weight:600;color:#ffd98a;font-variant-numeric:tabular-nums;margin-right:4px}
+.hud small{display:block;opacity:.6;font-size:11px}
+.hint{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);color:rgba(255,236,200,.8);font:13px -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:2px;padding:8px 16px;border-radius:99px;background:rgba(10,12,30,.45);backdrop-filter:blur(6px);pointer-events:none;white-space:nowrap;transition:opacity 1s}
+#snd{position:fixed;top:14px;right:14px;border:1px solid rgba(255,230,190,.3);background:rgba(10,12,30,.45);color:#f5e6c8;border-radius:99px;padding:6px 12px;font:12px -apple-system,"PingFang SC",sans-serif;cursor:pointer}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas><canvas id="fx"></canvas><canvas id="rf"></canvas>
+<div class="hud"><b id="cnt">0</b>朵<small id="pc">粒子 0</small></div>
+<button id="snd">声音：开</button>
+<div class="hint" id="hint">点击夜空放烟花 · 按住连发</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const bg = $("bg").getContext("2d"), fx = $("fx").getContext("2d"), rf = $("rf").getContext("2d");
+const R = Math.random, TAU = Math.PI * 2, rnd = (a, b) => a + R() * (b - a), pick = (a) => a[(R() * a.length) | 0];
+const PALETTE = [[255, 214, 120], [255, 90, 80], [110, 190, 255], [150, 255, 170], [210, 130, 255], [255, 255, 255], [255, 140, 200], [255, 170, 60]];
+const KINDS = ["peony", "peony", "chrys", "willow", "ring", "heart", "crossette", "strobe"];
+let W = 0, H = 0, DPR = 1, horizon = 0, last = performance.now(), count = 0, idleT = 0, holdT = 0, hold = null;
+const rockets = [], parts = [], MAX = 5200;
+
+function resize() {
+  DPR = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; horizon = Math.round(H * 0.8);
+  for (const c of [bg, fx, rf]) { c.canvas.width = W * DPR; c.canvas.height = H * DPR; c.setTransform(DPR, 0, 0, DPR, 0, 0); }
+  drawBackground();
+}
+// 静态背景：天空、星、月、塔楼与楼群（含窗灯）、江面及楼群倒影
+function drawBackground() {
+  const sky = bg.createLinearGradient(0, 0, 0, horizon);
+  sky.addColorStop(0, "#03040c"); sky.addColorStop(0.6, "#0c1030"); sky.addColorStop(1, "#2a1f48");
+  bg.fillStyle = sky; bg.fillRect(0, 0, W, horizon);
+  for (let i = 0; i < (W * H) / 2600; i++) { bg.fillStyle = `rgba(255,255,255,${rnd(0.1, 0.8)})`; bg.fillRect(R() * W, R() * horizon * 0.8, rnd(0.6, 1.6), rnd(0.6, 1.6)); }
+  const mx = W * 0.84, my = H * 0.14, mg = bg.createRadialGradient(mx, my, 10, mx, my, 110);
+  mg.addColorStop(0, "rgba(255,240,210,.35)"); mg.addColorStop(1, "rgba(255,240,210,0)");
+  bg.fillStyle = mg; bg.fillRect(mx - 110, my - 110, 220, 220);
+  bg.fillStyle = "#fbf1d8"; bg.beginPath(); bg.arc(mx, my, 20, 0, TAU); bg.fill();
+  const blds = [], lights = [];
+  for (let x = -10; x < W + 10;) { const w = rnd(18, 54), h = rnd(0.04, x > W * 0.55 && x < W * 0.75 ? 0.26 : 0.16) * H; blds.push([x, w, h]); x += w + rnd(-4, 3); }
+  const s = Math.min(1, H / 700), px = W * 0.22;
+  const skyline = (g, flip) => { // flip=true 时画江面倒影（关于江岸线翻转）
+    const Y = (y) => (flip ? 2 * horizon - y : y);
+    const box = (x, y0, y1, w) => { g.beginPath(); g.rect(x, Math.min(Y(y0), Y(y1)), w, Math.abs(y1 - y0)); g.fill(); };
+    for (const [x, w, h] of blds) box(x, horizon - h, horizon, w);
+    for (let k = 0; k < 7; k++) { // 塔：七层飞檐，檐角上翘
+      const y = horizon - (40 + k * 26) * s, hw = (34 - k * 3.4) * s;
+      box(px - hw * 0.62, y, k ? y + 26 * s : horizon, hw * 1.24);
+      g.beginPath(); g.moveTo(px - hw - 8 * s, Y(y)); g.quadraticCurveTo(px - hw, Y(y - 6 * s), px - hw * 0.7, Y(y - 8 * s));
+      g.lineTo(px + hw * 0.7, Y(y - 8 * s)); g.quadraticCurveTo(px + hw, Y(y - 6 * s), px + hw + 8 * s, Y(y)); g.fill();
+    }
+    box(px - 1.5 * s, horizon - 240 * s, horizon - 204 * s, 3 * s);
+  };
+  bg.fillStyle = "#070814"; skyline(bg, false);
+  for (let k = 0; k < 7; k++) for (const d of [-1, 1]) { // 檐角灯笼
+    const lx = px + d * (34 - k * 3.4 + 7) * s, ly = horizon - (40 + k * 26) * s + 3 * s, lg = bg.createRadialGradient(lx, ly, 0, lx, ly, 9 * s);
+    lg.addColorStop(0, "rgba(255,170,90,.9)"); lg.addColorStop(1, "rgba(255,120,60,0)"); bg.fillStyle = lg; bg.fillRect(lx - 9 * s, ly - 9 * s, 18 * s, 18 * s);
+  }
+  for (const [x, w, h] of blds) for (let y = horizon - h + 6; y < horizon - 6; y += 9) for (let wx = x + 4; wx < x + w - 5; wx += 7) {
+    if (R() < 0.18) { const c = pick(["255,214,140", "255,236,190", "180,210,255"]); bg.fillStyle = `rgba(${c},${rnd(0.35, 0.9)})`; bg.fillRect(wx, y, 3, 4); lights.push([wx, y, c]); }
+  }
+  const river = bg.createLinearGradient(0, horizon, 0, H);
+  river.addColorStop(0, "#0d1233"); river.addColorStop(1, "#02030a");
+  bg.fillStyle = river; bg.fillRect(0, horizon, W, H - horizon);
+  bg.globalAlpha = 0.5; bg.fillStyle = "#04050d"; skyline(bg, true); bg.globalAlpha = 1;
+  for (const [x, y, c] of lights) { bg.fillStyle = `rgba(${c},.18)`; bg.fillRect(x + rnd(-1, 1), 2 * horizon - y, 3, rnd(6, 16)); }
+  bg.fillStyle = "rgba(255,220,170,.12)"; bg.fillRect(0, horizon, W, 1);
+}
+// 发射：初速按 v0 = √(2gh) 反推，使礼花弹的弹道顶点恰好落在点击点
+function launch(tx, ty) {
+  if (ty > horizon - 30) return explode(tx, ty);
+  const g = 520, x0 = tx + rnd(-60, 60), h = horizon - ty, vy = -Math.sqrt(2 * g * h), t = -vy / g;
+  rockets.push({ x: x0, y: horizon, vx: (tx - x0) / t, vy, g, tx, ty });
+  sound.whistle(t);
+}
+function add(p) { if (parts.length < MAX) parts.push(p); }
+function spark(x, y, vx, vy, c, o = {}) {
+  add({ x, y, vx, vy, c, life: 1, decay: o.decay ?? rnd(0.55, 0.9), size: o.size ?? rnd(1.4, 2.7), drag: o.drag ?? 1.25, g: o.g ?? 90, tw: o.tw ?? 0, split: o.split ?? 0, trail: o.trail ?? 0 });
+}
+function explode(x, y) {
+  const kind = pick(KINDS), c1 = pick(PALETTE), c2 = R() < 0.45 ? pick(PALETTE) : c1, big = Math.min(W, H) / 800;
+  const sp = rnd(260, 390) * Math.max(0.65, big), n = Math.round(rnd(110, 170) * Math.max(0.55, Math.min(1.2, big * 1.4)));
+  count++; $("cnt").textContent = count;
+  add({ x, y, vx: 0, vy: 0, c: c1, life: 1, decay: 3.2, size: 90 * Math.max(0.6, big), drag: 0, g: 0, flash: 1 });
+  sound.boom(0.6 + big * 0.4);
+  if (kind === "heart") {
+    for (let i = 0; i < 90; i++) {
+      const t = (i / 90) * TAU, hx = 16 * Math.sin(t) ** 3, hy = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+      spark(x, y, hx * sp / 17, hy * sp / 17, [255, 110, 170], { drag: 1.6, g: 40, decay: 0.5 });
+    }
+    return;
+  }
+  const tilt = rnd(0.2, 1), rot = rnd(0, TAU);
+  for (let i = 0; i < (kind === "ring" ? 80 : kind === "crossette" ? 34 : n); i++) {
+    let vx, vy;
+    if (kind === "ring") { const a = (i / 80) * TAU, ex = Math.cos(a), ey = Math.sin(a) * tilt; vx = ex * Math.cos(rot) - ey * Math.sin(rot); vy = ex * Math.sin(rot) + ey * Math.cos(rot); }
+    else { const u = rnd(-1, 1), a = R() * TAU, s = Math.sqrt(1 - u * u); vx = s * Math.cos(a); vy = u; } // 球面均匀取样再投影：边缘更密，立体感
+    const v = sp * (kind === "willow" ? 0.72 : rnd(0.86, 1)), c = i % 2 ? c1 : c2;
+    if (kind === "willow") spark(x, y, vx * v, vy * v, [255, 196, 90], { drag: 2.4, g: 70, decay: rnd(0.24, 0.34), size: 1.6, trail: 0.5 });
+    else if (kind === "chrys") spark(x, y, vx * v, vy * v, c, { trail: 0.7, decay: rnd(0.5, 0.7) });
+    else if (kind === "crossette") spark(x, y, vx * v * 0.8, vy * v * 0.8, c, { split: 0.55, decay: 0.7, size: 2.4 });
+    else if (kind === "strobe") spark(x, y, vx * v, vy * v, [255, 255, 245], { tw: 1, decay: rnd(0.4, 0.55) });
+    else spark(x, y, vx * v, vy * v, c);
+  }
+}
+// —— WebAudio：首次交互后创建上下文；噪声爆炸 + 升空哨音 ——
+const sound = (() => {
+  let ac = null, noise = null, on = true;
+  const init = () => {
+    if (ac) return; ac = new (window.AudioContext || window.webkitAudioContext)();
+    noise = ac.createBuffer(1, ac.sampleRate * 1.6, ac.sampleRate);
+    const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (R() * 2 - 1) * (1 - i / d.length) ** 2.5;
+  };
+  const boom = (k) => {
+    if (!ac || !on) return;
+    const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(), t = ac.currentTime;
+    s.buffer = noise; f.type = "lowpass"; f.frequency.setValueAtTime(900 * k, t); f.frequency.exponentialRampToValueAtTime(120, t + 1.2);
+    g.gain.setValueAtTime(0.55 * k, t); s.connect(f).connect(g).connect(ac.destination); s.start(t);
+  };
+  const whistle = (dur) => {
+    if (!ac || !on) return;
+    const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime;
+    o.frequency.setValueAtTime(700, t); o.frequency.exponentialRampToValueAtTime(1900, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.035, t + 0.08); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur);
+  };
+  return { init, boom, whistle, toggle: () => (on = !on) };
+})();
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.033, (now - last) / 1000); last = now;
+  fx.globalCompositeOperation = "destination-out"; // 擦除式淡出：旧像素按比例变透明，形成拖尾
+  fx.fillStyle = `rgba(0,0,0,${Math.min(1, 12 * dt)})`; fx.fillRect(0, 0, W, H);
+  fx.globalCompositeOperation = "lighter";
+  for (let i = rockets.length - 1; i >= 0; i--) {
+    const r = rockets[i];
+    r.vy += r.g * dt; r.x += r.vx * dt; r.y += r.vy * dt;
+    add({ x: r.x + rnd(-1, 1), y: r.y, vx: rnd(-20, 20), vy: rnd(20, 60), c: [255, 200, 130], life: 0.6, decay: 1.8, size: 1.3, drag: 2, g: 60 });
+    fx.fillStyle = "#fff4d6"; fx.fillRect(r.x - 1.5, r.y - 1.5, 3, 3);
+    if (r.vy >= 0) { rockets.splice(i, 1); explode(r.tx, r.ty); }
+  }
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i];
+    p.life -= p.decay * dt;
+    if (p.life <= 0) {
+      if (p.split) for (let k = 0; k < 4; k++) { const a = (k / 4) * TAU + R(); spark(p.x, p.y, Math.cos(a) * 90 + p.vx * 0.3, Math.sin(a) * 90 + p.vy * 0.3, [255, 245, 220], { decay: 1.6, size: 1.5 }); }
+      parts[i] = parts[parts.length - 1]; parts.pop(); continue;
+    }
+    if (p.flash) { // 爆点照亮夜空
+      const g = fx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2.2);
+      g.addColorStop(0, `rgba(${p.c},${0.35 * p.life})`); g.addColorStop(1, `rgba(${p.c},0)`);
+      fx.fillStyle = g; fx.fillRect(p.x - p.size * 2.2, p.y - p.size * 2.2, p.size * 4.4, p.size * 4.4); continue;
+    }
+    const k = Math.exp(-p.drag * dt);
+    p.vx *= k; p.vy = p.vy * k + p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+    if (p.trail && R() < p.trail * dt * 30) add({ x: p.x, y: p.y, vx: 0, vy: 10, c: p.c, life: p.life * 0.5, decay: 1.4, size: p.size * 0.6, drag: 3, g: 30 });
+    let a = Math.min(1, p.life * 1.6) ** 1.4;
+    if (p.tw && p.life < 0.6) a *= R() < 0.5 ? 1 : 0.1;
+    fx.fillStyle = `rgba(${p.c},${a})`;
+    const s = p.size * (0.6 + p.life * 0.6);
+    fx.fillRect(p.x - s / 2, p.y - s / 2, s, s);
+    if (p.life > 0.75) { fx.fillStyle = `rgba(${p.c},${a * 0.18})`; fx.fillRect(p.x - s * 1.5, p.y - s * 1.5, s * 3, s * 3); }
+  }
+  // 江面倒影：把天空按条带竖直翻转、压缩并横向正弦错位
+  rf.clearRect(0, 0, W, H);
+  const strips = 26, rh = H - horizon, k = 2.4, t = now / 1000;
+  for (let i = 0; i < strips; i++) {
+    const d0 = (i / strips) * rh, h = rh / strips + 1, s0 = horizon - d0 * k, s1 = Math.max(0, horizon - (d0 + h) * k);
+    rf.save(); rf.translate(Math.sin(t * 1.7 + i * 0.9) * (1 + i * 0.35), horizon + d0 + h); rf.scale(1, -1);
+    rf.drawImage(fx.canvas, 0, s1 * DPR, W * DPR, Math.max(1, (s0 - s1) * DPR), 0, 0, W, h); rf.restore();
+  }
+  // 按住连发 + 闲置自动表演
+  if (hold && (holdT -= dt) <= 0) { holdT = 0.16; launch(hold.x + rnd(-40, 40), hold.y + rnd(-30, 30)); }
+  if ((idleT -= dt) <= 0) { idleT = rnd(0.7, 1.5); launch(rnd(W * 0.12, W * 0.88), rnd(H * 0.14, horizon * 0.62)); }
+  $("pc").textContent = `粒子 ${parts.length}`;
+}
+addEventListener("pointerdown", (e) => {
+  if (e.target.id === "snd") return;
+  sound.init(); idleT = 6; hold = { x: e.clientX, y: e.clientY }; holdT = 0.45;
+  launch(e.clientX, e.clientY); $("hint").style.opacity = 0;
+});
+addEventListener("pointermove", (e) => { if (hold) hold = { x: e.clientX, y: e.clientY }; });
+for (const ev of ["pointerup", "pointercancel", "blur"]) addEventListener(ev, () => (hold = null));
+$("snd").onclick = () => { $("snd").textContent = sound.toggle() ? "声音：开" : "声音：关"; };
+addEventListener("resize", resize);
+resize();
+[[0.3, 0.3], [0.62, 0.22], [0.5, 0.38]].forEach(([x, y], i) => setTimeout(() => launch(W * x, H * y), 250 + i * 380)); // 开场三发
+idleT = 2.2;
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

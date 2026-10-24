@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-phase="day">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Opus-5.5 · 天文台时计</title>
+<!-- 设计说明：
+1. 做一只“天文台时计”：旭日纹表盘加平滑扫秒，秒针身后拖着一道彗星光尾，扫过分钟刻度圈。
+2. 6 点位是 24 小时昼夜盘（日月随时间升落），3 点位是日期窗；下方数字时间逐秒翻动，附日期、时区和今日进度。
+3. 按本地时间在拂晓、白昼、黄昏、夜晚四套配色之间渐变过渡，夜里指针和刻度会亮起呼吸的夜光。
+4. 点表盘或按钮可以切换扫秒/跳秒、24/12 小时制、自动/日/夜；每帧只改 transform，文字每秒只更新一次。 -->
+<style>
+@property --bg1{syntax:'<color>';inherits:true;initial-value:#bcd8f0}
+@property --bg2{syntax:'<color>';inherits:true;initial-value:#eef3f9}
+*{box-sizing:border-box;margin:0}
+:root{--bg1:#bcd8f0;--bg2:#eef3f9;--ink:#142033;--sub:#5a6a80;--d1:#fff;--d2:#d3dae4;--mk:#1b2536;--ac:#d9442a;--lume:#1b2536;--glow:rgba(217,68,42,.5);--card:rgba(255,255,255,.55);--bz1:#fbfcfd;--bz2:#7f8a97;--h1:#3a475c;--h2:#0e1522;--i1:#fff;--i2:#98a2b0;--lumeH:#f6f1e1;--star:0}
+html[data-phase=dawn]{--bg1:#f4b394;--bg2:#fde9da;--sub:#7d5b52;--ac:#c9432b;--glow:rgba(201,67,43,.4)}
+html[data-phase=dusk]{--bg1:#e98d4f;--bg2:#4f4386;--ink:#fff7ef;--sub:#ffe0c8;--d1:#fff4e8;--d2:#dcc4b1;--card:rgba(58,34,82,.38);--star:.4}
+html[data-phase=night]{--bg1:#030916;--bg2:#15244d;--ink:#e6edfb;--sub:#8d9dc2;--d1:#1a2e5c;--d2:#060e22;--mk:#c7d4f3;--ac:#ff7b47;--lume:#a8ffd8;--glow:rgba(130,255,205,.42);--card:rgba(18,30,64,.55);--bz1:#6a7489;--bz2:#0e131d;--h1:#dfe6f2;--h2:#66728a;--i1:#d3dbea;--i2:#4b5569;--lumeH:#a8ffd8;--star:1}
+body{min-height:100vh;display:grid;place-items:center;padding:24px 16px;font-family:-apple-system,"SF Pro Display","PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;color:var(--ink);background:radial-gradient(120% 85% at 50% 0%,var(--bg2),var(--bg1));transition:--bg1 1.6s,--bg2 1.6s,color 1.6s;overflow-x:hidden}
+.sky{position:fixed;inset:0;pointer-events:none;opacity:var(--star);transition:opacity 1.6s}
+.sky i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:tw 3s ease-in-out infinite alternate}
+@keyframes tw{from{opacity:.15}to{opacity:1}}
+main{display:flex;flex-direction:column;align-items:center;gap:clamp(18px,4vh,34px);width:100%;max-width:520px}
+.watch{--s:min(86vw,54vh,430px);width:var(--s);height:var(--s);position:relative;border-radius:50%;cursor:pointer;background:conic-gradient(from 210deg,var(--bz1),var(--bz2) 18%,var(--bz1) 36%,var(--bz2) 55%,var(--bz1) 72%,var(--bz2) 88%,var(--bz1));box-shadow:0 30px 60px -18px rgba(0,0,0,.45),0 6px 14px rgba(0,0,0,.2),inset 0 2px 3px rgba(255,255,255,.7),inset 0 -3px 6px rgba(0,0,0,.35);transition:transform .25s}
+.watch:active{transform:scale(.985)}
+.watch::before,.sweep{content:"";position:absolute;inset:3.5%;border-radius:50%}
+.watch::before{background:radial-gradient(circle,var(--d1) 0,transparent 16%),repeating-conic-gradient(rgba(255,255,255,.06) 0 1.2deg,rgba(0,0,0,.035) 1.2deg 2.4deg),radial-gradient(circle at 50% 32%,var(--d1),var(--d2));box-shadow:inset 0 4px 14px rgba(0,0,0,.35),inset 0 -2px 6px rgba(255,255,255,.25)}
+.sweep{background:conic-gradient(transparent 0 235deg,var(--glow) 360deg);-webkit-mask:radial-gradient(circle,transparent 81%,#000 82%,#000 99%,transparent 100%);mask:radial-gradient(circle,transparent 81%,#000 82%,#000 99%,transparent 100%);will-change:transform}
+svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.t1{stroke:var(--mk);stroke-width:1.1;opacity:.7}.t5{stroke:var(--mk);stroke-width:2.6}
+.mn{font-size:8.5px;fill:var(--mk);opacity:.75;text-anchor:middle;font-weight:600;letter-spacing:.5px}
+.ix{fill:url(#ixg);stroke:rgba(0,0,0,.25);stroke-width:.5}
+.lm{fill:var(--lume)}.hand .lm{fill:var(--lumeH)}
+html[data-phase=night] .lm,html[data-phase=night] .hand .lm{filter:drop-shadow(0 0 3px var(--lume));animation:breathe 4s ease-in-out infinite}
+@keyframes breathe{50%{opacity:.62}}
+.brand{font-size:15px;font-weight:700;letter-spacing:6px;fill:var(--mk);text-anchor:middle}
+.model{font-size:6.5px;letter-spacing:2.6px;fill:var(--mk);opacity:.7;text-anchor:middle}
+.hand{filter:drop-shadow(1.5px 3px 2.5px rgba(0,0,0,.38));will-change:transform}
+.date-t{font-size:14px;font-weight:700;text-anchor:middle;fill:#1b2536}
+.digital{width:100%;padding:18px 22px 16px;border-radius:24px;background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 10px 30px -12px rgba(0,0,0,.35);text-align:center}
+.greet{font-size:13px;letter-spacing:3px;color:var(--sub)}
+.time{font-weight:200;font-size:clamp(52px,15vw,84px);line-height:1.05;font-variant-numeric:tabular-nums;letter-spacing:1px}
+.time .sec{display:inline-block;font-size:.42em;font-weight:400;color:var(--ac);margin-left:6px;vertical-align:.95em}
+.time .ap{font-size:.24em;font-weight:500;margin-left:6px;color:var(--sub);vertical-align:1.9em}
+.date{font-size:15px;margin-top:2px;color:var(--sub)}
+.bar{height:4px;border-radius:4px;background:rgba(127,127,127,.25);margin:14px 0 8px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,var(--ac),#f5b041);transition:width .9s}
+.meta{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums}
+.ctrl{display:flex;justify-content:center;gap:8px;margin-top:14px;flex-wrap:wrap}
+button{font:inherit;font-size:13px;color:var(--ink);background:rgba(127,127,127,.14);border:1px solid rgba(127,127,127,.3);border-radius:99px;padding:6px 14px;cursor:pointer;transition:background .2s}
+button:hover{background:rgba(127,127,127,.26)}
+@media (max-width:420px){.digital{padding:14px 14px 12px}.meta{font-size:11px}}
+</style>
+</head>
+<body>
+<div class="sky" id="sky"></div>
+<main>
+  <div class="watch" id="watch" title="点击切换 扫秒 / 跳秒" role="img" aria-label="模拟时钟">
+    <div class="sweep" id="sweep"></div>
+    <svg viewBox="-200 -200 400 400" aria-hidden="true">
+      <defs>
+        <linearGradient id="ixg" x1="0" x2="1"><stop offset=".5" stop-color="var(--i1)"/><stop offset=".5" stop-color="var(--i2)"/></linearGradient>
+        <linearGradient id="hg" x1="0" x2="1"><stop offset=".5" stop-color="var(--h1)"/><stop offset=".5" stop-color="var(--h2)"/></linearGradient>
+        <linearGradient id="skyg" y2="1" x2="0"><stop offset="0" stop-color="#3f8fe0"/><stop offset="1" stop-color="#bfe3ff"/></linearGradient>
+        <radialGradient id="capg" cx=".35" cy=".3"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#6b7584"/></radialGradient>
+        <clipPath id="aperture"><path d="M-37 0A37 37 0 0 1 37 0Z"/></clipPath>
+      </defs>
+      <g id="ticks"></g>
+      <text class="brand" y="-66">OPUS</text>
+      <text class="model" y="-52">OBSERVATORY · 5.5</text>
+      <g transform="translate(0 92)">
+        <g clip-path="url(#aperture)"><g id="disc">
+          <path d="M-40 0A40 40 0 0 1 40 0Z" fill="url(#skyg)"/>
+          <g transform="translate(0 -24)"><circle r="11" fill="#ffd66b" opacity=".35"/><circle r="7" fill="#ffc53d"/></g>
+          <path d="M-40 0A40 40 0 0 0 40 0Z" fill="#0a1531"/>
+          <g fill="#fff"><circle cx="-20" cy="10" r="1"/><circle cx="18" cy="14" r="1.2"/><circle cx="-8" cy="33" r=".9"/><circle cx="24" cy="30" r=".8"/></g>
+          <g transform="translate(0 24)"><circle r="7" fill="#f3efd8"/><circle cx="3.5" cy="-2" r="6.2" fill="#0a1531"/></g>
+        </g></g>
+        <path d="M-37 0Q-28 -9 -17 -5T5 -7T24 -3T37 0Z" fill="var(--d2)" opacity=".9"/>
+        <path d="M-39 0A39 39 0 0 1 39 0" fill="none" stroke="var(--mk)" stroke-width="1.4" opacity=".6"/>
+        <line x1="-39" x2="39" stroke="var(--mk)" stroke-width="1" opacity=".5"/>
+      </g>
+      <g transform="translate(124 0)">
+        <rect x="-17" y="-12.5" width="34" height="25" rx="3" fill="#fbfaf6" stroke="var(--h2)" stroke-width="1.5"/>
+        <text class="date-t" id="dw" y="5">23</text>
+      </g>
+      <g class="hand" id="hh"><path d="M-5 20L-7.5 0L0 -104L7.5 0L5 20Z" fill="url(#hg)"/><path class="lm" d="M-2.8 -12L0 -90L2.8 -12Z"/></g>
+      <g class="hand" id="mh"><path d="M-4 26L-5.8 0L0 -164L5.8 0L4 26Z" fill="url(#hg)"/><path class="lm" d="M-2.2 -16L0 -148L2.2 -16Z"/></g>
+      <g class="hand" id="sh" fill="var(--ac)" stroke="var(--ac)">
+        <line y1="42" y2="-176" stroke-width="1.7"/><circle cy="-130" r="5.5" fill="none" stroke-width="1.7"/>
+        <circle cy="-130" r="2.2" class="lm" stroke="none"/><rect x="-3.2" y="18" width="6.4" height="24" rx="3"/>
+      </g>
+      <circle r="7.5" fill="url(#capg)"/><circle r="2.6" fill="var(--ac)"/>
+    </svg>
+  </div>
+  <section class="digital">
+    <div class="greet" id="greet">你好</div>
+    <div class="time"><span id="hm">--:--</span><span class="sec" id="sec">--</span><span class="ap" id="ampm"></span></div>
+    <div class="date" id="dateline"></div>
+    <div class="bar"><i id="prog"></i></div>
+    <div class="meta"><span id="tz"></span><span id="pct"></span></div>
+    <div class="ctrl"><button id="bMode">扫秒</button><button id="bFmt">24 小时制</button><button id="bPh">配色：自动</button></div>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+const mk = (tag, attrs, parent) => {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return parent.appendChild(e);
+};
+// 表盘刻度：60 分钟刻度 + 5 分钟数字 + 时标（3 点让位日期窗、12 点双时标）
+const ticks = $("ticks");
+for (let i = 0; i < 60; i++) {
+  const a = (i * Math.PI) / 30, s = Math.sin(a), c = -Math.cos(a), big = i % 5 === 0;
+  mk("line", { x1: s * 184, y1: c * 184, x2: s * (big ? 172 : 177), y2: c * (big ? 172 : 177), class: big ? "t5" : "t1" }, ticks);
+  if (!big) continue;
+  mk("text", { x: s * 162, y: c * 162 + 3, class: "mn" }, ticks).textContent = String(i || 60).padStart(2, "0");
+  if (i === 15 || i === 30) continue;
+  const g = mk("g", { transform: `rotate(${i * 6})` }, ticks);
+  for (const dx of i === 0 ? [-6.5, 6.5] : [0]) {
+    mk("rect", { x: dx - 4, y: -150, width: 8, height: 30, rx: 1.5, class: "ix" }, g);
+    mk("rect", { x: dx - 2, y: -147, width: 4, height: 10, rx: 1, class: "lm" }, g);
+  }
+}
+const sky = $("sky");
+for (let i = 0; i < 70; i++) {
+  const st = document.createElement("i");
+  st.style.cssText = `left:${Math.random() * 100}%;top:${Math.random() * 70}%;animation-delay:${-Math.random() * 3}s;transform:scale(${0.6 + Math.random()})`;
+  sky.appendChild(st);
+}
+const WEEK = "日一二三四五六";
+const state = { sweep: true, h24: true, phase: "auto", last: -1 };
+const pad = (n) => String(n).padStart(2, "0");
+const easeBack = (t) => 1 + 2.7 * Math.pow(t - 1, 3) + 1.7 * Math.pow(t - 1, 2);
+const off = -new Date().getTimezoneOffset();
+$("tz").textContent = `GMT${off >= 0 ? "+" : "-"}${Math.floor(Math.abs(off) / 60)}${off % 60 ? ":" + pad(Math.abs(off) % 60) : ""} · ${Intl.DateTimeFormat().resolvedOptions().timeZone || "本地"}`;
+
+function phaseOf(h) {
+  if (h >= 5 && h < 7.5) return "dawn";
+  if (h >= 7.5 && h < 17) return "day";
+  if (h >= 17 && h < 19) return "dusk";
+  return "night";
+}
+function greeting(h) {
+  return h < 5 ? "凌晨好 · 夜还很长" : h < 9 ? "早上好 · 新的一天" : h < 12 ? "上午好" : h < 14 ? "中午好 · 记得休息" : h < 18 ? "下午好" : "晚上好 · 慢下来";
+}
+function updateText(now) {
+  const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+  const hf = h + m / 60 + s / 3600;
+  $("hm").textContent = `${pad(state.h24 ? h : h % 12 || 12)}:${pad(m)}`;
+  $("ampm").textContent = state.h24 ? "" : h < 12 ? "上午" : "下午";
+  const sec = $("sec");
+  sec.textContent = pad(s);
+  sec.animate([{ opacity: 0, transform: "translateY(-40%)" }, { opacity: 1, transform: "none" }], { duration: 320, easing: "cubic-bezier(.2,.8,.2,1)" });
+  $("dateline").textContent = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 · 星期${WEEK[now.getDay()]}`;
+  $("dw").textContent = now.getDate();
+  $("greet").textContent = greeting(h);
+  $("prog").style.width = `${(hf / 24) * 100}%`;
+  $("pct").textContent = `今日已过 ${((hf / 24) * 100).toFixed(1)}%`;
+  $("disc").setAttribute("transform", `rotate(${((hf - 12) / 24) * 360})`);
+  const ph = state.phase === "auto" ? phaseOf(hf) : state.phase;
+  if (document.documentElement.dataset.phase !== ph) document.documentElement.dataset.phase = ph;
+  $("watch").setAttribute("aria-label", `现在时间 ${h} 点 ${m} 分`);
+}
+const hh = $("hh"), mh = $("mh"), sh = $("sh"), sweep = $("sweep");
+function frame() {
+  const now = new Date(), s = now.getSeconds(), ms = now.getMilliseconds();
+  // 扫秒：毫秒级连续角度；跳秒：每秒开头 220ms 内带回弹地跳到下一格
+  const sf = state.sweep ? s + ms / 1000 : s - 1 + easeBack(Math.min(1, ms / 220));
+  const mf = now.getMinutes() + (s + ms / 1000) / 60;
+  const hf = (now.getHours() % 12) + mf / 60;
+  sh.setAttribute("transform", `rotate(${sf * 6})`);
+  mh.setAttribute("transform", `rotate(${mf * 6})`);
+  hh.setAttribute("transform", `rotate(${hf * 30})`);
+  sweep.style.transform = `rotate(${sf * 6}deg)`;
+  if (s !== state.last) {
+    state.last = s;
+    updateText(now);
+  }
+  requestAnimationFrame(frame);
+}
+const toggleMode = () => {
+  state.sweep = !state.sweep;
+  $("bMode").textContent = state.sweep ? "扫秒" : "跳秒";
+};
+$("watch").addEventListener("click", toggleMode);
+$("bMode").addEventListener("click", toggleMode);
+$("bFmt").addEventListener("click", () => {
+  state.h24 = !state.h24;
+  $("bFmt").textContent = state.h24 ? "24 小时制" : "12 小时制";
+  state.last = -1;
+});
+$("bPh").addEventListener("click", () => {
+  const order = ["auto", "day", "night"], names = { auto: "自动", day: "白昼", night: "夜晚" };
+  state.phase = order[(order.indexOf(state.phase) + 1) % 3];
+  $("bPh").textContent = `配色：${names[state.phase]}`;
+  state.last = -1;
+});
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

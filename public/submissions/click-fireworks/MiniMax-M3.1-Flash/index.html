@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>焰火 · 夜空庆典</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:#04060f;color:#e9eefc;overflow:hidden;cursor:crosshair;
+font:400 14px/1.45 ui-sans-serif,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+#fx{z-index:2}
+#bg{z-index:1}
+.hud{position:fixed;z-index:5;left:14px;bottom:14px;display:flex;flex-direction:column;gap:7px;
+padding:11px 13px;border-radius:14px;background:rgba(8,11,22,.6);border:1px solid rgba(255,255,255,.12);
+backdrop-filter:blur(10px);font-size:11px;color:#9fb0cc;letter-spacing:.05em;pointer-events:none}
+.hud b{color:#fff;font-weight:600;font-variant-numeric:tabular-nums}
+.hud .row{display:flex;gap:12px}
+.hint{position:fixed;z-index:5;left:50%;top:50%;translate:-50% -50%;text-align:center;
+pointer-events:none;transition:opacity .7s ease}
+.hint h1{font-size:26px;font-weight:200;letter-spacing:.34em;margin-bottom:9px;
+background:linear-gradient(92deg,#ffd36e,#ff6f9c,#8f7bff,#5fe0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hint p{font-size:12px;color:#8fa0c0;letter-spacing:.2em}
+.hint.gone{opacity:0}
+.tip{position:fixed;z-index:5;right:14px;top:14px;text-align:right;font-size:11px;color:#8fa0c0;line-height:1.9;letter-spacing:.06em}
+.tip b{color:#ffd36e;font-weight:600}
+.btn{position:fixed;z-index:6;right:14px;bottom:14px;border:1px solid rgba(255,255,255,.16);
+background:rgba(255,255,255,.05);color:#cfe0ff;border-radius:11px;padding:8px 13px;font:inherit;font-size:11.5px;
+cursor:pointer;backdrop-filter:blur(10px);transition:background .25s}
+.btn:hover{background:rgba(255,255,255,.13)}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<canvas id="fx"></canvas>
+<div class="hint" id="hint"><h1>焰 火</h1><p>点击夜空任意处 · 放一场烟花</p></div>
+<div class="tip">模式 <b id="mode">经典</b><br>点击切换形态 · 空白处自动演示</div>
+<div class="hud">
+  <div class="row"><span>粒子 <b id="pc">0</b></span><span>帧率 <b id="fps">60</b></span><span>发射 <b id="lc">0</b></span></div>
+  <div class="row"><span>画质 <b id="q">高</b></span><span>峰值粒子上限 <b id="cap">2400</b></span></div>
+</div>
+<button class="btn" id="mute">音效：开</button>
+<script>
+const bg=document.getElementById('bg'),fx=document.getElementById('fx');
+const bx=bg.getContext('2d'),cx=fx.getContext('2d');
+let W=0,H=0,DPR=1,HZ=0,stars=[],sky=[];
+const MAXQ=2400;
+let parts=[],rockets=[],launches=0,fps=60,lastT=performance.now(),mode=0,muted=false;
+const $=id=>document.getElementById(id);
+const hint=$('hint');
+const MODES=['经典','环形','柳枝','双彩','碎裂'];
+const PAL=[[255,205,110],[255,120,140],[140,190,255],[170,255,200],[255,160,90],[215,140,255]];
+const rnd=(a,b)=>a+Math.random()*(b-a);
+function resize(){DPR=Math.min(2,window.devicePixelRatio||1);
+W=window.innerWidth;H=window.innerHeight;
+for(const c of [bg,fx]){c.width=W*DPR;c.height=H*DPR}
+bx.setTransform(DPR,0,0,DPR,0,0);cx.setTransform(DPR,0,0,DPR,0,0);
+HZ=H*0.82;sky=[];stars=[];
+for(let i=0;i<110;i++)stars.push({x:Math.random()*W,y:Math.random()*HZ*.94,r:rnd(.3,1.35),a:rnd(.15,.85),tw:rnd(.6,2.4),ph:rnd(0,6.28)});
+for(let i=0;i<26;i++)sky.push({x:i/26*W+Math.random()*12,w:rnd(16,54),h:rnd(28,96),a:rnd(.5,1)});
+drawBG()}
+function drawBG(){const g=bx.createLinearGradient(0,0,0,H);
+g.addColorStop(0,'#080d1f');g.addColorStop(.5,'#0b1226');g.addColorStop(1,'#131a2e');
+bx.fillStyle=g;bx.fillRect(0,0,W,H);
+const gl=bx.createRadialGradient(W*.5,H*.12,10,W*.5,H*.12,Math.max(W,H)*.7);
+gl.addColorStop(0,'rgba(90,120,190,.16)');gl.addColorStop(1,'transparent');bx.fillStyle=gl;bx.fillRect(0,0,W,H);
+for(const s of stars){bx.beginPath();bx.arc(s.x,s.y,s.r,0,6.2832);
+bx.fillStyle='rgba(226,238,255,'+(s.a*(.55+.45*Math.sin(s.ph+s.tw)))+')';bx.fill()}
+bx.fillStyle='#070a14';
+for(const b of sky){bx.fillRect(b.x,H-b.h,b.w,b.h);
+for(let i=0;i<3;i++){const wy=H-b.h+8+i*9;
+if(Math.random()<.55){bx.fillStyle='rgba(255,214,140,'+rnd(.25,.6)+')';bx.fillRect(b.x+5+Math.random()*(b.w-12),wy,3,4)}}}
+bx.fillStyle='#0a0f1c';bx.fillRect(0,HZ,W,H-HZ);
+bx.strokeStyle='rgba(140,190,255,.12)';bx.lineWidth=1;
+for(let i=0;i<12;i++){const y=HZ+6+i*((H-HZ)/12);bx.beginPath();
+for(let x=0;x<=W;x+=16)bx.lineTo(x,y+Math.sin(x*.03+i*1.7)*1.6);bx.stroke()}
+}
+function boom(mag){if(muted)return;
+try{const ac=new (window.AudioContext||window.webkitAudioContext)();
+const n=ac.createBufferSource(),b=ac.createBuffer(1,ac.sampleRate*.5,ac.sampleRate),d=b.getChannelData(0);
+for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.2);
+n.buffer=b;const f=ac.createBiquadFilter();f.type='lowpass';f.frequency.value=420;
+const g=ac.createGain();g.gain.value=.16*mag;g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.5);
+n.connect(f);f.connect(g);g.connect(ac.destination);n.start();
+setTimeout(()=>ac.close(),700)}catch(e){}}
+function addP(o){if(parts.length>=MAXQ)return;parts.push(o)}
+function burst(x,y){const c1=PAL[(Math.random()*PAL.length)|0],c2=PAL[(Math.random()*PAL.length)|0];
+const type=mode;let n=0,sp=0,g=0,life=1,size=1.7,drag=.985;
+if(type===0){n=120;sp=rnd(1.4,7.2);g=.028;life=rnd(.9,1.5);size=1.8}
+else if(type===1){n=90;sp=6.2;g=.03;life=rnd(1,1.5);size=1.7}
+else if(type===2){n=86;sp=rnd(.9,4.2);g=.055;life=rnd(1.5,2.3);size=1.9}
+else if(type===3){n=130;sp=rnd(1.2,6.4);g=.03;life=rnd(1,1.6);size=1.8}
+else{n=150;sp=rnd(2,9);g=.02;life=rnd(.5,.9);size=1.4}
+const base=rnd(0,6.2832);
+for(let i=0;i<n;i++){let ang;
+if(type===1)ang=base+(i/n)*6.2832+rnd(-.03,.03);
+else if(type===4)ang=base+rnd(-.4,.4)+Math.floor(rnd(0,6))*(Math.PI/3);
+else ang=rnd(0,6.2832);
+const v=sp*rnd(.72,1.22),col=(type===3&&i%2)?c2:c1;
+addP({x,y,vx:Math.cos(ang)*v,vy:Math.sin(ang)*v,g,life:life*rnd(.65,1.25),ml:life*1.25,
+size:size*rnd(.7,1.4),r:col[0],gg:col[1],b:col[2],drag,tw:rnd(.15,1.2),tr:rnd(.35,.95)})}}
+function launch(tx,ty){launches++;rockets.push({x:tx,y:H+8,ty:ty||rnd(H*.12,H*.52),vy:-rnd(9.5,14),vx:rnd(-.5,.5),
+c:PAL[(Math.random()*PAL.length)|0],trail:[]})}
+function step(dt){
+for(let i=rockets.length-1;i>=0;i--){const r=rockets[i];
+r.trail.push({x:r.x,y:r.y});if(r.trail.length>9)r.trail.shift();
+r.x+=r.vx*dt*60;r.y+=r.vy*dt*60;
+if(r.y<=r.ty){burst(r.x,r.y);boom(1);rockets.splice(i,1)}}
+for(let i=parts.length-1;i>=0;i--){const p=parts[i];
+p.life-=dt;
+if(p.life<=0){parts.splice(i,1);continue}
+p.vy+=p.g*dt*60;p.vx*=p.drag;p.vy*=p.drag;
+p.x+=p.vx*dt*60;p.y+=p.vy*dt*60;p.tw-=dt;
+if(p.y>HZ*1.04){p.life-=dt*1.2}}
+}
+function paint(){cx.globalCompositeOperation='destination-out';
+cx.fillStyle='rgba(0,0,0,'+(0.19)+')';cx.fillRect(0,0,W,H);
+cx.globalCompositeOperation='lighter';
+for(const r of rockets){for(let i=0;i<r.trail.length;i++){const t=r.trail[i],f=i/r.trail.length;
+cx.fillStyle='rgba('+r.c[0]+','+r.c[1]+','+r.c[2]+','+(f*.85)+')';
+cx.beginPath();cx.arc(t.x,t.y,1.7*f+.5,0,6.2832);cx.fill()}
+cx.fillStyle='rgba(255,255,255,.95)';cx.beginPath();cx.arc(r.x,r.y,2.1,0,6.2832);cx.fill()}
+for(const p of parts){const a=Math.max(0,p.life/p.ml);
+if(a<=0)continue;
+const fl=p.tw>0?(0.55+0.45*Math.sin(p.tw*30)):1;
+const al=a*fl*(p.tr);
+const col=p.r+','+p.gg+','+p.b;
+cx.fillStyle='rgba('+col+','+al+')';
+cx.beginPath();cx.arc(p.x,p.y,p.size*a+.4,0,6.2832);cx.fill();
+if(p.y>HZ){const my=HZ-(p.y-HZ)*.42,ma=al*.24;
+cx.fillStyle='rgba('+col+','+ma+')';cx.beginPath();cx.arc(p.x,my,p.size*a*.9+.4,0,6.2832);cx.fill()}
+if(al>.5){cx.fillStyle='rgba(255,255,255,'+(al*.5)+')';
+cx.beginPath();cx.arc(p.x,p.y,p.size*a*.42,0,6.2832);cx.fill()}}
+cx.globalCompositeOperation='source-over'}
+function loop(t){const dt=Math.min(.05,(t-lastT)/1000);lastT=t;
+step(dt);paint();
+fps=fps*.92+(1/Math.max(dt,.001))*.08;
+if(t-lastShow>420){lastShow=t;$('pc').textContent=parts.length;$('fps').textContent=Math.round(fps);
+$('lc').textContent=launches;$('cap').textContent=MAXQ}
+requestAnimationFrame(loop)}
+let lastShow=0;
+function fire(ev){const x=ev.clientX,y=ev.clientY;launch(x,y);
+hint.classList.add('gone')}
+let lastDemo=-9999;
+function auto(){if(performance.now()-lastDemo<2600)return;lastDemo=performance.now();
+const x=rnd(W*.15,W*.85);launch(x,rnd(H*.1,H*.5));
+if(Math.random()<.5)setTimeout(()=>launch(rnd(W*.1,W*.9),rnd(H*.1,H*.45)),260)}
+addEventListener('pointerdown',e=>{if(e.target.closest('.btn'))return;fire(e)});
+addEventListener('resize',resize);
+$('mode').textContent=MODES[0];
+document.querySelector('.tip').addEventListener('click',()=>{mode=(mode+1)%MODES.length;$('mode').textContent=MODES[mode]});
+$('mute').addEventListener('click',()=>{muted=!muted;$('mute').textContent='音效：'+(muted?'关':'开')});
+resize();drawBG();requestAnimationFrame(loop);setInterval(auto,900);auto();
+setTimeout(()=>hint.classList.add('gone'),7000);
+</script>
+</body>
+</html>

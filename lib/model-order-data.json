@@ -1,6 +1,10 @@
 {
   "latestModels": [
+    "gemini-4-argon",
     "GPT-6.1-Sol",
+    "GPT-6-Astra",
+    "GPT-6-Sol",
+    "GPT-6Luna",
     "fable-5.1",
     "ox-alpha",
     "glm-5.3",
@@ -11,17 +15,24 @@
   ],
   "modelOrder": [
     "^GPT-6\\.1-Sol$",
+    "^GPT-6-Astra$",
+    "^GPT-6-Astra-v2$",
+    "^GPT-6-Sol$",
+    "^GPT-6Luna$",
     "^gpt-5\\.6-sol$",
     "^gpt-5\\.5$",
     "^gpt-5\\.4$",
     "^gpt-5\\.4-mini$",
     "^gpt-5\\.3-codex$",
+    "^Opus-5\\.5$",
     "^claude-opus-5$",
     "^sonnet-5\\.5$",
+    "^Haiku-5\\.5$",
     "^claude-opus-4-8$",
     "^claude-opus-4\\.6$",
     "^opus-4\\.7$",
     "^claude-sonnet-4-6$",
+    "^gemini-4-argon$",
     "^Gemini-3\\.1-Pro-High$",
     "^gemini-3\\.8-flash$",
     "^gemini-3\\.7-flash$",
@@ -46,6 +57,8 @@
     "^deepseek-v4-pro-GA$",
     "^deepseek-v4-pro-harness$",
     "^deepseek-v4-pro$",
+    "^deepseek-v4\\.1-flash$",
+    "^DeepSeek-V4\\.1-Flash-1017$",
     "^deepseek-v4-flash$",
     "^kimi-k3$",
     "^kimi-k2\\.7$",
@@ -54,10 +67,13 @@
     "^glm-5\\.2$",
     "^glm-5\\.1$",
     "^glm-5$",
+    "^Grok-4\\.7$",
     "^grok-4\\.6$",
     "^grok-4\\.5$",
     "^grok-4\\.3$",
     "^Seed-2\\.0-Pro$",
+    "^MiniMax-M3\\.1-Flash$",
+    "^MiniMax-M3\\.1-Flash-Preview$",
     "^minimax-m2\\.7$",
     "^minimax-portal-MiniMax-M2\\.5$",
     "^fable-5\\.1$",
@@ -66,19 +82,73 @@
     "^hunter-alpha$",
     "^ox-alpha$",
     "^hy4$",
-    "^muse-spark-1\\.3$"
+    "^muse-spark-1\\.3$",
+    "^mimo-v2\\.6-flash$",
+    "^mimo-v2\\.6-pro$",
+    "^step-5-preview$",
+    "^GPT-6\\.1-Sol-new$"
   ],
   "referenceGroups": [
-    ["^GPT-6\\.1-Sol$"],
-    ["^gpt-5\\.6-sol$", "^gpt-5\\.5$", "^gpt-5\\.4$", "^gpt-5\\.3-codex$"],
-    ["^claude-opus-5$", "^sonnet-5\\.5$", "^claude-opus-4-8$", "^claude-opus-4\\.6$", "^opus-4\\.7$", "^claude-sonnet-4-6$"],
-    ["^Gemini-3\\.1-Pro-High$", "^gemini-3\\.5-flash-high$"],
-    ["^qwen3\\.8-max-0902$", "^qwen3\\.8-max-new$", "^qwen3\\.8-max$", "^qwen3\\.8-max-pre$", "^qwen3\\.8-flash$", "^qwen-3\\.7-max$", "^qwen-3\\.6-plus$", "^qwen3\\.7-plus$"],
-    ["^deepseek-v4-pro-GA$", "^deepseek-v4-pro$", "^deepseek-v4-flash$"],
-    ["^kimi-k3$", "^kimi-k2\\.7$", "^kimi-k2\\.6$"],
-    ["^glm-5\\.3$", "^glm-5\\.2$", "^glm-5\\.1$", "^glm-5$"],
-    ["^Seed-2\\.0-Pro$"],
-    ["^minimax-m2\\.7$", "^minimax-portal-MiniMax-M2\\.5$"],
-    ["^fable-5\\.1$", "^fable-5$"]
+    [
+      "^GPT-6\\.1-Sol$"
+    ],
+    [
+      "^GPT-6-Sol$",
+      "^gpt-5\\.6-sol$",
+      "^gpt-5\\.5$",
+      "^gpt-5\\.4$",
+      "^gpt-5\\.3-codex$"
+    ],
+    [
+      "^Opus-5\\.5$",
+      "^claude-opus-5$",
+      "^sonnet-5\\.5$",
+      "^claude-opus-4-8$",
+      "^claude-opus-4\\.6$",
+      "^opus-4\\.7$",
+      "^claude-sonnet-4-6$"
+    ],
+    [
+      "^gemini-4-argon$",
+      "^Gemini-3\\.1-Pro-High$",
+      "^gemini-3\\.5-flash-high$"
+    ],
+    [
+      "^qwen3\\.8-max-0902$",
+      "^qwen3\\.8-max-new$",
+      "^qwen3\\.8-max$",
+      "^qwen3\\.8-max-pre$",
+      "^qwen3\\.8-flash$",
+      "^qwen-3\\.7-max$",
+      "^qwen-3\\.6-plus$",
+      "^qwen3\\.7-plus$"
+    ],
+    [
+      "^deepseek-v4-pro-GA$",
+      "^deepseek-v4-pro$",
+      "^deepseek-v4-flash$"
+    ],
+    [
+      "^kimi-k3$",
+      "^kimi-k2\\.7$",
+      "^kimi-k2\\.6$"
+    ],
+    [
+      "^glm-5\\.3$",
+      "^glm-5\\.2$",
+      "^glm-5\\.1$",
+      "^glm-5$"
+    ],
+    [
+      "^Seed-2\\.0-Pro$"
+    ],
+    [
+      "^minimax-m2\\.7$",
+      "^minimax-portal-MiniMax-M2\\.5$"
+    ],
+    [
+      "^fable-5\\.1$",
+      "^fable-5$"
+    ]
   ]
 }

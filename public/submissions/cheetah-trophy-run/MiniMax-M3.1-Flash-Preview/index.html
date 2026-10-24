@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>猎豹托举大力神杯冲刺 · Stoppage-Time Champions</title>
+<style>
+  :root{
+    --ink:#06080f;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;max-width:100%;overflow-x:hidden;}
+  body{
+    background:
+      radial-gradient(120% 90% at 50% 12%, #14203a 0%, #0a1020 45%, #05070e 100%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:clamp(6px,2.2vw,30px);
+    font-family:"Helvetica Neue",Helvetica,Arial,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  .poster{
+    width:100%;
+    max-width:720px;
+    min-width:0;
+    flex:0 1 auto;
+    position:relative;
+    filter:drop-shadow(0 26px 60px rgba(0,0,0,.62));
+  }
+  .poster::after{
+    content:"";
+    position:absolute;inset:-1px;
+    border:1px solid rgba(255,214,120,.28);
+    border-radius:4px;
+    pointer-events:none;
+  }
+  svg{display:block;width:100%;max-width:100%;height:auto;}
+
+  /* ---------- motion ---------- */
+  .anim-cheetah{animation:bob .46s ease-in-out infinite alternate;transform-origin:600px 1000px;}
+  @keyframes bob{
+    from{transform:translate(0px,7px) rotate(-.5deg);}
+    to{transform:translate(0px,-7px) rotate(.5deg);}
+  }
+  .speed-scroll{animation:scrollX 1.1s linear infinite;}
+  @keyframes scrollX{from{transform:translateX(0);}to{transform:translateX(-260px);}}
+  .ball-roll{animation:roll 2.6s linear infinite;transform-origin:1044px 1372px;}
+  @keyframes roll{from{transform:translate(0,0) rotate(0deg);}to{transform:translate(0,0) rotate(360deg);}}
+  .conf-a{animation:fallA 6.5s linear infinite;}
+  .conf-b{animation:fallB 8.2s linear infinite;}
+  .conf-c{animation:fallC 7.4s linear infinite;}
+  @keyframes fallA{
+    0%{transform:translate(0,-260px) rotate(0deg);opacity:0;}
+    8%{opacity:1;}
+    92%{opacity:1;}
+    100%{transform:translate(40px,1700px) rotate(760deg);opacity:0;}
+  }
+  @keyframes fallB{
+    0%{transform:translate(0,-300px) rotate(0deg);opacity:0;}
+    10%{opacity:.95;}
+    90%{opacity:.95;}
+    100%{transform:translate(-70px,1700px) rotate(-680deg);opacity:0;}
+  }
+  @keyframes fallC{
+    0%{transform:translate(0,-280px) rotate(0deg);opacity:0;}
+    12%{opacity:.9;}
+    88%{opacity:.9;}
+    100%{transform:translate(90px,1700px) rotate(920deg);opacity:0;}
+  }
+  .twinkle{animation:twinkle 2.6s ease-in-out infinite alternate;}
+  .twinkle.b{animation-duration:3.4s;animation-delay:-1.2s;}
+  .twinkle.c{animation-duration:2.1s;animation-delay:-.7s;}
+  @keyframes twinkle{from{opacity:.25;}to{opacity:1;}}
+  .beam-flicker{animation:flicker 5.2s ease-in-out infinite alternate;}
+  @keyframes flicker{from{opacity:.62;}to{opacity:.92;}}
+  .shine{animation:shine 3.4s ease-in-out infinite;}
+  @keyframes shine{
+    0%,100%{transform:translateX(-90px);opacity:0;}
+    40%{opacity:.9;}
+    60%{opacity:.9;}
+    100%{transform:translateX(150px);opacity:0;}
+  }
+  .clock-dot{animation:pulse 1s steps(2,end) infinite;}
+  @keyframes pulse{0%{opacity:1;}100%{opacity:.15;}}
+  .grass-sway{animation:sway 2.2s ease-in-out infinite alternate;transform-origin:600px 1320px;}
+  @keyframes sway{from{transform:skewX(-2.2deg);}to{transform:skewX(2.2deg);}}
+  .debris-fly{animation:debris 1.5s ease-out infinite;}
+  @keyframes debris{
+    0%{transform:translate(0,0) rotate(0deg);opacity:0;}
+    12%{opacity:1;}
+    100%{transform:translate(-260px,86px) rotate(-420deg);opacity:0;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .anim-cheetah,.speed-scroll,.ball-roll,.conf-a,.conf-b,.conf-c,
+    .twinkle,.beam-flicker,.shine,.clock-dot,.grass-sway,.debris-fly{animation:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="poster">
+<svg id="poster" viewBox="0 0 1200 1600" preserveAspectRatio="xMidYMid meet"
+     xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     role="img" aria-labelledby="posterTitle posterDesc">
+  <title id="posterTitle">猎豹托举大力神杯冲刺 · 决赛补时绝杀夺冠海报</title>
+  <desc id="posterDesc">一只拟人化猎豹在球场草皮上高速前倾奔跑，双前爪高举金色大力神杯（地球球体、双人托举轮廓、绿色底座），身后是残影与速度线、观众席、聚光灯、金色彩带；比分牌显示 90+7' 与 3:2，地面有一枚滚动的足球与草痕。</desc>
+
+<defs>
+  <!-- ===== gradients : sky / stadium ===== -->
+  <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0"    stop-color="#03060f"/>
+    <stop offset="0.34" stop-color="#0a1730"/>
+    <stop offset="0.62" stop-color="#12304a"/>
+    <stop offset="0.86" stop-color="#1d4c5c"/>
+    <stop offset="1"    stop-color="#2a6a6a"/>
+  </linearGradient>
+  <radialGradient id="gSkyGlow" cx="0.5" cy="0.92" r="0.72">
+    <stop offset="0"   stop-color="#5fe3d0" stop-opacity="0.34"/>
+    <stop offset="0.45" stop-color="#2b8fa8" stop-opacity="0.13"/>
+    <stop offset="1"   stop-color="#000000" stop-opacity="0"/>
+  </radialGradient>
+
+  <linearGradient id="gRoof" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0"   stop-color="#05070f"/>
+    <stop offset="0.6" stop-color="#0b1020"/>
+    <stop offset="1"   stop-color="#161b30"/>
+  </linearGradient>
+
+  <linearGradient id="gStandBase" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#2a1830"/>
+    <stop offset="1" stop-color="#0c0715"/>
+  </linearGradient>
+  <linearGradient id="gFascia" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0"   stop-color="#101a30"/>
+    <stop offset="0.5" stop-color="#0a1122"/>
+    <stop offset="1"   stop-color="#141d33"/>
+  </linearGradient>
+  <linearGradient id="gBannerGold2" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0"    stop-color="#fff3c8"/>
+    <stop offset="0.32" stop-color="#f4c95a"/>
+    <stop offset="1"    stop-color="#a8740d"/>
+  </linearGradient>
+
+  <!-- ===== gradients : pitch ===== -->
+  <linearGradient id="gPitch" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0"    stop-color="#2f8a4c"/>
+    <stop offset="0.10" stop-color="#1f6c3c"/>
+    <stop offset="0.42" stop-color="#135130"/>
+    <stop offset="1"    stop-color="#06240f"/>
+  </linearGradient>
+  <linearGradient id="gPitchLight" x1="0.1" y1="0" x2="0.9" y2="0.9">
+    <stop offset="0"   stop-color="#bff2c0" stop-opacity="0.22"/>
+    <stop offset="0.5" stop-color="#000000" stop-opacity="0"/>
+    <stop offset="1"   stop-color="#000000" stop-opacity="0.24"/>
+  </linearGradient>
+  <linearGradient id="gHaze" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0"   stop-color="#a9f0e4" stop-opacity="0"/>
+    <stop offset="1"   stop-color="#bff5ea" stop-opacity="0.42"/>
+  </linearGradient>
+
+  <!-- ===== gradients : cheetah ===== -->
+  <linearGradient id="gFur" x1="0.08" y1="0" x2="0.95" y2="0.92">
+    <stop offset="0"    stop-color="#ffe6a6"/>
+    <stop offset="0.22" stop-color="#f8cf74"/>
+    <stop offset="0.23" stop-color="#f3bd63"/>
+    <stop offset="0.55" stop-color="#dd9433"/>
+    <stop offset="0.82" stop-color="#b26a17"/>
+    <stop offset="1"    stop-color="#8a4d10"/>
+  </linearGradient>
+  <linearGradient id="gFurShade" x1="0.1" y1="0" x2="0.9" y2="1">
+    <stop offset="0"   stop-color="#c9a066"/>
+    <stop offset="0.5" stop-color="#a3763f"/>
+    <stop offset="1"   stop-color="#6d4a1f"/>
+  </linearGradient>
+  <linearGradient id="gBelly" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0"   stop-color="#fbeccd" stop-opacity="0.05"/>
+    <stop offset="0.45" stop-color="#fdf0d2" stop-opacity="0.72"/>
+    <stop offset="1"   stop-color="#f7e2b4" stop-opacity="0.9"/>
+  </linearGradient>
+  <linearGradient id="gHeadFur" x1="0.15" y1="0.05" x2="0.85" y2="0.95">
+    <stop offset="0"   stop-color="#ffeec0"/>
+    <stop offset="0.42" stop-color="#f6cc7a"/>
+    <stop offset="0.43" stop-color="#f0b95c"/>
+    <stop offset="1"   stop-color="#b06e1a"/>
+  </linearGradient>
+  <linearGradient id="gMuzzle" x1="0.2" y1="0" x2="0.8" y2="1">
+    <stop offset="0"   stop-color="#fff8e8"/>
+    <stop offset="1"   stop-color="#e9cf9d"/>
+  </linearGradient>
+  <linearGradient id="gEye" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0"   stop-color="#ffe98f"/>
+    <stop offset="0.5" stop-color="#ffbe2e"/>
+    <stop offset="1"   stop-color="#c07212"/>
+  </linearGradient>
+
+  <!-- ===== gradients : trophy ===== -->
+  <linearGradient id="gGold" x1="0.08" y1="0" x2="0.92" y2="1">
+    <stop offset="0"    stop-color="#fff8dc"/>
+    <stop offset="0.16" stop-color="#ffe294"/>
+    <stop offset="0.33" stop-color="#e8a52a"/>
+    <stop offset="0.47" stop-color="#fff6cd"/>
+    <stop offset="0.62" stop-color="#d38f16"/>
+    <stop offset="0.8"  stop-color="#8a5606"/>
+    <stop offset="1"    stop-color="#f2cf74"/>
+  </linearGradient>
+  <linearGradient id="gGoldSoft" x1="0.1" y1="0" x2="0.9" y2="1">
+    <stop offset="0"   stop-color="#ffe9ae"/>
+    <stop offset="0.5" stop-color="#d99b20"/>
+    <stop offset="1"   stop-color="#8d5b08"/>
+  </linearGradient>
+  <linearGradient id="gGoldEdge" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0"   stop-color="#6d4505"/>
+    <stop offset="0.5" stop-color="#ffeaa8"/>
+    <stop offset="1"   stop-color="#6d4505"/>
+  </linearGradient>
+  <linearGradient id="gBaseGreen" x1="0" y1="0.1" x2="1" y2="0.6">
+    <stop offset="0"    stop-color="#072b18"/>
+    <stop offset="0.22" stop-color="#1c7d4e"/>
+    <stop offset="0.44" stop-color="#33a96c"/>
+    <stop offset="0.62" stop-color="#146640"/>
+    <stop offset="0.84" stop-color="#0a3a22"/>
+    <stop offset="1"    stop-color="#042014"/>
+  </linearGradient>
+  <radialGradient id="gGlobe" cx="0.36" cy="0.28" r="0.82">
+    <stop offset="0"    stop-color="#fffaea"/>
+    <stop offset="0.22" stop-color="#ffe08e"/>
+    <stop offset="0.55" stop-color="#e3a227"/>
+    <stop offset="0.82" stop-color="#9b6409"/>
+    <stop offset="1"    stop-color="#f4d588"/>
+  </radialGradient>
+  <linearGradient id="gGlobeSheen" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0"   stop-color="#fff8dc" stop-opacity="0.85"/>
+    <stop offset="0.5" stop-color="#ffd166" stop-opacity="0.15"/>
+    <stop offset="1"   stop-color="#7a4e06" stop-opacity="0.35"/>
+  </linearGradient>
+
+  <!-- ===== gradients : misc ===== -->
+  <linearGradient id="gBeam" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0"    stop-color="#fff6d8" stop-opacity="0.30"/>
+    <stop offset="0.42" stop-color="#dff3ff" stop-opacity="0.11"/>
+    <stop offset="1"    stop-color="#bfe8ff" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="gLampGlow" cx="0.5" cy="0.5" r="0.5">
+    <stop offset="0"   stop-color="#fffbe8" stop-opacity="0.95"/>
+    <stop offset="0.45" stop-color="#ffeeb4" stop-opacity="0.4"/>
+    <stop offset="1"   stop-color="#ffd77a" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="gPanel" x1="0.1" y1="0" x2="0.9" y2="1">
+    <stop offset="0"   stop-color="#152a44"/>
+    <stop offset="0.45" stop-color="#0a1428"/>
+    <stop offset="1"   stop-color="#050a16"/>
+  </linearGradient>
+  <linearGradient id="gClockGlow" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0"   stop-color="#fff3b8"/>
+    <stop offset="0.5" stop-color="#ffc23c"/>
+    <stop offset="1"   stop-color="#ff8b18"/>
+  </linearGradient>
+  <radialGradient id="gBallShade" cx="0.34" cy="0.28" r="0.78">
+    <stop offset="0"    stop-color="#ffffff"/>
+    <stop offset="0.55" stop-color="#f2f6fb"/>
+    <stop offset="1"    stop-color="#aab6c6"/>
+  </radialGradient>
+  <radialGradient id="gVignette" cx="0.5" cy="0.46" r="0.78">
+    <stop offset="0.5" stop-color="#000000" stop-opacity="0"/>
+    <stop offset="0.82" stop-color="#02040a" stop-opacity="0.36"/>
+    <stop offset="1"    stop-color="#010206" stop-opacity="0.78"/>
+  </radialGradient>
+  <linearGradient id="gGoldText" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0"    stop-color="#fff8d8"/>
+    <stop offset="0.28" stop-color="#ffd463"/>
+    <stop offset="0.52" stop-color="#e09715"/>
+    <stop offset="0.74" stop-color="#ffc84d"/>
+    <stop offset="1"    stop-color="#8f5c08"/>
+  </linearGradient>
+
+  <!-- ===== patterns ===== -->
+  <pattern id="pSpots" width="132" height="132" patternUnits="userSpaceOnUse" patternTransform="rotate(-14)">
+    <circle cx="16"  cy="20"  r="8"    fill="#241107"/>
+    <circle cx="48"  cy="14"  r="6"    fill="#241107"/>
+    <circle cx="78"  cy="28"  r="9"    fill="#241107"/>
+    <circle cx="108" cy="16"  r="6.5"  fill="#241107"/>
+    <circle cx="120" cy="48"  r="5"    fill="#241107"/>
+    <circle cx="30"  cy="54"  r="7"    fill="#241107"/>
+    <circle cx="62"  cy="64"  r="5.5"  fill="#241107"/>
+    <circle cx="94"  cy="58"  r="8"    fill="#241107"/>
+    <circle cx="18"  cy="92"  r="6"    fill="#241107"/>
+    <circle cx="50"  cy="104" r="9"    fill="#241107"/>
+    <circle cx="82"  cy="90"  r="6"    fill="#241107"/>
+    <circle cx="112" cy="104" r="8.5"  fill="#241107"/>
+    <circle cx="122" cy="82"  r="5"    fill="#241107"/>
+    <circle cx="10"  cy="124" r="7.5"  fill="#241107"/>
+    <circle cx="70"  cy="126" r="6"    fill="#241107"/>
+  </pattern>
+
+  <pattern id="pCrowdFar" width="40" height="30" patternUnits="userSpaceOnUse">
+    <rect width="40" height="30" fill="#141024"/>
+    <circle cx="7"  cy="9"  r="4.4" fill="#251d35"/>
+    <circle cx="21" cy="11" r="4.8" fill="#2d2139"/>
+    <circle cx="34" cy="8"  r="4.2" fill="#1f1830"/>
+    <path d="M2 30 v-6 a5 5 0 0 1 10 0 v6z" fill="#2b1f37"/>
+    <path d="M16 30 v-6.5 a5.5 5.5 0 0 1 11 0 v6.5z" fill="#35263f"/>
+    <path d="M29 30 v-6 a5 5 0 0 1 10 0 v6z" fill="#251a31"/>
+  </pattern>
+  <pattern id="pCrowdMid" width="52" height="40" patternUnits="userSpaceOnUse">
+    <rect width="52" height="40" fill="#1a1024"/>
+    <circle cx="9"  cy="12" r="5.6" fill="#33203c"/>
+    <circle cx="27" cy="14" r="6.2" fill="#3d2543"/>
+    <circle cx="45" cy="11" r="5.4" fill="#2c1b36"/>
+    <path d="M1 40 v-9 a8 8 0 0 1 16 0 v9z" fill="#3a2340"/>
+    <path d="M18 40 v-10 a9 9 0 0 1 18 0 v10z" fill="#462a4a"/>
+    <path d="M37 40 v-9 a8 8 0 0 1 15 0 v9z" fill="#33203a"/>
+  </pattern>
+  <pattern id="pCrowdNear" width="66" height="52" patternUnits="userSpaceOnUse">
+    <rect width="66" height="52" fill="#22122a"/>
+    <circle cx="12" cy="16" r="7.2" fill="#42274a"/>
+    <circle cx="35" cy="18" r="8"   fill="#4e2c52"/>
+    <circle cx="58" cy="15" r="7"   fill="#3a2142"/>
+    <path d="M2 52 v-11 a10 10 0 0 1 20 0 v11z" fill="#4a2a4e"/>
+    <path d="M25 52 v-12 a11 11 0 0 1 22 0 v12z" fill="#57325a"/>
+    <path d="M48 52 v-11 a10 10 0 0 1 18 0 v11z" fill="#442652"/>
+  </pattern>
+  <pattern id="pFlash" width="173" height="97" patternUnits="userSpaceOnUse">
+    <rect x="20"  y="30" width="4" height="4" fill="#fff6cf" opacity="0.95"/>
+    <rect x="86"  y="12" width="3" height="3" fill="#e8f4ff" opacity="0.85"/>
+    <rect x="140" y="58" width="5" height="5" fill="#fff1b8" opacity="0.9"/>
+    <rect x="52"  y="76" width="3" height="3" fill="#cfe8ff" opacity="0.7"/>
+    <rect x="120" y="34" width="3" height="3" fill="#ffffff" opacity="0.8"/>
+  </pattern>
+
+  <!-- ===== filters ===== -->
+  <filter id="fSoft6" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur stdDeviation="6"/>
+  </filter>
+  <filter id="fSoft14" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur stdDeviation="14"/>
+  </filter>
+  <filter id="fSoft28" x="-45%" y="-45%" width="190%" height="190%">
+    <feGaussianBlur stdDeviation="28"/>
+  </filter>
+  <filter id="fGhost" x="-20%" y="-20%" width="150%" height="150%">
+    <feGaussianBlur stdDeviation="5"/>
+  </filter>
+  <filter id="fShadow" x="-30%" y="-60%" width="160%" height="220%">
+    <feGaussianBlur stdDeviation="11"/>
+  </filter>
+  <filter id="fGlowGold" x="-60%" y="-60%" width="220%" height="220%">
+    <feGaussianBlur stdDeviation="5" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="fGlowSoft" x="-60%" y="-60%" width="220%" height="220%">
+    <feGaussianBlur stdDeviation="3" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="fTrophyBloom" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="9" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+
+  <!-- ===== reusable grass blades ===== -->
+  <g id="bladeA" fill="currentColor">
+    <path d="M0 0 C -5 -20 -12 -36 -18 -52 C -8 -40 -2 -20 2 0 Z"/>
+  </g>
+  <g id="bladeB" fill="currentColor">
+    <path d="M0 0 C 3 -22 9 -40 16 -58 C 10 -38 5 -18 2 0 Z"/>
+  </g>
+  <g id="bladeC" fill="currentColor">
+    <path d="M0 0 C -2 -14 -4 -28 -3 -40 C 2 -28 4 -14 3 0 Z"/>
+  </g>
+  <g id="clod">
+    <path d="M0 0 L 9 -5 L 15 3 L 8 11 L -3 9 Z" fill="#1c5e2c"/>
+    <path d="M0 0 L 9 -5 L 6 3 Z" fill="#2f8a44"/>
+  </g>
+  <g id="ribbon">
+    <path d="M0 0 C 6 14 -6 26 0 40 L 7 38 C 2 26 12 14 7 0 Z" fill="currentColor"/>
+  </g>
+  <g id="chip">
+    <rect x="-6" y="-2.4" width="12" height="4.8" rx="1.4" fill="currentColor"/>
+  </g>
+
+  <!-- ===== simplified silhouette reused as speed after-images ===== -->
+    <g id="ghostBody">
+    <path fill="currentColor" d="M287 365 C254 350 220 332 184 319 C148 303 104 278 62 267
+      C20 256 -20 252 -55 259 C-78 264 -98 282 -108 308 C-116 316 -122 320 -128 320
+      C-124 330 -116 330 -108 326 C-92 316 -68 294 -41 281 C-10 268 26 272 58 297
+      C96 318 134 332 168 353 C202 372 236 392 265 407 Z"/>
+    <path fill="currentColor" d="M424 300 C430 262 436 220 442 180 L466 104 L486 96 L494 112
+      L474 122 L466 194 L456 302 Z"/>
+    <path fill="currentColor" d="M268 400 C318 372 380 316 450 262 C486 236 512 214 522 190
+      C530 172 526 150 510 150 C492 150 482 170 478 192 C472 232 486 280 496 318
+      C508 358 492 392 458 406 C424 418 368 428 320 440 C292 446 266 424 268 400 Z"/>
+    <path fill="currentColor" d="M266 420 L392 508 L344 578 L414 560 L418 590 L326 608
+      L306 578 L350 520 Z"/>
+    <path fill="currentColor" d="M262 404 L182 556 L78 596 L74 564 L168 514 L236 386 Z"/>
+    <path fill="currentColor" d="M462 180 C518 146 592 156 630 198 C650 220 646 254 620 262
+      C562 276 492 268 458 250 Z"/>
+    <ellipse cx="681" cy="192" rx="78" ry="68" fill="currentColor"/>
+    <path fill="currentColor" d="M704 168 C748 158 782 182 786 214 C788 242 756 258 714 250 Z"/>
+    <path fill="currentColor" d="M610 100 L623 74 L645 96 Z"/>
+    <path fill="currentColor" d="M676 84 L689 60 L706 84 Z"/>
+    <path fill="currentColor" d="M462 288 C470 250 480 210 490 176 L546 88 L578 78
+      L592 98 L562 110 L522 190 L500 294 Z"/>
+    <path fill="currentColor" d="M476 120 L592 120 L582 44 C578 26 562 12 534 -4
+      C506 12 490 26 486 44 Z"/>
+    <circle cx="534" cy="-123" r="65" fill="currentColor"/>
+  </g>
+</defs>
+
+<!-- ============================================================= -->
+<!-- LAYER 1 · SKY + STADIUM SHELL -->
+<!-- ============================================================= -->
+<g id="layer-sky">
+  <rect x="0" y="0" width="1200" height="900" fill="url(#gSky)"/>
+  <rect x="0" y="0" width="1200" height="900" fill="url(#gSkyGlow)"/>
+  <!-- distant city / ad-board glow -->
+  <ellipse cx="600" cy="888" rx="700" ry="90" fill="#6ff0d8" opacity="0.13" filter="url(#fSoft28)"/>
+</g>
+
+<g id="layer-roof">
+  <path d="M0 168 L1200 168 L1200 316 C 900 288 300 288 0 316 Z" fill="url(#gRoof)"/>
+  <g stroke="#2a3350" stroke-width="3" opacity="0.75" fill="none">
+    <path d="M0 250 L1200 250"/>
+    <path d="M0 282 C 300 256 900 256 1200 282"/>
+    <path d="M60 172 L30 314 M180 172 L162 310 M300 172 L288 302 M420 172 L416 296
+             M540 172 L540 292 M660 172 L664 296 M780 172 L784 302 M900 172 L912 310
+             M1020 172 L1038 314 M1140 172 L1170 316"/>
+    <path d="M0 200 L1200 200 M0 228 L1200 228" opacity="0.5"/>
+  </g>
+  <path d="M0 316 C 300 288 900 288 1200 316 L1200 330 C 900 302 300 302 0 330 Z" fill="#070b18"/>
+</g>
+
+<!-- ============================================================= -->
+<!-- LAYER 2 · CROWD STANDS -->
+<!-- ============================================================= -->
+<g id="layer-stands">
+  <rect x="0" y="318" width="1200" height="470" fill="url(#gStandBase)"/>
+  <!-- tier dividers + stepped rows -->
+  <g>
+    <rect x="0" y="322" width="1200" height="96"  fill="url(#pCrowdFar)"/>
+    <rect x="0" y="418" width="1200" height="132" fill="url(#pCrowdMid)"/>
+    <rect x="0" y="550" width="1200" height="168" fill="url(#pCrowdNear)"/>
+  </g>
+  <!-- terrace steps -->
+  <g fill="#000000" opacity="0.34">
+    <rect x="0" y="404" width="1200" height="16"/>
+    <rect x="0" y="536" width="1200" height="18"/>
+    <rect x="0" y="704" width="1200" height="18"/>
+  </g>
+  <g fill="#c9a227" opacity="0.16">
+    <rect x="0" y="398" width="1200" height="4"/>
+    <rect x="0" y="530" width="1200" height="4"/>
+    <rect x="0" y="698" width="1200" height="4"/>
+  </g>
+  <!-- phone flashes -->
+  <rect x="0" y="318" width="1200" height="406" fill="url(#pFlash)" opacity="0.5" class="twinkle"/>
+  <g class="twinkle b" opacity="0.7">
+    <circle cx="184" cy="452" r="3.4" fill="#fff4cf"/>
+    <circle cx="702" cy="392" r="3"   fill="#eaf6ff"/>
+    <circle cx="1042" cy="500" r="3.6" fill="#fff1b8"/>
+    <circle cx="446" cy="640" r="3"   fill="#ffffff"/>
+  </g>
+  <g class="twinkle c" opacity="0.65">
+    <circle cx="322" cy="600" r="3.2" fill="#dcefff"/>
+    <circle cx="888" cy="618" r="3.2" fill="#fff6d8"/>
+    <circle cx="1170" cy="420" r="3"  fill="#ffffff"/>
+  </g>
+  <!-- champion banner draped over the front rail -->
+  <g id="champion-banner">
+    <path d="M0 700 L1200 700 L1200 760 C 900 742 300 742 0 760 Z" fill="url(#gFascia)"/>
+    <path d="M0 704 L1200 704 L1200 726 C 900 712 300 712 0 726 Z" fill="url(#gBannerGold2)"/>
+    <g fill="#5b3c05" opacity="0.85" font-size="19" font-weight="700" letter-spacing="9" text-anchor="middle">
+      <text x="150" y="722">CHAMPIONS</text>
+      <text x="450" y="720">STOPPAGE TIME</text>
+      <text x="780" y="720">FINAL</text>
+      <text x="1050" y="722">CHAMPIONS</text>
+    </g>
+  </g>
+</g>
+
+<!-- ============================================================= -->
+<!-- LAYER 3 · FLOODLIGHTS + BEAM LIGHTING -->
+<!-- ============================================================= -->
+<g id="layer-floodlights">
+  <!-- light cones -->
+  <g class="beam-flicker" style="mix-blend-mode:screen">
+    <path d="M34 84 L250 84 L930 930 L-70 930 Z" fill="url(#gBeam)" filter="url(#fSoft14)"/>
+    <path d="M950 84 L1166 84 L1270 930 L270 930 Z" fill="url(#gBeam)" filter="url(#fSoft14)"/>
+    <ellipse cx="330" cy="300" rx="300" ry="150" fill="#bfe6ff" opacity="0.07" filter="url(#fSoft28)"/>
+    <ellipse cx="880" cy="300" rx="300" ry="150" fill="#ffe9b0" opacity="0.06" filter="url(#fSoft28)"/>
+  </g>
+
+  <!-- left tower -->
+  <g id="floodlight-left">
+    <g stroke="#0d1426" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.95">
+      <path d="M126 92 L112 344"/>
+      <path d="M154 92 L170 344"/>
+      <path d="M112 150 L168 178 L110 208 L170 238 L108 270 L172 302 L106 334"/>
+    </g>
+    <ellipse cx="140" cy="60" rx="180" ry="86" fill="url(#gLampGlow)" opacity="0.55"/><rect x="24" y="34" width="232" height="52" rx="8" fill="#080d1c" stroke="#243050" stroke-width="3"/>
+    <g fill="#fff8dc">
+      <circle cx="52"  cy="50" r="10"/><circle cx="92"  cy="50" r="10"/><circle cx="132" cy="50" r="10"/>
+      <circle cx="172" cy="50" r="10"/><circle cx="212" cy="50" r="10"/>
+      <circle cx="52"  cy="72" r="10"/><circle cx="92"  cy="72" r="10"/><circle cx="132" cy="72" r="10"/>
+      <circle cx="172" cy="72" r="10"/><circle cx="212" cy="72" r="10"/>
+    </g>
+    <g fill="#fff8dc" opacity="0.5" filter="url(#fSoft6)">
+      <circle cx="92"  cy="72" r="12"/><circle cx="172" cy="50" r="12"/><circle cx="52" cy="72" r="12"/>
+    </g>
+  </g>
+
+  <!-- right tower -->
+  <g id="floodlight-right">
+    <g stroke="#0d1426" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.95">
+      <path d="M1046 92 L1030 344"/>
+      <path d="M1074 92 L1090 344"/>
+      <path d="M1030 150 L1096 178 L1028 208 L1090 238 L1026 270 L1094 302 L1024 334"/>
+    </g>
+    <ellipse cx="1060" cy="60" rx="180" ry="86" fill="url(#gLampGlow)" opacity="0.55"/><rect x="944" y="34" width="232" height="52" rx="8" fill="#080d1c" stroke="#243050" stroke-width="3"/>
+    <g fill="#fff8dc">
+      <circle cx="972" cy="50" r="10"/><circle cx="1012" cy="50" r="10"/><circle cx="1052" cy="50" r="10"/>
+      <circle cx="1092" cy="50" r="10"/><circle cx="1132" cy="50" r="10"/>
+      <circle cx="972" cy="72" r="10"/><circle cx="1012" cy="72" r="10"/><circle cx="1052" cy="72" r="10"/>
+      <circle cx="1092" cy="72" r="10"/><circle cx="1132" cy="72" r="10"/>
+    </g>
+    <g fill="#fff8dc" opacity="0.5" filter="url(#fSoft6)">
+      <circle cx="1012" cy="72" r="12"/><circle cx="1092" cy="50" r="12"/><circle cx="972" cy="72" r="12"/>
+    </g>
+  </g>
+</g>
+
+<!-- ============================================================= -->
+<!-- LAYER 4 · HOARDINGS + HORIZON HAZE -->
+<!-- ============================================================= -->
+<g id="layer-haze">
+  <rect x="0" y="742" width="1200" height="158" fill="url(#gHaze)" opacity="0.55"/>
+  <rect x="0" y="828" width="1200" height="72" fill="url(#gHaze)"/>
+</g>
+<g id="layer-hoardings">
+  <rect x="0" y="784" width="1200" height="96" fill="#070c1a"/>
+  <rect x="0" y="784" width="1200" height="6" fill="#f6c95a" opacity="0.5"/>
+  <!-- generic invented advertising panels (no real brands) -->
+  <g opacity="0.92">
+    <rect x="18"   y="798" width="150" height="66" fill="#12203c" stroke="#c9a227" stroke-width="2"/>
+    <path d="M46 848 L72 818 L98 848 L72 836 Z" fill="#e8b13c"/>
+    <rect x="192" y="798" width="196" height="66" fill="#1a1030" stroke="#6fd6c4" stroke-width="2"/>
+    <g fill="#6fd6c4" opacity="0.8">
+      <rect x="212" y="812" width="12" height="38"/>
+      <rect x="234" y="804" width="12" height="46"/>
+      <rect x="256" y="820" width="12" height="30"/>
+      <rect x="278" y="810" width="12" height="40"/>
+      <rect x="300" y="824" width="12" height="26"/>
+      <rect x="322" y="816" width="12" height="34"/>
+    </g>
+    <rect x="412" y="798" width="176" height="66" fill="#2a1420" stroke="#ff9a4a" stroke-width="2"/>
+    <path d="M436 852 L500 812 L500 824 L456 852 Z" fill="#ff9a4a"/>
+    <circle cx="534" cy="826" r="16" fill="none" stroke="#ff9a4a" stroke-width="4"/>
+    <rect x="612" y="798" width="150" height="66" fill="#101c34" stroke="#e8e2d0" stroke-width="2"/>
+    <g fill="#e8e2d0" opacity="0.85">
+      <rect x="632" y="816" width="110" height="6"/>
+      <rect x="632" y="830" width="76"  height="6"/>
+      <rect x="632" y="844" width="94"  height="6"/>
+    </g>
+    <rect x="786" y="798" width="196" height="66" fill="#241206" stroke="#ffd166" stroke-width="2"/>
+    <path d="M806 848 l18 -34 l18 34 z" fill="#ffd166"/>
+    <path d="M850 848 l18 -34 l18 34 z" fill="#ff9a4a"/>
+    <path d="M894 848 l18 -34 l18 34 z" fill="#ffd166"/>
+    <rect x="1006" y="798" width="176" height="66" fill="#0e2130" stroke="#8fe3ff" stroke-width="2"/>
+    <path d="M1030 848 C1050 806 1090 806 1110 848 Z" fill="#8fe3ff" opacity="0.85"/>
+    <circle cx="1070" cy="816" r="12" fill="#fff6cf"/>
+  </g>
+  <rect x="0" y="862" width="1200" height="18" fill="#04110a"/>
+</g>
+
+<!-- ============================================================= -->
+<!-- LAYER 5 · PITCH -->
+<!-- ============================================================= -->
+<g id="layer-pitch">
+  <rect x="0" y="880" width="1200" height="720" fill="url(#gPitch)"/>
+  <!-- mow stripes converging to vanishing point (600,872) -->
+  <g id="mow-stripes">
+    <path d="M557 900 L660 900 L2120 1600 L1400 1600 Z" fill="#ffffff" opacity="0.055"/>
+    <path d="M481 900 L557 900 L1400 1600 L680 1600 Z" fill="#000000" opacity="0.11"/>
+    <path d="M660 900 L739 900 L2120 1600 L1400 1600 Z" fill="#ffffff" opacity="0.055"/>
+    <path d="M739 900 L795 900 L2120 1600 L2120 1600 Z" fill="#000000" opacity="0.11"/>
+    <path d="M405 900 L481 900 L680 1600 L-80 1600 Z" fill="#ffffff" opacity="0.055"/>
+    <path d="M795 900 L843 900 L2900 1600 L2120 1600 Z" fill="#000000" opacity="0.11"/>
+  </g>
+  <!-- pitch lighting wash -->
+  <rect x="0" y="880" width="1200" height="720" fill="url(#gPitchLight)"/>
+  <!-- markings -->
+  <g id="pitch-lines" stroke="#f2f7ee" fill="none" opacity="0.3">
+    <path d="M-40 1292 L1240 1292" stroke-width="6"/>
+    <path d="M-40 1400 L1240 1400" stroke-width="4" opacity="0.6"/>
+    <path d="M900 1600 L1014 1152 L1420 1152" stroke-width="5"/>
+    <path d="M60 1600 L-30 1180" stroke-width="4" opacity="0.55"/>
+    <ellipse cx="600" cy="1206" rx="330" ry="58" stroke-width="4" opacity="0.45"/>
+  </g>
+  <!-- far shadow band right under the hoardings -->
+  <rect x="0" y="880" width="1200" height="86" fill="#03160c" opacity="0.5"/>
+  <rect x="0" y="880" width="1200" height="70" fill="#9df0d8" opacity="0.08"/>
+</g>
+
+<!-- ============================================================= -->
+<!-- LAYER 6 · GROUND SHADOW + GRASS SCUFFS -->
+<!-- ============================================================= -->
+<g id="layer-ground-shadow">
+  <ellipse cx="470" cy="1216" rx="330" ry="38" fill="#02150a" opacity="0.55" filter="url(#fShadow)"/>
+  <ellipse cx="470" cy="1212" rx="440" ry="52" fill="#bff2c0" opacity="0.07" filter="url(#fSoft28)"/>
+  <ellipse cx="1048" cy="1424" rx="126" ry="20" fill="#02150a" opacity="0.5"  filter="url(#fSoft6)"/>
+</g>
+
+<g id="layer-grass-scuffs">
+  <!-- torn turf where the cheetah pushed off -->
+  <g opacity="0.95">
+    <path d="M214 1232 C 262 1214 320 1212 372 1222 C 330 1230 288 1236 250 1248 Z" fill="#0a3a1c"/>
+    <path d="M236 1252 C 280 1238 336 1238 392 1252 C 340 1258 290 1258 250 1250 Z" fill="#0d4a23"/>
+    <path d="M268 1218 C 316 1200 372 1202 414 1216 C 372 1216 330 1214 296 1224 Z" fill="#126030" opacity="0.8"/>
+  </g>
+  <!-- kicked-up turf clods + dirt flying backwards -->
+  <g class="debris-fly">
+    <use xlink:href="#clod" href="#clod" transform="translate(392 1216) rotate(-24) scale(1.25)"/>
+    <use xlink:href="#clod" href="#clod" transform="translate(356 1192) rotate(40) scale(1)"/>
+    <use xlink:href="#clod" href="#clod" transform="translate(318 1236) rotate(-10) scale(0.9)"/>
+    <use xlink:href="#clod" href="#clod" transform="translate(288 1180) rotate(72) scale(0.75)"/>
+    <use xlink:href="#chip" href="#chip" transform="translate(404 1246) rotate(-30) scale(1.1)"/>
+    <use xlink:href="#chip" href="#chip" transform="translate(340 1262) rotate(18) scale(0.85)"/>
+  </g>
+  <g class="debris-fly" style="animation-delay:-0.6s">
+    <use xlink:href="#clod" href="#clod" transform="translate(360 1150) rotate(16) scale(0.8)"/>
+    <use xlink:href="#clod" href="#clod" transform="translate(300 1128) rotate(-40) scale(0.62)"/>
+    <use xlink:href="#chip" href="#chip" transform="translate(268 1170) rotate(52) scale(0.7)"/>
+  </g>
+  <!-- bent grass around the impact zone -->
+  <g class="grass-sway" style="color:#1d7a3e">
+    <use xlink:href="#bladeA" href="#bladeA" transform="translate(268 1244) rotate(-42) scale(1.15)"/>
+    <use xlink:href="#bladeB" href="#bladeB" transform="translate(310 1252) rotate(-30) scale(1.05)"/>
+    <use xlink:href="#bladeC" href="#bladeC" transform="translate(352 1246) rotate(-52) scale(1.2)"/>
+    <use xlink:href="#bladeA" href="#bladeA" transform="translate(398 1256) rotate(-18) scale(1)"/>
+  </g>
+  <!-- spray of fine dirt -->
+  <g fill="#c7b184" opacity="0.5">
+    <circle cx="372" cy="1188" r="3.2"/><circle cx="336" cy="1168" r="2.6"/>
+    <circle cx="300" cy="1196" r="2.2"/><circle cx="412" cy="1200" r="2.8"/>
+    <circle cx="262" cy="1156" r="2.2"/><circle cx="430" cy="1232" r="3"/>
+  </g>
+</g>
+
+<!-- ============================================================= -->
+<!-- LAYER 7 · SPEED LINES + AFTER-IMAGES -->
+<!-- ============================================================= -->
+<g id="layer-speed-lines" opacity="0.95">
+  <g class="speed-scroll">
+    <g id="speed-stripe-set">
+      <!-- x pattern repeats every 260px from -260 to 1460 -->
+      <g opacity="0.9">
+        <path d="M-260 986 h250 l-24 6 h-250 z" fill="#bfe9ff" opacity="0.5"/>
+        <path d="M0 986 h180 l-18 6 h-180 z" fill="#bfe9ff" opacity="0.5"/>
+        <path d="M260 986 h250 l-24 6 h-250 z" fill="#bfe9ff" opacity="0.5"/>
+        <path d="M520 986 h180 l-18 6 h-180 z" fill="#bfe9ff" opacity="0.5"/>
+        <path d="M780 986 h250 l-24 6 h-250 z" fill="#bfe9ff" opacity="0.5"/>
+        <path d="M1040 986 h180 l-18 6 h-180 z" fill="#bfe9ff" opacity="0.5"/>
+        <path d="M1300 986 h160 l-16 6 h-160 z" fill="#bfe9ff" opacity="0.5"/>
+      </g>
+      <g opacity="0.85">
+        <path d="M-260 1044 h220 l-20 5 h-220 z" fill="#ffd77a" opacity="0.55"/>
+        <path d="M0 1044 h200 l-20 5 h-200 z" fill="#ffd77a" opacity="0.55"/>
+        <path d="M260 1044 h220 l-20 5 h-220 z" fill="#ffd77a" opacity="0.55"/>
+        <path d="M520 1044 h150 l-16 5 h-150 z" fill="#ffd77a" opacity="0.55"/>
+        <path d="M780 1044 h220 l-20 5 h-220 z" fill="#ffd77a" opacity="0.55"/>
+        <path d="M1040 1044 h200 l-20 5 h-200 z" fill="#ffd77a" opacity="0.55"/>
+        <path d="M1300 1044 h170 l-18 5 h-170 z" fill="#ffd77a" opacity="0.55"/>
+      </g>
+      <g opacity="0.8">
+        <path d="M-260 1102 h190 l-18 5 h-190 z" fill="#e6f6ff" opacity="0.45"/>
+        <path d="M0 1102 h160 l-16 5 h-160 z" fill="#e6f6ff" opacity="0.45"/>
+        <path d="M260 1102 h190 l-18 5 h-190 z" fill="#e6f6ff" opacity="0.45"/>
+        <path d="M520 1102 h210 l-20 5 h-210 z" fill="#e6f6ff" opacity="0.45"/>
+        <path d="M780 1102 h160 l-16 5 h-160 z" fill="#e6f6ff" opacity="0.45"/>
+        <path d="M1040 1102 h190 l-18 5 h-190 z" fill="#e6f6ff" opacity="0.45"/>
+        <path d="M1300 1102 h150 l-16 5 h-150 z" fill="#e6f6ff" opacity="0.45"/>
+      </g>
+      <g opacity="0.75">
+        <path d="M-260 1160 h260 l-24 6 h-260 z" fill="#8fe3ff" opacity="0.5"/>
+        <path d="M0 1160 h230 l-22 6 h-230 z" fill="#8fe3ff" opacity="0.5"/>
+        <path d="M260 1160 h260 l-24 6 h-260 z" fill="#8fe3ff" opacity="0.5"/>
+        <path d="M520 1160 h210 l-20 6 h-210 z" fill="#8fe3ff" opacity="0.5"/>
+        <path d="M780 1160 h260 l-24 6 h-260 z" fill="#8fe3ff" opacity="0.5"/>
+        <path d="M1040 1160 h230 l-22 6 h-230 z" fill="#8fe3ff" opacity="0.5"/>
+      </g>
+      <g opacity="0.7">
+        <path d="M-260 1220 h300 l-28 7 h-300 z" fill="#ffe6a6" opacity="0.42"/>
+        <path d="M40 1220 h280 l-26 7 h-280 z" fill="#ffe6a6" opacity="0.42"/>
+        <path d="M320 1220 h300 l-28 7 h-300 z" fill="#ffe6a6" opacity="0.42"/>
+        <path d="M620 1220 h240 l-24 7 h-240 z" fill="#ffe6a6" opacity="0.42"/>
+        <path d="M860 1220 h300 l-28 7 h-300 z" fill="#ffe6a6" opacity="0.42"/>
+      </g>
+      <g opacity="0.65">
+        <path d="M-260 1274 h210 l-20 5 h-210 z" fill="#a8ffd0" opacity="0.4"/>
+        <path d="M0 1274 h190 l-18 5 h-190 z" fill="#a8ffd0" opacity="0.4"/>
+        <path d="M260 1274 h210 l-20 5 h-210 z" fill="#a8ffd0" opacity="0.4"/>
+        <path d="M520 1274 h180 l-18 5 h-180 z" fill="#a8ffd0" opacity="0.4"/>
+      </g>
+    </g>
+  </g>
+  <!-- long blurred wash to sell velocity -->
+  <g filter="url(#fSoft14)" opacity="0.32">
+    <path d="M0 1120 C 200 1090 420 1080 620 1108 L620 1196 C 400 1160 200 1152 0 1180 Z" fill="#5fd6ff"/>
+  </g>
+</g>
+
+<g id="layer-after-images" transform="translate(225 560) scale(1.06)" filter="url(#fGhost)">
+  <use xlink:href="#ghostBody" href="#ghostBody" transform="translate(-306 24)" color="#39b6e8" opacity="0.16"/>
+  <use xlink:href="#ghostBody" href="#ghostBody" transform="translate(-208 14)" color="#5cd0f2" opacity="0.21"/>
+  <use xlink:href="#ghostBody" href="#ghostBody" transform="translate(-120 7)"  color="#8fe3ff" opacity="0.27"/>
+  <use xlink:href="#ghostBody" href="#ghostBody" transform="translate(-52 0)"   color="#ffd98a" opacity="0.25"/>
+</g>
+
+<!-- ============================================================= -->
+<!-- LAYER 8 · SUBJECT : THE CHEETAH -->
+<!-- ============================================================= -->
+<g id="layer-subject" class="anim-cheetah">
+  <g id="cheetah" transform="translate(225 560) scale(1.06)">
+
+    <!-- = 8a. TAIL : long, streaming back, forms the motion arc = -->
+    <g id="cheetah-tail" transform="translate(0 20)">
+      <path id="tail-shape"
+            d="M287 345 C254 330 220 312 184 299 C148 283 104 258 62 247
+               C20 236 -20 232 -55 239 C-78 244 -98 262 -108 288
+               C-116 296 -122 300 -128 300 C-124 310 -116 310 -108 306
+               C-92 296 -68 274 -41 261 C-10 248 26 252 58 277
+               C96 298 134 312 168 333 C202 352 236 372 265 387 Z"
+            fill="url(#gFur)" stroke="#2b1405" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M287 345 C254 330 220 312 184 299 C148 283 104 258 62 247
+               C20 236 -20 232 -55 239 C-78 244 -98 262 -108 288
+               C-116 296 -122 300 -128 300 C-124 310 -116 310 -108 306
+               C-92 296 -68 274 -41 261 C-10 248 26 252 58 277
+               C96 298 134 312 168 333 C202 352 236 372 265 387 Z"
+            fill="url(#pSpots)" opacity="0.92"/>
+      <path d="M-104 272 C-134 272 -160 288 -176 312 C-150 296 -128 294 -104 302 Z" fill="#1c0d03"/>
+      <path d="M272 344 C240 326 210 310 180 297 C144 280 102 256 60 245"
+            fill="none" stroke="#ffe9b4" stroke-width="5" opacity="0.5" stroke-linecap="round"/>
+    </g>
+
+    <!-- = 8b. FAR HIND LEG : recovery phase, folded up under the belly = -->
+    <g id="hind-leg-far" stroke-linecap="round" stroke-linejoin="round">
+      <g stroke="#2b1405" fill="none">
+        <path d="M296 434 L376 516" stroke-width="72"/>
+        <path d="M376 516 L328 562" stroke-width="46"/>
+        <path d="M328 562 L390 546" stroke-width="30"/>
+      </g>
+      <g stroke="url(#gFurShade)" fill="none">
+        <path d="M296 434 L376 516" stroke-width="62"/>
+        <path d="M376 516 L328 562" stroke-width="36"/>
+        <path d="M328 562 L390 546" stroke-width="20"/>
+      </g>
+      <g stroke="url(#pSpots)" fill="none" opacity="0.8">
+        <path d="M296 434 L376 516" stroke-width="62"/>
+        <path d="M376 516 L328 562" stroke-width="36"/>
+      </g>
+      <g transform="rotate(-12 400 548)">
+        <ellipse cx="400" cy="548" rx="27" ry="19" fill="url(#gFurShade)" stroke="#2b1405" stroke-width="9"/>
+        <g fill="#f4dfb4" opacity="0.75">
+          <ellipse cx="392" cy="554" rx="9" ry="5"/>
+          <ellipse cx="406" cy="552" rx="8" ry="4.4"/>
+          <ellipse cx="418" cy="549" rx="6" ry="3.6"/>
+        </g>
+      </g>
+    </g>
+
+    <!-- = 8c. FAR FRONT ARM : raised, supports the cup from behind = -->
+    <g id="arm-far" stroke-linecap="round" stroke-linejoin="round">
+      <g stroke="#2b1405" fill="none">
+        <path d="M446 278 L462 176" stroke-width="58"/>
+        <path d="M462 176 L478 102" stroke-width="42"/>
+      </g>
+      <g stroke="url(#gFurShade)" fill="none">
+        <path d="M446 278 L462 176" stroke-width="48"/>
+        <path d="M462 176 L478 102" stroke-width="32"/>
+      </g>
+      <g stroke="url(#pSpots)" fill="none" opacity="0.78">
+        <path d="M452 272 L470 172" stroke-width="48"/>
+        <path d="M470 172 L486 100" stroke-width="32"/>
+      </g>
+      <ellipse cx="476" cy="90" rx="23" ry="19" fill="url(#gFurShade)" stroke="#2b1405" stroke-width="9"/>
+    </g>
+
+    <!-- = 8d. TORSO : 39 degree forward lean, deep chest, slim rear = -->
+    <g id="cheetah-torso">
+      <path id="torso-shape"
+            d="M268 400 C318 372 380 316 450 262 C486 236 512 214 522 190
+               C530 172 526 150 510 150 C492 150 482 170 478 192
+               C472 232 486 280 496 318 C508 358 492 392 458 406
+               C424 418 368 428 320 440 C292 446 266 424 268 400 Z"
+            fill="url(#gFur)" stroke="#2b1405" stroke-width="13" stroke-linejoin="round"/>
+      <path d="M268 400 C318 372 380 316 450 262 C486 236 512 214 522 190
+               C530 172 526 150 510 150 C492 150 482 170 478 192
+               C472 232 486 280 496 318 C508 358 492 392 458 406
+               C424 418 368 428 320 440 C292 446 266 424 268 400 Z"
+            fill="url(#pSpots)" opacity="0.95"/>
+      <!-- pale belly, tucked up toward the chest -->
+      <path d="M306 418 C346 424 408 414 452 396 C478 386 494 366 498 344
+               C504 374 490 402 458 414 C412 432 344 444 306 418 Z"
+            fill="url(#gBelly)"/>
+      <!-- deep chest highlight -->
+      <path d="M462 268 C492 252 508 300 506 340 C504 376 488 398 464 410
+               C478 372 476 306 462 268 Z" fill="#ffe6a6" opacity="0.2"/>
+      <!-- haunch : teardrop aligned with the drive-leg axis -->
+      <path d="M330 400 C366 390 396 414 398 452 C400 490 374 524 336 534
+               C298 544 262 526 250 494 C236 456 288 412 330 400 Z"
+            fill="url(#gFur)" opacity="0.97" stroke="#2b1405" stroke-width="7" stroke-linejoin="round"/>
+      <path d="M330 400 C366 390 396 414 398 452 C400 490 374 524 336 534
+               C298 544 262 526 250 494 C236 456 288 412 330 400 Z"
+            fill="url(#pSpots)" opacity="0.9"/>
+      <!-- hip crease : separates thigh from body -->
+      <path d="M282 452 C300 434 324 424 348 426" fill="none" stroke="#2b1405"
+            stroke-width="9" stroke-linecap="round" opacity="0.7"/>
+      <!-- muscle tension -->
+      <g fill="none" stroke="#8a4d10" stroke-width="5" stroke-linecap="round" opacity="0.48">
+        <path d="M300 424 C328 408 356 412 372 432"/>
+        <path d="M300 470 C326 458 350 462 364 478"/>
+        <path d="M296 508 C320 500 342 504 356 514"/>
+      </g>
+      <!-- rim lights -->
+      <path d="M272 398 C322 370 382 314 450 260 C484 235 510 213 520 190"
+            fill="none" stroke="#ffedbe" stroke-width="6" opacity="0.62" stroke-linecap="round"/>
+      <path d="M498 244 C502 280 502 318 494 352"
+            fill="none" stroke="#a9e6ff" stroke-width="5" opacity="0.5" stroke-linecap="round"/>
+    </g>
+
+    <!-- = 8e. NECK = -->
+    <g id="cheetah-neck">
+      <path d="M462 180 C518 146 592 156 630 198 C650 220 646 254 620 262
+               C562 276 492 268 458 250 Z"
+            fill="url(#gFur)" stroke="#2b1405" stroke-width="13" stroke-linejoin="round"/>
+      <path d="M462 180 C518 146 592 156 630 198 C650 220 646 254 620 262
+               C562 276 492 268 458 250 Z"
+            fill="url(#pSpots)" opacity="0.8"/>
+      <path d="M474 182 C526 154 590 164 624 200"
+            fill="none" stroke="#ffedbe" stroke-width="5" opacity="0.45" stroke-linecap="round"/>
+    </g>
+
+    <!-- = 8f. NEAR HIND LEG : drive leg, heel high, toe pushing off = -->
+    <g id="hind-leg-near" stroke-linecap="round" stroke-linejoin="round">
+      <g stroke="#2b1405" fill="none">
+        <path d="M290 442 L206 534" stroke-width="86"/>
+        <path d="M206 534 L150 566" stroke-width="50"/>
+        <path d="M150 566 L104 582" stroke-width="34"/>
+      </g>
+      <g stroke="url(#gFur)" fill="none">
+        <path d="M290 442 L206 534" stroke-width="74"/>
+        <path d="M206 534 L150 566" stroke-width="38"/>
+        <path d="M150 566 L104 582" stroke-width="24"/>
+      </g>
+      <g stroke="url(#pSpots)" fill="none" opacity="0.92">
+        <path d="M290 442 L206 534" stroke-width="74"/>
+        <path d="M206 534 L150 566" stroke-width="38"/>
+        <path d="M150 566 L104 582" stroke-width="24"/>
+      </g>
+      <g transform="rotate(-24 94 590)">
+        <ellipse cx="94" cy="590" rx="31" ry="22" fill="url(#gFur)" stroke="#2b1405" stroke-width="10"/>
+        <g fill="#f6e3ba" opacity="0.85">
+          <ellipse cx="81" cy="598" rx="8" ry="5"/>
+          <ellipse cx="96" cy="600" rx="8" ry="5"/>
+          <ellipse cx="111" cy="596" rx="7" ry="4.4"/>
+        </g>
+        <path d="M71 580 C60 574 54 580 58 588" fill="none" stroke="#2b1405" stroke-width="5" stroke-linecap="round"/>
+        <path d="M119 580 C130 574 136 580 132 588" fill="none" stroke="#2b1405" stroke-width="5" stroke-linecap="round"/>
+      </g>
+      <g fill="none" stroke="#8a4d10" stroke-width="4" stroke-linecap="round" opacity="0.5">
+        <path d="M276 416 L198 512"/>
+        <path d="M184 546 L142 562"/>
+      </g>
+      <path d="M262 410 C226 448 198 492 182 532"
+            fill="none" stroke="#ffedbe" stroke-width="5" opacity="0.42" stroke-linecap="round"/>
+    </g>
+
+    <!-- = 8g. HEAD : feline skull, rounded ears, black tear marks = -->
+    <g id="cheetah-head" transform="translate(622 224) rotate(-18) scale(1.2)">
+      <path d="M10 -52 C10 -82 20 -100 33 -99 C43 -98 45 -80 41 -58 C32 -48 18 -48 10 -52 Z"
+            fill="url(#gHeadFur)" stroke="#2b1405" stroke-width="10" stroke-linejoin="round"/>
+      <path d="M19 -55 C21 -78 28 -92 35 -91 C40 -90 39 -74 36 -60 C30 -54 23 -53 19 -55 Z" fill="#7a3c17"/>
+      <path d="M58 -54 C63 -84 76 -98 89 -94 C98 -90 96 -72 91 -54 C81 -47 67 -47 58 -54 Z"
+            fill="url(#gHeadFur)" stroke="#2b1405" stroke-width="10" stroke-linejoin="round"/>
+      <path d="M67 -57 C71 -79 79 -92 87 -90 C91 -88 89 -73 85 -60 C79 -54 71 -54 67 -57 Z" fill="#7a3c17"/>
+      <path id="skull-shape"
+            d="M-26 -8 C-26 -40 -4 -60 26 -60 C56 -60 80 -46 94 -22
+               C104 -6 116 8 122 18 C128 28 122 42 108 46
+               C90 52 64 52 44 48 C22 44 2 32 -10 18 C-22 6 -26 -2 -26 -8 Z"
+            fill="url(#gHeadFur)" stroke="#2b1405" stroke-width="12" stroke-linejoin="round"/>
+      <path d="M-26 -8 C-26 -40 -4 -60 26 -60 C56 -60 80 -46 94 -22
+               C104 -6 116 8 122 18 C128 28 122 42 108 46
+               C90 52 64 52 44 48 C22 44 2 32 -10 18 C-22 6 -26 -2 -26 -8 Z"
+            fill="url(#pSpots)" opacity="0.5"/>
+      <path d="M74 -8 C96 -12 118 2 128 18 C134 30 126 44 110 48
+               C92 52 72 46 62 34 C52 22 56 2 74 -8 Z"
+            fill="url(#gMuzzle)" opacity="0.95"/>
+      <g fill="url(#gHeadFur)" stroke="#2b1405" stroke-width="5" stroke-linejoin="round">
+        <path d="M28 46 L20 62 L36 54 Z"/>
+        <path d="M46 52 L42 68 L56 58 Z"/>
+      </g>
+      <path d="M110 12 C120 10 130 16 130 24 C130 32 120 38 110 36
+               C102 34 98 26 100 20 C102 15 106 13 110 12 Z" fill="#2b1405"/>
+      <path d="M106 16 C112 14 118 17 119 21 C114 20 109 19 106 16 Z" fill="#6b3a12" opacity="0.8"/>
+      <path d="M110 40 C102 46 88 47 78 42" fill="none" stroke="#2b1405" stroke-width="5" stroke-linecap="round"/>
+      <path d="M80 42 C76 34 80 28 88 26" fill="none" stroke="#2b1405" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+      <!-- BLACK TEAR MARKS : the cheetah signature -->
+      <path d="M58 -10 C64 6 68 18 72 32 C75 40 76 44 74 46
+               C68 34 62 20 56 6 C53 0 52 -6 54 -12 Z" fill="#1a0c03"/>
+      <path d="M82 -8 C88 6 92 18 96 30 C99 38 100 43 98 45
+               C92 32 86 18 80 4 C77 -2 76 -8 78 -12 Z" fill="#1a0c03" opacity="0.85"/>
+      <path d="M36 -20 C44 -26 58 -26 66 -20" fill="none" stroke="#1a0c03" stroke-width="4"
+            stroke-linecap="round" opacity="0.5"/>
+      <path d="M40 -30 C52 -38 68 -38 78 -30" fill="none" stroke="#8a4d10" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+      <g id="eyes">
+        <ellipse cx="48" cy="-14" rx="13" ry="11" fill="url(#gEye)" stroke="#2b1405" stroke-width="4"/>
+        <ellipse cx="48" cy="-14" rx="4.2" ry="9.5" fill="#180d04"/>
+        <circle cx="44" cy="-18" r="3.4" fill="#ffffff" opacity="0.92"/>
+        <ellipse cx="78" cy="-12" rx="11" ry="10" fill="url(#gEye)" stroke="#2b1405" stroke-width="4"/>
+        <ellipse cx="78" cy="-12" rx="3.6" ry="8.6" fill="#180d04"/>
+        <circle cx="74" cy="-16" r="3" fill="#ffffff" opacity="0.9"/>
+      </g>
+      <g stroke="#3a2110" stroke-width="2.6" fill="none" opacity="0.7" stroke-linecap="round">
+        <path d="M110 28 C132 24 148 24 162 28"/>
+        <path d="M110 36 C132 36 148 40 160 46"/>
+        <path d="M110 22 C130 14 146 12 158 14"/>
+      </g>
+      <path d="M-24 -20 C-12 -46 12 -60 38 -58 C60 -56 80 -44 92 -26"
+            fill="none" stroke="#fff0c6" stroke-width="5" opacity="0.55" stroke-linecap="round"/>
+    </g>
+
+    <!-- = 8h. THE TROPHY : golden cup, two-figure support, globe, green base = -->
+    <g id="trophy" transform="translate(534 120) scale(0.76)">
+      <g id="trophy-base">
+        <path d="M-76 -104 C-78 -76 -72 -40 -56 -6 C-54 -2 -50 0 -46 0
+                 L46 0 C50 0 54 -2 56 -6 C72 -40 78 -76 76 -104 Z"
+              fill="url(#gBaseGreen)" stroke="#04200f" stroke-width="6" stroke-linejoin="round"/>
+        <g stroke="#4fd69a" stroke-width="4" opacity="0.4" fill="none">
+          <path d="M-70 -88 C-40 -94 40 -94 70 -88"/>
+          <path d="M-68 -66 C-38 -72 38 -72 68 -66"/>
+          <path d="M-64 -44 C-36 -50 36 -50 64 -44"/>
+          <path d="M-58 -24 C-32 -30 32 -30 58 -24"/>
+        </g>
+        <path d="M-60 -6 C-56 -2 -52 0 -46 0 L46 0 C52 0 56 -2 60 -6
+                 C62 -12 62 -18 61 -22 L-61 -22 C-62 -18 -62 -12 -60 -6 Z"
+              fill="url(#gGoldSoft)" stroke="#6d4505" stroke-width="3"/>
+        <rect x="-78" y="-108" width="156" height="12" rx="5" fill="url(#gGoldSoft)" stroke="#6d4505" stroke-width="3"/>
+        <path d="M-64 -102 L64 -102" stroke="#fff0b8" stroke-width="3" opacity="0.55"/>
+      </g>
+
+      <!-- two human figures, back to back, arms raised in a V holding the globe -->
+      <g id="trophy-figures">
+        <path id="figure-half"
+              d="M0 -214 C-12 -216 -25 -226 -34 -240 C-45 -251 -56 -256 -67 -262
+                 C-76 -267 -83 -274 -81 -283 C-79 -292 -68 -296 -59 -292
+                 C-51 -288 -51 -279 -57 -275 C-64 -271 -66 -264 -61 -258
+                 C-55 -250 -47 -244 -39 -238 C-33 -233 -30 -227 -29 -221
+                 C-33 -199 -36 -178 -34 -158 C-32 -138 -29 -118 -26 -104 L0 -104 Z"
+              fill="url(#gGold)" stroke="#6d4505" stroke-width="5" stroke-linejoin="round"/>
+        <use xlink:href="#figure-half" href="#figure-half" transform="scale(-1 1)"/>
+        <circle cx="-17" cy="-224" r="12" fill="url(#gGold)" stroke="#6d4505" stroke-width="4.5"/>
+        <circle cx="17"  cy="-224" r="12" fill="url(#gGold)" stroke="#6d4505" stroke-width="4.5"/>
+        <g fill="#7a4e06" opacity="0.5">
+          <path d="M-39 -238 C-46 -232 -50 -224 -50 -214 C-46 -220 -42 -228 -37 -234 Z"/>
+          <path d="M39 -238 C46 -232 50 -224 50 -214 C46 -220 42 -228 37 -234 Z"/>
+          <path d="M-67 -262 C-72 -266 -76 -272 -76 -279 C-72 -274 -69 -268 -65 -265 Z"/>
+          <path d="M67 -262 C72 -266 76 -272 76 -279 C72 -274 69 -268 65 -265 Z"/>
+        </g>
+        <g stroke="#7a4e06" stroke-width="3.4" fill="none" opacity="0.72" stroke-linecap="round">
+          <path d="M0 -208 L0 -104"/>
+          <path d="M-24 -196 C-27 -172 -28 -138 -26 -110"/>
+          <path d="M24 -196 C27 -172 28 -138 26 -110"/>
+          <path d="M-40 -246 C-54 -256 -66 -266 -74 -278"/>
+          <path d="M40 -246 C54 -256 66 -266 74 -278"/>
+          <path d="M-30 -158 C-18 -152 -6 -150 0 -150"/>
+          <path d="M30 -158 C18 -152 6 -150 0 -150"/>
+        </g>
+        <g fill="#ffe9ae" stroke="#6d4505" stroke-width="3" opacity="0.95">
+          <path d="M-81 -283 C-74 -295 -60 -298 -55 -289 C-64 -285 -71 -283 -79 -279 Z"/>
+          <path d="M81 -283 C74 -295 60 -298 55 -289 C64 -285 71 -283 79 -279 Z"/>
+        </g>
+      </g>
+
+      <g id="trophy-globe">
+        <circle cx="0" cy="-320" r="85" fill="url(#gGlobe)" stroke="#6d4505" stroke-width="6"/>
+        <g fill="none" stroke="#8a5606" stroke-width="3.4" opacity="0.65">
+          <ellipse cx="0" cy="-320" rx="85" ry="28"/>
+          <ellipse cx="0" cy="-320" rx="85" ry="58"/>
+          <ellipse cx="0" cy="-320" rx="32" ry="85" transform="rotate(-8 0 -320)"/>
+          <ellipse cx="0" cy="-320" rx="63" ry="85" transform="rotate(-8 0 -320)"/>
+          <path d="M-85 -320 L85 -320"/>
+        </g>
+        <g fill="#a26d0d" opacity="0.5">
+          <path d="M-46 -352 C-24 -364 4 -358 18 -344 C6 -338 -10 -342 -22 -336 C-36 -330 -52 -338 -46 -352 Z"/>
+          <path d="M8 -308 C28 -318 54 -312 64 -296 C50 -288 30 -292 18 -284 C6 -292 -2 -300 8 -308 Z"/>
+          <path d="M-60 -292 C-46 -300 -30 -296 -26 -284 C-34 -272 -52 -270 -62 -280 Z"/>
+        </g>
+        <ellipse cx="-26" cy="-352" rx="26" ry="16" transform="rotate(-28 -26 -352)"
+                 fill="#fffbe8" opacity="0.62" filter="url(#fSoft6)"/>
+        <circle cx="-38" cy="-368" r="6" fill="#ffffff" opacity="0.85"/>
+        <path d="M-85 -320 A85 85 0 0 1 85 -320 C60 -344 -60 -344 -85 -320 Z"
+              fill="url(#gGlobeSheen)" opacity="0.5"/>
+      </g>
+    </g>
+
+    <!-- = 8i. NEAR FRONT ARM : in front of the cup, paws grip the base = -->
+    <g id="arm-near" stroke-linecap="round" stroke-linejoin="round">
+      <g stroke="#2b1405" fill="none">
+        <path d="M490 258 L516 168" stroke-width="64"/>
+        <path d="M516 168 L546 96" stroke-width="48"/>
+      </g>
+      <g stroke="url(#gFur)" fill="none">
+        <path d="M490 258 L516 168" stroke-width="52"/>
+        <path d="M516 168 L546 96" stroke-width="36"/>
+      </g>
+      <g stroke="url(#pSpots)" fill="none" opacity="0.9">
+        <path d="M490 258 L516 168" stroke-width="52"/>
+        <path d="M516 168 L546 96" stroke-width="36"/>
+      </g>
+      <path d="M486 226 C512 226 536 246 542 272 C520 268 498 254 486 240 Z"
+            fill="url(#gFur)" stroke="#8a4d10" stroke-width="4" opacity="0.9"/>
+      <path d="M496 190 C512 198 524 216 530 234" fill="none" stroke="#8a4d10" stroke-width="4" opacity="0.5" stroke-linecap="round"/>
+      <path d="M484 238 C492 212 500 188 510 170" fill="none" stroke="#ffedbe" stroke-width="5" opacity="0.45" stroke-linecap="round"/>
+      <!-- paw wrapped over the near rim of the cup base -->
+      <g transform="translate(576 84) rotate(-10)">
+        <ellipse cx="0" cy="0" rx="29" ry="23" fill="url(#gFur)" stroke="#2b1405" stroke-width="10"/>
+        <path d="M-21 -13 C-33 -7 -35 4 -29 12" fill="none" stroke="#2b1405" stroke-width="6" stroke-linecap="round"/>
+        <path d="M-23 2 C-35 6 -37 16 -31 21" fill="none" stroke="#2b1405" stroke-width="6" stroke-linecap="round"/>
+        <path d="M-23 17 C-33 25 -31 32 -23 34" fill="none" stroke="#2b1405" stroke-width="6" stroke-linecap="round"/>
+        <g fill="#f6e3ba" opacity="0.85">
+          <ellipse cx="-15" cy="-6" rx="6" ry="4"/>
+          <ellipse cx="-17" cy="9" rx="6" ry="4"/>
+          <ellipse cx="-15" cy="22" rx="5.5" ry="3.6"/>
+        </g>
+      </g>
+      <!-- far paw fingers peeking over the far rim -->
+      <g transform="translate(484 102) rotate(8)">
+        <path d="M-2 -21 C10 -25 20 -19 20 -9" fill="none" stroke="#2b1405" stroke-width="7" stroke-linecap="round"/>
+        <path d="M0 -5 C14 -9 24 -1 22 9" fill="none" stroke="#2b1405" stroke-width="7" stroke-linecap="round"/>
+        <path d="M0 13 C12 11 20 19 16 27" fill="none" stroke="#2b1405" stroke-width="7" stroke-linecap="round"/>
+      </g>
+    </g>
+
+    <!-- = 8j. rim light unifying the subject = -->
+    <g id="cheetah-rimlight" style="mix-blend-mode:screen">
+      <path d="M287 345 C254 330 220 312 184 299 C148 283 104 258 62 247 C20 236 -20 232 -55 239"
+            fill="none" stroke="#8fe3ff" stroke-width="4" opacity="0.4" stroke-linecap="round"/>
+      <path d="M742 196 C756 168 762 142 762 124" fill="none" stroke="#bfe9ff" stroke-width="4" opacity="0.35" stroke-linecap="round"/>
+    </g>
+  </g>
+</g>
+
+<!-- ============================================================= -->
+<!-- LAYER 9 · TROPHY HIGHLIGHT (bloom + sparkles + moving shine) -->
+<!-- ============================================================= -->
+<g id="layer-trophy-highlight" transform="translate(534 120) scale(0.76)" style="mix-blend-mode:screen">
+  <g class="shine">
+    <path d="M-150 -420 L-60 -420 L30 -90 L-30 -90 Z" fill="#fff6cf" opacity="0.4" filter="url(#fSoft14)"/>
+  </g>
+  <g filter="url(#fTrophyBloom)" opacity="0.75">
+    <ellipse cx="-34" cy="-352" rx="30" ry="17" transform="rotate(-30 -34 -352)" fill="#fffdf0"/>
+    <circle cx="0" cy="-320" r="96" fill="none" stroke="#ffe9ae" stroke-width="5" opacity="0.45"/>
+  </g>
+  <g id="sparkles" filter="url(#fGlowSoft)">
+    <path d="M-96 -352 L-90 -338 L-76 -332 L-90 -326 L-96 -312 L-102 -326 L-116 -332 L-102 -338 Z" fill="#fffbe8" opacity="0.95"/>
+    <path d="M92 -292 L96 -280 L108 -276 L96 -272 L92 -260 L88 -272 L76 -276 L88 -280 Z" fill="#fffbe8" opacity="0.8"/>
+    <path d="M-16 -418 L-20 -406 L-32 -402 L-20 -398 L-16 -386 L-12 -398 L0 -402 L-12 -406 Z" fill="#fffbe8" opacity="0.9"/>
+    <circle cx="118" cy="-352" r="4.5" fill="#fffdf0" opacity="0.85"/>
+    <circle cx="-118" cy="-268" r="4"   fill="#fffdf0" opacity="0.8"/>
+    <circle cx="46"  cy="-248" r="3.4" fill="#fffdf0" opacity="0.7"/>
+  </g>
+</g>
+
+<!-- ============================================================= -->
+<!-- LAYER 10 · FOREGROUND GRASS + DEBRIS -->
+<!-- ============================================================= -->
+<g id="layer-debris-front">
+  <!-- grass tufts, foreground -->
+  <g style="color:#1b6b39">
+    <use xlink:href="#bladeA" href="#bladeA" transform="translate(66 1332) scale(1.6)"/>
+    <use xlink:href="#bladeB" href="#bladeB" transform="translate(118 1352) scale(1.5)"/>
+    <use xlink:href="#bladeC" href="#bladeC" transform="translate(162 1330) scale(1.4)"/>
+    <use xlink:href="#bladeA" href="#bladeA" transform="translate(214 1362) scale(1.7)"/>
+    <use xlink:href="#bladeB" href="#bladeB" transform="translate(262 1340) scale(1.45)"/>
+    <use xlink:href="#bladeC" href="#bladeC" transform="translate(316 1368) scale(1.6)"/>
+    <use xlink:href="#bladeA" href="#bladeA" transform="translate(430 1348) scale(1.5)"/>
+    <use xlink:href="#bladeB" href="#bladeB" transform="translate(492 1372) scale(1.7)"/>
+    <use xlink:href="#bladeC" href="#bladeC" transform="translate(552 1342) scale(1.4)"/>
+    <use xlink:href="#bladeB" href="#bladeB" transform="translate(640 1362) scale(1.6)"/>
+    <use xlink:href="#bladeA" href="#bladeA" transform="translate(716 1340) scale(1.5)"/>
+    <use xlink:href="#bladeC" href="#bladeC" transform="translate(790 1370) scale(1.65)"/>
+    <use xlink:href="#bladeA" href="#bladeA" transform="translate(1146 1352) scale(1.55)"/>
+    <use xlink:href="#bladeB" href="#bladeB" transform="translate(1092 1374) scale(1.5)"/>
+  </g>
+  <g style="color:#2c8f4c">
+    <use xlink:href="#bladeB" href="#bladeB" transform="translate(92 1348) scale(1.9)"/>
+    <use xlink:href="#bladeA" href="#bladeA" transform="translate(188 1380) scale(2.1)"/>
+    <use xlink:href="#bladeC" href="#bladeC" transform="translate(288 1392) scale(1.9)"/>
+    <use xlink:href="#bladeB" href="#bladeB" transform="translate(372 1378) scale(2.2)"/>
+    <use xlink:href="#bladeA" href="#bladeA" transform="translate(470 1398) scale(2)"/>
+    <use xlink:href="#bladeC" href="#bladeC" transform="translate(600 1384) scale(2.1)"/>
+    <use xlink:href="#bladeA" href="#bladeA" transform="translate(688 1400) scale(2.2)"/>
+    <use xlink:href="#bladeB" href="#bladeB" transform="translate(846 1386) scale(1.95)"/>
+    <use xlink:href="#bladeC" href="#bladeC" transform="translate(960 1404) scale(2.15)"/>
+    <use xlink:href="#bladeA" href="#bladeA" transform="translate(1160 1392) scale(2)"/>
+  </g>
+  <g style="color:#0f4a26" opacity="0.85">
+    <use xlink:href="#bladeC" href="#bladeC" transform="translate(40 1420) scale(2.4)"/>
+    <use xlink:href="#bladeA" href="#bladeA" transform="translate(240 1436) scale(2.6)"/>
+    <use xlink:href="#bladeB" href="#bladeB" transform="translate(452 1424) scale(2.4)"/>
+    <use xlink:href="#bladeC" href="#bladeC" transform="translate(760 1440) scale(2.6)"/>
+    <use xlink:href="#bladeA" href="#bladeA" transform="translate(1044 1428) scale(2.4)"/>
+  </g>
+  <!-- a few loose blades and specks of turf -->
+  <g fill="#2f8a44" opacity="0.8">
+    <path d="M300 1270 C288 1258 284 1248 288 1240 C296 1248 302 1258 304 1268 Z"/>
+    <path d="M520 1300 C508 1286 504 1276 508 1268 C516 1278 522 1288 524 1298 Z"/>
+    <path d="M760 1266 C748 1254 744 1244 748 1236 C756 1246 762 1256 764 1264 Z"/>
+    <path d="M940 1312 C928 1298 924 1288 928 1280 C936 1290 942 1300 944 1310 Z"/>
+  </g>
+  <g fill="#1d6b34" opacity="0.7">
+    <ellipse cx="150" cy="1450" rx="26" ry="6"/>
+    <ellipse cx="560" cy="1490" rx="34" ry="7"/>
+    <ellipse cx="880" cy="1462" rx="22" ry="5"/>
+    <ellipse cx="1120" cy="1502" rx="30" ry="6"/>
+  </g>
+</g>
+
+<!-- ============================================================= -->
+<!-- LAYER 11 · ROLLING FOOTBALL -->
+<!-- ============================================================= -->
+<g id="layer-football">
+  <!-- motion streak -->
+  <g opacity="0.5" filter="url(#fSoft6)">
+    <path d="M700 1364 L1010 1350 L1016 1392 L706 1398 Z" fill="#cfe6ff" opacity="0.35"/>
+    <path d="M760 1384 L1000 1374 L1002 1394 L762 1402 Z" fill="#9fd4f0" opacity="0.28"/>
+  </g>
+  <g class="ball-roll" transform="translate(1048 1362) scale(1.16) translate(-1044 -1372)">
+    <circle cx="1044" cy="1372" r="44" fill="url(#gBallShade)" stroke="#0b1119" stroke-width="5"/>
+    <g clip-path="none">
+      <!-- classic 5-panel layout -->
+      <path d="M1044 1336 L1076 1356 L1066 1392 L1022 1392 L1012 1356 Z" fill="#2f3f54"/>
+      <path d="M1002 1360 L1012 1350 L1012 1384 L990 1392 L982 1372 Z" fill="#2f3f54"/>
+      <path d="M1086 1360 L1078 1348 L1078 1384 L1100 1390 L1108 1370 Z" fill="#2f3f54"/>
+      <path d="M1024 1328 L1040 1326 L1046 1348 L1028 1360 L1010 1346 Z" fill="#43566d"/>
+      <path d="M1080 1330 L1092 1346 L1078 1362 L1060 1350 L1058 1326 Z" fill="#43566d"/>
+    </g>
+    <!-- seams -->
+    <g fill="none" stroke="#0d141c" stroke-width="2.6" opacity="0.8">
+      <path d="M1012 1356 L1022 1392"/>
+      <path d="M1076 1356 L1066 1392"/>
+      <path d="M1022 1392 L1066 1392"/>
+      <path d="M1012 1356 L1076 1356"/>
+    </g>
+    <!-- specular + contact shade -->
+    <ellipse cx="1030" cy="1350" rx="17" ry="11" transform="rotate(-28 1030 1350)" fill="#ffffff" opacity="0.72"/>
+    <path d="M1044 1328 A44 44 0 0 1 1088 1372 L1044 1372 Z" fill="#20304a" opacity="0.12"/>
+  </g>
+  <!-- bounce dust -->
+  <g fill="#bcd4e8" opacity="0.45">
+    <ellipse cx="1000" cy="1406" rx="18" ry="5"/>
+    <ellipse cx="1074" cy="1414" rx="12" ry="4"/>
+  </g>
+</g>
+
+<!-- ============================================================= -->
+<!-- LAYER 12 · GOLD STREAMERS + CONFETTI -->
+<!-- ============================================================= -->
+<g id="layer-confetti">
+  <!-- long S streamers -->
+  <g opacity="0.9">
+    <path d="M120 300 C168 336 150 392 196 430 C238 464 224 512 262 546"
+          fill="none" stroke="url(#gGoldText)" stroke-width="12" stroke-linecap="round"/>
+    <path d="M1044 262 C1096 306 1072 358 1120 396 C1164 432 1150 486 1192 522"
+          fill="none" stroke="url(#gGoldText)" stroke-width="12" stroke-linecap="round"/>
+    <path d="M604 214 C648 250 632 306 676 344 C714 378 700 428 736 464"
+          fill="none" stroke="#ffd9e2" stroke-width="10" stroke-linecap="round" opacity="0.8"/>
+    <path d="M300 200 C338 232 326 284 364 318 C398 348 386 396 420 430"
+          fill="none" stroke="#8fe3ff" stroke-width="9" stroke-linecap="round" opacity="0.7"/>
+    <path d="M872 190 C914 226 900 278 940 314 C974 344 962 392 996 428"
+          fill="none" stroke="#ffd166" stroke-width="9" stroke-linecap="round" opacity="0.75"/>
+  </g>
+
+  <!-- falling chips -->
+  <g>
+    <g class="conf-a" style="color:#ffd166"><use xlink:href="#chip" href="#chip" transform="translate(96 260) scale(1.3) rotate(24)"/></g>
+    <g class="conf-b" style="color:#ffffff"><use xlink:href="#chip" href="#chip" transform="translate(238 220) scale(1.1) rotate(-18)"/></g>
+    <g class="conf-c" style="color:#ff9ec7"><use xlink:href="#chip" href="#chip" transform="translate(388 268) scale(1.25) rotate(40)"/></g>
+    <g class="conf-a" style="animation-delay:-2.1s;color:#8fe3ff"><use xlink:href="#chip" href="#chip" transform="translate(530 232) scale(1.2) rotate(12)"/></g>
+    <g class="conf-b" style="animation-delay:-3.4s;color:#ffd166"><use xlink:href="#chip" href="#chip" transform="translate(690 258) scale(1.35) rotate(-30)"/></g>
+    <g class="conf-c" style="animation-delay:-1.6s;color:#ffffff"><use xlink:href="#chip" href="#chip" transform="translate(826 226) scale(1.15) rotate(52)"/></g>
+    <g class="conf-a" style="animation-delay:-4.2s;color:#ffd9e2"><use xlink:href="#chip" href="#chip" transform="translate(986 252) scale(1.3) rotate(-44)"/></g>
+    <g class="conf-b" style="animation-delay:-5.1s;color:#8fffc9"><use xlink:href="#chip" href="#chip" transform="translate(1128 236) scale(1.2) rotate(18)"/></g>
+    <g class="conf-c" style="animation-delay:-2.7s;color:#ffd166"><use xlink:href="#ribbon" href="#ribbon" transform="translate(168 300) rotate(20) scale(1.3)"/></g>
+    <g class="conf-a" style="animation-delay:-3.9s;color:#ff9ec7"><use xlink:href="#ribbon" href="#ribbon" transform="translate(468 250) rotate(-16) scale(1.4)"/></g>
+    <g class="conf-b" style="animation-delay:-1.2s;color:#ffffff"><use xlink:href="#ribbon" href="#ribbon" transform="translate(764 296) rotate(26) scale(1.35)"/></g>
+    <g class="conf-c" style="animation-delay:-4.6s;color:#8fe3ff"><use xlink:href="#ribbon" href="#ribbon" transform="translate(1062 288) rotate(-22) scale(1.3)"/></g>
+  </g>
+  <!-- sparks radiating from the cup -->
+  <g id="cup-sparks" filter="url(#fGlowSoft)" transform="translate(534 120) scale(0.76)">
+    <g class="twinkle"><circle cx="-128" cy="-268" r="4" fill="#fff6cf"/></g>
+    <g class="twinkle b"><circle cx="132" cy="-250" r="3.6" fill="#fff6cf"/></g>
+    <g class="twinkle c"><circle cx="-88" cy="-424" r="3.4" fill="#fffdf0"/></g>
+    <g class="twinkle b"><circle cx="96" cy="-410" r="4" fill="#fffdf0"/></g>
+    <g class="twinkle c"><circle cx="-142" cy="-330" r="3.2" fill="#fff6cf"/></g>
+  </g>
+</g>
+
+<!-- ============================================================= -->
+<!-- LAYER 13 · SCOREBOARD  (90+7'  /  3:2) -->
+<!-- ============================================================= -->
+<g id="layer-scoreboard" transform="translate(56 150)">
+  <ellipse cx="210" cy="322" rx="230" ry="20" fill="#000000" opacity="0.45" filter="url(#fSoft6)"/>
+  <!-- frame -->
+  <rect x="0" y="0" width="420" height="306" rx="22" fill="url(#gPanel)" stroke="url(#gGoldEdge)" stroke-width="6"/>
+  <rect x="13" y="13" width="394" height="280" rx="14" fill="#060d1c" stroke="#1e3253" stroke-width="2"/>
+  <!-- header -->
+  <rect x="13" y="13" width="394" height="42" rx="14" fill="#132744"/>
+  <rect x="13" y="45" width="394" height="10" fill="#132744"/>
+  <g font-size="21" font-weight="700" letter-spacing="7" fill="#e9d9a6" text-anchor="middle">
+    <text x="128" y="42">FINAL</text>
+    <text x="292" y="42" fill="#8fe3ff">TOP CLOCK</text>
+  </g>
+  <circle cx="52" cy="34" r="5" fill="#37e08a" class="clock-dot"/>
+  <circle cx="368" cy="34" r="5" fill="#ff6b4a" class="clock-dot" style="animation-delay:-0.5s"/>
+
+  <!-- clock : exactly 90+7' -->
+  <g filter="url(#fGlowGold)">
+    <text x="210" y="150" text-anchor="middle" font-size="96" font-weight="800"
+          letter-spacing="2" fill="url(#gClockGlow)">90+7'</text>
+  </g>
+  <text x="210" y="150" text-anchor="middle" font-size="96" font-weight="800"
+        letter-spacing="2" fill="none" stroke="#6d4505" stroke-width="1.4" opacity="0.5">90+7'</text>
+
+  <!-- divider -->
+  <rect x="34" y="170" width="352" height="3" fill="#c9a227" opacity="0.55"/>
+  <circle cx="210" cy="171.5" r="6" fill="#ffd166" opacity="0.9"/>
+
+  <!-- two generic invented club marks -->
+  <g id="club-mark-a" transform="translate(62 228)">
+    <path d="M0 -34 L26 -24 L26 4 C26 24 14 36 0 42 C-14 36 -26 24 -26 4 L-26 -24 Z"
+          fill="#12325f"/>
+    <path d="M0 -34 L26 -24 L26 4 C26 24 14 36 0 42 C-14 36 -26 24 -26 4 L-26 -24 Z"
+          fill="none" stroke="#d9b23a" stroke-width="4"/>
+    <path d="M-13 0 L0 -13 L13 0 L0 13 Z" fill="#ffd166"/>
+    <rect x="-17" y="18" width="34" height="6" fill="#d9b23a" opacity="0.85"/>
+  </g>
+  <g id="club-mark-b" transform="translate(358 228)">
+    <path d="M0 -34 L26 -24 L26 4 C26 24 14 36 0 42 C-14 36 -26 24 -26 4 L-26 -24 Z"
+          fill="#3a1130" stroke="#d9b23a" stroke-width="4"/>
+    <circle cx="0" cy="2" r="12" fill="none" stroke="#ff9ec7" stroke-width="4"/>
+    <g stroke="#ff9ec7" stroke-width="4" stroke-linecap="round">
+      <path d="M0 -22 L0 -30"/><path d="M0 34 L0 26"/>
+      <path d="M-20 2 L-28 2"/><path d="M20 2 L28 2"/>
+    </g>
+  </g>
+
+  <!-- score : exactly 3:2 -->
+  <g filter="url(#fGlowSoft)">
+    <text x="210" y="272" text-anchor="middle" font-size="112" font-weight="800"
+          letter-spacing="4" fill="#ffffff">3:2</text>
+  </g>
+  <text x="210" y="272" text-anchor="middle" font-size="112" font-weight="800"
+        letter-spacing="4" fill="none" stroke="#6d4505" stroke-width="1.6" opacity="0.45">3:2</text>
+
+  <!-- bottom strip -->
+  <rect x="34" y="284" width="352" height="4" fill="#c9a227" opacity="0.4"/>
+  <g fill="#ffd166" opacity="0.85">
+    <path d="M188 268 l10 12 l-10 12 l-10 -12 z"/>
+  </g>
+  <text x="210" y="294" text-anchor="middle" font-size="15" font-weight="700"
+        letter-spacing="5" fill="#e9d9a6" opacity="0">WINNER</text>
+</g>
+
+<!-- ============================================================= -->
+<!-- LAYER 14 · POSTER TYPE -->
+<!-- ============================================================= -->
+<g id="layer-title">
+  <!-- kicker -->
+  <g opacity="0.95">
+    <rect x="662" y="96" width="6" height="44" fill="#ffd166"/>
+    <text x="682" y="118" font-size="24" font-weight="700" letter-spacing="8" fill="#e9d9a6">STOPPAGE TIME</text>
+    <text x="682" y="140" font-size="16" letter-spacing="6" fill="#8fe3ff" opacity="0.85">CHAMPIONS</text>
+  </g>
+  <!-- main title -->
+  <g id="main-title" transform="translate(74 1416)">
+    <text x="0" y="0" font-size="118" font-weight="800" letter-spacing="4"
+          fill="url(#gGoldText)" stroke="#2b1405" stroke-width="7" paint-order="stroke"
+          stroke-linejoin="round">CHAMPIONS</text>
+    <text x="4" y="46" font-size="34" font-weight="600" letter-spacing="10" fill="#f4e6bb" opacity="0.92">补时绝杀 · 捧杯冲刺</text>
+    <rect x="4" y="62" width="560" height="3" fill="#ffd166" opacity="0.7"/>
+    <text x="4" y="90" font-size="18" letter-spacing="5" fill="#9fd8ff" opacity="0.8">90+7'  ·  3:2  ·  FINAL</text>
+  </g>
+</g>
+
+<!-- ============================================================= -->
+<!-- LAYER 15 · VIGNETTE -->
+<!-- ============================================================= -->
+<g id="layer-vignette" pointer-events="none">
+  <rect x="0" y="0" width="1200" height="1600" fill="url(#gVignette)"/>
+  <rect x="0" y="0" width="1200" height="10" fill="#000" opacity="0.5"/>
+</g>
+
+</svg>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var root = document.documentElement;
+  var layers = [];
+  var nodes = document.querySelectorAll("[data-depth]");
+  for (var i = 0; i < nodes.length; i++) { layers.push(nodes[i]); }
+
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!layers.length || reduce) { return; }
+
+  var raf = null;
+  function apply(px, py) {
+    for (var j = 0; j < layers.length; j++) {
+      var el = layers[j];
+      var d = parseFloat(el.getAttribute("data-depth")) || 0;
+      el.style.transform = "translate3d(" + (-px * d).toFixed(2) + "px," + (-py * d).toFixed(2) + "px,0)";
+    }
+  }
+  function onMove(ev) {
+    var x = (ev.clientX / window.innerWidth - 0.5) * 2;
+    var y = (ev.clientY / window.innerHeight - 0.5) * 2;
+    if (raf) { cancelAnimationFrame(raf); }
+    raf = requestAnimationFrame(function () { apply(x * 14, y * 10); raf = null; });
+  }
+  window.addEventListener("pointermove", onMove, { passive: true });
+  root.setAttribute("data-motion", "on");
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>天气卡片</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:14px;
+         background:#0e1526; font-family:"Avenir Next","PingFang SC","Microsoft YaHei",sans-serif; overflow-x:hidden; }
+  body.night { background:#070b16; }
+  .card { position:relative; width:min(430px,100%); border-radius:26px; overflow:hidden; color:#fff;
+          box-shadow:0 26px 70px rgba(0,0,0,.55); transition:background .8s ease; background:linear-gradient(165deg,#2c5fb0,#123a78); }
+  body.night .card { background:linear-gradient(165deg,#22345c,#0d1a36); }
+  .card.rain { background:linear-gradient(165deg,#4a5f80,#232f47); }
+  .card.snow { background:linear-gradient(165deg,#7d93b4,#3d5379); }
+  .card.cloud { background:linear-gradient(165deg,#5d7091,#2b3a55); }
+  canvas.fx { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  .inner { position:relative; padding:18px 18px 16px; }
+  .cityRow { display:flex; gap:8px; margin-bottom:14px; }
+  .cityRow button { flex:1; border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.10); color:#dce6f7;
+    border-radius:999px; padding:7px 0; font-size:13px; cursor:pointer; font-family:inherit; transition:all .3s; }
+  .cityRow button.on { background:#ffd166; border-color:#ffd166; color:#20304d; font-weight:600; }
+  .top { display:flex; justify-content:space-between; align-items:flex-start; }
+  .city { font-size:17px; font-weight:600; letter-spacing:1px; }
+  .desc { font-size:12.5px; opacity:.85; margin-top:3px; }
+  .unit { border:1px solid rgba(255,255,255,.3); background:rgba(0,0,0,.15); color:#fff; border-radius:999px;
+          padding:5px 12px; font-size:12px; cursor:pointer; font-family:inherit; }
+  .tempBox { display:flex; align-items:center; gap:14px; margin:8px 0 4px; transition:opacity .35s, transform .35s; }
+  .tempBox.fade { opacity:0; transform:translateY(10px); }
+  .temp { font-size:74px; font-weight:150; line-height:1; font-variant-numeric:tabular-nums; }
+  .temp sup { font-size:26px; vertical-align:top; }
+  .icon { width:66px; height:66px; }
+  .meta { display:flex; gap:8px; margin:12px 0 4px; }
+  .m { flex:1; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.14); border-radius:14px;
+       padding:8px 10px; text-align:center; }
+  .m span { display:block; font-size:11px; opacity:.8; }
+  .m b { font-size:15px; font-variant-numeric:tabular-nums; }
+  .fcTitle { font-size:12px; letter-spacing:2px; opacity:.85; margin:14px 0 8px; }
+  .fc { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+  .day { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.14); border-radius:14px;
+         padding:8px 3px; text-align:center; font-size:11px; }
+  .day svg { width:24px; height:24px; margin:4px auto; display:block; }
+  .day b { display:block; font-size:12.5px; font-variant-numeric:tabular-nums; }
+  .day i { font-style:normal; opacity:.75; font-size:10.5px; }
+  .chart { width:100%; height:74px; margin-top:10px; display:block; }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <canvas class="fx" id="fx"></canvas>
+  <div class="inner">
+    <div class="cityRow" id="cityRow"></div>
+    <div class="top">
+      <div><div class="city" id="cityName">--</div><div class="desc" id="desc">--</div></div>
+      <button class="unit" id="unitBtn">°C</button>
+    </div>
+    <div class="tempBox" id="tempBox">
+      <div class="temp"><span id="tempN">0</span><sup id="tempU">°</sup></div>
+      <div class="icon" id="iconBox"></div>
+    </div>
+    <div class="meta">
+      <div class="m"><span>风速</span><b id="wind">--</b></div>
+      <div class="m"><span>湿度</span><b id="hum">--</b></div>
+      <div class="m"><span>体感</span><b id="feel">--</b></div>
+    </div>
+    <div class="fcTitle">未来 5 天</div>
+    <div class="fc" id="fc"></div>
+    <svg class="chart" id="chart" viewBox="0 0 320 74" preserveAspectRatio="none"></svg>
+  </div>
+</div>
+<script>
+  const $ = id => document.getElementById(id);
+  // 本地 mock 数据：4 城市 × 5 天
+  const DATA = [
+    { city:'北京', type:'sun',  desc:'晴',        wind:'12 km/h', hum:28, days:[['今天','晴',32,21],['周四','晴',33,22],['周五','多云',30,20],['周六','雷阵雨',28,19],['周日','晴',31,20]] },
+    { city:'上海', type:'rain', desc:'中雨',      wind:'18 km/h', hum:86, days:[['今天','中雨',25,20],['周四','小雨',26,21],['周五','阴',27,21],['周六','多云',28,22],['周日','晴',29,22]] },
+    { city:'哈尔滨', type:'snow', desc:'小雪',    wind:'9 km/h',  hum:74, days:[['今天','小雪',-4,-13],['周四','阴',-2,-12],['周五','多云',1,-9],['周六','晴',3,-7],['周日','晴',4,-6]] },
+    { city:'广州', type:'cloud', desc:'多云',     wind:'7 km/h',  hum:63, days:[['今天','多云',29,24],['周四','阵雨',28,24],['周五','雷阵雨',27,23],['周六','多云',29,24],['周日','晴',31,25]] }
+  ];
+  const ICON = {
+    sun:'<circle cx="33" cy="33" r="11" fill="#ffd166"/><g stroke="#ffd166" stroke-width="3" stroke-linecap="round"><line x1="33" y1="7" x2="33" y2="15"/><line x1="33" y1="51" x2="33" y2="59"/><line x1="7" y1="33" x2="15" y2="33"/><line x1="51" y1="33" x2="59" y2="33"/><line x1="14" y1="14" x2="20" y2="20"/><line x1="46" y1="46" x2="52" y2="52"/><line x1="52" y1="14" x2="46" y2="20"/><line x1="20" y1="46" x2="14" y2="52"/></g>',
+    rain:'<path d="M20 38a11 11 0 0 1 2-21.7A15 15 0 0 1 50 22a9 9 0 0 1-1 16z" fill="#dfe8f5"/><g stroke="#7fc4ff" stroke-width="3" stroke-linecap="round"><line x1="24" y1="46" x2="21" y2="55"/><line x1="34" y1="46" x2="31" y2="58"/><line x1="44" y1="46" x2="41" y2="55"/></g>',
+    snow:'<path d="M20 34a11 11 0 0 1 2-21.7A15 15 0 0 1 50 18a9 9 0 0 1-1 16z" fill="#eef4fb"/><g stroke="#cfe4ff" stroke-width="2.6" stroke-linecap="round"><line x1="24" y1="44" x2="24" y2="54"/><line x1="34" y1="46" x2="34" y2="58"/><line x1="44" y1="44" x2="44" y2="54"/></g>',
+    cloud:'<path d="M18 44a12 12 0 0 1 3-23.6A16 16 0 0 1 51 25a10 10 0 0 1-2 19z" fill="#e6edf7"/>'
+  };
+  const FCMAP = { '晴':'sun', '多云':'cloud', '阴':'cloud', '小雨':'rain', '中雨':'rain', '阵雨':'rain', '雷阵雨':'rain', '小雪':'snow' };
+  let ci = 0, useF = false;
+  // 天气粒子层：sun=光晕光斑上浮 / rain=雨滴 / snow=雪花 / cloud=云影漂移
+  const cv = $('fx'), ctx = cv.getContext('2d');
+  let parts = [], fxType = 'sun';
+  function initFx(type) {
+    fxType = type; parts = [];
+    const n = type === 'sun' ? 26 : type === 'rain' ? 90 : type === 'snow' ? 55 : 14;
+    for (let i = 0; i < n; i++) parts.push({ x: Math.random() * cv.width, y: Math.random() * cv.height,
+      v: 0.4 + Math.random(), r: 1 + Math.random() * 2.6, a: Math.random() * Math.PI * 2, o: 0.25 + Math.random() * 0.6 });
+  }
+  function fx() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    for (const p of parts) {
+      if (fxType === 'rain') { p.y += 9 * p.v; p.x -= 1.6 * p.v; if (p.y > cv.height) { p.y = -8; p.x = Math.random() * cv.width; }
+        ctx.strokeStyle = `rgba(160,205,255,${p.o})`; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + 2.4, p.y + 12); ctx.stroke();
+      } else if (fxType === 'snow') { p.y += 1.1 * p.v; p.x += Math.sin(p.a += 0.02) * 0.7; if (p.y > cv.height) { p.y = -6; p.x = Math.random() * cv.width; }
+        ctx.fillStyle = `rgba(255,255,255,${p.o})`;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill();
+      } else if (fxType === 'sun') { p.y -= 0.45 * p.v; p.a += 0.01; if (p.y < -8) { p.y = cv.height + 8; p.x = Math.random() * cv.width; }
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 5);
+        g.addColorStop(0, `rgba(255,215,120,${p.o})`); g.addColorStop(1, 'rgba(255,215,120,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 5, 0, 7); ctx.fill();
+      } else { p.x += 0.28 * p.v; if (p.x > cv.width + 30) p.x = -30;
+        ctx.fillStyle = `rgba(255,255,255,${p.o * 0.25})`;
+        ctx.beginPath(); ctx.ellipse(p.x, p.y, 26 * p.v, 7 * p.v, 0, 0, 7); ctx.fill(); }
+    }
+    requestAnimationFrame(fx);
+  }
+  // 温度折线（SVG）：5 天最高/最低温双线对比
+  function drawChart(d) {
+    const hi = d.map(x => x[2]), lo = d.map(x => x[3]);
+    const all = hi.concat(lo), mn = Math.min(...all), mx = Math.max(...all), sp = mx - mn || 1;
+    const px = i => 26 + i * 67, py = v => 62 - ((v - mn) / sp) * 44;
+    const path = arr => arr.map((v, i) => `${i ? 'L' : 'M'}${px(i)},${py(v).toFixed(1)}`).join(' ');
+    $('chart').innerHTML =
+      `<defs><linearGradient id="gl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd166" stop-opacity=".35"/><stop offset="1" stop-color="#ffd166" stop-opacity="0"/></linearGradient></defs>` +
+      `<path d="${path(hi)} L${px(4)},74 L${px(0)},74 Z" fill="url(#gl)"/>` +
+      `<path d="${path(hi)}" fill="none" stroke="#ffd166" stroke-width="2.2"/>` +
+      `<path d="${path(lo)}" fill="none" stroke="#9cc4ff" stroke-width="2" stroke-dasharray="4 3"/>` +
+      hi.map((v, i) => `<text x="${px(i)}" y="${(py(v) - 6).toFixed(1)}" fill="#ffe6a8" font-size="10" text-anchor="middle">${v}°</text>`).join('') +
+      lo.map((v, i) => `<text x="${px(i)}" y="${(py(v) + 13).toFixed(1)}" fill="#bcd8ff" font-size="10" text-anchor="middle">${v}°</text>`).join('');
+  }
+  // 温度 countUp 过渡
+  function countTo(el, to) {
+    const from = Number(el.textContent) || 0, t0 = performance.now();
+    (function step(t) {
+      const k = Math.min(1, (t - t0) / 500), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = Math.round(from + (to - from) * e);
+      if (k < 1) requestAnimationFrame(step);
+    })(t0);
+  }
+  function render(idx, animate) {
+    const d = DATA[idx];
+    document.body.classList.toggle('night', new Date().getHours() < 6 || new Date().getHours() >= 18);
+    $('card').className = 'card ' + (d.type === 'sun' || d.type === 'cloud' ? d.type : d.type);
+    if (animate) { $('tempBox').classList.add('fade'); setTimeout(() => $('tempBox').classList.remove('fade'), 360); }
+    $('cityName').textContent = d.city; $('desc').textContent = d.desc;
+    $('wind').textContent = d.wind; $('hum').textContent = d.hum + '%';
+    const conv = c => useF ? Math.round(c * 9 / 5 + 32) : c;
+    setTimeout(() => { countTo($('tempN'), conv(d.days[0][2])); $('tempU').textContent = useF ? 'F' : 'C'; }, animate ? 360 : 0);
+    $('feel').textContent = conv(d.days[0][2] - 2) + '°';
+    $('iconBox').innerHTML = `<svg viewBox="0 0 66 66">${ICON[d.type]}</svg>`;
+    $('fc').innerHTML = d.days.map(day => `<div class="day"><span>${day[0]}</span><svg viewBox="0 0 66 66">${ICON[FCMAP[day[1]]]}</svg><b>${conv(day[2])}°<i>/${conv(day[3])}°</i></b><i>${day[1]}</i></div>`).join('');
+    drawChart(d.days.map(x => [x[0], x[1], conv(x[2]), conv(x[3])]));
+    initFx(d.type);
+    [...$('cityRow').children].forEach((b, i) => b.classList.toggle('on', i === idx));
+  }
+  $('cityRow').innerHTML = DATA.map((d, i) => `<button data-i="${i}">${d.city}</button>`).join('');
+  $('cityRow').onclick = e => { const i = e.target.dataset.i; if (i == null) return; ci = +i; render(ci, true); };
+  $('unitBtn').onclick = () => { useF = !useF; $('unitBtn').textContent = useF ? '°F' : '°C'; render(ci, true); };
+  render(0, false);
+  requestAnimationFrame(fx);
+</script>
+</body>
+</html>

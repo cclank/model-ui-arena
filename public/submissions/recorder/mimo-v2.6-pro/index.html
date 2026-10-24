@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>录音机</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:16px;
+         background:radial-gradient(120% 100% at 50% 0%, #1c2333, #0b0e16 75%); color:#e8ecf6;
+         font-family:"Avenir Next","PingFang SC","Microsoft YaHei",sans-serif; overflow-x:hidden; }
+  .card { width:min(420px,100%); background:linear-gradient(180deg,#222b3e,#161c2a); border:1px solid #33405c;
+          border-radius:22px; padding:22px 20px 18px; box-shadow:0 24px 60px rgba(0,0,0,.5); }
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .title { font-size:15px; letter-spacing:4px; color:#9fb2d8; }
+  .state { display:flex; align-items:center; gap:7px; font-size:12.5px; color:#9fb2d8; background:#101624;
+           border:1px solid #2b3852; padding:5px 12px; border-radius:999px; }
+  .dot { width:9px; height:9px; border-radius:50%; background:#5a6a8c; }
+  .dot.on { background:#ff4d5e; animation:blink 1s ease-in-out infinite; }
+  @keyframes blink { 50% { opacity:.25; } }
+  .timer { text-align:center; font-variant-numeric:tabular-nums; font-size:56px; font-weight:200; letter-spacing:4px; margin:6px 0 2px; }
+  .sub { text-align:center; color:#7386ab; font-size:12px; letter-spacing:2px; margin-bottom:14px; }
+  .wave { width:100%; height:110px; background:#0d1320; border:1px solid #2b3852; border-radius:14px; display:block; }
+  .bar { display:flex; gap:12px; justify-content:center; margin:18px 0 8px; }
+  button { border:0; border-radius:50%; width:64px; height:64px; font-size:12.5px; letter-spacing:1px; cursor:pointer;
+           color:#fff; font-family:inherit; transition:transform .15s ease, box-shadow .2s ease, opacity .2s; }
+  button:active { transform:scale(.92); }
+  button:disabled { opacity:.35; cursor:not-allowed; }
+  #btnRec { background:radial-gradient(circle at 35% 30%, #ff7a86, #d92b45); box-shadow:0 8px 22px rgba(217,43,69,.4); }
+  #btnPause { background:radial-gradient(circle at 35% 30%, #ffd67a, #d99a1f); box-shadow:0 8px 22px rgba(217,154,31,.35); }
+  #btnStop { background:radial-gradient(circle at 35% 30%, #8fa3c8, #46587c); box-shadow:0 8px 22px rgba(70,88,124,.4); }
+  .hint { text-align:center; min-height:18px; font-size:12px; color:#ffb3ba; margin-top:4px; }
+  .summary { margin-top:12px; background:#101624; border:1px solid #2b3852; border-radius:14px; padding:12px 14px;
+             font-size:13px; color:#c3d0ea; display:none; }
+  .summary.show { display:block; animation:pop .3s ease; }
+  @keyframes pop { from { opacity:0; transform:translateY(8px); } }
+  .summary h3 { font-size:12px; color:#8aa0cc; letter-spacing:2px; font-weight:600; margin-bottom:8px; }
+  .row { display:flex; justify-content:space-between; padding:3px 0; }
+  .row b { color:#ffd166; font-weight:600; font-variant-numeric:tabular-nums; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="head">
+    <div class="title">RECORDER</div>
+    <div class="state"><span class="dot" id="dot"></span><span id="stateTxt">待机</span></div>
+  </div>
+  <div class="timer" id="timer">00:00</div>
+  <div class="sub" id="sub">按下 REC 开始录音（模拟）</div>
+  <canvas class="wave" id="wave" width="740" height="220"></canvas>
+  <div class="bar">
+    <button id="btnRec">REC</button>
+    <button id="btnPause" disabled>PAUSE</button>
+    <button id="btnStop" disabled>STOP</button>
+  </div>
+  <div class="hint" id="hint"></div>
+  <div class="summary" id="summary">
+    <h3>本次录音摘要</h3>
+    <div class="row"><span>时长</span><b id="sumDur">00:00</b></div>
+    <div class="row"><span>状态</span><b id="sumState">已保存</b></div>
+    <div class="row"><span>结束于</span><b id="sumTime">--:--:--</b></div>
+    <div class="row"><span>峰值音量</span><b id="sumPeak">--</b></div>
+  </div>
+</div>
+<script>
+  const $ = id => document.getElementById(id);
+  const cv = $('wave'), ctx = cv.getContext('2d');
+  // 状态机：idle -> recording <-> paused -> (stop确认) -> idle
+  let st = 'idle', acc = 0, last = 0, peak = 0, stopArm = 0, bars = new Array(56).fill(0), raf = 0;
+  const mmss = t => `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+  const LABEL = { idle: '待机', recording: '录音中', paused: '已暂停' };
+  function setState(s) {
+    st = s;
+    $('stateTxt').textContent = LABEL[s];
+    $('dot').className = 'dot' + (s === 'recording' ? ' on' : '');
+    $('btnRec').textContent = s === 'paused' ? 'RESUME' : 'REC';
+    $('btnRec').disabled = s === 'recording';
+    $('btnPause').disabled = s !== 'recording' && s !== 'paused';
+    $('btnPause').textContent = s === 'paused' ? 'HOLD' : 'PAUSE';
+    $('btnStop').disabled = s === 'idle';
+    $('sub').textContent = s === 'recording' ? '正在录音…' : s === 'paused' ? '已暂停，可继续或停止' : '按下 REC 开始录音（模拟）';
+  }
+  function drawWave(t) {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    // 录音中推入新的振幅条；暂停冻结；静止渐落
+    if (t - last > 55) {
+      last = t;
+      const amp = st === 'recording' ? Math.min(1, 0.25 + Math.random() * 0.75 * (0.6 + 0.4 * Math.sin(t / 300))) : 0;
+      bars.push(amp); bars.shift();
+      peak = Math.max(peak, amp);
+    }
+    const n = bars.length, w = cv.width / n;
+    for (let i = 0; i < n; i++) {
+      const a = bars[i] * (0.55 + 0.45 * Math.sin(i * 1.7 + t / 240));
+      const h = Math.max(3, Math.abs(a) * cv.height * 0.82);
+      const g = ctx.createLinearGradient(0, cv.height / 2 - h / 2, 0, cv.height / 2 + h / 2);
+      g.addColorStop(0, st === 'recording' ? '#ff6b7d' : '#5b6f9b');
+      g.addColorStop(1, '#3a4a72');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      const x = i * w + w * 0.22, bw = w * 0.56, y = cv.height / 2 - h / 2, r = bw / 2;
+      ctx.roundRect(x, y, bw, h, r); ctx.fill();
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,.12)';
+    ctx.beginPath(); ctx.moveTo(0, cv.height / 2); ctx.lineTo(cv.width, cv.height / 2); ctx.stroke();
+    raf = requestAnimationFrame(drawWave);
+  }
+  function tick(t) {
+    if (st === 'recording') { acc += (t - (tick.p || t)) / 1000; $('timer').textContent = mmss(acc); }
+    tick.p = t; requestAnimationFrame(tick);
+  }
+  $('btnRec').onclick = () => { $('summary').classList.remove('show'); if (st === 'idle') { acc = 0; peak = 0; bars.fill(0); $('hint').textContent = ''; } setState('recording'); };
+  $('btnPause').onclick = () => setState(st === 'recording' ? 'paused' : 'recording');
+  $('btnStop').onclick = () => {
+    // 误操作防护：首次点击进入 3 秒待确认，再点一次才真正停止
+    if (!stopArm) {
+      stopArm = setTimeout(() => { stopArm = 0; $('hint').textContent = ''; }, 3000);
+      $('hint').textContent = '再次点击 STOP 确认结束（3 秒内）';
+      return;
+    }
+    clearTimeout(stopArm); stopArm = 0; $('hint').textContent = '';
+    const now = new Date();
+    $('sumDur').textContent = mmss(acc);
+    $('sumState').textContent = '已保存 · 1 条';
+    $('sumTime').textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    $('sumPeak').textContent = Math.round(peak * 100) + '%';
+    $('summary').classList.add('show');
+    acc = 0; $('timer').textContent = '00:00';
+    setState('idle');
+  };
+  setState('idle');
+  requestAnimationFrame(drawWave);
+  requestAnimationFrame(tick);
+</script>
+</body>
+</html>

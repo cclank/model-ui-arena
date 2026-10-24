@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>黄历 · 农历日历</title>
+<style>
+  :root { --bg:#f5efdf; --card:#fffdf4; --ink:#2b2217; --sub:#94805c; --acc:#bf3a2b; --term:#2f7d5e; --line:#e7dcc2; --glow:rgba(191,58,43,.10); }
+  @media (prefers-color-scheme: dark) { :root { --bg:#15120c; --card:#211c13; --ink:#f0e5cd; --sub:#a5906a; --acc:#ff7a63; --term:#5fc58f; --line:#3a3220; --glow:rgba(255,122,99,.14); } }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--ink); min-height:100vh; display:flex; justify-content:center; padding:14px 10px 28px;
+         font-family:"Songti SC","STSong","PingFang SC","Microsoft YaHei",serif; overflow-x:hidden; }
+  .wrap { width:100%; max-width:430px; display:flex; flex-direction:column; gap:10px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:13px 14px; }
+  .hd { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  h1 { font-size:21px; letter-spacing:8px; }
+  .todayStr { color:var(--sub); font-size:11.5px; letter-spacing:1px; margin-top:3px; }
+  .tools { display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+  button { border:1px solid var(--line); background:transparent; color:var(--ink); font-family:inherit; font-size:13px;
+           min-width:30px; height:30px; padding:0 8px; border-radius:9px; cursor:pointer; }
+  button:hover { background:var(--glow); }
+  button:focus-visible, input:focus-visible, .cell:focus-visible { outline:2px solid var(--acc); outline-offset:2px; }
+  #cap { min-width:106px; text-align:center; font-size:15px; letter-spacing:2px; }
+  .wk { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; color:var(--sub); font-size:11px; letter-spacing:2px; padding-bottom:4px; }
+  .grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+  .cell { aspect-ratio:.85; border:1px solid transparent; border-radius:11px; padding:4px 1px 2px; cursor:pointer;
+          display:flex; flex-direction:column; align-items:center; gap:1px; }
+  .cell:hover { background:var(--glow); }
+  .cell b { font-size:15px; font-weight:600; line-height:1.15; }
+  .cell i { font-style:normal; font-size:10px; color:var(--sub); line-height:1.25; }
+  .cell i.fest { color:var(--acc); font-weight:600; }
+  .cell i.term { color:var(--term); }
+  .cell.out b, .cell.out i { opacity:.3; }
+  .cell.today { border-color:var(--acc); background:var(--glow); }
+  .cell.today b { color:var(--acc); }
+  .cell.sel { box-shadow:0 0 0 2px var(--acc) inset; }
+  .detail { font-size:12.5px; line-height:1.9; }
+  .detail b { color:var(--acc); font-weight:600; }
+  .k { color:var(--sub); letter-spacing:1px; margin-top:3px; }
+  .q label { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12.5px; color:var(--sub); letter-spacing:2px; }
+  input[type=date] { font-family:inherit; font-size:13px; background:transparent; color:var(--ink); border:1px solid var(--line); border-radius:9px; padding:6px 8px; }
+  #q-result { margin-top:9px; padding-top:9px; border-top:1px dashed var(--line); font-size:13.5px; line-height:1.75; letter-spacing:.5px; }
+  .foot { color:var(--sub); font-size:10.5px; text-align:center; letter-spacing:1.5px; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="card hd">
+    <div><h1>黄历</h1><div class="todayStr" id="todayStr"></div></div>
+    <div class="tools">
+      <button id="prevY" aria-label="上一年">«</button><button id="prevM" aria-label="上一月">‹</button>
+      <b id="cap"></b>
+      <button id="nextM" aria-label="下一月">›</button><button id="nextY" aria-label="下一年">»</button>
+      <button id="back">今天</button>
+    </div>
+  </section>
+  <section class="card">
+    <div class="wk">日一二三四五六</div>
+    <div class="grid" id="grid" role="grid" aria-label="月历"></div>
+  </section>
+  <section class="card detail" id="detail"></section>
+  <section class="card q">
+    <label>日期查询 <input type="date" id="q-date"></label>
+    <div id="q-result">选择或输入任意日期，自动给出农历、生肖、节气与节日</div>
+  </section>
+  <div class="foot">1900 - 2100 · 节气按太阳视黄经天文公式实时计算</div>
+</main>
+<script>
+  const $ = i => document.getElementById(i), MS = 864e5, D2R = Math.PI / 180;
+  // 农历 1900-2100 压缩历表：bit16=闰月大小月，bit5..1=正月起各月大小，低4位=闰月月份
+  const LI = [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,
+    0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,
+    0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,
+    0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,
+    0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,
+    0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,
+    0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,
+    0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,
+    0x0a2e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,
+    0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520];
+  const GAN = "甲乙丙丁戊己庚辛壬癸", ZHI = "子丑寅卯辰巳午未申酉戌亥", ZOD = "鼠牛虎兔龙蛇马羊猴鸡狗猪";
+  const MN = ["","正","二","三","四","五","六","七","八","九","十","冬","腊"];
+  const TERMS = ["春分","清明","谷雨","立夏","小满","芒种","夏至","小暑","大暑","立秋","处暑","白露","秋分","寒露","霜降","立冬","小雪","大雪","冬至","小寒","大寒","立春","雨水","惊蛰"];
+  const FEST = { "1-1":"春节", "1-15":"元宵", "5-5":"端午", "7-7":"七夕", "8-15":"中秋", "9-9":"重阳", "12-8":"腊八" };
+  const D1 = ["","一","二","三","四","五","六","七","八","九","十"];
+  const WEEK = ["星期日","星期一","星期二","星期三","星期四","星期五","星期六"];
+  const EPOCH = Date.UTC(1900, 0, 31), ymd = (y, m, d) => Date.UTC(y, m - 1, d), pad = n => String(n).padStart(2, "0");
+  const leapM = y => LI[y - 1900] & 15, leapD = y => leapM(y) ? (LI[y - 1900] & 0x10000 ? 30 : 29) : 0;
+  const moD = (y, m) => LI[y - 1900] & (0x10000 >> m) ? 30 : 29;
+  function months(y) { const a = []; for (let m = 1; m <= 12; m++) { a.push({ m, leap:false, d:moD(y, m) }); if (m === leapM(y)) a.push({ m, leap:true, d:leapD(y) }); } return a; }
+  const yDays = y => months(y).reduce((s, x) => s + x.d, 0);
+  function toLunar(y, m, d) {
+    let o = Math.round((ymd(y, m, d) - EPOCH) / MS), ly = 1900;
+    if (o < 0) return null;
+    for (let n; ly < 2100 && o >= (n = yDays(ly)); ly++) o -= n;
+    for (const mo of months(ly)) { if (o < mo.d) return { y:ly, m:mo.m, leap:mo.leap, d:o + 1 }; o -= mo.d; }
+    return null;
+  }
+  const gzY = ly => GAN[(ly - 4) % 10] + ZHI[(ly - 4) % 12], zodY = ly => ZOD[(ly - 4) % 12];
+  const gzD = ms => { const i = Math.round(ms / MS) + 2440637; return GAN[i % 10] + ZHI[i % 12]; };
+  // 节气：太阳视黄经（Meeus 低精度）每 15° 一个节令，当日与次日跨界即为交节
+  function sunLon(jd) {
+    const T = (jd - 2451545) / 36525, L = 280.46646 + 36000.76983 * T + 3.032e-4 * T * T, M = (357.52911 + 35999.05029 * T - 1.537e-4 * T * T) * D2R;
+    const C = (1.914602 - .004817 * T - 1.4e-5 * T * T) * Math.sin(M) + (.019993 - 1.01e-4 * T) * Math.sin(2 * M) + 2.89e-4 * Math.sin(3 * M);
+    return (((L + C - .00569 - .00478 * Math.sin((125.04 - 1934.136 * T) * D2R)) % 360) + 360) % 360;
+  }
+  function termOf(y, m, d) {
+    const jd = ymd(y, m, d) / MS + 2440587.5 - 1 / 3, a = Math.floor(sunLon(jd) / 15), b = Math.floor(sunLon(jd + 1) / 15);
+    return a === b ? "" : TERMS[b];
+  }
+  const NY = []; for (let y = 1900; y <= 2101; y++) { let o = 0; for (let l = 1900; l < y; l++) o += yDays(l); NY.push(EPOCH + o * MS); }
+  const NYS = new Set(NY);
+  function festOf(y, m, d) {
+    const L = toLunar(y, m, d);
+    if (!L) return "";
+    if (NYS.has(ymd(y, m, d) + MS)) return "除夕";          // 次日为正月初一即除夕
+    return L.leap ? "" : (FEST[L.m + "-" + L.d] || "");
+  }
+  const dn = n => n <= 10 ? "初" + D1[n] : n < 20 ? "十" + D1[n - 10] : n === 20 ? "二十" : n < 30 ? "廿" + D1[n - 20] : "三十";
+  function qline(y, m, d) {
+    const L = toLunar(y, m, d);
+    if (!L) return "该日期超出 1900-2100 计算范围";
+    return `农历：${gzY(L.y)}年 ${L.leap ? "闰" : ""}${MN[L.m]}月 ${dn(L.d)} · 生肖：${zodY(L.y)} · 节气：${termOf(y, m, d) || "无"} · 节日：${festOf(y, m, d) || "无"}`;
+  }
+  const NOW = new Date(), TMS = ymd(NOW.getFullYear(), NOW.getMonth() + 1, NOW.getDate());
+  let view = { y: NOW.getFullYear(), m: NOW.getMonth() + 1 }, sel = TMS;
+  function render() {
+    $("cap").textContent = `${view.y} 年 ${view.m} 月`;
+    const first = ymd(view.y, view.m, 1), start = first - new Date(first).getUTCDay() * MS;
+    let h = "";
+    for (let i = 0; i < 42; i++) {
+      const ms = start + i * MS, dt = new Date(ms), y = dt.getUTCFullYear(), m = dt.getUTCMonth() + 1, d = dt.getUTCDate();
+      const L = toLunar(y, m, d), t = termOf(y, m, d), f = festOf(y, m, d);
+      const txt = !L ? "—" : (f || (L.d === 1 ? (L.leap ? "闰" : "") + MN[L.m] + "月" : (t || dn(L.d))));
+      const kc = f ? "fest" : (t && L && L.d !== 1 ? "term" : "");
+      const out = m !== view.m ? " out" : "";
+      h += `<div class="cell${out}${ms === TMS ? " today" : ""}${ms === sel ? " sel" : ""}" role="gridcell" tabindex="${ms === sel ? 0 : -1}" data-ms="${ms}"${ms === TMS ? ' aria-current="date"' : ""}><b>${d}</b><i class="${kc}">${txt}</i></div>`;
+    }
+    $("grid").innerHTML = h;
+    const dt = new Date(sel), y = dt.getUTCFullYear(), m = dt.getUTCMonth() + 1, d = dt.getUTCDate(), L = toLunar(y, m, d);
+    if (L) {
+      const t = termOf(y, m, d), f = festOf(y, m, d);
+      const doy = Math.round((sel - ymd(y, 1, 1)) / MS) + 1;
+      const w = Math.ceil((doy + new Date(ymd(y, 1, 1)).getUTCDay()) / 7);
+      const nextNY = NY.find(v => v >= sel), cd = nextNY == null ? "-" : Math.round((nextNY - sel) / MS);
+      $("detail").innerHTML =
+        `<div class="k">公历</div><b>${y}-${pad(m)}-${pad(d)}</b>　${WEEK[dt.getUTCDay()]}　第 ${doy} 天 · 第 ${w} 周` +
+        `<div class="k">农历</div><b>${gzY(L.y)}年 ${L.leap ? "闰" : ""}${MN[L.m]}月 ${dn(L.d)}</b>　生肖 <b>${zodY(L.y)}</b>　日干支 <b>${gzD(sel)}</b>` +
+        `<div class="k">节气 / 节日</div><b>${t || "无"}</b> / <b>${f || "无"}</b>　距下个春节 <b>${cd}</b> 天`;
+      $("q-date").value = `${y}-${pad(m)}-${pad(d)}`;
+      $("q-result").textContent = qline(y, m, d);
+    } else {
+      $("detail").textContent = "该日期超出 1900-2100 计算范围";
+      $("q-result").textContent = "该日期超出 1900-2100 计算范围";
+    }
+  }
+  function focusSel() { const el = document.querySelector(".cell.sel"); if (el) el.focus(); }
+  $("grid").addEventListener("click", e => {
+    const c = e.target.closest(".cell"); if (!c) return;
+    sel = +c.dataset.ms; const dt = new Date(sel);
+    view = { y: dt.getUTCFullYear(), m: dt.getUTCMonth() + 1 }; render(); focusSel();
+  });
+  $("grid").addEventListener("keydown", e => {
+    let ms = sel;
+    if (e.key === "ArrowLeft") ms -= MS;
+    else if (e.key === "ArrowRight") ms += MS;
+    else if (e.key === "ArrowUp") ms -= 7 * MS;
+    else if (e.key === "ArrowDown") ms += 7 * MS;
+    else if (e.key === "PageUp") { view = view.m === 1 ? { y: view.y - 1, m: 12 } : { y: view.y, m: view.m - 1 }; render(); focusSel(); e.preventDefault(); return; }
+    else if (e.key === "PageDown") { view = view.m === 12 ? { y: view.y + 1, m: 1 } : { y: view.y, m: view.m + 1 }; render(); focusSel(); e.preventDefault(); return; }
+    else return;
+    e.preventDefault();
+    sel = ms; const dt = new Date(ms);
+    view = { y: dt.getUTCFullYear(), m: dt.getUTCMonth() + 1 }; render(); focusSel();
+  });
+  $("prevM").onclick = () => { view = view.m === 1 ? { y: view.y - 1, m: 12 } : { y: view.y, m: view.m - 1 }; render(); };
+  $("nextM").onclick = () => { view = view.m === 12 ? { y: view.y + 1, m: 1 } : { y: view.y, m: view.m + 1 }; render(); };
+  $("prevY").onclick = () => { view = { y: view.y - 1, m: view.m }; render(); };
+  $("nextY").onclick = () => { view = { y: view.y + 1, m: view.m }; render(); };
+  $("back").onclick = () => { sel = TMS; view = { y: NOW.getFullYear(), m: NOW.getMonth() + 1 }; render(); };
+  $("q-date").addEventListener("input", onQ);
+  $("q-date").addEventListener("change", onQ);
+  function onQ() {
+    const v = $("q-date").value;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
+    const [y, m, d] = v.split("-").map(Number);
+    if (!toLunar(y, m, d)) { $("q-result").textContent = "该日期超出 1900-2100 计算范围"; return; }
+    $("q-result").textContent = qline(y, m, d);
+    sel = ymd(y, m, d); view = { y, m }; render();
+  }
+  $("todayStr").textContent = `今天 ${NOW.getFullYear()}-${pad(NOW.getMonth() + 1)}-${pad(NOW.getDate())} ${WEEK[NOW.getDay()]}`;
+  render();
+</script>
+</body>
+</html>

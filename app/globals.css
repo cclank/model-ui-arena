@@ -1080,6 +1080,36 @@ button.task-link {
   font-size: 13px;
 }
 
+.theme-focus {
+  margin-top: 12px;
+  max-width: 860px;
+}
+
+.theme-focus-kicker {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #68d8ff;
+  margin-bottom: 6px;
+}
+
+.theme-focus-words {
+  font-family: var(--font-title), serif;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #edf1ff;
+  line-height: 1.2;
+}
+
+.theme-focus-note {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
 .evaluator-guide {
   display: grid;
   grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);

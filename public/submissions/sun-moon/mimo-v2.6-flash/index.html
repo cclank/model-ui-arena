@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="kYdFn1LDB2HUSMfrV6QNLp">
+<head data-page-node-id="gwjaYclHTJIxwijnB2CQV8">
+<meta charset="utf-8" data-page-node-id="ChFUFOH5ZszQBHRBEvE4si">
+<meta name="viewport" content="width=device-width,initial-scale=1" data-page-node-id="EWdVqTXBwH0m3tFI8AZDTR">
+<title>日出日落与月相 · 天文卡片</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#f0f4ff;--dim:#9db0d8;--card:#131a30;--line:#2a3558;--acc:#ffd166;--sky1:#0a1030;--sky2:#1b2a5e}
+@media(prefers-color-scheme:light){:root{--ink:#22304f;--dim:#5d6e93;--card:#ffffff;--line:#dde4f2;
+  --acc:#e08b2e;--sky1:#dff0ff;--sky2:#b8dcff}}
+body{min-height:100vh;display:grid;place-items:center;padding:16px 10px;
+  background:linear-gradient(160deg,#0a0e20,#141b3a);font-family:-apple-system,"PingFang SC","Segoe UI",sans-serif}
+@media(prefers-color-scheme:light){body{background:linear-gradient(160deg,#e8eefb,#cfdaf2)}}
+.card{width:100%;max-width:440px;background:var(--card);border:1px solid var(--line);border-radius:24px;
+  overflow:hidden;box-shadow:0 26px 70px rgba(0,0,0,.45)}
+.top{padding:18px 18px 12px}
+.top h1{font-size:17px;color:var(--ink);letter-spacing:.1em}
+.top p{font-size:10.5px;color:var(--dim);letter-spacing:.3em;margin-top:4px}
+/* 预设城市 */
+.presets{display:flex;gap:6px;flex-wrap:wrap;padding:0 18px 10px}
+.presets button{border:1px solid var(--line);background:transparent;color:var(--dim);border-radius:999px;
+  padding:5px 11px;font-size:11.5px;cursor:pointer;transition:.2s}
+.presets button:hover{border-color:var(--acc);color:var(--acc)}
+.presets button.on{background:var(--acc);border-color:var(--acc);color:#1a1a2e;font-weight:700}
+button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+/* 输入区 */
+.inputs{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 18px 12px}
+.inputs label{font-size:10px;color:var(--dim);letter-spacing:.16em;display:block;margin-bottom:4px}
+.inputs input{width:100%;border:1px solid var(--line);background:transparent;color:var(--ink);
+  border-radius:9px;padding:8px 9px;font-size:13.5px;font-family:inherit}
+.inputs .full{grid-column:1/-1}
+/* 天穹图 */
+.dome{position:relative;margin:0 12px;border-radius:16px;overflow:hidden;border:1px solid var(--line)}
+.dome svg{display:block;width:100%;height:auto}
+/* 月相盘 */
+.moonrow{display:flex;align-items:center;gap:14px;padding:12px 18px 4px}
+.moonrow svg{flex:0 0 auto}
+.mooninfo{font-size:12.5px;color:var(--dim);line-height:1.8}
+.mooninfo b{color:var(--ink);font-size:15px}
+/* 结果区（契约） */
+#q-result{margin:10px 14px 14px;background:color-mix(in srgb,var(--acc) 12%,transparent);
+  border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:14.5px;
+  font-weight:700;color:var(--ink);line-height:1.7;word-break:break-all;min-height:46px}
+/* 时间滑杆 */
+.slider{padding:0 18px 8px}
+.slider .lab{display:flex;justify-content:space-between;font-size:10.5px;color:var(--dim);letter-spacing:.1em}
+input[type=range]{width:100%;appearance:none;height:5px;border-radius:5px;background:var(--line);outline:none;margin-top:7px}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;
+  background:var(--acc);box-shadow:0 0 10px rgba(255,209,102,.7);cursor:pointer}
+.extras{display:flex;gap:6px;flex-wrap:wrap;padding:4px 18px 16px}
+.extras span{font-size:10.5px;color:var(--dim);border:1px dashed var(--line);border-radius:999px;padding:4px 10px}
+@media(max-width:390px){.top h1{font-size:15.5px}.inputs input{font-size:12.5px;padding:7px 7px}
+  #q-result{font-size:13.5px;margin:8px 10px 12px}.dome{margin:0 8px}}
+</style>
+</head>
+<body data-page-node-id="DHTEvFVt0eHUkdhXaUi6Hf">
+<div class="card" data-page-node-id="eKk6Ktwg1DQEkoOLWqGlgA">
+  <div class="top" data-page-node-id="aPo0HLCpNID1Ri6vR6D52C"><h1 data-page-node-id="QhG6C0miQhclYbOfZHNeaq">天穹 · 日出日落与月相</h1><p data-page-node-id="Tbq3RlHdIcKj7JGTVZm2Ti">SUNRISE · SUNSET · MOON PHASE</p></div>
+  <div class="presets" id="presets" data-page-node-id="gb1sJX9KzbOQKR2Ut7dBG1"></div>
+  <div class="inputs" data-page-node-id="HFtjUGSx7X1WKMVnmZT6Gv">
+    <div data-page-node-id="rALdNgP1PdtvgfDwU831CT"><label for="q-lat" data-page-node-id="XnhzHYHOvldyVZEdsqMrLf">纬度 LAT (−90 ~ 90)</label><input type="number" id="q-lat" min="-90" max="90" step="0.0001" value="39.9042" data-page-node-id="jXXGLhd0lubWR3qzHiXgY4"></div>
+    <div data-page-node-id="G0LeETBvwnQrFkuACY4Mff"><label for="q-lon" data-page-node-id="fqpvcgDbmXeMfvIDibVkik">经度 LON (−180 ~ 180)</label><input type="number" id="q-lon" min="-180" max="180" step="0.0001" value="116.4074" data-page-node-id="IfIdx7h494fV4JDGMNi0Vr"></div>
+    <div class="full" data-page-node-id="3azzmzKDT3E1JeDn00vGq1"><label for="q-date" data-page-node-id="TAM6utJ5ou2GsAFjtdO4FU">日期 DATE</label><input type="date" id="q-date" data-page-node-id="4ANnt7JRa2nnuRH3D5ajWr"></div>
+    <div class="full" data-page-node-id="QpGXj5frWAYiAbj0ZYbcAS"><label for="q-tz" data-page-node-id="35Vv2dU2lj4OgEMtMHG2c5">时区偏移（小时，可为小数）</label><input type="number" id="q-tz" min="-12" max="14" step="0.5" value="8" data-page-node-id="5PRnkcQ7mTnyS9CfS1aVcA"></div>
+  </div>
+  <div class="dome" data-page-node-id="C0OQ0aj3eFyVMsbYVqYh7H">
+    <svg id="domeSvg" viewBox="0 0 700 300" role="img" aria-label="天穹：太阳轨迹与地平线" data-page-node-id="GfFCHvlUjcuubz398mgba3">
+      <defs data-page-node-id="JCPofaEelzjInYtYCdDhJr">
+        <linearGradient id="sunPath" x1="0" y1="0" x2="1" y2="0" data-page-node-id="FmGvUj12Bfc3INYcsev0W2">
+          <stop offset="0" stop-color="#ff9a4d" data-page-node-id="4veMB0PAPFcme0jvNOiBsh"/><stop offset=".5" stop-color="#ffe27a" data-page-node-id="6Sn6LQ4CiiYoT0hKIH4vx3"/><stop offset="1" stop-color="#ff9a4d" data-page-node-id="hsAifA0o2xv3nPrxXFG2vc"/>
+        </linearGradient>
+        <radialGradient id="sunGlow" data-page-node-id="W3LXtrnLajoMY75CvqAgnS"><stop offset="0" stop-color="#fff6c9" data-page-node-id="GqoBHXKAGKjtvHzaPY7rR7"/><stop offset=".45" stop-color="#ffd166" data-page-node-id="3WYg7hAGSO0Aopx2o34FD1"/><stop offset="1" stop-color="#ffd166" stop-opacity="0" data-page-node-id="Ea858auv6nDWB1GcY7F0Mz"/></radialGradient>
+        <linearGradient id="bgDay" x1="0" y1="0" x2="0" y2="1" data-page-node-id="HYL6T6CgkgALVw9Cy5TAct">
+          <stop offset="0" id="bgA" stop-color="#0a1030" data-page-node-id="pt6IoDNOB3IsXTy9LBSGFD"/><stop offset="1" id="bgB" stop-color="#1b2a5e" data-page-node-id="pu7l8FMBK8gr3eAVMcyR61"/>
+        </linearGradient>
+      </defs>
+      <rect id="skyRect" width="700" height="300" fill="url(#bgDay)" data-page-node-id="V83fmKc3jToeHZ1cBeqLlL"/>
+      <g id="stars" fill="#ffffff" data-page-node-id="lhkocdWYskxFzXZfNCltM4"></g>
+      <path id="trail" fill="none" stroke="url(#sunPath)" stroke-width="3" stroke-dasharray="7 6" opacity=".9" data-page-node-id="lzrizrNI57z3chJPcxTn5c"/>
+      <!-- 地平线 -->
+      <line x1="20" y1="252" x2="680" y2="252" stroke="#8fa4d8" stroke-width="2.5" opacity=".8" data-page-node-id="cvQfWcFCpQUmPz6fRFgPDZ"/>
+      <path d="M 20,252 h 660" stroke="#000" stroke-width="0" data-page-node-id="mRsshJYKc2O7panR91OBIw" />
+      <g fill="#8fa4d8" font-size="12" font-family="Arial, sans-serif" opacity=".95" data-page-node-id="7K86GqGtMTJzUZP8jPAkKj">
+        <text x="24" y="270" data-page-node-id="pfFu7VB173hfLwCjWWMkVv">东 East</text><text x="330" y="270" data-page-node-id="ORFjUrAkgNTkpBHclCfnED">南 South</text><text x="622" y="270" data-page-node-id="OjgGgKQQHI4NKwfeqC8bch">西 West</text>
+      </g>
+      <!-- 标记：日出 / 正午 / 日落 -->
+      <g id="marks" font-size="11.5" font-family="Arial, sans-serif" data-page-node-id="pEGk39BVC6WnG5E5bBH3d5"></g>
+      <!-- 当前太阳 -->
+      <g id="sunNow" style="display:none" data-page-node-id="ZVOVRaZN25VTHKsOaCMuaT">
+        <circle r="30" fill="url(#sunGlow)" data-page-node-id="SFD5HZ4vnfT86BA1tzOzj6"/><circle r="13" fill="#ffd166" data-page-node-id="GYLxKAuAluRndZDO3PpOYV"/>
+        <circle r="13" fill="none" stroke="#fff6c9" stroke-width="2" data-page-node-id="1LelZGkXo0CDWtJOFYPDZz"/>
+      </g>
+      <!-- 夜晚月亮 -->
+      <g id="moonNow" style="display:none" data-page-node-id="0NBrm5MuU8xK4t4NRSEAnX">
+        <circle r="19" fill="#e8ecf8" opacity=".95" data-page-node-id="KSruRcWPjsYUJ3ykJLKw1x"/>
+        <path id="moonShade" fill="#0a1030" d="" data-page-node-id="Z37AQhIOVdFVZPTsQjHEOA"/>
+        <circle r="19" fill="none" stroke="#c9d2f0" stroke-width="1.4" opacity=".7" data-page-node-id="LquIaRwxmCYSwl6515uIxI"/>
+      </g>
+    </svg>
+  </div>
+  <div class="slider" data-page-node-id="0RraRXUeUihdg7XtHIVkoS">
+    <div class="lab" data-page-node-id="MfGYludUb3Nr9nhr9xIAfb"><span data-page-node-id="H5E00H2IJ2v1WoHZDXRwRC">时刻</span><span id="tLab" data-page-node-id="YCN56PaIA8ac8cpNstNF83">12:00</span></div>
+    <input type="range" id="tSlide" min="0" max="1430" step="10" value="720" aria-label="一天中的时刻" data-page-node-id="c6sumEqAX9WCNO3ByUmdz4">
+  </div>
+  <div class="moonrow" data-page-node-id="OtcS0K7RPPs9eJKhKhd63d">
+    <svg width="104" height="104" viewBox="-52 -52 104 104" role="img" aria-label="月相盘" data-page-node-id="sKZY2I9JDpCRLYNTquqEgC">
+      <circle r="46" fill="#10162e" stroke="#3a456e" stroke-width="2" data-page-node-id="H1aRNZtxdIda38eujV6RdJ"/>
+      <g id="litG" data-page-node-id="p19zeKxQjT28Dnl75YV1dh"><path id="litPath" fill="#f3ecce" d="" data-page-node-id="n6bB1pEpiraYyEDkZxA1Yv"/></g>
+      <circle r="46" fill="none" stroke="#54608d" stroke-width="1.5" opacity=".8" data-page-node-id="yNlVyQXWJlbRvPXkaLIp3T"/>
+    </svg>
+    <div class="mooninfo" data-page-node-id="HIQHcSsPQXXp9FT3PlD1iF">
+      相位：<b id="mName" data-page-node-id="3YK5eBY738XAnS7ujqVNEa">—</b><br data-page-node-id="IrUkujMEiPoiVgz68yLlnA">
+      照亮比例：<b id="mK" data-page-node-id="7Qry6wap7IuObqR1aO7BLu">—</b> · 相位角 p = <span id="mP" data-page-node-id="p9JG05AhrHE7P5j6Wh8Mbt">—</span>
+    </div>
+  </div>
+  <!-- 结果区（自动校验入口） -->
+  <div id="q-result" data-page-node-id="RCcZSmax7UkwXyEpTzGvqq">—</div>
+  <div class="extras" data-page-node-id="V03afp9VeeJS76TEJ5eowd">
+    <span id="xDL" data-page-node-id="2RYD16BTiGE9VXZFErhEz1">昼长 —</span><span id="xDLd" data-page-node-id="V65gJKuty7zY6xM11Oibc8">较前日 —</span><span id="xNoon" data-page-node-id="u5Bk4nAD5rnt4eFCcL2odB">正午太阳高度 —</span><span id="xBlue" data-page-node-id="TeCjN8zBg5Dmdqb5WktuyM">蓝调时刻 —</span>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   天文计算：NOAA 日出日落（含时差方程与赤纬，本地正午两次迭代）
+   + Meeus《天文算法》48.4 节近似月相（真距角修正 → 相位比例 p / 照亮 k）
+   所有数值由页面代码实时计算，无接口、无查表、无硬编码结果。
+===================================================================== */
+const D2R=Math.PI/180, R2D=180/Math.PI;
+const jdOf=(y,m,d,ut)=>Date.UTC(y,m-1,d)/864e5+2440587.5+ut/24;
+
+/* ---------- NOAA 太阳：时差方程 eqt + 赤纬 decl（给定 jd、经度、时区） ---------- */
+function solar(jd,lon,tz){
+  const jc=(jd-2451545)/36525;
+  const L0=(280.46646+jc*(36000.76983+jc*0.0003032))%360, M=357.52911+jc*(35999.05029-0.0001537*jc);
+  const e=0.016708634-jc*(0.000042037+jc*0.0000001267);
+  const C=Math.sin(M*D2R)*(1.914602-jc*(0.004817+jc*0.000014))+Math.sin(2*M*D2R)*(0.019993-jc*0.000101)+Math.sin(3*M*D2R)*0.000289;
+  const omega=(125.04-1934.136*jc)*D2R, appLong=L0+C-0.00569-0.00478*Math.sin(omega);
+  const obliq=23+(26+(21.448-jc*(46.815+jc*(0.00059-jc*0.001813)))/60)/60+0.00256*Math.cos(omega);
+  const decl=Math.asin(Math.sin(obliq*D2R)*Math.sin(appLong*D2R))*R2D;
+  const y=Math.tan((obliq/2)*D2R)**2;
+  const eqt=4*R2D*(y*Math.sin(2*L0*D2R)-2*e*Math.sin(M*D2R)+4*e*y*Math.sin(M*D2R)*Math.cos(2*L0*D2R)-0.5*y*y*Math.sin(4*L0*D2R)-1.25*e*e*Math.sin(2*M*D2R));
+  return{noon:720-4*lon-eqt+tz*60,decl,eqt};
+}
+/* 太阳中心高度 −0.833°（折射9′+视半径16′）的时角；c>1 极夜 / c<−1 极昼 */
+function hourAngle(lat,decl){
+  const c=Math.cos(90.833*D2R)/(Math.cos(lat*D2R)*Math.cos(decl*D2R))-Math.tan(lat*D2R)*Math.tan(decl*D2R);
+  return c>1?{polar:"极夜"}:c<-1?{polar:"极昼"}:{ha:Math.acos(c)*R2D};
+}
+/* 日出日落（本地分钟）：先估再按出没时刻的赤纬迭代两次收敛 */
+function sunTimes(y,m,d,lat,lon,tz){
+  let s=solar(jdOf(y,m,d,12-tz),lon,tz), h=hourAngle(lat,s.decl);
+  if(h.polar)return h;
+  let rise=s.noon-h.ha*4, set=s.noon+h.ha*4;
+  for(let i=0;i<2;i++){
+    const sr=solar(jdOf(y,m,d,rise/60-tz),lon,tz), hr=hourAngle(lat,sr.decl),
+          ss=solar(jdOf(y,m,d,set/60-tz),lon,tz), hs=hourAngle(lat,ss.decl);
+    if(hr.polar)return hr; if(hs.polar)return hs;
+    rise=sr.noon-hr.ha*4; set=ss.noon+hs.ha*4;
+  }
+  return{rise,set,decl:s.decl,noon:s.noon};
+}
+const norm=x=>((x%360)+360)%360;
+/* ---------- 月相：Meeus 48.4（主项修正）→ 照亮 k、相位比例 p ---------- */
+function moon(jd){
+  const T=(jd-2451545)/36525;
+  const D=norm(297.8501921+445267.1114034*T-0.0018819*T*T),
+        M=norm(357.5291092+35999.0502909*T-0.0001536*T*T),
+        Mp=norm(134.9633964+477198.8675055*T+0.0087414*T*T);
+  const corr=6.289*Math.sin(Mp*D2R)-2.100*Math.sin(M*D2R)+1.274*Math.sin((2*D-Mp)*D2R)
+            +0.658*Math.sin(2*D*D2R)+0.214*Math.sin(2*Mp*D2R)+0.110*Math.sin(D*D2R);
+  return{k:(1+Math.cos((180-D-corr)*D2R))/2, p:norm(D+corr)/360};
+}
+const NAMES=["新月","蛾眉月","上弦月","盈凸月","满月","亏凸月","下弦月","残月"];
+function phaseName(p){
+  const near=c=>Math.min(Math.abs(p-c),Math.abs(p-c-1),Math.abs(p-c+1))<=0.03;
+  if(near(0))return"新月"; if(near(0.25))return"上弦月"; if(near(0.5))return"满月"; if(near(0.75))return"下弦月";
+  return p<0.25?"蛾眉月":p<0.5?"盈凸月":p<0.75?"亏凸月":"残月";
+}
+const fmt=min=>{const t=((Math.round(min)%1440)+1440)%1440;
+  return String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0");};
+
+/* ---------- 结果文本（契约：日出/日落/月相/照亮） ---------- */
+function compute(){
+  const lat=parseFloat($("q-lat").value)||0, lon=parseFloat($("q-lon").value)||0,
+        tz=parseFloat($("q-tz").value)||0, ds=$("q-date").value;
+  const [y,m,d]=ds.split("-").map(Number);
+  const s=sunTimes(y,m,d,lat,lon,tz), mo=moon(jdOf(y,m,d,12-tz));
+  const name=phaseName(mo.p), k=Math.round(mo.k*100);
+  let txt;
+  if(s.polar)txt=`日出：${s.polar} · 日落：${s.polar} · 月相：${name} · 照亮：${k}%`;
+  else txt=`日出：${fmt(s.rise)} · 日落：${fmt(s.set)} · 月相：${name} · 照亮：${k}%`;
+  $("q-result").textContent=txt;
+  return{s,mo,name,k,lat,lon,tz,y,m,d};
+}
+const $=id=>document.getElementById(id);
+
+/* ---------- 预设城市（含南半球悉尼、北纬60°以上赫尔辛基） ---------- */
+const CITIES=[
+ {n:"北京",lat:39.9042,lon:116.4074,tz:8},
+ {n:"东京",lat:35.6762,lon:139.6503,tz:9},
+ {n:"伦敦",lat:51.5074,lon:-0.1278,tz:0},
+ {n:"纽约",lat:40.7128,lon:-74.0060,tz:-5},
+ {n:"悉尼",lat:-33.8688,lon:151.2093,tz:10},
+ {n:"赫尔辛基",lat:60.1699,lon:24.9384,tz:2}];
+CITIES.forEach((c,i)=>{const b=document.createElement("button");b.textContent=c.n;
+  b.onclick=()=>{[...$("presets").children].forEach(x=>x.classList.remove("on"));b.classList.add("on");
+    $("q-lat").value=c.lat;$("q-lon").value=c.lon;$("q-tz").value=c.tz;update();};
+  $("presets").appendChild(b);});
+$("presets").children[0].classList.add("on");
+
+/* ---------- 天穹图 ---------- */
+const HX=350, HY=252; /* 地平线 y、中心 x */
+function posAt(min,st){ /* 某本地分钟的太阳高度角（用该日赤纬近似） */
+  const H=(min-st.noon)*0.25*D2R, lat=st.lat*D2R, dec=st.decl*D2R;
+  const alt=Math.asin(Math.sin(dec)*Math.sin(lat)+Math.cos(dec)*Math.cos(lat)*Math.cos(H))*R2D;
+  return{alt,H:H*R2D};
+}
+function xy(H,alt){ return[HX+(H/180)*305, HY-(Math.max(alt,-25)/90)*235]; }
+function drawDome(st){
+  const pts=[];
+  for(let H=-180;H<=180;H+=6){
+    const lat=st.lat*D2R, dec=st.decl*D2R, h=H*D2R;
+    const alt=Math.asin(Math.sin(dec)*Math.sin(lat)+Math.cos(dec)*Math.cos(lat)*Math.cos(h))*R2D;
+    pts.push(xy(H,alt));
+  }
+  $("trail").setAttribute("d","M "+pts.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" L "));
+  /* 标记 */
+  const mk=$("marks"); mk.innerHTML="";
+  const label=(H,alt,txt,col,dx)=>{const[x,y]=xy(H,alt);
+    mk.innerHTML+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5" fill="${col}"/>
+      <text x="${(x+dx).toFixed(1)}" y="${(y-11).toFixed(1)}" fill="${col}" text-anchor="middle">${txt}</text>`;};
+  if(st.s.polar){
+    mk.innerHTML=`<text x="350" y="140" fill="#ffd166" font-size="17" text-anchor="middle">${st.s.polar} · 太阳整日不落 / 不升</text>`;
+  }else{
+    label((st.s.rise-st.s.noon)/4,0,"日出","#ff9a4d",0);
+    label(0,(()=>{const H=0,lat=st.lat*D2R,dec=st.decl*D2R;
+      return Math.asin(Math.sin(dec)*Math.sin(lat)+Math.cos(dec)*Math.cos(lat))*R2D;})(),"正午","#ffe27a",0);
+    label((st.s.set-st.s.noon)/4,0,"日落","#ff9a4d",0);
+  }
+}
+/* 天空颜色随太阳高度插值（夜 → 暮光 → 昼） */
+function skyColor(alt){
+  const A=$("bgA"),B=$("bgB");
+  let top,bot;
+  if(alt>8){ top="#3fa9f5"; bot="#bfe3ff"; }
+  else if(alt>-6){ const t=(alt+8)/14;
+    top=mix("#060a1e","#3a2f6b",t);
+    bot=mix(mix("#141c44","#e0704a",Math.min(t*2,1)),"#bfe3ff",Math.max(0,t*2-1)); }
+  else { top="#060a1e"; bot="#141c44"; }
+  A.setAttribute("stop-color",top); B.setAttribute("stop-color",bot);
+}
+function mix(a,b,t){t=Math.max(0,Math.min(1,t));
+  const p=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+  const A=p(a),B2=p(b);return"#"+A.map((v,i)=>Math.round(v+(B2[i]-v)*t).toString(16).padStart(2,"0")).join("");}
+/* 星空种子 */
+(function(){let s="";for(let i=0;i<70;i++){const x=(i*137.5)%700,y=(i*89.3)%230,r=(i%5)*.3+.7;
+  s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(2)}" opacity="${(0.25+(i%7)*0.1).toFixed(2)}"/>`;}
+  $("stars").innerHTML=s;})();
+
+/* ---------- 月相盘（亮面形状与朝向随 p 连续变化，北半球视角：盈月亮右） ---------- */
+function drawPhase(p,k){
+  const R=46, rx=Math.abs(Math.cos(2*Math.PI*p))*R;
+  const waxing=p<0.5;
+  const sweepOuter=waxing?1:0;
+  /* 后半椭圆：盈凸过左 / 蛾眉过右；亏月镜像（整体 scale 翻转） */
+  let sweepIn;
+  if(k>50)sweepIn=waxing?1:0; else sweepIn=waxing?0:1;
+  if(Math.abs(k-50)<0.5)sweepIn=waxing?1:0; /* 上/下弦：半圆直线过渡取同侧直边 */
+  const d=`M 0,${-R} A ${R},${R} 0 0,${sweepOuter} 0,${R} A ${Math.max(rx,0.01)},${R} 0 0,${sweepIn} 0,${-R} Z`;
+  $("litPath").setAttribute("d",d);
+  $("litG").setAttribute("transform",waxing?"":"scale(-1,1)");
+}
+
+/* ---------- 主更新 ---------- */
+function update(){
+  const r=compute();
+  const st={lat:r.lat,decl:0,noon:720,s:{rise:r.s.rise,set:r.s.set,polar:r.s.polar,noon:r.s.noon}};
+  const s2=solar(jdOf(r.y,r.m,r.d,12-r.tz),r.lon,r.tz);
+  st.decl=s2.decl; st.noon=s2.noon;
+  drawDome(st);
+  skyAndMarks(st,r);
+  drawPhase(r.mo.p,r.k);
+  $("mName").textContent=r.name;
+  $("mK").textContent=r.k+"%";
+  $("mP").textContent=r.mo.p.toFixed(4);
+  extras(r,s2);
+}
+function skyAndMarks(st,r){
+  const min=+$("tSlide").value;
+  $("tLab").textContent=String(Math.floor(min/60)).padStart(2,"0")+":"+String(min%60).padStart(2,"0");
+  const{alt,H}=posAt(min,{lat:st.lat,decl:st.decl,noon:st.noon});
+  skyColor(alt);
+  const[x,y]=xy(H,alt);
+  if(alt>-0.9&&!st.s.polar){$("sunNow").style.display="";$("sunNow").setAttribute("transform",`translate(${x.toFixed(1)},${y.toFixed(1)})`);
+    $("moonNow").style.display="none";}
+  else{$("sunNow").style.display="none";
+    /* 夜晚：月亮出现在近似对侧（同高度映射） */
+    const mx=HX+(st.noon-min)*0.25/180*305, my=HY-Math.max(-alt*0.85,6)/90*235;
+    $("moonNow").style.display="";
+    $("moonNow").setAttribute("transform",`translate(${Math.max(40,Math.min(660,mx)).toFixed(1)},${Math.max(24,my).toFixed(1)})`);
+    /* 夜面遮罩：暗面 = 外侧半圆 + 终止线椭圆（盈月亮右，亏月镜像） */
+    const p=r.mo.p, R=19, rx=Math.abs(Math.cos(2*Math.PI*p))*R;
+    const k=(1-Math.cos(2*Math.PI*p))/2;
+    const wax=p<0.5;
+    /* 暗面外缘：盈月在左（sweep0 从上到下经左），亏月镜像由 group 翻转处理 */
+    const outerSweep=0;
+    const innerSweep=k>0.5?1:0; /* 暗面为凸月牙(亏)或弦月牙(盈) */
+    const shadeD=`M 0,${-R} A ${R},${R} 0 0,${outerSweep} 0,${R} A ${Math.max(rx,.01)},${R} 0 0,${innerSweep} 0,${-R} Z`;
+    $("moonShade").setAttribute("d",shadeD);
+    $("moonShade").setAttribute("transform",wax?"":"scale(-1,1)");}
+  if(!st.s.polar){
+    $("trail").style.opacity=".95";
+  } else {$("trail").style.opacity=".25";}
+}
+/* 加分项：昼长、与前一日差、正午高度、蓝调时刻 */
+function extras(r,s2){
+  const st={lat:r.lat,decl:s2.decl,noon:s2.noon};
+  if(!r.s.polar){
+    const dl=(r.s.set-r.s.rise)/60;
+    $("xDL").textContent="昼长 "+dl.toFixed(1)+" 小时";
+    const pv=new Date(Date.UTC(r.y,r.m-1,r.d)-864e5);
+    const ps=sunTimes(pv.getUTCFullYear(),pv.getUTCMonth()+1,pv.getUTCDate(),r.lat,r.lon,r.tz);
+    const pdl=ps.polar?dl:(ps.set-ps.rise)/60;
+    const diff=Math.round((dl-pdl)*60);
+    $("xDLd").textContent="较前日 "+(diff>0?"+":"")+diff+" 分钟";
+    $("xBlue").textContent="蓝调时刻 "+fmt(r.s.rise+30)+" – "+fmt(r.s.rise+60);
+  }else{ $("xDL").textContent="昼长 "+r.s.polar; $("xDLd").textContent="较前日 —"; $("xDLd").textContent="较前日 —"; $("xBlue").textContent="蓝调时刻 —"; }
+  const noonAlt=90-Math.abs(r.lat-s2.decl);
+  $("xNoon").textContent="正午太阳高度 "+Math.max(0,noonAlt).toFixed(1)+"°";
+}
+/* ---------- 事件 ---------- */
+function updateVisualsOnly(){ update(); }
+["q-lat","q-lon","q-date","q-tz"].forEach(id=>{
+  ["input","change"].forEach(ev=>$(id).addEventListener(ev,update));
+});
+$("tSlide").addEventListener("input",update);
+/* 默认：北京 + 今天 */
+(function(){const n=new Date(),p=x=>String(x).padStart(2,"0");
+  $("q-date").value=`${n.getFullYear()}-${p(n.getMonth()+1)}-${p(n.getDate())}`;
+  ["input","change"].forEach(ev=>$("q-date").dispatchEvent(new Event(ev)));})();
+</script>
+</body>
+</html>

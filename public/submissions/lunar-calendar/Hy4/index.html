@@ -1,0 +1,140 @@
+<!doctype html><html lang="zh-CN" data-page-node-id="AncjfKEGL3mYAulqGrBli5"><head data-page-node-id="OZ7fa2xAtItdq310PP7yhD">
+<meta charset="utf-8" data-page-node-id="WUSc3fI07Lw1G0DmH0vFGL"><meta name="viewport" content="width=device-width,initial-scale=1" data-page-node-id="9ncK07LYb0SVAbnaoPZmjF">
+<title>农历日历 · 公历农历双历</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f4efe4;--card:#fffdf7;--ink:#2b2a26;--sub:#8c867a;--line:#e9e1d1;--acc:#b0392c;--gd:#b8912b;--soft:#f6efe2}
+@media(prefers-color-scheme:dark){:root{--bg:#111318;--card:#1b1e25;--ink:#ece7dc;--sub:#949aa6;--line:#2b303a;--acc:#e5766a;--gd:#e3ba55;--soft:#22262e}}
+body{min-height:100vh;display:flex;justify-content:center;padding:16px;background:radial-gradient(120% 70% at 50% 0,var(--soft),var(--bg));color:var(--ink);font:14px/1.5 -apple-system,"PingFang SC","Noto Sans CJK SC",sans-serif}
+.card{width:100%;max-width:400px;background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 20px 44px -20px rgba(0,0,0,.3);overflow:hidden}
+.hd{padding:15px 16px 11px;border-bottom:1px solid var(--line);background:linear-gradient(165deg,rgba(176,57,44,.10),transparent 70%)}
+.yr{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.yr h1{font-size:23px;font-weight:700;letter-spacing:.5px}
+.yr h1 em{font-style:normal;font-size:14px;color:var(--sub);margin-left:5px}
+.chip{font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);background:var(--soft);color:var(--sub);white-space:nowrap}
+.nav{display:flex;align-items:center;gap:6px;margin-top:11px}
+.nav button{flex:0 0 auto;min-width:32px;height:30px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:9px;font-size:13px;cursor:pointer;transition:.15s}
+.nav button:hover{border-color:var(--acc);color:var(--acc)}
+.nav .sp{flex:1}
+.nav .now{font-size:12px;padding:0 10px}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.wk,.g{display:grid;grid-template-columns:repeat(7,1fr)}
+.wk{padding:8px 8px 0;font-size:11px;color:var(--sub);text-align:center}
+.wk span:first-child,.wk span:last-child{color:var(--acc)}
+.g{padding:6px 8px 10px;outline:none}
+.c{padding:3px 0 4px;text-align:center;border-radius:10px;cursor:pointer;min-height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:background .15s}
+.c b{font-size:15px;font-weight:600;line-height:1.1}
+.c i{font-style:normal;font-size:10px;color:var(--sub);line-height:1.2;white-space:nowrap}
+.c u{text-decoration:none;font-size:9px;color:var(--gd);line-height:1.2;white-space:nowrap}
+.c.o{opacity:.34}
+.c:hover{background:var(--soft)}
+.c.sel{background:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.c.sel b,.c.sel i,.c.sel u{color:#fff}
+.c.today b{color:var(--acc)}
+.c.today:not(.sel){background:rgba(176,57,44,.10)}
+.c.sel.today b{color:#fff}
+.det{margin:0 8px 10px;padding:11px 12px;border-radius:13px;background:var(--soft);border:1px solid var(--line)}
+.det h2{font-size:15px;font-weight:600;margin-bottom:6px}
+.det p{font-size:12px;color:var(--sub);margin-top:3px;display:flex;gap:6px}
+.det p b{font-weight:600;color:var(--acc);flex:0 0 auto}
+.q{margin:0 8px 14px;padding:11px 12px;border-radius:13px;border:1px dashed var(--line)}
+.q label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px}
+.q input{width:100%;height:32px;padding:0 9px;font:13px inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:9px}
+.res{margin-top:9px;font-size:12px;color:var(--ink);display:flex;flex-wrap:wrap;align-items:center;gap:2px}
+.res span b{font-weight:600;color:var(--acc)}
+.res .dot{color:var(--sub);opacity:.6}
+.tip{padding:0 16px 14px;font-size:10px;color:var(--sub);text-align:center}
+</style></head><body data-page-node-id="4HegkqhucVMaePRudZ4Qtq">
+<div class="card" data-page-node-id="ScOiOmQTAzFdcCXoJCq8eI">
+ <div class="hd" data-page-node-id="DstgqTwpGzloqMgbEDYXyD">
+  <div class="yr" data-page-node-id="yGvMQvZe6UDVyA4iwC6fF4"><h1 id="mt" data-page-node-id="3XGXvLIfPeIgTVx7vxPC09">—</h1><span class="chip" id="chip" data-page-node-id="OGVDGu31pAyh8DM4W4THcG"></span></div>
+  <div class="nav" data-page-node-id="aVbJ3KSp7lzKazESxyk4Hy">
+   <button id="py" title="上一年" data-page-node-id="3vkg2uF3OZUyhhn4X55qAY">«</button><button id="pm" title="上一月" data-page-node-id="CbO4KChaQo938r3gSHTiih">‹</button>
+   <span class="sp" data-page-node-id="HzOAWM7LAfMtpv7lHOOXFE"></span><button id="nm" title="下一月" data-page-node-id="pBGkBoTZXyNx0BPwK6E0gT">›</button><button id="ny" title="下一年" data-page-node-id="AtYK4P13R5H9CPLIRawJ33">»</button>
+   <button class="now" id="t0" data-page-node-id="EIBBU4S6yrpT9WKgPnmnfU">今天</button>
+  </div>
+ </div>
+ <div class="wk" data-page-node-id="iD87NZSXZjAMXWYMLN4hC2"><span data-page-node-id="cszuMgZU2iorcpncFG5yii">日</span><span data-page-node-id="xpJDmnIZ6Ljf0Ly2C7m424">一</span><span data-page-node-id="fZdgZLqY5jroqCfAdqw0Qd">二</span><span data-page-node-id="BAPx35seYz3LSbWSI568wv">三</span><span data-page-node-id="FS4HD2RM0MsSVYBahjGMxi">四</span><span data-page-node-id="rPEapJqqoLaWK3ZFFt3fvs">五</span><span data-page-node-id="9CLlwaKiCBTsOF7LzcGoma">六</span></div>
+ <div class="g" id="g" role="grid" tabindex="0" aria-label="日历月视图" data-page-node-id="WaV8bjFltok9qCZIkqYWdo"></div>
+ <div class="det" id="det" data-page-node-id="a8ZjAyJq7ere3UCNFXGpMH"></div>
+ <div class="q" data-page-node-id="TpoIM8LfWgHGgSzGtxYKXC"><label for="q-date" data-page-node-id="mcEQRdiKV8nr3ALe6HYwFA">日期查询（1900–2100）</label>
+  <input type="date" id="q-date" min="1900-01-31" max="2100-12-31" data-page-node-id="9UnFCx9InZNGCBosWzx4B8"><div class="res" id="q-result" data-page-node-id="drkimRluDlXXhl5ulwYUff"></div>
+ </div>
+ <p class="tip" data-page-node-id="p43L9uanElv8HxkZpSly0l">方向键移动 · PageUp / PageDown 翻月 · 数据全部由页内算法实时推算</p>
+</div>
+<script>
+const GAN="甲乙丙丁戊己庚辛壬癸",ZHI="子丑寅卯辰巳午未申酉戌亥",ZOD="鼠牛虎兔龙蛇马羊猴鸡狗猪";
+const MN="正二三四五六七八九十冬腊".split(""),DN="初一初二初三初四初五初六初七初八初九初十十一十二十三十四十五十六十七十八十九二十廿一廿二廿三廿四廿五廿六廿七廿八廿九三十".match(/../g);
+const TERMS="春分 清明 谷雨 立夏 小满 芒种 夏至 小暑 大暑 立秋 处暑 白露 秋分 寒露 霜降 立冬 小雪 大雪 冬至 小寒 大寒 立春 雨水 惊蛰".split(" ");
+const LIS="0ezc0esg0wog0gr915k016xc1yl00h400ukw0gya0esg0wqe0wk015jk2k450zsw16e80yaq0tkg1t2v0ei80wj40zp10l000lkw2ces08kg0tio"+
+"0gdu0ei80k1216001aa80lud0hxs08kg257n0t0g2i8n13rk16002ld20ztc0h402bas07gw0t0015ma0xg00ztj0lgg0ztc1v110fc00wq81sab"+
+"0gc00xig1a340l280yhy0xu80ew00xr80wog0g9s1bvn16xc0i1j0h400tsg0fdh0es00wk0161g15jk16540zsw102o284m0tkg0ek00xh00wj4"+
+"0z960l000lkw0yme0xuo0tio0et10ei80jw00n1f1aa80l7c0hxc0xuo0tsl0t0g13s016xg1600174g0n6a0h400xx307gw0t00141h0xg00zog"+
+"10v80y8g0gyh0exs0wq81unq0gc00xf40nys0l280y8g0i1e0ew00wyu0wkg15k01aat16400hwg0nfn0tsg0et70es00wk02jsm15jk163k17ph"+
+"0zvk0h5c0gxe0ek00won0wj40xn42dsl0lk00yao1tgj0t4g0em00ei80jw01z8m1aa80l5s2bic0xr40w6815nn13s016531600174g0ifp0h40"+
+"0wy80gyc0gcw0xiw0xg00zog102u0y8g0gww0xwk0wq80gc00z8z0ks00mrb0l280y8g1tg50ew00wog0gro15cw1a3s163k176o1zmu0h5c0esg"+
+"0xjo0w5s15cg1bv6163k";
+const MS=864e5,EPOCH=Date.UTC(1900,0,31),D2R=Math.PI/180,WD="日一二三四五六";
+const info=y=>parseInt(LIS.substr((y-1900)*4,4),36),lM=y=>info(y)&15,lD=y=>lM(y)?(info(y)&65536?30:29):0,mD=(y,m)=>info(y)&(65536>>m)?30:29;
+function months(y){const s=[];for(let m=1;m<=12;m++){s.push([m,0,mD(y,m)]);if(m===lM(y))s.push([m,1,lD(y)]);}return s;}
+const yD=y=>months(y).reduce((a,x)=>a+x[2],0);
+function lunar(y,m,d){let o=Math.round((Date.UTC(y,m-1,d)-EPOCH)/MS),ly=1900;if(o<0)return null;
+ for(let n;ly<2100&&o>=(n=yD(ly));ly++)o-=n;
+ for(const x of months(ly)){if(o<x[2])return{y:ly,m:x[0],leap:!!x[1],d:o+1};o-=x[2];}return null;}
+function s2l(ly,lm,ld){let o=0;for(let y=1900;y<ly;y++)o+=yD(y);
+ for(const x of months(ly)){if(x[0]===lm&&!x[1])return new Date(EPOCH+(o+ld-1)*MS);o+=x[2];}return null;}
+const gz=y=>GAN[((y-4)%10+10)%10]+ZHI[((y-4)%12+12)%12],zod=y=>ZOD[((y-4)%12+12)%12];
+const dgz=a=>{const i=((Math.floor(Date.UTC(a[0],a[1]-1,a[2])/MS)+17)%60+60)%60;return GAN[i%10]+ZHI[i%12];};
+function sunLon(jd){const T=(jd-2451545)/36525,L=280.46646+36000.76983*T+3.032e-4*T*T,M=(357.52911+35999.05029*T-1.537e-4*T*T)*D2R;
+ const C=(1.914602-0.004817*T-1.4e-5*T*T)*Math.sin(M)+(0.019993-1.01e-4*T)*Math.sin(2*M)+2.89e-4*Math.sin(3*M);
+ return (((L+C-0.00569-0.00478*Math.sin((125.04-1934.136*T)*D2R))%360)+360)%360;}
+function term(y,m,d){const j=Date.UTC(y,m-1,d)/MS+2440587.5-1/3,a=Math.floor(sunLon(j)/15),b=Math.floor(sunLon(j+1)/15);return a===b?"":TERMS[b];}
+const FT={"1-1":"春节","1-15":"元宵","5-5":"端午","7-7":"七夕","8-15":"中秋","9-9":"重阳","12-8":"腊八"};
+function fest(L){if(L.leap)return"";const k=L.m+"-"+L.d;if(FT[k])return FT[k];if(L.m===12&&L.d===mD(L.y,12))return"除夕";return"";}
+const YJ=["宜读书 · 忌熬夜","宜出行 · 忌争执","宜会友 · 忌空想","宜早起 · 忌拖延","宜整理 · 忌囤积","宜练字 · 忌浮躁","宜散步 · 忌久坐","宜问候 · 忌沉默"];
+const $=i=>document.getElementById(i),dim=(y,m)=>new Date(y,m,0).getDate();
+const now=new Date(),T=[now.getFullYear(),now.getMonth()+1,now.getDate()];let sel=T.slice();
+const shift=(a,n)=>{let y=a[0],m=a[1]+n;while(m<1){m+=12;y--;}while(m>12){m-=12;y++;}return[y,m,Math.min(a[2],dim(y,m))];};
+const lName=L=>(L.leap?"闰":"")+MN[L.m-1]+"月"+DN[L.d-1];
+const all=a=>{const L=lunar(a[0],a[1],a[2]);return L?{L,t:term(...a),f:fest(L)}:null;};
+function render(){
+ const [y,m,d]=sel,h=[],off=new Date(y,m-1,1).getDay();
+ const i=all(sel),L=i.L;
+ $("mt").innerHTML=y+"年"+m+"月<em>· "+gz(L.y)+"年</em>";
+ $("chip").textContent="生肖 "+zod(L.y)+" · "+(L.leap?"闰":"")+MN[L.m-1]+"月";
+ for(let k=0;k<42;k++){
+  const b=new Date(y,m-1,1-off+k),gy=b.getFullYear(),gm=b.getMonth()+1,gd=b.getDate();
+  const A=[gy,gm,gd],j=all(A),cur=gm===m,isT=gy===T[0]&&gm===T[1]&&gd===T[2],isS=gy===sel[0]&&gm===sel[1]&&gd===sel[2];
+  const ev=j.f||j.t||"",lb=j.L.d===1?(j.L.leap?"闰":"")+MN[j.L.m-1]+"月":DN[j.L.d-1];
+  h.push('<div class="c'+(cur?"":" o")+(isT?" today":"")+(isS?" sel":"")+'" role="gridcell"'+(isT?' aria-current="date"':'')+
+   ' data-p="'+gy+'-'+gm+'-'+gd+'" aria-label="'+gy+'年'+gm+'月'+gd+'日 农历'+lName(j.L)+'"><b>'+gd+'</b><i>'+lb+'</i><u>'+ev+'</u></div>');
+ }
+ $("g").innerHTML=h.join("");
+ const doy=Math.round((Date.UTC(y,m-1,d)-Date.UTC(y,0,1))/MS)+1,nx=s2l(L.y,1,1),nx2=nx&&nx<new Date(y,m-1,d)?s2l(Math.min(L.y+1,2100),1,1):nx;
+ const days=nx2?Math.round((nx2-Date.UTC(y,m-1,d))/MS):0;
+ $("det").innerHTML="<h2>"+y+"年"+m+"月"+d+"日 星期"+WD[new Date(y,m-1,d).getDay()]+"</h2>"+
+  '<p><b>农历</b>'+gz(L.y)+"年 "+lName(L)+"</p>"+
+  '<p><b>干支</b>'+gz(L.y)+"年 "+dgz(sel)+"日 · 生肖"+zod(L.y)+"</p>"+
+  '<p><b>'+(i.t?"节气":"节日")+'</b>'+(i.t||i.f||"无")+(i.t&&i.f?" · "+i.f:"")+"</p>"+
+  '<p><b>纪序</b>年内第 '+doy+' 天 · 第 '+Math.ceil(doy/7)+' 周 · 距春节 '+days+' 天</p>'+
+  '<p><b>宜忌</b>'+YJ[(L.y*3+L.m*7+L.d*13)%8]+"</p>";
+}
+function upd(){const v=$("q-date").value;if(!v)return;const a=v.split("-").map(Number);
+ const i=all(a);if(!i||!i.L){$("q-result").textContent="超出 1900–2100 范围";return;}
+ const L=i.L,s=k=>'<span>'+k+'</span>';
+ $("q-result").innerHTML=s("农历：<b>"+gz(L.y)+"年 "+(L.leap?"闰":"")+MN[L.m-1]+"月 "+DN[L.d-1]+"</b>")+'<span class="dot"> · </span>'+
+  s("生肖：<b>"+zod(L.y)+"</b>")+'<span class="dot"> · </span>'+s("节气：<b>"+(i.t||"无")+"</b>")+'<span class="dot"> · </span>'+s("节日：<b>"+(i.f||"无")+"</b>");}
+$("g").addEventListener("click",e=>{const c=e.target.closest(".c");if(!c)return;sel=c.dataset.p.split("-").map(Number);render();});
+$("g").addEventListener("keydown",e=>{const K=e.key,n={ArrowLeft:-1,ArrowRight:1,ArrowUp:-7,ArrowDown:7};
+ if(K in n){const b=new Date(sel[0],sel[1]-1,sel[2]+n[K]);sel=[b.getFullYear(),b.getMonth()+1,b.getDate()];}
+ else if(K==="PageUp")sel=shift(sel,-1);
+ else if(K==="PageDown")sel=shift(sel,1);
+ else if(K==="Home")sel=T.slice();
+ else return;e.preventDefault();render();$("g").focus();});
+$("pm").onclick=()=>{sel=shift(sel,-1);render();};$("nm").onclick=()=>{sel=shift(sel,1);render();};
+$("py").onclick=()=>{sel=shift(sel,-12);render();};$("ny").onclick=()=>{sel=shift(sel,12);render();};
+$("t0").onclick=()=>{sel=T.slice();render();};
+$("q-date").addEventListener("input",upd);$("q-date").addEventListener("change",upd);
+$("q-date").value=T[0]+"-"+String(T[1]).padStart(2,"0")+"-"+String(T[2]).padStart(2,"0");
+render();upd();
+</script></body></html>

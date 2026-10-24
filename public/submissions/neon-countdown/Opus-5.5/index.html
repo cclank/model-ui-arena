@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-phase="run">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Opus-5.5 · 霓虹倒计时</title>
+<!-- 设计说明：
+1. 霓虹灯管风：60 段 LED 外环按毫秒逐段熄灭，内圈光弧平滑流失，10 个秒位刻点逐一点亮；背景是随节拍流动的透视网格地面。
+2. 每一秒同步触发五件事：数字“砸入”、冲击波扩散、网格亮度脉冲、秒位点亮、(可选) 合成滴答声，全部由同一个 performance.now() 截止时间驱动。
+3. 最后 3 秒切到品红警报色：心跳式双脉冲、画面震动、色差重影和边缘警报光，节奏明显加紧。
+4. 归零后进入完成态：白闪 + 粒子爆发 + 多重光环，外环转为流动彩虹并显示 0 与完成文案；Restart 重新完整倒计时。 -->
+<style>
+@property --c{syntax:'<color>';inherits:true;initial-value:#27f3ff}
+*{box-sizing:border-box;margin:0}
+:root{--c:#27f3ff;--c2:#b04bff;--dial:min(84vw,58vh,460px)}
+html[data-phase=final]{--c:#ff2d78;--c2:#ff9a2d}
+html[data-phase=done]{--c:#ffe45c;--c2:#ff4fd8}
+body{height:100vh;overflow:hidden;display:grid;place-items:center;background:radial-gradient(70% 60% at 50% 40%,#140a2e,#03020a 70%);color:#fff;font-family:-apple-system,"SF Pro Display","Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;transition:--c .5s}
+canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+.floor{position:fixed;left:-60%;right:-60%;bottom:-2%;height:46%;transform:perspective(520px) rotateX(62deg);transform-origin:50% 100%;opacity:.55;
+  background:linear-gradient(transparent 94%,var(--c) 94%) 0 0/100% 56px,linear-gradient(90deg,transparent 95%,var(--c) 95%) 0 0/56px 100%;
+  -webkit-mask:linear-gradient(transparent 5%,#000 70%);mask:linear-gradient(transparent 5%,#000 70%);animation:run 1s linear infinite}
+@keyframes run{to{background-position:0 56px,0 0}}
+html[data-phase=final] .floor{animation-duration:.4s}html[data-phase=done] .floor{animation-duration:.25s}
+.alarm{position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 120px 20px var(--c);opacity:0;transition:opacity .4s}
+html[data-phase=final] .alarm{opacity:.55;animation:beat 1s infinite}
+@keyframes beat{0%,40%,100%{opacity:.2}10%,30%{opacity:.75}}
+.stage{position:relative;display:flex;flex-direction:column;align-items:center;gap:clamp(12px,2.6vh,22px);z-index:1}
+.dial{position:relative;width:var(--dial);height:var(--dial);display:grid;place-items:center}
+.dial svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.seg{fill:var(--c);transition:opacity .12s}
+#arc{fill:none;stroke:var(--c);stroke-width:5;stroke-linecap:round;filter:drop-shadow(0 0 6px var(--c)) drop-shadow(0 0 14px var(--c))}
+.tick{fill:#fff;opacity:.18}.tick.on{opacity:1;fill:var(--c2);filter:drop-shadow(0 0 5px var(--c2))}
+.num{position:relative;font-weight:800;font-size:calc(var(--dial)*.46);line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:#fff;
+  text-shadow:0 0 4px #fff,0 0 14px var(--c),0 0 34px var(--c),0 0 70px var(--c)}
+html[data-phase=final] .num{text-shadow:-3px 0 rgba(0,240,255,.75),3px 0 rgba(255,0,90,.75),0 0 14px var(--c),0 0 40px var(--c),0 0 90px var(--c)}
+.shock{position:absolute;inset:18%;border-radius:50%;border:2px solid var(--c);opacity:0;pointer-events:none;box-shadow:0 0 24px var(--c),inset 0 0 24px var(--c)}
+.label{font-size:13px;letter-spacing:.5em;text-indent:.5em;color:var(--c);text-shadow:0 0 10px var(--c);text-transform:uppercase;min-height:1.2em;text-align:center}
+.ms{font:600 clamp(20px,4.6vw,28px)/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:.12em;color:#fff;opacity:.9}
+.row{display:flex;gap:10px}
+button{font:600 14px/1 -apple-system,"PingFang SC",sans-serif;letter-spacing:.2em;color:#fff;background:rgba(255,255,255,.04);border:1.5px solid var(--c);border-radius:99px;padding:12px 26px;cursor:pointer;box-shadow:0 0 14px color-mix(in srgb,var(--c) 60%,transparent),inset 0 0 12px color-mix(in srgb,var(--c) 35%,transparent);transition:transform .15s}
+button:hover{transform:translateY(-1px)}button:active{transform:scale(.97)}
+#snd{border-color:rgba(255,255,255,.3);box-shadow:none;letter-spacing:.1em;padding:12px 16px}
+html[data-phase=done] #restart{animation:glow 1.2s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 34px var(--c),inset 0 0 18px var(--c)}}
+.flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none}
+.scan{position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(transparent 0 2px,rgba(0,0,0,.18) 2px 4px);mix-blend-mode:multiply}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="floor" id="floor"></div>
+<div class="alarm"></div>
+<main class="stage" id="stage">
+  <div class="dial">
+    <svg viewBox="-200 -200 400 400" aria-hidden="true">
+      <circle r="150" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="5"/>
+      <circle id="arc" r="150" transform="rotate(-90)"/>
+      <g id="segs"></g><g id="ticks"></g>
+    </svg>
+    <div class="shock" id="shock"></div>
+    <div class="num" id="num" aria-live="polite">10</div>
+  </div>
+  <div class="label" id="label">T-minus · 倒计时</div>
+  <div class="ms" id="ms">10.000</div>
+  <div class="row"><button id="restart">RESTART</button><button id="snd" aria-label="切换声音">声音 关</button></div>
+</main>
+<div class="flash" id="flash"></div><div class="scan"></div>
+<script>
+const $ = (id) => document.getElementById(id), root = document.documentElement;
+const NS = "http://www.w3.org/2000/svg", DUR = 10000, SEGS = 60, TAU = Math.PI * 2;
+const segs = [], ticks = [], arc = $("arc"), C = TAU * 150;
+for (let i = 0; i < SEGS; i++) {
+  const r = document.createElementNS(NS, "rect");
+  Object.entries({ x: -3, y: -186, width: 6, height: 18, rx: 3, class: "seg", transform: `rotate(${(i / SEGS) * 360 + 3})` }).forEach(([k, v]) => r.setAttribute(k, v));
+  $("segs").appendChild(r); segs.push(r);
+}
+for (let i = 0; i < 10; i++) {
+  const c = document.createElementNS(NS, "circle"), a = (i / 10) * TAU - Math.PI / 2;
+  Object.entries({ cx: Math.cos(a) * 128, cy: Math.sin(a) * 128, r: 4.5, class: "tick" }).forEach(([k, v]) => c.setAttribute(k, v));
+  $("ticks").appendChild(c); ticks.push(c);
+}
+arc.setAttribute("stroke-dasharray", C);
+// —— 粒子层：常驻上升火花 + 完成态爆发 ——
+const cv = $("fx"), ctx = cv.getContext("2d"), parts = [];
+let W, H, DPR;
+function resize() { DPR = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
+const color = () => getComputedStyle(root).getPropertyValue("--c").trim() || "#27f3ff";
+function burst(n, speed, cols, at) { // at 缺省时从数字中心爆发
+  const r = $("num").getBoundingClientRect(), x = at ? at[0] : r.left + r.width / 2, y = at ? at[1] : r.top + r.height / 2;
+  for (let i = 0; i < n && parts.length < 1400; i++) {
+    const a = Math.random() * TAU, v = speed * (0.25 + Math.random() ** 0.6);
+    parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 1, d: 0.35 + Math.random() * 0.5, s: 1.5 + Math.random() * 2.5, c: cols[i % cols.length], g: 60 });
+  }
+}
+// —— 声音：用户点开后才创建 AudioContext ——
+let ac = null, soundOn = false;
+function beep(freq, len = 0.09, vol = 0.12, type = "square") {
+  if (!ac || !soundOn) return;
+  const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime;
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+  o.connect(g).connect(ac.destination); o.start(t); o.stop(t + len + 0.02);
+}
+// —— 倒计时状态机：run → final(最后 3 秒) → done ——
+let deadline = 0, lastSec = -1, phase = "", doneAt = 0;
+function setPhase(p) { if (phase !== p) { phase = p; root.dataset.phase = p; } }
+function onSecond(sec) {
+  const num = $("num"), final = sec <= 3 && sec > 0;
+  num.textContent = sec;
+  num.animate([{ transform: `scale(${final ? 1.55 : 1.32})`, filter: "blur(5px)", opacity: 0.35 }, { transform: "scale(.96)", filter: "blur(0)", opacity: 1, offset: 0.32 }, { transform: "scale(1)" }],
+    { duration: final ? 420 : 520, easing: "cubic-bezier(.2,.9,.25,1)" });
+  $("shock").animate([{ transform: "scale(.7)", opacity: 0.95 }, { transform: `scale(${final ? 2.4 : 1.9})`, opacity: 0 }], { duration: final ? 700 : 900, easing: "cubic-bezier(.1,.7,.3,1)" });
+  if (final) {
+    $("shock").animate([{ transform: "scale(.7)", opacity: 0.7 }, { transform: "scale(1.8)", opacity: 0 }], { duration: 600, delay: 180, easing: "ease-out" });
+    $("stage").animate([{ transform: "translate(0,0)" }, { transform: "translate(-7px,4px)" }, { transform: "translate(6px,-5px)" }, { transform: "translate(-3px,2px)" }, { transform: "none" }], { duration: 320 });
+  }
+  $("floor").animate([{ opacity: 1, filter: "brightness(2)" }, { opacity: 0.55, filter: "brightness(1)" }], { duration: 600, easing: "ease-out" });
+  ticks.forEach((t, i) => t.classList.toggle("on", i < 10 - sec));
+  const d = document.querySelector(".dial").getBoundingClientRect(), a = (sec / 10) * TAU, rr = d.width * 0.44; // 火花从外环当前熄灭处迸出
+  burst(final ? 70 : 34, final ? 300 : 180, [color(), "#ffffff"], [d.left + d.width / 2 + Math.sin(a) * rr, d.top + d.height / 2 - Math.cos(a) * rr]);
+  beep(final ? 1320 : 880, final ? 0.12 : 0.07, final ? 0.16 : 0.1);
+}
+function finish() {
+  setPhase("done"); doneAt = performance.now();
+  $("num").textContent = "0"; $("label").textContent = "完成 · Mission Complete"; $("ms").textContent = "00.000";
+  ticks.forEach((t) => t.classList.add("on"));
+  $("flash").animate([{ opacity: 0.95 }, { opacity: 0 }], { duration: 750, easing: "ease-out" });
+  $("num").animate([{ transform: "scale(2.2)", opacity: 0 }, { transform: "scale(.9)", opacity: 1, offset: 0.6 }, { transform: "scale(1)" }], { duration: 900, easing: "cubic-bezier(.2,.9,.3,1.2)" });
+  for (let k = 0; k < 3; k++) $("shock").animate([{ transform: "scale(.6)", opacity: 1 }, { transform: `scale(${3 + k})`, opacity: 0 }], { duration: 1300, delay: k * 220, easing: "cubic-bezier(.1,.7,.3,1)" });
+  burst(700, 720, ["#ffe45c", "#ff4fd8", "#27f3ff", "#ffffff", "#9dff6a"]);
+  [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => beep(f, 0.5, 0.12, "sawtooth"), i * 90));
+}
+function start() {
+  deadline = performance.now() + DUR; lastSec = -1; parts.length = 0;
+  setPhase("run"); $("label").textContent = "T-minus · 倒计时";
+  ticks.forEach((t) => t.classList.remove("on"));
+}
+function frame(now) {
+  requestAnimationFrame(frame);
+  const remain = Math.max(0, deadline - now), frac = remain / DUR, sec = Math.ceil(remain / 1000);
+  if (phase !== "done") {
+    if (sec !== lastSec) { lastSec = sec; if (sec > 0) onSecond(sec); }
+    setPhase(sec <= 3 ? "final" : "run");
+    if (remain <= 0) finish();
+    else $("ms").textContent = (remain / 1000).toFixed(3).padStart(6, "0");
+    arc.setAttribute("stroke-dashoffset", C * (1 - frac));
+    const lit = frac * SEGS, flick = phase === "final";
+    segs.forEach((s, i) => { const o = Math.max(0.08, Math.min(1, lit - i)); s.style.opacity = flick && i === Math.floor(lit) ? (Math.random() < 0.5 ? 1 : 0.2) : o; });
+  } else { // 完成态：外环流动彩虹
+    const t = (now - doneAt) / 1000;
+    arc.setAttribute("stroke-dashoffset", 0);
+    segs.forEach((s, i) => { s.style.opacity = 0.55 + 0.45 * Math.sin(t * 6 - i * 0.35); s.style.fill = `hsl(${(i * 6 + t * 160) % 360} 100% 62%)`; });
+  }
+  if (phase !== "done") segs.forEach((s) => s.style.fill && (s.style.fill = ""));
+  ctx.clearRect(0, 0, W, H);
+  if (Math.random() < 0.35) parts.push({ x: Math.random() * W, y: H + 5, vx: 0, vy: -30 - Math.random() * 60, life: 1, d: 0.25, s: 1 + Math.random() * 1.5, c: color(), g: 0 });
+  ctx.globalCompositeOperation = "lighter";
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i], dt = 1 / 60;
+    p.vx *= 0.985; p.vy = p.vy * 0.985 + p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.life -= p.d * dt;
+    if (p.life <= 0) { parts[i] = parts[parts.length - 1]; parts.pop(); continue; }
+    ctx.globalAlpha = p.life; ctx.fillStyle = p.c;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.s * (0.5 + p.life * 0.5), 0, TAU); ctx.fill();
+  }
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+}
+$("restart").onclick = start;
+$("snd").onclick = () => {
+  ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+  soundOn = !soundOn; $("snd").textContent = soundOn ? "声音 开" : "声音 关";
+};
+addEventListener("resize", resize);
+resize(); start(); requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>机芯 · AETERNUM Cal. AE-18000</title>
+<style>
+  :root {
+    --ink: #2b2620;
+    --paper: #efe9dd;
+    --paper2: #e2dac8;
+    --line: rgba(60, 48, 36, .22);
+    --gold: #b98f34;
+    --gold2: #8a5f2a;
+    --steel: #4a5560;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+    background: radial-gradient(120% 85% at 50% 0%, #f7f2e6 0%, var(--paper) 48%, var(--paper2) 100%);
+    color: var(--ink);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  header { display: flex; align-items: baseline; gap: 14px; padding: 12px 20px 6px; flex-wrap: wrap; }
+  header h1 { font-size: 18px; letter-spacing: .3em; font-weight: 600; }
+  header .sub { font-size: 11px; letter-spacing: .16em; color: #8a7c64; }
+  header .cal { margin-left: auto; font-size: 11.5px; letter-spacing: .1em; color: var(--gold2);
+    border-left: 2px solid var(--gold); padding-left: 10px; }
+  main { position: relative; flex: 1; min-height: 0; display: flex; }
+  #stage { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
+  /* ---------- 侧面板（桌面） ---------- */
+  #panel {
+    position: absolute; right: 12px; top: 12px; width: 268px; z-index: 5;
+    background: rgba(250, 246, 236, .93); border: 1px solid var(--line); border-radius: 10px;
+    box-shadow: 0 8px 28px rgba(80, 60, 30, .14);
+    padding: 12px 13px; font-size: 12px; line-height: 1.5;
+    max-height: calc(100% - 24px); overflow: auto;
+  }
+  #panel h2 { font-size: 12px; letter-spacing: .22em; color: var(--gold2); font-weight: 600; margin-bottom: 6px; }
+  #panel table { width: 100%; border-collapse: collapse; margin: 4px 0 10px; }
+  #panel td, #panel th { padding: 2.5px 3px; border-bottom: 1px dashed rgba(60,48,36,.16); font-size: 11px; text-align: left; vertical-align: top; }
+  #panel th { color: #8a7c64; font-weight: 500; letter-spacing: .08em; }
+  #panel td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #panel .row { display: flex; align-items: center; gap: 8px; margin: 7px 0; flex-wrap: wrap; }
+  #panel button {
+    font-family: inherit; font-size: 11.5px; letter-spacing: .1em; cursor: pointer;
+    border: 1px solid var(--line); background: #fffdf6; color: var(--ink);
+    border-radius: 999px; padding: 4px 11px; transition: all .2s;
+  }
+  #panel button:hover { border-color: var(--gold); color: var(--gold2); }
+  #panel button.on { background: linear-gradient(180deg, #f4dd9d, #d9b65e); border-color: #b98f34; color: #4a3812; }
+  #gauge { height: 9px; border-radius: 999px; background: rgba(60,48,36,.12); overflow: hidden; flex: 1; min-width: 90px; }
+  #gauge i { display: block; height: 100%; width: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, #d9b65e, #f2d98a); transition: width .2s; }
+  #beatDot { width: 9px; height: 9px; border-radius: 50%; background: rgba(60,48,36,.15); transition: background .05s; }
+  #beatDot.hit { background: radial-gradient(circle at 35% 30%, #ffb0a0, #c03028); box-shadow: 0 0 7px rgba(192,48,40,.55); }
+  #hint {
+    position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%);
+    font-size: 12.5px; letter-spacing: .14em; color: var(--gold2); white-space: nowrap;
+    background: rgba(255, 251, 240, .92); border: 1px solid rgba(160, 120, 40, .32);
+    padding: 7px 18px; border-radius: 999px; z-index: 6; pointer-events: none;
+    transition: opacity .4s;
+  }
+  #hint.off { opacity: 0; }
+  /* ---------- 放大镜 ---------- */
+  #lens { position: absolute; width: 168px; height: 168px; border-radius: 50%; z-index: 7;
+    pointer-events: none; display: none; overflow: hidden;
+    box-shadow: 0 0 0 3px #d8c9a4, 0 0 0 7px rgba(120,95,50,.28), 0 14px 34px rgba(60,45,20,.34), inset 0 0 26px rgba(40,30,10,.28); }
+  #lens svg { display: block; }
+  @media (max-width: 900px) {
+    header .cal { display: none; }
+    #panel { right: 6px; left: 6px; top: auto; bottom: 44px; width: auto; max-height: 41%;
+      font-size: 11px; padding: 9px 10px; border-radius: 12px; }
+    #panel td, #panel th { font-size: 10px; padding: 1.5px 2px; }
+    #hint { bottom: auto; top: 8px; font-size: 11.5px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>机芯</h1>
+  <span class="sub">MOVEMENT · 瑞士杠杆擒纵 · 可拆解把玩</span>
+  <span class="cal">AETERNUM · Cal. AE-18000 · 17 JEWELS</span>
+</header>
+<main>
+  <svg id="stage" viewBox="0 0 760 720" preserveAspectRatio="xMidYMid meet" aria-label="可把玩的机械怀表机芯"></svg>
+  <div id="lens"><svg id="lensSvg" viewBox="0 0 168 168"></svg></div>
+  <aside id="panel">
+    <h2>轮系核对表</h2>
+    <table id="gearTable">
+      <tr><th>啮合</th><th>齿数</th><th>速比</th><th>周期</th></tr>
+    </table>
+    <div class="row"><span>动力储存</span><span id="gauge"><i id="gaugeFill"></i></span><b id="powerNum" class="n">100%</b></div>
+    <div class="row"><span id="beatDot"></span><span>节拍 <b id="beatNum" class="n">0</b></span><span>走时 <b id="clockNum" class="n" style="margin-left:auto">--:--:--</b></span></div>
+    <div class="row">
+      <button id="sp1" class="on">1×</button><button id="sp60">60×</button><button id="sp3600">3600×</button>
+      <button id="sndBtn" class="on">滴答声</button>
+    </div>
+    <div class="row" style="margin-top:2px">
+      <button id="crownBtn">表冠：走时中（点击拔出调时）</button>
+    </div>
+    <div style="color:#8a7c64;font-size:10.5px;line-height:1.6">
+      中心距 = 模数×(z₁+z₂)/2（going train m=3.2 / 跨轮系 m=2.2）<br>
+      拖动任意齿轮、指针或表冠，全表按速比联动
+    </div>
+  </aside>
+  <div id="hint">拖动任意齿轮 · 全表联动 · 点击表冠切换走时/调时</div>
+</main>
+<script>
+'use strict';
+/* =====================================================================
+ * AETERNUM Cal. AE-18000 —— 机械怀表机芯
+ * 单一走时状态 tSec：所有轮系角、指针、擒纵、摆轮皆由其导出
+ * 传动链（going train, m=3.2）：
+ *   发条盒72 → 中心齿轴12（6:1）   中心轮72 → 三轮轴12（6:1）
+ *   三轮80  → 四轮轴8（10:1）      四轮80  → 擒纵轴8（10:1）
+ *   ⇒ 中心轮 1 转/小时；秒轮 1 转/分；擒纵轮 10 转/分
+ *   擒纵轮 15 齿 × 2 = 30 步/转 ⇒ 5 拍/秒 = 18000 A/h
+ * 跨轮系（m=2.2）：分轮10 → 跨轮30（3:1）→ 跨齿轴8 → 时轮32（4:1）= 12:1
+ * ===================================================================== */
+const SVGNS = 'http://www.w3.org/2000/svg';
+const $ = id => document.getElementById(id);
+const stage = $('stage');
+const D2R = Math.PI / 180, R2D = 180 / Math.PI;
+const MT = 3.2, MM = 2.2;                 // 模数：走时轮系 / 跨轮系
+
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(SVGNS, tag);
+  if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const pol = (f, deg, d) => ({ x: f.x + d * Math.cos(deg * D2R), y: f.y + d * Math.sin(deg * D2R) });
+const mod = (a, m) => ((a % m) + m) % m;
+
+/* ---------- 位置（全部由齿数与模数精确推出） ---------- */
+const C = { x: 380, y: 340 };                       // 中心轮 = 分针轴
+const P = { center: C, crown: { x: 380, y: 30 } };
+P.barrel = pol(C, -90, MT * (72 + 12) / 2);          // 134.4
+P.third  = pol(C, 145, MT * (72 + 12) / 2);
+P.fourth = pol(P.third, 20, MT * (80 + 8) / 2);
+P.escape = pol(P.fourth, 80, MT * (80 + 8) / 2);
+P.bal    = pol(P.escape, 25, 70);
+P.mWheel = pol(C, 195, MM * (10 + 30) / 2);          // 44.0（与分轮、跨齿轴啮合自洽）
+P.fork   = pol(P.escape, 25, 34);
+const MATS = {
+  gilt:   'url(#gGilt)', rhodium: 'url(#gRho)', steel: 'url(#gSteel)',
+  blued:  'url(#gBlue)', ruby: 'url(#gRuby)', brass: 'url(#gBrass)',
+};
+
+/* =====================================================================
+ * defs：材质渐变 + 打磨纹理（鱼鳞纹 / 日内瓦波纹 / 太阳纹）
+ * ===================================================================== */
+const defs = el('defs', null, stage);
+function lg(id, stops, x1, y1, x2, y2) {
+  const g = el('linearGradient', { id, x1, y1, x2, y2 }, defs);
+  stops.forEach(([o, c]) => el('stop', { offset: o, 'stop-color': c }, g));
+}
+lg('gGilt',  [[0, '#f8e7b4'], [.42, '#e3c170'], [.75, '#b98f34'], [1, '#8a6620']], 0, 0, .8, 1);
+lg('gRho',   [[0, '#fbfcfe'], [.5, '#ccd6de'], [1, '#93a1ad']], 0, 0, .7, 1);
+lg('gSteel', [[0, '#f2f5f8'], [.55, '#c2ccd6'], [1, '#7d8a97']], 0, 0, .8, 1);
+lg('gBlue',  [[0, '#8aa6d8'], [.5, '#3a5a94'], [1, '#1d2c52']], 0, 0, .6, 1);
+lg('gBrass', [[0, '#f0d9a0'], [.55, '#c8a45c'], [1, '#8f6f2c']], 0, 0, .7, 1);
+lg('gFork',  [[0, '#f6f8fb'], [.5, '#c3ced8'], [1, '#78848f']], 0, 1, 1, 0);
+lg('gPlate', [[0, '#f3efe4'], [.6, '#e6dfcc'], [1, '#cfc6ae']], 0, 0, .4, 1);
+lg('gHand',  [[0, '#7e9bd4'], [.45, '#33508a'], [1, '#16224a']], 0, 0, .3, 1);
+lg('gGold2', [[0, '#f6e2a6'], [.5, '#d9b65e'], [1, '#9c7626']], 0, 0, 1, 1);
+{ // 红宝石轴承
+  const rg = el('radialGradient', { id: 'gRuby', cx: '.38', cy: '.32', r: '.85' }, defs);
+  el('stop', { offset: 0, 'stop-color': '#ffb3a4' }, rg);
+  el('stop', { offset: .45, 'stop-color': '#c8322c' }, rg);
+  el('stop', { offset: 1, 'stop-color': '#6e1416' }, rg);
+  const pg = el('radialGradient', { id: 'gPerle', cx: '.35', cy: '.3', r: '.9' }, defs);
+  el('stop', { offset: 0, 'stop-color': '#f6f1e2' }, pg);
+  el('stop', { offset: .7, 'stop-color': '#ddd2b6' }, pg);
+  el('stop', { offset: 1, 'stop-color': '#b9ac88' }, pg);
+  const cg = el('linearGradient', { id: 'gCotes', x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+  el('stop', { offset: 0, 'stop-color': '#f4f6f8' }, cg);
+  el('stop', { offset: .48, 'stop-color': '#aeb9c4' }, cg);
+  el('stop', { offset: .52, 'stop-color': '#8e99a5' }, cg);
+  el('stop', { offset: 1, 'stop-color': '#e8ebef' }, cg);
+}
+// 鱼鳞纹（perlage）：圆形研磨斑
+{
+  const p = el('pattern', { id: 'tPerle', patternUnits: 'userSpaceOnUse', width: 19, height: 19 }, defs);
+  el('circle', { cx: 4.8, cy: 4.8, r: 6.6, fill: 'url(#gPerle)' }, p);
+  el('circle', { cx: 14.2, cy: 14.2, r: 6.6, fill: 'url(#gPerle)' }, p);
+  el('circle', { cx: 4.8, cy: 4.8, r: 6.6, fill: 'none', stroke: 'rgba(90,75,50,.18)', 'stroke-width': .5 }, p);
+  el('circle', { cx: 14.2, cy: 14.2, r: 6.6, fill: 'none', stroke: 'rgba(90,75,50,.18)', 'stroke-width': .5 }, p);
+  // 日内瓦波纹（côtes de Genève）：波浪饰带
+  const c = el('pattern', { id: 'tCotes', patternUnits: 'userSpaceOnUse', width: 240, height: 30 }, defs);
+  el('path', { d: 'M0 6 Q60 1 120 6 T240 6 L240 30 L0 30 Z', fill: 'url(#gCotes)' }, c);
+  el('path', { d: 'M0 6 Q60 1 120 6 T240 6', fill: 'none', stroke: 'rgba(255,255,255,.5)', 'stroke-width': .8 }, c);
+  el('path', { d: 'M0 6 Q60 1 120 6 T240 6 L240 11 Q180 7 120 11 T0 11 Z', fill: 'rgba(60,70,80,.14)' }, c);
+}
+/* 跨轮系啮合相位解算：驱动轮在连线方向给出齿，被驱动轮给出槽 */
+const KEY = {};
+function solveKeys() {
+  const mesh = [
+    ['barrelW', 'centerP', MT], ['centerW', 'thirdP', MT], ['thirdW', 'fourthP', MT],
+    ['fourthW', 'escapeP', MT], ['cannonP', 'mWheel', MM], ['mPinion', 'hWheel', MM],
+  ];
+  const AT = { barrelW: P.barrel, centerP: C, centerW: C, thirdP: P.third, thirdW: P.third,
+    fourthP: P.fourth, fourthW: P.fourth, escapeP: P.escape, cannonP: C, mWheel: P.mWheel,
+    mPinion: P.mWheel, hWheel: C };
+  const Z = { barrelW: 72, centerP: 12, centerW: 72, thirdP: 12, thirdW: 80, fourthP: 8,
+    fourthW: 80, escapeP: 8, cannonP: 10, mWheel: 30, mPinion: 8, hWheel: 32 };
+  for (const [a, b] of mesh) {
+    const beta = Math.atan2(AT[b].y - AT[a].y, AT[b].x - AT[a].x) * R2D;
+    KEY[a] = mod(beta, 360 / Z[a]);
+    KEY[b] = mod(beta + 180 - (360 / Z[b]) / 2, 360 / Z[b]);
+  }
+}
+solveKeys();
+
+/* =====================================================================
+ * 场景静态层：主夹板 / 太阳纹 / 刻度环 / 文字
+ * ===================================================================== */
+const scene = el('g', { id: 'movRoot' }, stage);
+const plate = el('g', null, scene);
+// 主夹板：圆 + 12 点表耳座
+el('path', {
+  d: `M${C.x - 300} ${C.y} a300 300 0 1 1 600 0 a300 300 0 1 1 -600 0 Z
+      M${C.x - 26} 46 q26 -34 52 0 l0 26 q-26 -12 -52 0 Z`,
+  fill: 'url(#gPlate)', stroke: 'rgba(70,58,40,.4)', 'stroke-width': 1.4,
+}, plate);
+{ // 太阳纹（主夹板）
+  const sun = el('g', { 'clip-path': 'url(#clipPlate)' }, plate);
+  for (let i = 0; i < 150; i++) {
+    const a = i * 2.399963;
+    el('line', {
+      x1: C.x, y1: C.y, x2: C.x + Math.cos(a) * 296, y2: C.y + Math.sin(a) * 296,
+      stroke: i % 2 ? 'rgba(255,255,255,.5)' : 'rgba(90,75,50,.05)', 'stroke-width': 1.1,
+    }, sun);
+  }
+  el('circle', { cx: C.x, cy: C.y, r: 292, fill: 'none', stroke: 'rgba(90,75,50,.16)', 'stroke-width': 8 }, sun);
+}
+el('clipPath', { id: 'clipPlate' }, defs).appendChild(el('path', {
+  d: `M${C.x - 300} ${C.y} a300 300 0 1 1 600 0 a300 300 0 1 1 -600 0 Z`,
+}));
+{ // 刻度环（60 分轨 + 12 时位）
+  const ring = el('g', null, plate);
+  for (let i = 0; i < 60; i++) {
+    const a = (i * 6 - 90) * D2R, big = i % 5 === 0;
+    const r1 = big ? 236 : 244, r2 = 250;
+    el('line', {
+      x1: C.x + Math.cos(a) * r1, y1: C.y + Math.sin(a) * r1,
+      x2: C.x + Math.cos(a) * r2, y2: C.y + Math.sin(a) * r2,
+      stroke: big ? '#3a3428' : 'rgba(58,52,40,.55)', 'stroke-width': big ? 3 : 1.2,
+    }, ring);
+  }
+  for (let i = 0; i < 12; i++) {
+    const a = (i * 30 - 90) * D2R;
+    el('rect', {
+      x: C.x + Math.cos(a) * 214 - (i % 3 === 0 ? 3.4 : 2.6), y: C.y + Math.sin(a) * 214 - 9,
+      width: i % 3 === 0 ? 6.8 : 5.2, height: 18, rx: 1.5,
+      fill: '#3a3428', transform: `rotate(${i * 30} ${C.x + Math.cos(a) * 214} ${C.y + Math.sin(a) * 214})`,
+    }, ring);
+  }
+  // 小秒盘（四轮位）
+  const ss = el('g', null, plate);
+  el('circle', { cx: P.fourth.x, cy: P.fourth.y, r: 62, fill: 'rgba(250,246,236,.55)', stroke: 'rgba(70,58,40,.35)', 'stroke-width': 1.2 }, ss);
+  for (let i = 0; i < 60; i++) {
+    const a = (i * 6 - 90) * D2R, big = i % 5 === 0;
+    el('line', {
+      x1: P.fourth.x + Math.cos(a) * (big ? 50 : 55), y1: P.fourth.y + Math.sin(a) * (big ? 50 : 55),
+      x2: P.fourth.x + Math.cos(a) * 59, y2: P.fourth.y + Math.sin(a) * 59,
+      stroke: big ? '#3a3428' : 'rgba(58,52,40,.5)', 'stroke-width': big ? 2.4 : 1,
+    }, ss);
+  }
+  // 刻字
+  const tp = el('text', { x: C.x, y: C.y + 226, 'text-anchor': 'middle', 'font-size': 17,
+    'letter-spacing': 7, fill: 'rgba(70,60,44,.75)', 'font-family': 'Georgia, serif' }, plate);
+  tp.textContent = 'AETERNUM';
+  const tp2 = el('text', { x: C.x, y: C.y + 246, 'text-anchor': 'middle', 'font-size': 10.5,
+    'letter-spacing': 2.4, fill: 'rgba(70,60,44,.55)' }, plate);
+  tp2.textContent = 'AE-18000 · SEVENTEEN JEWELS · ADJUSTED';
+}
+
+/* =====================================================================
+ * 齿轮生成器（齿形由齿数代码生成）
+ * ===================================================================== */
+function teethPath(cx, cy, rPitch, z, phase, m, opt = {}) {
+  const add = (opt.add ?? 1.0) * m, ded = (opt.ded ?? 1.15) * m;
+  const tipR = rPitch + add, rootR = rPitch - ded, p = 2 * Math.PI / z;
+  const ht = p * (opt.tip ?? .16), hr = p * (opt.root ?? .30);
+  let d = '';
+  const pt = (r, a) => `${(cx + r * Math.cos(a)).toFixed(2)} ${(cy + r * Math.sin(a)).toFixed(2)}`;
+  for (let k = 0; k < z; k++) {
+    const c = phase + k * p;
+    const A = c - p / 2 + hr, B = c - ht, Cc = c + ht, D = c + p / 2 - hr;
+    d += (k ? 'L' : 'M') + pt(rootR, A) + 'L' + pt(tipR, B);
+    for (let s = 1; s <= 2; s++) d += 'L' + pt(tipR, B + (Cc - B) * s / 3);      // 齿顶
+    d += 'L' + pt(rootR, D);
+    const e = c + p / 2 + hr;                                                     // 齿根弧
+    for (let s = 1; s <= 3; s++) d += 'L' + pt(rootR, D + (e - D) * s / 4);
+  }
+  return d + 'Z';
+}
+// 镂空（crossings）掩膜
+let maskN = 0;
+function spokesMask(cx, cy, rOut, rRoot, n) {
+  const id = 'spk' + (maskN++);
+  const m = el('mask', { id, maskUnits: 'userSpaceOnUse' }, defs);
+  el('rect', { x: cx - rOut - 3, y: cy - rOut - 3, width: 2 * rOut + 6, height: 2 * rOut + 6, fill: '#fff' }, m);
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    el('ellipse', { cx, cy, rx: rRoot * .99, ry: rRoot * .30, fill: '#000',
+      transform: `rotate(${a * R2D} ${cx} ${cy})` }, m);
+  }
+  return 'url(#' + id + ')';
+}
+// 轮（带齿、轮辐、轮毂、红宝石）
+function makeWheel(o) {   // {cx,cy,z,r,m,mat,spokes?,tip?,root?,perle?}
+  const g = el('g', null, null);
+  const rRoot = o.r - 1.15 * o.m, hubR = Math.max(6, o.r * .16);
+  const rOut = o.r + 1.0 * o.m + 2;
+  let body;
+  if (o.spokes) {
+    body = el('g', { mask: spokesMask(o.cx, o.cy, rOut, rRoot, o.spokes) }, g);
+  } else body = g;
+  el('path', { d: teethPath(o.cx, o.cy, o.r, o.z, (o.phase || 0) * D2R, o.m, { tip: o.tip, root: o.root, add: o.add, ded: o.ded }), fill: o.mat, stroke: 'rgba(40,45,52,.5)', 'stroke-width': .7 }, body);
+  el('circle', { cx: o.cx, cy: o.cy, r: rRoot, fill: o.perle ? 'url(#tPerle)' : o.mat, opacity: o.perle ? .85 : 1 }, body);
+  el('circle', { cx: o.cx, cy: o.cy, r: rRoot, fill: 'none', stroke: 'rgba(40,45,52,.35)', 'stroke-width': .8 }, body);
+  if (o.spokes) {   // 轮辐压暗边
+    for (let i = 0; i < o.spokes; i++) {
+      const a = (i / o.spokes) * 360;
+      el('rect', { x: o.cx - rRoot * .12, y: o.cy - rRoot * .96, width: rRoot * .24, height: rRoot * .94,
+        fill: o.mat, opacity: .96, transform: `rotate(${a} ${o.cx} ${o.cy})` }, body);
+    }
+  }
+  el('circle', { cx: o.cx, cy: o.cy, r: hubR, fill: MATS.steel, stroke: 'rgba(40,45,52,.4)', 'stroke-width': .6 }, body);
+  el('circle', { cx: o.cx, cy: o.cy, r: hubR * .55, fill: 'url(#gRuby)', stroke: '#c9a24a', 'stroke-width': 1 }, body);
+  el('ellipse', { cx: o.cx - hubR * .18, cy: o.cy - hubR * .2, rx: hubR * .16, ry: hubR * .12, fill: 'rgba(255,255,255,.85)' }, body);
+  return g;
+}
+function makePinion(o) {  // {cx,cy,z,r,m}
+  const g = el('g', null, null);
+  el('path', { d: teethPath(o.cx, o.cy, o.r, o.z, (o.phase || 0) * D2R, o.m, { tip: .3, root: .42, add: .8, ded: .9 }), fill: MATS.steel, stroke: 'rgba(30,36,44,.55)', 'stroke-width': .5 }, g);
+  el('circle', { cx: o.cx, cy: o.cy, r: o.r - .9 * o.m, fill: 'url(#gSteel)' }, g);
+  el('circle', { cx: o.cx, cy: o.cy, r: Math.max(3, o.r * .3), fill: '#39424c' }, g);
+  return g;
+}
+// 擒纵轮（钩形齿）
+function escapeTeeth(cx, cy, r, phase, z) {
+  let d = '', p = 2 * Math.PI / z;
+  const pt = (rr, a) => `${(cx + rr * Math.cos(a)).toFixed(2)} ${(cy + rr * Math.sin(a)).toFixed(2)}`;
+  for (let k = 0; k < z; k++) {
+    const c = phase + k * p;
+    const r0 = r - 3.8, r1 = r + 2.6;
+    d += (k ? 'L' : 'M') + pt(r0, c - p * .30) + 'L' + pt(r1 - 1.2, c - p * .13) + 'L' + pt(r1, c - p * .02)
+      + 'L' + pt(r1 + .9, c + p * .10) + 'L' + pt(r1 - .6, c + p * .16) + 'L' + pt(r0, c + p * .26);
+  }
+  return d + 'Z';
+}
+// 蓝钢螺钉
+function screw(cx, cy, r, rot) {
+  const g = el('g', null, null);
+  el('circle', { cx, cy, r, fill: 'url(#gBlue)', stroke: 'rgba(15,25,50,.5)', 'stroke-width': .6 }, g);
+  el('line', { x1: cx - r * .8, y1: cy, x2: cx + r * .8, y2: cy, stroke: 'rgba(10,18,40,.75)', 'stroke-width': r * .34,
+    transform: `rotate(${rot} ${cx} ${cy})` }, g);
+  el('ellipse', { cx: cx - r * .25, cy: cy - r * .3, rx: r * .3, ry: r * .18, fill: 'rgba(255,255,255,.4)', transform: `rotate(${-30} ${cx} ${cy})` }, g);
+  return g;
+}
+function jewel(cx, cy, r) {
+  const g = el('g', null, null);
+  el('circle', { cx, cy, r: r + 1.6, fill: 'url(#gGold2)', stroke: 'rgba(110,85,30,.5)', 'stroke-width': .7 }, g);
+  el('circle', { cx, cy, r, fill: 'url(#gRuby)' }, g);
+  el('ellipse', { cx: cx - r * .3, cy: cy - r * .34, rx: r * .34, ry: r * .2, fill: 'rgba(255,255,255,.9)' }, g);
+  return g;
+}
+
+/* =====================================================================
+ * 机芯装配：7 条轮轴 + 擒纵机构 + 摆轮
+ * 结构：translate(轴位) > spin(每帧 rotate) > gear(固定 key)
+ * ===================================================================== */
+const G = {};   // 每帧更新的 spin 组
+function arbor(id, at, spinSel) {
+  const a = el('g', { transform: `translate(${at.x} ${at.y})`, 'data-arbor': id }, scene);
+  const spin = el('g', null, a);
+  a.addEventListener('pointerdown', onWheelDown);
+  G[id] = { spin, sel: spinSel, at };
+  return { a, spin };
+}
+function mount(arborGear, o) {   // 在 spin 内挂一个带 key 的齿轮
+  const k = el('g', { transform: `rotate(${o.key ?? 0} 0 0)` }, arborGear.spin);
+  o.node = o.maker(o);
+  k.appendChild(o.node);
+  return o.node;
+}
+// —— 发条盒（含棘轮、主发条） ——
+{
+  const A = arbor('barrel', P.barrel);
+  mount(A, { key: KEY.barrelW, maker: () => makeWheel({ cx: 0, cy: 0, z: 72, r: MT * 72 / 2, m: MT, mat: MATS.gilt, spokes: 4, perle: true, tip: .14, root: .3 }) });
+  // 棘轮（仅上弦时转动）
+  const ratchet = el('g', null, A.a);
+  el('path', { d: teethPath(0, 0, 34, 30, 0, 1.6, { tip: .12, root: .3 }), fill: 'url(#gSteel)', stroke: 'rgba(30,36,44,.5)', 'stroke-width': .7 }, ratchet);
+  el('circle', { r: 24, fill: 'url(#gBlue)' }, ratchet);
+  el('circle', { r: 24, fill: 'none', stroke: 'rgba(20,30,60,.4)', 'stroke-width': .8 }, ratchet);
+  screw(0, 0, 6, 20, ratchet);
+  G.ratchet = { g: ratchet, angle: 0 };
+  // 主发条（螺旋，随动力收放）
+  const spring = el('g', null, A.a);
+  const spA = el('path', { d: '', fill: 'none', stroke: '#7e8a97', 'stroke-width': 4.6, 'stroke-linecap': 'round' }, spring);
+  const spB = el('path', { d: '', fill: 'none', stroke: 'rgba(255,255,255,.4)', 'stroke-width': 1.4 }, spring);
+  G.spring = { a: spA, b: spB };
+  // 棘爪（click）
+  const click = el('g', { transform: `translate(${P.barrel.x + 52} ${P.barrel.y + 26})` }, scene);
+  el('path', { d: 'M0 0 q-6 -26 14 -34 l7 3 q-16 7 -11 30 Z', fill: 'url(#gFork)', stroke: 'rgba(40,50,60,.5)', 'stroke-width': .7 }, click);
+  screw(2, -34, 4.5, 40, click);
+  el('path', { d: 'M-3 -36 q-16 -4 -22 -20', fill: 'none', stroke: '#7d8a97', 'stroke-width': 2, 'stroke-linecap': 'round' }, click);
+  G.click = { g: click, base: -6 };
+}
+// —— 中心轮 + 中心齿轴 + 分轮（跨轮） ——
+{
+  const A = arbor('center', C);
+  mount(A, { key: KEY.centerP, maker: () => makePinion({ cx: 0, cy: 0, z: 12, r: MT * 12 / 2, m: MT }) });
+  mount(A, { key: KEY.centerW, maker: () => makeWheel({ cx: 0, cy: 0, z: 72, r: MT * 72 / 2, m: MT, mat: MATS.rhodium, spokes: 5 }) });
+  mount(A, { key: KEY.cannonP, maker: () => makePinion({ cx: 0, cy: 0, z: 10, r: MM * 10 / 2, m: MM }) });
+}
+// —— 三轮 ——
+{
+  const A = arbor('third', P.third);
+  mount(A, { key: KEY.thirdP, maker: () => makePinion({ cx: 0, cy: 0, z: 12, r: MT * 12 / 2, m: MT }) });
+  mount(A, { key: KEY.thirdW, maker: () => makeWheel({ cx: 0, cy: 0, z: 80, r: MT * 80 / 2, m: MT, mat: MATS.rhodium, spokes: 5 }) });
+}
+// —— 四轮（秒轮，小秒针） ——
+{
+  const A = arbor('fourth', P.fourth);
+  mount(A, { key: KEY.fourthP, maker: () => makePinion({ cx: 0, cy: 0, z: 8, r: MT * 8 / 2, m: MT }) });
+  mount(A, { key: KEY.fourthW, maker: () => makeWheel({ cx: 0, cy: 0, z: 80, r: MT * 80 / 2, m: MT, mat: MATS.rhodium, spokes: 5 }) });
+}
+// —— 擒纵轮 ——
+{
+  const A = arbor('escape', P.escape);
+  mount(A, { key: KEY.escapeP, maker: () => makePinion({ cx: 0, cy: 0, z: 8, r: MT * 8 / 2, m: MT }) });
+  mount(A, { key: 0, maker: () => {
+    const g = el('g', null, null);
+    el('path', { d: escapeTeeth(0, 0, MT * 15 / 2, 0, 15), fill: 'url(#gSteel)', stroke: 'rgba(30,36,44,.6)', 'stroke-width': .7 }, g);
+    el('circle', { r: MT * 15 / 2 - 5.5, fill: 'url(#gBlue)' }, g);
+    el('circle', { r: MT * 15 / 2 - 5.5, fill: 'none', stroke: 'rgba(20,30,60,.35)', 'stroke-width': .6 }, g);
+    return g;
+  } });
+}
+// —— 跨轮系（分轮已在中心轴） ——
+{
+  const A = arbor('motion', P.mWheel);
+  mount(A, { key: KEY.mWheel, maker: () => makeWheel({ cx: 0, cy: 0, z: 30, r: MM * 30 / 2, m: MM, mat: MATS.brass }) });
+  mount(A, { key: KEY.mPinion, maker: () => makePinion({ cx: 0, cy: 0, z: 8, r: MM * 8 / 2, m: MM }) });
+}
+{ // —— 时轮（与分轮同轴，套在分轮管上） ——
+  const A = arbor('hour', C);
+  mount(A, { key: KEY.hWheel, maker: () => makeWheel({ cx: 0, cy: 0, z: 32, r: MM * 32 / 2, m: MM, mat: MATS.brass }) });
+}
+
+/* =====================================================================
+ * 擒纵叉 + 摆轮游丝
+ * ===================================================================== */
+const FORK = { x: P.fork.x, y: P.fork.y };
+const forkOuter = el('g', { transform: `translate(${FORK.x} ${FORK.y})` }, scene);
+const forkG = el('g', { 'data-arbor': 'fork' }, forkOuter);
+forkG.addEventListener('pointerdown', onWheelDown);
+G.fork = { spin: forkG, sel: 'fork', at: FORK };
+{
+  // 叉体：指向擒纵轮的长臂 + 指向摆轮的叉口
+  const toEsc = Math.atan2(P.escape.y - FORK.y, P.escape.x - FORK.x) * R2D;
+  const toBal = Math.atan2(P.bal.y - FORK.y, P.bal.x - FORK.x) * R2D;
+  const armE = 30, armB = 46;
+  const ppt = (deg, r) => `${(r * Math.cos(deg * D2R)).toFixed(2)} ${(r * Math.sin(deg * D2R)).toFixed(2)}`;
+  const lpt = (deg, r) => ({ x: r * Math.cos(deg * D2R), y: r * Math.sin(deg * D2R) });
+  el('path', {
+    d: `M${ppt(toEsc + 160, 7)} L${ppt(toEsc, armE)} L${ppt(toBal, armB + 6)}
+        L${ppt(toBal + 8, armB - 2)} L${ppt(toEsc - 160, 7)} Z`,
+    fill: 'url(#gFork)', stroke: 'rgba(40,50,60,.55)', 'stroke-width': .7,
+  }, forkG);
+  // 进出瓦（红宝石叉瓦）—— 位于擒纵轮锁圆附近
+  const entry = lpt(toEsc + 26, 27), exit = lpt(toEsc - 26, 27);
+  el('rect', { x: entry.x - 4, y: entry.y - 6, width: 8, height: 12, rx: 2,
+    fill: 'url(#gRuby)', stroke: 'rgba(110,20,20,.5)', 'stroke-width': .6, transform: `rotate(${toEsc + 26} ${entry.x} ${entry.y})` }, forkG);
+  el('rect', { x: exit.x - 4, y: exit.y - 6, width: 8, height: 12, rx: 2,
+    fill: 'url(#gRuby)', stroke: 'rgba(110,20,20,.5)', 'stroke-width': .6, transform: `rotate(${toEsc - 26} ${exit.x} ${exit.y})` }, forkG);
+  // 叉口（喇叭口 + 保险销）
+  el('path', { d: `M${ppt(toBal - 7, armB + 2)} L${ppt(toBal, armB + 4)} L${ppt(toBal + 7, armB + 2)}`,
+    fill: 'none', stroke: 'url(#gFork)', 'stroke-width': 4.5, 'stroke-linecap': 'round' }, forkG);
+  el('circle', { cx: lpt(toBal, armB - 3).x, cy: lpt(toBal, armB - 3).y, r: 2.2, fill: '#39424c' }, forkG);
+  el('circle', { r: 5, fill: 'url(#gSteel)', stroke: 'rgba(40,45,52,.4)', 'stroke-width': .5 }, forkG);
+  jewel(0, 0, 3.2);
+}
+// 摆轮 +  roller + 游丝
+const balOuter = el('g', { transform: `translate(${P.bal.x} ${P.bal.y})` }, scene);
+const balG = el('g', { 'data-arbor': 'bal' }, balOuter);
+balG.addEventListener('pointerdown', onWheelDown);
+G.bal = { spin: balG, sel: 'bal', at: P.bal };
+{
+  el('circle', { r: 76, fill: 'url(#gGilt)', stroke: 'rgba(120,90,25,.55)', 'stroke-width': 1.6 }, balG);       // 摆轮缘
+  el('circle', { r: 76, fill: 'none', stroke: 'rgba(255,240,200,.5)', 'stroke-width': 2.5 }, balG);
+  for (let i = 0; i < 12; i++) {                                                                             // 调速螺钉
+    const a = i * 30 * D2R;
+    el('circle', { cx: Math.cos(a) * 76, cy: Math.sin(a) * 76, r: 4.6, fill: 'url(#gBrass)', stroke: 'rgba(110,85,30,.6)', 'stroke-width': .7 }, balG);
+    el('circle', { cx: Math.cos(a) * 76, cy: Math.sin(a) * 76, r: 1.7, fill: 'rgba(60,45,15,.5)' }, balG);
+  }
+  el('rect', { x: -13, y: -71, width: 26, height: 142, rx: 11, fill: 'url(#gGilt)', stroke: 'rgba(120,90,25,.45)', 'stroke-width': 1 }, balG);  // 摆臂
+  el('circle', { r: 15, fill: 'url(#gSteel)' }, balG);                                                        // roller
+  el('circle', { cx: 9, cy: 0, r: 3, fill: 'url(#gRuby)' }, balG);                                            // 冲击钉
+  jewel(0, 0, 4.5);
+}
+const hairG = el('g', { transform: `translate(${P.bal.x} ${P.bal.y})`, 'pointer-events': 'none' }, scene);
+const hairPath = el('path', { d: hairspringPath(0), fill: 'none', stroke: '#5d6b7a', 'stroke-width': 2.2, 'stroke-linecap': 'round' }, hairG);
+const hairPath2 = el('path', { d: hairspringPath(0), fill: 'none', stroke: 'rgba(255,255,255,.45)', 'stroke-width': .8 }, hairG);
+// 摆轮夹板（balance cock，日内瓦波纹）
+const cockG = el('g', null, scene);
+{
+  const a0 = Math.atan2(P.bal.y - C.y, P.bal.x - C.x) * R2D;
+  const start = pol(C, a0, 250), end = P.bal;
+  el('path', {
+    d: `M${start.x} ${start.y - 26} Q${(start.x + end.x) / 2 - 8} ${(start.y + end.y) / 2 - 40} ${end.x + 40} ${end.y - 46}
+        L${end.x + 40} ${end.y - 26} Q${(start.x + end.x) / 2 + 26} ${(start.y + end.y) / 2 - 18} ${start.x + 34} ${start.y - 6} Z`,
+    fill: 'url(#tCotes)', stroke: 'rgba(50,58,66,.5)', 'stroke-width': 1,
+  }, cockG);
+  el('circle', { cx: end.x + 40, cy: end.y - 36, r: 9, fill: 'url(#gRho)', stroke: 'rgba(50,58,66,.5)', 'stroke-width': .8 }, cockG);
+  jewel(end.x + 40, end.y - 36, 4);
+  screw(start.x + 10, start.y - 14, 5.5, 25, cockG);
+  const rg = el('text', { x: (start.x + end.x) / 2 - 4, y: (start.y + end.y) / 2 - 22, 'font-size': 9,
+    'letter-spacing': 2, fill: 'rgba(50,58,66,.6)', transform: `rotate(${a0 + 180} ${(start.x + end.x) / 2 - 4} ${(start.y + end.y) / 2 - 22})` }, cockG);
+  rg.textContent = 'AETERNUM';
+}
+// 快慢针（ regulator ）
+const regG = el('g', { transform: `translate(${P.bal.x} ${P.bal.y})` }, scene);
+{
+  el('path', { d: 'M-46 -8 A48 48 0 0 1 44 -10', fill: 'none', stroke: 'url(#gBlue)', 'stroke-width': 5, 'stroke-linecap': 'round' }, regG);
+  el('path', { d: 'M-46 -8 A48 48 0 0 1 44 -10', fill: 'none', stroke: 'rgba(255,255,255,.35)', 'stroke-width': 1.6 }, regG);
+  el('path', { d: 'M46 -10 l10 -14 l5 8', fill: 'none', stroke: 'url(#gBlue)', 'stroke-width': 3.4, 'stroke-linecap': 'round' }, regG);
+  el('circle', { cx: -46, cy: -8, r: 3.4, fill: 'url(#gSteel)' }, regG);
+  const tx = el('text', { x: 56, y: -34, 'font-size': 8, fill: 'rgba(40,50,60,.65)', 'letter-spacing': 1 }, regG);
+  tx.textContent = 'F  S';
+}
+// 止秒杆（调时模式下伸出刹停摆轮）
+const brakeG = el('g', { transform: `translate(${P.bal.x + 78} ${P.bal.y - 58})` }, scene);
+{
+  el('path', { d: 'M0 0 L-30 30', fill: 'none', stroke: 'url(#gBlue)', 'stroke-width': 4, 'stroke-linecap': 'round' }, brakeG);
+  el('circle', { r: 3.2, fill: '#39424c' }, brakeG);
+  brakeG.dataset.open = '0';
+}
+
+/* =====================================================================
+ * 指针（时/分/小秒） + 表冠
+ * ===================================================================== */
+function hand(rotSel, len, w, tail) {
+  const g = el('g', null, null);
+  el('path', {
+    d: `M${-w / 2} ${tail} Q${-w * .32} ${-len * .55} 0 ${-len} Q${w * .32} ${-len * .55} ${w / 2} ${tail} Z`,
+    fill: 'url(#gHand)', stroke: 'rgba(12,22,48,.55)', 'stroke-width': .6,
+  }, g);
+  el('path', { d: `M0 ${-len * .82} L0 ${tail * .6}`, stroke: 'rgba(190,210,245,.5)', 'stroke-width': w * .18 }, g);
+  return g;
+}
+{
+  // 时针挂在时轮轴
+  const A = G.hour.spin;
+  const hh = hand('hour', 168, 11, 26); A.appendChild(hh);
+  // 分针、中心轴帽
+  const mm = hand('minute', 232, 8.5, 30); G.center.spin.appendChild(mm);
+  // 小秒针（步进，独立于连续轮系角但同源）
+  G.secHand = el('g', { transform: `translate(${P.fourth.x} ${P.fourth.y})` }, scene);
+  G.secHand.appendChild(hand('sec', 54, 4.6, 14));
+  el('circle', { r: 6, fill: 'url(#gBlue)', stroke: 'rgba(15,25,50,.5)', 'stroke-width': .6 }, G.secHand);
+  // 中心轴帽
+  el('circle', { cx: C.x, cy: C.y, r: 7.5, fill: 'url(#gGold2)', stroke: 'rgba(110,85,30,.55)', 'stroke-width': .8 }, scene);
+  el('circle', { cx: C.x, cy: C.y, r: 4.4, fill: 'url(#gRuby)' }, scene);
+}
+// 表冠 + 上弦柄轴 + 拔出动画
+const crownG = el('g', { transform: `translate(${P.crown.x} ${P.crown.y})`, 'data-crown': 1 }, scene);
+{
+  el('path', { d: 'M-4 24 L-6 44 L6 44 L4 24 Z', fill: 'url(#gSteel)', stroke: 'rgba(40,45,52,.5)', 'stroke-width': .7 }, crownG);
+  const knob = el('g', null, crownG);
+  el('ellipse', { cx: 0, cy: 14, rx: 21, ry: 16, fill: 'url(#gGilt)', stroke: 'rgba(120,90,25,.6)', 'stroke-width': 1.2 }, knob);
+  for (let i = 0; i < 16; i++) {   // 表冠齿纹
+    const a = i * 22.5 * D2R;
+    el('line', { x1: Math.cos(a) * 21, y1: 14 + Math.sin(a) * 15.5, x2: Math.cos(a) * 24.5, y2: 14 + Math.sin(a) * 18,
+      stroke: 'rgba(90,68,20,.55)', 'stroke-width': 2.2, 'stroke-linecap': 'round' }, knob);
+  }
+  el('ellipse', { cx: 0, cy: 14, rx: 9, ry: 6.5, fill: 'url(#gBrass)', stroke: 'rgba(110,85,30,.5)', 'stroke-width': .7 }, knob);
+  el('path', { d: 'M-13 5 A14 12 0 0 1 13 5', fill: 'none', stroke: 'rgba(255,245,210,.55)', 'stroke-width': 2 }, knob);
+}
+
+/* =====================================================================
+ * 状态：单一走时状态 tSec（秒），全部角度由其导出
+ * ===================================================================== */
+const now = new Date();
+let tSec = (now.getHours() % 12) * 3600 + now.getMinutes() * 60 + now.getSeconds() + now.getMilliseconds() / 1000;
+let power = 100;            // 动力储存 %
+let wind = 0;               // 累计上弦角（度）
+let mode = 'run';           // run | set
+let speed = 1;
+let sound = true;
+let beats = 0, beatN = 0, beatFlash = 0;
+let amp = 270;              // 摆幅（度）
+let brakeT = 0;             // 止秒杆伸出量 0..1
+const A0 = 270;
+let dragging = null;
+let crownDrag = null;
+
+const easeOut = p => 1 - Math.pow(1 - p, 2.6);
+const IMPULSE = 0.18;       // 擒纵轮在一个节拍内的 impulase 占比
+
+function angles() {
+  const th = tSec / 10;                 // 中心轮角（度）：1 转/小时
+  const b = tSec * 5;                   // 节拍计数（5/s）
+  const n = Math.floor(b), u = b - n;
+  const escStep = 12;                   // 擒纵轮每拍半齿距 = 360/30
+  const esc = -(n + easeOut(Math.min(u / IMPULSE, 1))) * escStep;
+  const flip = easeOut(Math.min(u / 0.15, 1));
+  const forkSide = (n % 2 === 0 ? -9 : 9);
+  const fork = forkSide * (2 * flip - 1);
+  const bal = amp * Math.sin(2 * Math.PI * 2.5 * tSec);
+  return { th, esc, fork, bal, n };
+}
+
+/* ---------- 游丝（随摆角呼吸收放） ---------- */
+function hairspringPath(thetaDeg) {
+  const coils = 3.15, r0 = 14, r1 = 33, N = 96, out = [];
+  const th = thetaDeg * D2R;
+  for (let i = 0; i <= N; i++) {
+    const u = i / N, phi = u * coils * 2 * Math.PI;
+    const r = r0 + (r1 - r0) * u;
+    const shift = th * (1 - u);                                                    // 内端随摆轮、外端固定
+    const wob = Math.sin(phi * 2 - th * 2.2) * 0.9 * u;        // 呼吸起伏
+    out.push(`${(Math.cos(phi + shift) * (r + wob)).toFixed(2)} ${(Math.sin(phi + shift) * (r + wob)).toFixed(2)}`);
+  }
+  return 'M' + out.join('L');
+}
+
+/* ---------- 每帧更新 ---------- */
+let lastT = performance.now();
+let tAnchorT = tSec, tAnchorW = lastT;   // 走时锚点：低帧率/掉帧下走时仍严格等于真实时间
+function resync() { tAnchorT = tSec; tAnchorW = performance.now(); }
+function frame(t) {
+  let dt = (t - lastT) / 1000; lastT = t;
+  if (!isFinite(dt) || dt < 0) dt = 0.016;
+  const dtS = Math.min(dt, 0.1);         // 平滑用途
+  if (mode === 'run' && !dragging && t >= tAnchorW - 1e-6) tSec = tAnchorT + (t - tAnchorW) / 1000 * speed;
+  // 动力消耗（按走时时间）
+  if (mode === 'run') power = Math.max(0, power - dtS * speed * (100 / 480));
+  // 摆幅：调时刹停 / 动力枯竭衰减
+  const target = mode === 'set' ? 0 : (power <= 0.6 ? 0 : (power < 14 ? A0 * power / 14 : A0));
+  amp += (target - amp) * (1 - Math.exp(-dtS * (mode === 'set' ? 9 : 2.2)));
+
+  const A = angles();
+  G.barrel.spin.setAttribute('transform', `rotate(${(-A.th / 6).toFixed(3)})`);
+  G.center.spin.setAttribute('transform', `rotate(${A.th.toFixed(3)})`);
+  G.third.spin.setAttribute('transform', `rotate(${(-6 * A.th).toFixed(3)})`);
+  G.fourth.spin.setAttribute('transform', `rotate(${(60 * A.th).toFixed(3)})`);
+  G.escape.spin.setAttribute('transform', `rotate(${A.esc.toFixed(3)})`);
+  G.motion.spin.setAttribute('transform', `rotate(${(-A.th / 3).toFixed(3)})`);
+  G.hour.spin.setAttribute('transform', `rotate(${(A.th / 12).toFixed(3)})`);
+  G.fork.spin.setAttribute('transform', `rotate(${A.fork.toFixed(3)})`);
+  G.bal.spin.setAttribute('transform', `rotate(${A.bal.toFixed(2)})`);
+  // 游丝呼吸
+  const hd = hairspringPath(A.bal);
+  hairPath.setAttribute('d', hd); hairPath2.setAttribute('d', hd);
+  // 小秒针（步进，与摆轮过平衡位同步）
+  G.secHand.setAttribute('transform', `translate(${P.fourth.x} ${P.fourth.y}) rotate(${(A.n * 1.2).toFixed(3)})`);
+  // 棘轮随上弦转动（发条盒体仍走轮系）
+  G.ratchet.g.setAttribute('transform', `rotate(${(wind % 360).toFixed(2)})`);
+  // 主发条螺旋（随动力收放，沿用累计上弦角）
+  const turns = 4.2 + 5.6 * (1 - power / 100), rr0 = 5 + 9 * (power / 100), rr1 = 96;
+  let d = '';
+  for (let i = 0; i <= 130; i++) {
+    const u = i / 130, phi = u * turns * 2 * Math.PI + wind * D2R;
+    const r = rr0 + (rr1 - rr0) * u;
+    d += (i ? 'L' : 'M') + (r * Math.cos(phi)).toFixed(2) + ' ' + (r * Math.sin(phi)).toFixed(2);
+  }
+  G.spring.a.setAttribute('d', d); G.spring.b.setAttribute('d', d);
+  // 止秒杆：调时模式下伸出贴住摆轮缘
+  brakeT += ((mode === 'set' ? 1 : 0) - brakeT) * (1 - Math.exp(-dtS * 10));
+  brakeG.setAttribute('transform', `translate(${P.bal.x + 78 - brakeT * 16} ${P.bal.y - 58 + brakeT * 10}) rotate(${(-58 + brakeT * 66).toFixed(1)})`);
+
+  // 节拍音 & 闪烁
+  if (A.n !== beatN) {
+    beatN = A.n; beats++;
+    beatFlash = 1;
+    if (mode === 'run' && sound && power > 0 && speed <= 60) tick(beats % 2);
+  }
+  beatFlash = Math.max(0, beatFlash - dtS * 6);
+  $('beatDot').classList.toggle('hit', beatFlash > 0.15);
+
+  // 面板
+  $('gaugeFill').style.width = power.toFixed(1) + '%';
+  $('powerNum').textContent = Math.round(power) + '%';
+  $('beatNum').textContent = beats.toLocaleString();
+  const tt = ((tSec % 43200) + 43200) % 43200;
+  const hh2 = Math.floor(tt / 3600), mm2 = Math.floor(tt % 3600 / 60), ss2 = Math.floor(tt % 60);
+  $('clockNum').textContent = `${String(hh2).padStart(2, '0')}:${String(mm2).padStart(2, '0')}:${String(ss2).padStart(2, '0')}`;
+
+  requestAnimationFrame(frame);
+}
+
+/* =====================================================================
+ * 交互：拖动任意齿轮 / 指针 / 摆轮 / 表冠 —— 全表按速比联动
+ * ===================================================================== */
+function toVB(e) {   // 屏幕坐标 → viewBox 坐标（兼容 meet/slice）
+  return new DOMPoint(e.clientX, e.clientY).matrixTransform(stage.getScreenCTM().inverse());
+}
+const RATIO = {   // 拖动角（度）→ tSec 变化
+  barrel: d => -60 * d, center: d => 10 * d, third: d => -10 / 6 * d,
+  fourth: d => d / 6, escape: d => d / 60, motion: d => -10 / 3 * d,
+  hour: d => 120 * d, bal: d => d / 6, fork: d => d / 90,   // 叉体全行程 18° = 擒纵一步 = 0.2s
+};
+function pivotOf(kind) {
+  if (kind === 'fork') return FORK;
+  if (kind === 'bal') return P.bal;
+  if (kind === 'hour') return C;              // 时轮与分轮同轴
+  return P[kind === 'motion' ? 'mWheel' : kind];
+}
+function onWheelDown(e) {
+  const kind = e.currentTarget.dataset.arbor;
+  if (!kind || dragging || crownDrag) return;
+  e.preventDefault();
+  const at = pivotOf(kind);
+  const p = toVB(e);
+  dragging = { kind, last: Math.atan2(p.y - at.y, p.x - at.x) };
+  stage.setPointerCapture(e.pointerId);
+  hint(kind === 'bal' ? '拨动摆轮 —— 擒纵逐拍让步，全表随之倒走/正走' : '拖动齿轮，全表按速比联动');
+}
+function dragMove(e) {
+  if (dragging) {
+    const at = pivotOf(dragging.kind), p = toVB(e);
+    let d = (Math.atan2(p.y - at.y, p.x - at.x) - dragging.last) * R2D;
+    d = ((d % 360) + 540) % 360 - 180;                 // 归一到 [-180,180)，跨 ±180° 不跳变
+    if (dragging.kind === 'escape') d = Math.round(d / 12) * 12;   // 擒纵只走整半齿距
+    tSec += RATIO[dragging.kind](d);
+    resync();
+    dragging.last = Math.atan2(p.y - at.y, p.x - at.x);
+  }
+  if (dragging || crownDrag) showLens(e);
+}
+stage.addEventListener('pointermove', dragMove);
+function endDrag() { if (dragging) { dragging = null; resync(); hideLens(); hint('拖动任意齿轮 · 全表联动 · 点击表冠切换走时/调时'); } }
+stage.addEventListener('pointerup', endDrag);
+stage.addEventListener('pointercancel', endDrag);
+
+// 指针 / 表冠：按下即判区域（指针与表冠）
+let crownDown = null;
+stage.addEventListener('pointerdown', e => {
+  if (dragging || crownDrag || crownDown) return;
+  const p = toVB(e);
+  const dM = Math.hypot(p.x - C.x, p.y - C.y);
+  if (dM < 46) {   // 分针/时针同轴：按半径区分
+    const isHour = dM < 130;
+    dragging = { kind: isHour ? 'hour' : 'center', last: Math.atan2(p.y - C.y, p.x - C.x) };
+    stage.setPointerCapture(e.pointerId);
+    hint(isHour ? '拖动时针（经跨轮系 12:1 导出分针）' : '拖动分针');
+  } else if (Math.hypot(p.x - P.fourth.x, p.y - P.fourth.y) < 52) {
+    dragging = { kind: 'fourth', last: Math.atan2(p.y - P.fourth.y, p.x - P.fourth.x) };
+    stage.setPointerCapture(e.pointerId);
+    hint('拖动小秒针（按节拍步进）');
+  } else if (Math.hypot(p.x - P.crown.x, p.y - P.crown.y - (mode === 'set' ? 16 : 0)) < 42) {
+    crownDown = { x0: e.clientX, y0: e.clientY };
+    stage.setPointerCapture(e.pointerId);
+  }
+});
+// 表冠拖动：走时态 = 上弦，调时态 = 拨针
+function crownMove(e) {
+  if (!crownDown) return;
+  const dx = e.clientX - crownDown.x0;
+  if (!crownDrag && Math.abs(dx) > 5) {
+    crownDrag = { x0: crownDown.x0 };
+    hint(mode === 'set' ? '转动表冠拨针' : '上弦中……棘轮与棘爪交替作响');
+  }
+  if (crownDrag) {
+    const d = e.clientX - crownDrag.x0;
+    if (mode === 'set') {
+      tSec += d * 1.2;                        // 调时：1px ≈ 1.2s
+    } else {
+      power = Math.min(100, power + d * 0.22); // 上弦
+      wind += d * 2.2;                         // 棘轮随动
+      if (d > 3 && sound) ratchetSnd();
+    }
+    crownDrag.x0 = e.clientX;
+    resync();
+    showLens(e);
+  }
+}
+stage.addEventListener('pointermove', crownMove);
+stage.addEventListener('pointerup', e => {
+  crownDown = null;
+  if (crownDrag) { crownDrag = null; hideLens(); hint('拖动任意齿轮 · 全表联动'); }
+});
+// 表冠点击（未拖动）= 拔出/推回
+stage.addEventListener('click', e => {
+  const p = toVB(e);
+  if (Math.hypot(p.x - P.crown.x, p.y - P.crown.y - (mode === 'set' ? 16 : 0)) < 42) crownTap();
+});
+function crownTap() {
+  resync();
+  if (mode === 'run') {
+    mode = 'set';
+    $('crownBtn').textContent = '表冠：调时中（点击推回走时）';
+    crownG.setAttribute('transform', `translate(${P.crown.x} ${P.crown.y + 16})`);
+    hint('调时模式：止秒杆已刹停摆轮 · 转动表冠或拖动指针');
+  } else {
+    mode = 'run';
+    $('crownBtn').textContent = '表冠：走时中（点击拔出调时）';
+    crownG.setAttribute('transform', `translate(${P.crown.x} ${P.crown.y})`);
+    hint('回到走时 · 拖动任意齿轮仍可联动');
+  }
+}
+$('crownBtn').addEventListener('click', crownTap);
+
+/* ---------- 放大镜（拖动齿轮时显示咬合细节） ---------- */
+function showLens(e) {
+  const p = toVB(e);
+  const lens = $('lens'), z = 3.2, half = 84 / z;
+  lens.style.display = 'block';
+  lens.style.left = (e.clientX - 84) + 'px';
+  lens.style.top = (e.clientY - 84) + 'px';
+  const svg = $('lensSvg');
+  svg.setAttribute('viewBox', `${(p.x - half).toFixed(1)} ${(p.y - half).toFixed(1)} ${(half * 2).toFixed(1)} ${(half * 2).toFixed(1)}`);
+  while (svg.firstChild) svg.firstChild.remove();
+  const use = document.createElementNS(SVGNS, 'use');
+  use.setAttribute('href', '#movRoot');
+  svg.appendChild(use);
+  el('circle', { cx: 84, cy: 84, r: 80, fill: 'none', stroke: 'rgba(255,250,235,.45)', 'stroke-width': 2 }, svg);
+}
+function hideLens() { $('lens').style.display = 'none'; }
+
+/* ---------- 提示 ---------- */
+let hintT = null;
+function hint(s) {
+  const h = $('hint'); h.textContent = s; h.classList.remove('off');
+  clearTimeout(hintT); hintT = setTimeout(() => h.classList.add('off'), 2600);
+}
+
+/* ---------- WebAudio：滴答 / 上弦 ---------- */
+let AC = null;
+function ac() { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); return AC; }
+function tick(alt) {
+  try {
+    const a = ac(), t = a.currentTime, o = a.createOscillator(), g = a.createGain(), f = a.createBiquadFilter();
+    f.type = 'bandpass'; f.frequency.value = alt ? 3300 : 2600; f.Q.value = 2.4;
+    o.type = 'square'; o.frequency.setValueAtTime(alt ? 1500 : 1180, t);
+    o.frequency.exponentialRampToValueAtTime(alt ? 700 : 560, t + 0.012);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.09, t + 0.001);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
+    o.connect(f).connect(g).connect(a.destination); o.start(t); o.stop(t + 0.05);
+  } catch (err) {}
+}
+function ratchetSnd() {
+  try {
+    const a = ac(), t = a.currentTime, len = a.sampleRate * 0.03, buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.5);
+    const s = a.createBufferSource(); s.buffer = buf;
+    const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1800; f.Q.value = 1.2;
+    const g = a.createGain(); g.gain.value = 0.12;
+    s.connect(f).connect(g).connect(a.destination); s.start(t);
+  } catch (err) {}
+}
+
+/* ---------- 面板 ---------- */
+$('gearTable').insertAdjacentHTML('beforeend', [
+  ['发条盒 → 中心齿轴', '72 : 12', '6:1', '6 h/转'],
+  ['中心轮 → 三轮齿轴', '72 : 12', '6:1', '60 min/转 · 分针'],
+  ['三轮 → 四轮齿轴', '80 : 8', '10:1', '10 min/转'],
+  ['四轮 → 擒纵齿轴', '80 : 8', '10:1', '60 s/转 · 小秒针'],
+  ['擒纵轮（15 齿）', '×2 步', '12°/拍', '6 s/转'],
+  ['擒纵叉 + 摆轮', '18000 A/h', '5 拍/s', '半齿距/拍'],
+  ['分轮 → 跨轮', '10 : 30', '3:1', '—'],
+  ['跨齿轴 → 时轮', '8 : 32', '4:1', '12:1 合比 · 时针 12 h/转'],
+].map(r => `<tr><td>${r[0]}</td><td class="n">${r[1]}</td><td class="n">${r[2]}</td><td class="n">${r[3]}</td></tr>`).join(''));
+
+function speedBtn(n) { speed = n; resync(); $('sp1').classList.toggle('on', n === 1); $('sp60').classList.toggle('on', n === 60); $('sp3600').classList.toggle('on', n === 3600); }
+$('sp1').onclick = () => speedBtn(1); $('sp60').onclick = () => speedBtn(60); $('sp3600').onclick = () => speedBtn(3600);
+$('sndBtn').onclick = () => { sound = !sound; $('sndBtn').classList.toggle('on', sound); if (sound) ac(); };
+
+/* 响应式：竖屏用 slice 撑满，横屏用 meet 全可见 */
+function fit() {
+  stage.setAttribute('preserveAspectRatio',
+    window.innerWidth / window.innerHeight < 1.02 ? 'xMidYMid slice' : 'xMidYMid meet');
+}
+window.addEventListener('resize', fit); fit();
+
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

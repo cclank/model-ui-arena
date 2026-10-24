@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pulse · 股票监控</title>
+<style>
+:root{--bg:#0a0d14;--panel:#121722;--card:#171d2b;--line:#ffffff14;--ink:#eef2fa;--dim:#8792a8;--up:#ff5f6d;--down:#2ee6a8;--acc:#7aa8ff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100svh;display:grid;place-items:center;background:radial-gradient(90vmax 70vmax at 80% -20%,#182238,#070910 70%);color:var(--ink);font-family:"SF Pro Text",-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;padding:16px;overflow-x:hidden}
+.panel{width:min(94vw,400px);background:linear-gradient(180deg,#151b28,#0f141f);border:1px solid var(--line);border-radius:24px;padding:18px 16px 14px;box-shadow:0 30px 80px -32px #000;display:grid;gap:12px}
+header{display:flex;justify-content:space-between;align-items:flex-start}
+h1{font-size:15px;font-weight:600;letter-spacing:.12em}
+header p{font-size:11px;color:var(--dim);margin-top:4px;letter-spacing:.06em}
+.live{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--up);letter-spacing:.14em}
+.live i{width:6px;height:6px;border-radius:50%;background:var(--up);box-shadow:0 0 10px var(--up);animation:blink 1.2s steps(2) infinite}
+@keyframes blink{50%{opacity:.25}}
+.board{display:grid;gap:7px}
+.row{display:grid;grid-template-columns:1fr 62px auto;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 11px;border-radius:14px;background:var(--card);border:1px solid transparent;cursor:pointer;transition:border-color .2s,background .2s;font:inherit;color:inherit}
+.row:hover{border-color:#ffffff26}
+.row.on{border-color:#7aa8ff66;background:#1a2336}
+.id b{display:block;font-size:13.5px;letter-spacing:.04em}
+.id em{font-size:10.5px;color:var(--dim);font-style:normal;letter-spacing:.14em}
+.spark{width:62px;height:22px}
+.quote{text-align:right;min-width:86px}
+.quote b{display:block;font-size:15px;font-variant-numeric:tabular-nums;transition:color .25s}
+.chg{font-size:11.5px;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.up{color:var(--up)}.down{color:var(--down)}.flat{color:var(--dim)}
+.flu{animation:fu .6s}
+@keyframes fu{0%{background:#ff5f6d33}100%{background:transparent}}
+.fld{animation:fd .6s}
+@keyframes fd{0%{background:#2ee6a833}100%{background:transparent}}
+.detail{background:#0d1220;border:1px solid var(--line);border-radius:16px;padding:12px 12px 8px}
+.dhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.dhead b{font-size:13px;letter-spacing:.06em}
+.tag{font-size:10px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--dim);letter-spacing:.08em}
+.tag.hot{color:var(--up);border-color:#ff5f6d55;animation:blink 1s steps(2) infinite}
+.tag.warm{color:#ffc663;border-color:#ffc66344}
+#big{width:100%;height:118px;display:block}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px 2px 4px}
+.stats div{text-align:center}
+.stats span{display:block;font-size:10px;color:var(--dim);letter-spacing:.1em;margin-bottom:3px}
+.stats b{font-size:12px;font-weight:500;font-variant-numeric:tabular-nums}
+footer{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);letter-spacing:.08em;padding-top:2px}
+@media (max-width:400px){.panel{padding:15px 12px 12px}.quote{min-width:78px}}
+</style>
+</head>
+<body>
+<main class="panel">
+  <header>
+    <div><h1>PULSE · 自选行情</h1><p>本地模拟数据 · 4 支标的</p></div>
+    <div class="live"><i></i><span id="lt">LIVE</span></div>
+  </header>
+  <section class="board" id="board"></section>
+  <section class="detail">
+    <div class="dhead"><b id="dname">—</b><span class="tag" id="tag">波动温和</span></div>
+    <svg id="big" viewBox="0 0 320 118" preserveAspectRatio="none" aria-label="分时走势">
+      <defs><linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+        <stop id="gs0" offset="0" style="stop-color:var(--up)" stop-opacity=".32"/><stop id="gs1" offset="1" style="stop-color:var(--up)" stop-opacity="0"/>
+      </linearGradient></defs>
+      <line id="base" x1="0" x2="320" y1="60" y2="60" stroke="#ffffff22" stroke-dasharray="3 4"/>
+      <path id="area" fill="url(#fill)" d=""/>
+      <path id="line" fill="none" stroke="var(--up)" stroke-width="1.8" vector-effect="non-scaling-stroke" d=""/>
+      <circle id="dot" r="3.2" fill="var(--up)"/>
+    </svg>
+    <div class="stats">
+      <div><span>今开</span><b id="s0">—</b></div>
+      <div><span>最高</span><b id="s1">—</b></div>
+      <div><span>最低</span><b id="s2">—</b></div>
+      <div><span>成交额</span><b id="s3">—</b></div>
+    </div>
+  </section>
+  <footer><span>数据为本地模拟 · 每 1.1s 刷新</span><span id="ftime">—</span></footer>
+</main>
+<script>
+const $=(id)=>document.getElementById(id),NS="http://www.w3.org/2000/svg";
+const STOCKS=[
+ {name:"星河智能",code:"XHAI",p:128.4,vol:.55},
+ {name:"极光能源",code:"AURA",p:42.7,vol:1.1},
+ {name:"深海生物",code:"OCEA",p:310.2,vol:1.5},
+ {name:"云杉出行",code:"SPRU",p:76.5,vol:.8}
+];
+let sel=0,turn=0;
+const rnd=()=>Math.random()-.5;
+STOCKS.forEach(s=>{s.prev=s.p*(1+(rnd()*1.6)/100);s.ser=[];let v=s.p*(1-(rnd()*2)/100);
+  for(let i=0;i<64;i++){v=Math.max(1,v*(1+rnd()*s.vol/60));s.ser.push(v);}s.ser[63]=s.p;});
+const fmt=(v)=>v.toFixed(2),pctOf=(s)=>((s.p-s.prev)/s.prev)*100;
+const clsOf=(p)=>Math.abs(p)<.005?"flat":p>0?"up":"down";
+const arrOf=(p)=>Math.abs(p)<.005?"–":p>0?"▲":"▼";
+function sparkPoints(ser,lo,hi){const n=ser.length;return ser.map((v,i)=>`${(i/(n-1)*60).toFixed(1)},${(20-((v-lo)/(hi-lo||1))*18).toFixed(1)}`).join(" ");}
+function build(){const board=$("board");STOCKS.forEach((s,i)=>{
+  const b=document.createElement("button");b.className="row";b.dataset.i=i;
+  b.innerHTML=`<div class="id"><b>${s.name}</b><em>${s.code}</em></div>
+    <svg class="spark" viewBox="0 0 60 22" preserveAspectRatio="none"><polyline fill="none" stroke-width="1.4" vector-effect="non-scaling-stroke" points=""/></svg>
+    <div class="quote"><b>--</b><span class="chg">--</span></div>`;
+  b.onclick=()=>{sel=i;render(true);};board.append(b);});}
+function render(flash){STOCKS.forEach((s,i)=>{const row=$("board").children[i],poly=row.querySelector("polyline"),
+  q=row.querySelector(".quote b"),c=row.querySelector(".chg"),p=pctOf(s);
+  const slice=s.ser.slice(-32),lo=Math.min(...slice),hi=Math.max(...slice),k=clsOf(p);
+  poly.setAttribute("points",sparkPoints(slice,lo,hi));poly.setAttribute("stroke",k==="down"?"#2ee6a8":"#ff5f6d");
+  q.textContent=fmt(s.p);q.className=k;c.className="chg "+k;c.textContent=`${p>=0?"+":""}${p.toFixed(2)}% ${arrOf(p)}`;
+  row.classList.toggle("on",i===sel);
+  if(flash&&k!=="flat"){q.classList.remove("flu","fld");void q.offsetWidth;q.classList.add(k==="up"?"flu":"fld");}});
+  const s=STOCKS[sel],p=pctOf(s),slice=s.ser.slice(-64),lo=Math.min(...slice),hi=Math.max(...slice),pad=(hi-lo)*.12,mn=lo-pad,mx=hi+pad;
+  const xy=(v,i)=>[6+(i/(slice.length-1))*308,108-((v-mn)/(mx-mn))*96];
+  let d="";slice.forEach((v,i)=>{const[x,y]=xy(v,i);d+=(i?"L":"M")+x.toFixed(1)+" "+y.toFixed(1);});
+  $("line").setAttribute("d",d);$("area").setAttribute("d",`${d}L314 116L6 116Z`);
+  const[lx,ly]=xy(slice[slice.length-1],slice.length-1);$("dot").setAttribute("cx",lx);$("dot").setAttribute("cy",ly);
+  const col=p>0.005?"#ff5f6d":p<-0.005?"#2ee6a8":"#8792a8";
+  $("dot").setAttribute("fill",col);$("line").setAttribute("stroke",col);
+  $("gs0").style.stopColor=col;$("gs1").style.stopColor=col;
+  $("base").setAttribute("y1",108-((s.prev-mn)/(mx-mn))*96);$("base").setAttribute("y2",108-((s.prev-mn)/(mx-mn))*96);
+  $("dname").textContent=`${s.name} · ${s.code}  ${fmt(s.p)} ${p>=0?"+":""}${p.toFixed(2)}%`;
+  const tag=$("tag"),ap=Math.abs(p);tag.className="tag"+(ap>=3?" hot":ap>=1.5?" warm":"");tag.textContent=ap>=3?"波动剧烈 · 注意风险":ap>=1.5?"波动活跃":"波动温和";
+  $("s0").textContent=fmt(slice[0]);$("s1").textContent=fmt(hi);$("s2").textContent=fmt(lo);
+  $("s3").textContent=(s.p*(8+Math.random()*6)).toFixed(1)+" 亿";}
+function tick(){turn++;STOCKS.forEach((s)=>{s.p=Math.max(1,s.p*(1+(rnd()*s.vol*.55)/100));s.ser.push(s.p);if(s.ser.length>160)s.ser.shift();});
+  render(true);$("ftime").textContent=new Date().toLocaleTimeString("zh-CN",{hour12:false});}
+build();tick();setInterval(tick,1100);
+</script>
+</body>
+</html>

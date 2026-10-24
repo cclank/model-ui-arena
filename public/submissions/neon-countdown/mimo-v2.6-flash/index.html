@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>最炫倒计时</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,#161a3a,#070810);font-family:-apple-system,"PingFang SC",sans-serif;color:#eef1ff;overflow:hidden}
+.stage{position:relative;display:flex;flex-direction:column;align-items:center;gap:26px;padding:20px}
+.ring{position:relative;width:min(84vw,340px);aspect-ratio:1}
+svg{width:100%;height:100%;transform:rotate(-90deg)}
+.track{fill:none;stroke:#262b52;stroke-width:10}
+.prog{fill:none;stroke:url(#grad);stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset .25s linear;filter:drop-shadow(0 0 8px rgba(125,211,252,.8))}
+.ticks circle{fill:#3a4180}
+.ticks circle.on{fill:#7dd3fc;filter:drop-shadow(0 0 4px #7dd3fc)}
+.num{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(90px,30vw,150px);font-weight:100;letter-spacing:-4px;font-variant-numeric:tabular-nums;text-shadow:0 0 34px rgba(125,211,252,.75);transition:transform .12s}
+.pulse{animation:pl .5s ease-out}
+@keyframes pl{0%{transform:scale(1.18);filter:brightness(1.8)}100%{transform:scale(1)}}
+.stage.crit .num{text-shadow:0 0 40px rgba(255,77,110,.95);color:#ff6b81}
+.stage.crit .prog{stroke:#ff4d6a;filter:drop-shadow(0 0 12px #ff4d6a)}
+.stage.crit{animation:shake .3s infinite}
+@keyframes shake{25%{transform:translate(2px,-2px)}75%{transform:translate(-2px,2px)}}
+.label{font-size:13px;letter-spacing:.5em;color:#8b93c9;text-transform:uppercase}
+.done-msg{font-size:20px;font-weight:700;letter-spacing:.3em;color:#ffd166;height:26px;text-shadow:0 0 20px rgba(255,209,102,.8)}
+.restart{border:1px solid #5b8cff;background:rgba(91,140,255,.14);color:#cfe0ff;border-radius:999px;padding:13px 42px;font-size:15px;letter-spacing:.2em;cursor:pointer;transition:.25s}
+.restart:hover{background:#5b8cff;color:#fff;box-shadow:0 8px 30px rgba(91,140,255,.5);transform:translateY(-2px)}
+.burst{position:absolute;top:50%;left:50%;width:10px;height:10px;pointer-events:none}
+.burst i{position:absolute;width:5px;height:5px;border-radius:50%;background:#ffd166;opacity:0}
+.boom .burst i{animation:fly .9s ease-out forwards}
+@keyframes fly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.2)}}
+@media(max-width:390px){.label{letter-spacing:.3em}}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="label">Countdown · 10s</div>
+  <div class="ring">
+    <svg viewBox="0 0 200 200">
+      <defs><linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#7dd3fc"/><stop offset="1" stop-color="#c77dff"/></linearGradient></defs>
+      <circle class="track" cx="100" cy="100" r="88"/>
+      <circle class="prog" id="prog" cx="100" cy="100" r="88" stroke-dasharray="553" stroke-dashoffset="0"/>
+      <g class="ticks" id="ticks"></g>
+    </svg>
+    <div class="num" id="num">10</div>
+    <div class="burst" id="burst"></div>
+  </div>
+  <div class="done-msg" id="msg"></div>
+  <button class="restart" id="restart">RESTART</button>
+</div>
+<script>
+const R=88,C=2*Math.PI*R,N=10,
+  prog=document.getElementById("prog"),num=document.getElementById("num"),
+  stage=document.getElementById("stage"),msg=document.getElementById("msg"),
+  ticks=document.getElementById("ticks"),burst=document.getElementById("burst");
+for(let i=0;i<60;i++){const a=i*6*Math.PI/180,
+  c=document.createElementNS("http://www.w3.org/2000/svg","circle");
+  c.setAttribute("cx",100+72*Math.cos(a));c.setAttribute("cy",100+72*Math.sin(a));
+  c.setAttribute("r",i%6===0?2.6:1.2);ticks.appendChild(c);}
+const tickEls=[...ticks.children];
+for(let i=0;i<24;i++){const d=document.createElement("i"),a=Math.random()*6.283,r=60+Math.random()*90;
+  d.style.setProperty("--dx",Math.cos(a)*r+"px");d.style.setProperty("--dy",Math.sin(a)*r+"px");
+  d.style.background=["#ffd166","#7dd3fc","#ff6b81","#c77dff"][i%4];burst.appendChild(d);}
+let t=10,timer=null;
+function setRing(){prog.style.strokeDashoffset=C*(1-t/10);
+  tickEls.forEach((e,i)=>e.classList.toggle("on",i<Math.round((1-t/10)*60)));}
+function finish(){clearInterval(timer);timer=null;t=0;setRing();num.textContent="0";
+  msg.textContent="完成 · LIFTOFF!";stage.classList.remove("crit");
+  stage.classList.add("boom");num.classList.add("pulse");
+  setTimeout(()=>stage.classList.remove("boom"),950);}
+function start(){
+  clearInterval(timer);stage.classList.remove("crit","boom");msg.textContent="";
+  t=10;num.textContent=t;setRing();num.classList.add("pulse");
+  setTimeout(()=>num.classList.remove("pulse"),140);
+  timer=setInterval(()=>{
+    t--;setRing();
+    num.textContent=t<0?0:t;
+    num.classList.remove("pulse");void num.offsetWidth;num.classList.add("pulse");
+    if(t<=3&&t>0)stage.classList.add("crit");
+    if(t<=0)finish();
+  },1000);
+}
+document.getElementById("restart").onclick=start;
+start();
+</script>
+</body>
+</html>

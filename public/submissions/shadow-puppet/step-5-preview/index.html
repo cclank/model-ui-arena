@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>皮影戏 · 硅谷论剑 —— Sam 大战 Dario</title>
+<style>
+  :root {
+    --paper: #f3e9d2;
+    --gold: #b98f34;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+    background: radial-gradient(130% 90% at 50% 0%, #201811 0%, #171009 55%, #100b06 100%);
+    color: var(--paper);
+    overflow-x: hidden;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100%;
+  }
+  header { text-align: center; padding: 14px 16px 6px; }
+  header h1 { font-size: 21px; letter-spacing: .32em; font-weight: 600; color: #e8cf9a; text-indent: .32em; }
+  header .sub { margin-top: 4px; font-size: 11.5px; letter-spacing: .18em; color: #9c8a68; }
+  #wrap { width: min(1060px, 100%); padding: 8px 12px 20px; }
+  #stage { width: 100%; height: auto; display: block; touch-action: none; border-radius: 10px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.55), 0 0 0 1px rgba(190,150,80,.22); }
+  #subBar {
+    margin: 10px auto 0; max-width: 860px; min-height: 44px; display: flex; align-items: center; justify-content: center;
+    background: rgba(20, 14, 8, .82); border: 1px solid rgba(190, 150, 80, .3); border-radius: 8px;
+    padding: 9px 18px; font-size: 16.5px; letter-spacing: .06em; color: #f0e2bd; text-align: center;
+    transition: opacity .25s;
+  }
+  #subBar .who { color: #e8b64c; font-weight: 600; margin-right: .6em; }
+  #subBar.off { opacity: 0; }
+  #bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; margin-top: 10px; }
+  button {
+    font-family: inherit; font-size: 13px; letter-spacing: .12em; cursor: pointer; color: #e8d9b0;
+    background: linear-gradient(180deg, #3a2c18, #241a0e); border: 1px solid rgba(190,150,80,.4);
+    border-radius: 999px; padding: 7px 16px; transition: all .18s;
+  }
+  button:hover { border-color: #d8b25e; color: #ffe9b8; }
+  button.on { background: linear-gradient(180deg, #8a6a2a, #5c4517); color: #fff3d6; border-color: #e8c26a; }
+  button:disabled { opacity: .45; cursor: default; }
+  #panel { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 10px; font-size: 12px; }
+  .card { background: rgba(24,17,10,.8); border: 1px solid rgba(190,150,80,.26); border-radius: 8px; padding: 8px 12px; min-width: 172px; }
+  .card h3 { font-size: 11px; letter-spacing: .2em; color: #b39a6a; font-weight: 600; margin-bottom: 5px; }
+  .card .n { font-variant-numeric: tabular-nums; color: #f0e2bd; }
+  .card .row { display: flex; justify-content: space-between; gap: 14px; line-height: 1.7; }
+  .card .row b { color: #e8b64c; font-weight: 600; }
+  #depthCtl { display: none; gap: 14px; align-items: center; margin-top: 10px; flex-wrap: wrap; justify-content: center; font-size: 12.5px; color: #cbb887; }
+  #depthCtl label { display: flex; align-items: center; gap: 8px; }
+  #depthCtl input { accent-color: #c79a3a; width: 150px; }
+  #hint { margin-top: 10px; text-align: center; font-size: 12px; letter-spacing: .1em; color: #8f7c58; }
+  @media (max-width: 560px) {
+    header h1 { font-size: 17px; }
+    #subBar { font-size: 14px; min-height: 38px; }
+    .card { min-width: 140px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>皮影戏 · 硅谷论剑</h1>
+  <div class="sub">SAM 大战 DARIO · 四斗法 · 光和影都是真的</div>
+</header>
+<div id="wrap">
+  <svg id="stage" viewBox="0 0 1000 640" aria-label="皮影戏台"></svg>
+  <div id="subBar" class="off"><span id="subText"></span></div>
+  <div id="bar">
+    <button id="btnPlay" class="on">暂 停</button>
+    <button id="btnReplay">重 演</button>
+    <button id="btnPerf">操演模式</button>
+    <button id="btnSnd" class="on">锣鼓钹</button>
+  </div>
+  <div id="depthCtl">
+    <label>Sam 离幕 <input id="zSam" type="range" min="180" max="450" value="300"><b id="zSamN">300</b></label>
+    <label>Dario 离幕 <input id="zDar" type="range" min="180" max="450" value="300"><b id="zDarN">300</b></label>
+  </div>
+  <div id="panel">
+    <div class="card"><h3>SAM ·放大率</h3>
+      <div class="row"><span>灯幕距÷灯偶距</span><b class="n" id="mSam">2.50 ×</b></div>
+      <div class="row"><span>半影宽度 σ</span><b class="n" id="bSam">3.2 px</b></div>
+    </div>
+    <div class="card"><h3>DARIO ·放大率</h3>
+      <div class="row"><span>灯幕距÷灯偶距</span><b class="n" id="mDar">2.50 ×</b></div>
+      <div class="row"><span>半影宽度 σ</span><b class="n" id="bDar">3.2 px</b></div>
+    </div>
+    <div class="card"><h3>油 灯</h3>
+      <div class="row"><span>灯焰坐标</span><b class="n" id="lampPos">500, 430</b></div>
+      <div class="row"><span>当前折子</span><b class="n" id="beatName">—</b></div>
+    </div>
+  </div>
+  <div id="hint">演出中：静观 · 点「操演模式」后可拖动签子柄与油灯、调节离幕远近</div>
+</div>
+
+<script>
+'use strict';
+/* =====================================================================
+ * 皮影戏《硅谷论剑》
+ * 光学投影核（全部由几何算出，禁止固定模糊/缩放冒充）：
+ *   灯焰 L（幕后 z=0），人偶关节点 P（z=zP），影幕 z=zS
+ *   放大率 m = zS / zP（人偶离幕越近 → zP 越小 → m 越大、影子越大）
+ *   幕上投影 S = L + m·(P − L)（灯右移 → 影子左移，反向）
+ *   半影 σ = 灯焰半径 f ×(zS − zP)/zP（离幕越近越虚）
+ *   贴幕布景挂在幕上，灯动它不动
+ * ===================================================================== */
+const SVGNS = 'http://www.w3.org/2000/svg';
+const $ = id => document.getElementById(id);
+const stage = $('stage');
+const D2R = Math.PI / 180, R2D = 180 / Math.PI;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, u) => a + (b - a) * u;
+const easeIO = u => u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(SVGNS, tag);
+  if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+/* ---------- 舞台常量 ---------- */
+const ZS = 750;                        // 灯到幕距离
+const FLAME_R = 7;                     // 灯焰半径（决定半影）
+const FLOOR = 535;                     // 人偶脚底（台口）
+const SCR = { x: 40, y: 60, w: 920, h: 495 };
+const PSC = .42, HIPH = PSC * 92;      // 人偶舞台缩放 / 髋离地高
+const APRON = 640;
+
+/* ---------- defs ---------- */
+const defs = el('defs', null, stage);
+function lg(id, stops, x1, y1, x2, y2) {
+  const g = el('linearGradient', { id, x1, y1, x2, y2 }, defs);
+  stops.forEach(([o, c]) => el('stop', { offset: o, 'stop-color': c }, g));
+}
+lg('gSky',   [[0, '#241a10'], [1, '#120c06']], 0, 0, 0, 1);
+lg('gPaper', [[0, '#f6ead0'], [.5, '#eeddb8'], [1, '#e2cd9f']], 0, 0, 0, 1);
+lg('gLeather', [[0, '#d9ad68'], [1, '#b3813f']], 0, 0, 1, 1);
+lg('gLeather2', [[0, '#c98f4e'], [1, '#9c6a32']], 0, 0, 1, 1);
+lg('gFlame', [[0, '#fff6cf'], [.4, '#ffd978'], [1, '#e07b2a']], 0, 0, 0, 1);
+lg('gBeamA', [[0, 'rgba(140,220,255,0)'], [.5, 'rgba(170,235,255,.95)'], [1, 'rgba(140,220,255,0)']], 0, 0, 1, 0);
+lg('gBeamB', [[0, 'rgba(255,220,140,0)'], [.5, 'rgba(255,230,150,.95)'], [1, 'rgba(255,220,140,0)']], 0, 0, 1, 0);
+const rg = el('radialGradient', { id: 'gGlow', cx: '.5', cy: '.5', r: '.5' }, defs);
+el('stop', { offset: 0, 'stop-color': 'rgba(255,214,130,.85)' }, rg);
+el('stop', { offset: .45, 'stop-color': 'rgba(255,180,80,.28)' }, rg);
+el('stop', { offset: 1, 'stop-color': 'rgba(255,170,60,0)' }, rg);
+// 幕布亮度衰减：圆心 = 灯焰投影位置（每帧更新）
+const fall = el('radialGradient', { id: 'gFallR', gradientUnits: 'userSpaceOnUse', cx: 500, cy: 430, r: 560 }, defs);
+el('stop', { offset: 0, 'stop-color': 'rgba(255,244,208,.42)' }, fall);
+el('stop', { offset: .5, 'stop-color': 'rgba(255,240,200,.12)' }, fall);
+el('stop', { offset: 1, 'stop-color': 'rgba(255,238,196,0)' }, fall);
+// 皮影镂空刻具
+function poker(id, d) { el('pattern', { id, patternUnits: 'userSpaceOnUse', width: 26, height: 26 }, defs).appendChild(el('path', { d, fill: '#f7e7bd', opacity: .9 })); }
+poker('pCutA', 'M13 6 a7 7 0 1 1 -0.1 0 Z M4 20 l3 -4 M19 20 l-3 -4');
+poker('pCutB', 'M13 5 l5 8 l-5 8 l-5 -8 Z');
+// 纸纹（细颗粒 + 纤维；不用滤镜 turbulence，保证软件渲染性能）
+const grain = el('pattern', { id: 'pGrain', patternUnits: 'userSpaceOnUse', width: 46, height: 46 }, defs);
+{
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 26; i++)
+    el('circle', { cx: (rnd() * 46).toFixed(1), cy: (rnd() * 46).toFixed(1), r: (.4 + rnd() * .8).toFixed(2), fill: 'rgba(120,90,40,.10)' }, grain);
+  for (let i = 0; i < 5; i++) {
+    const y = rnd() * 46;
+    el('path', { d: `M0 ${y.toFixed(1)} q12 ${(rnd() - .5) * 3} 23 0 t23 0`, fill: 'none', stroke: 'rgba(120,90,40,.07)', 'stroke-width': .6 }, grain);
+  }
+}
+// 半影：几何每帧算出 σ（幕布坐标系 px）→ 转成人偶局部坐标后写入 feGaussianBlur，
+// 影子得到真实的软边；同时在面板显示数值供人工验算。详见 fShS/fShD 定义处注释。
+// 破幕面具：白 = 罩布，黑 = 破洞
+const vmask = el('mask', { id: 'veilMask', maskUnits: 'userSpaceOnUse', x: SCR.x, y: SCR.y, width: SCR.w, height: SCR.h }, defs);
+el('rect', { x: SCR.x, y: SCR.y, width: SCR.w, height: SCR.h, fill: '#fff' }, vmask);
+// 影子滤镜（每人偶一份，半影 σ 可独立实时驱动）：
+//   ① feColorMatrix 整层压暗至 34% —— 透光质感：镂空处仍最亮、彩绘带色、墨线最暗、叠压更暗；
+//   ② feGaussianBlur —— 真实半影软边，stdDeviation 每帧由 σ/(放大率·人偶缩放) 算出。
+// ⚠ 必须挂在「直接实例化的组」上：挂在 use→defs 引用链上会让整层渲染近全透明（已实测的渲染器缺陷）。
+function shadowFilter(id) {
+  const f = el('filter', { id, x: '-25%', y: '-15%', width: '150%', height: '130%' }, defs);
+  el('feColorMatrix', { type: 'matrix', values: '.34 0 0 0 0  0 .34 0 0 0  0 0 .34 0 0  0 0 0 1 0' }, f);
+  return el('feGaussianBlur', { stdDeviation: 2 }, f);
+}
+const blurS = shadowFilter('fShS'), blurD = shadowFilter('fShD');
+
+/* =====================================================================
+ * 人偶工厂（各 15 部件）：脖签轴 = 上身总成（躯干+颈+头+背旗）绕颈点倾斜；
+ * 手签控双臂（肩点固定、肘部随动），余肢重力自摇；脚踩台口。
+ * 返回关节表 J：帧循环只写「translate(基准) rotate(角)」复合 transform，
+ * 基准位移永不被抹（旧版 setRot 直接覆写 transform 曾把关节拉回髋心）。
+ * 同一工厂建两具：幕后真身（无滤镜）+ 幕上影子（hip 挂 fShS/fShD）。
+ * ===================================================================== */
+function partPath(d, fill, sw, parent, extra) {
+  return el('path', Object.assign({ d, fill, stroke: '#241a10', 'stroke-width': sw || 1.1, 'stroke-linejoin': 'round' }, extra || {}), parent);
+}
+function jt(parent, tx, ty) { const e = el('g', { transform: `translate(${tx},${ty})` }, parent); return { el: e, tx, ty }; }
+function buildSam() {
+  const g = el('g');
+  const hip = el('g', { transform: `scale(${PSC})` }, g);
+  const flag = el('g', null, hip);
+  el('path', { d: 'M6 -262 L6 -140', stroke: '#3a2c18', 'stroke-width': 3 }, flag);
+  partPath('M6 -262 L58 -240 L6 -216 Z', 'url(#gLeather)', 1, flag);
+  const ft = el('text', { x: 18, y: -232, 'font-size': 12, fill: '#2b2118', 'font-family': 'Georgia, serif' }, flag);
+  ft.textContent = 'OpenAI';
+  // 上身总成：绕颈点 (0,-136) 倾斜；raw 做坐标补偿，所有部件坐标与髋坐标系一致
+  const body = el('g', { transform: 'translate(0,-136)' }, hip);
+  const raw = el('g', { transform: 'translate(0,136)' }, body);
+  partPath('M-26 0 L-30 -70 Q-32 -108 -20 -128 L20 -128 Q32 -108 30 -70 L26 0 Z', 'url(#gLeather)', 1.2, raw);
+  partPath('M-24 -58 Q0 -50 24 -58 L26 -92 Q0 -84 -26 -92 Z', 'rgba(46,125,116,.55)', .8, raw);
+  partPath('M-26 -128 L26 -128 L26 -136 L-26 -136 Z', 'rgba(46,125,116,.4)', .8, raw);
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++)
+    el('circle', { cx: -12 + j * 24, cy: -72 - i * 16, r: 3.4, fill: 'url(#pCutA)' }, raw);
+  const neck = el('g', { transform: 'translate(0,-136)' }, raw);
+  partPath('M-7 0 L-8 -14 L8 -14 L7 0 Z', 'url(#gLeather2)', 1, neck);
+  const head = el('g', { transform: 'translate(0,-16)' }, neck);
+  partPath('M-19 0 Q-21 -18 -13 -30 Q0 -38 13 -30 Q21 -18 19 0 Q10 8 0 8 Q-10 8 -19 0 Z', '#dcb478', 1.2, head);
+  partPath('M-20 -14 Q-24 -34 0 -40 Q24 -34 20 -14 Q14 -26 0 -27 Q-14 -26 -20 -14 Z', '#3a2c1c', .9, head);
+  partPath('M-20 -12 l-4 -10 M-12 -22 l-2 -8 M-2 -26 l0 -8 M8 -24 l2 -8 M17 -13 l4 -9', 'none', 0, head, { stroke: '#3a2c1c', 'stroke-width': 2.4, 'stroke-linecap': 'round' });
+  partPath('M-12 -12 q4 -3 8 0 M4 -12 q4 -3 8 0', 'none', 0, head, { stroke: '#241a10', 'stroke-width': 1.6 });
+  el('circle', { cx: -8, cy: -16, r: 1.7, fill: '#241a10' }, head);
+  el('circle', { cx: 8, cy: -16, r: 1.7, fill: '#241a10' }, head);
+  partPath('M0 -12 l-2 6 l2 2 l2 -2 Z', '#c9a06a', .8, head);
+  partPath('M-6 -2 q6 4 12 0', 'none', 0, head, { stroke: '#241a10', 'stroke-width': 1.4 });
+  partPath('M-18 -4 q-2 8 4 12 M18 -4 q2 8 -4 12 M-14 6 q0 4 5 5 M14 6 q0 4 -5 5', 'none', 0, head, { stroke: 'rgba(58,44,28,.5)', 'stroke-width': 1.1 });
+  const J = { g, hip, body, pivot: 136 };
+  function arm(side) {
+    const s = side === 'L' ? -1 : 1;
+    const sh = jt(hip, s * 26, -118);
+    partPath('M0 0 Q' + s * 10 + ' 22 ' + s * 6 + ' 40', '#dcb478', 4.6, sh.el);
+    const fo = jt(sh.el, s * 6, 40);
+    partPath('M0 0 Q' + s * 4 + ' 20 ' + s * 2 + ' 36', '#dcb478', 4, fo.el);
+    const hd = jt(fo.el, s * 2, 36);
+    partPath('M-6 0 q6 -4 12 0 q-2 10 -6 10 q-4 0 -6 -10 Z', '#e8c98f', 1, hd.el);
+    return { sh, fo, hd };
+  }
+  const aL = arm('L'), aR = arm('R');
+  Object.assign(J, { armL: aL.sh, armR: aR.sh, foreL: aL.fo, foreR: aR.fo });
+  function leg(side) {
+    const s = side === 'L' ? -1 : 1;
+    const th = jt(hip, s * 13, 0);
+    partPath('M0 0 L' + s * 2 + ' 44', '#dcb478', 7.5, th.el);
+    const sh = jt(th.el, s * 2, 44);
+    partPath('M0 0 L' + s * 1 + ' 42', '#dcb478', 6.2, sh.el);
+    const ftg = jt(sh.el, s * 1, 42);
+    partPath('M-9 0 L16 0 L18 6 L-9 6 Z', '#3a2c18', 1, ftg.el);
+    return { th, sh, ftg };
+  }
+  const lL = leg('L'), lR = leg('R');
+  Object.assign(J, { thighL: lL.th, thighR: lR.th, shinL: lL.sh, shinR: lR.sh });
+  return J;
+}
+function buildDario() {
+  const g = el('g');
+  const hip = el('g', { transform: `scale(${PSC})` }, g);
+  const flag = el('g', null, hip);
+  el('path', { d: 'M6 -262 L6 -140', stroke: '#3a2c18', 'stroke-width': 3 }, flag);
+  partPath('M6 -262 L-58 -240 L6 -216 Z', 'url(#gLeather)', 1, flag);
+  const ft = el('text', { x: -56, y: -232, 'font-size': 11, fill: '#2b2118', 'font-family': 'Georgia, serif' }, flag);
+  ft.textContent = 'Anthropic';
+  // 上身总成：绕颈点 (0,-142) 倾斜（Dario 颈位略高）
+  const body = el('g', { transform: 'translate(0,-142)' }, hip);
+  const raw = el('g', { transform: 'translate(0,142)' }, body);
+  partPath('M-26 0 L-30 -70 Q-32 -108 -20 -128 L20 -128 Q32 -108 30 -70 L26 0 Z', 'url(#gLeather2)', 1.2, raw);
+  partPath('M-24 -58 Q0 -50 24 -58 L26 -92 Q0 -84 -26 -92 Z', 'rgba(163,90,46,.55)', .8, raw);
+  partPath('M-11 -128 L11 -128 L8 -142 L-8 -142 Z', 'rgba(163,90,46,.6)', .8, raw);
+  for (let i = 0; i < 3; i++) el('path', { d: `M-20 ${-70 - i * 15} L20 ${-70 - i * 15}`, stroke: 'rgba(247,231,189,.75)', 'stroke-width': 1 }, raw);
+  const neck = el('g', { transform: 'translate(0,-142)' }, raw);
+  partPath('M-7 0 L-8 -12 L8 -12 L7 0 Z', 'url(#gLeather2)', 1, neck);
+  const head = el('g', { transform: 'translate(0,-14)' }, neck);
+  partPath('M-19 0 Q-21 -18 -13 -30 Q0 -38 13 -30 Q21 -18 19 0 Q10 8 0 8 Q-10 8 -19 0 Z', '#d3a468', 1.2, head);
+  partPath('M-21 -12 Q-26 -36 0 -42 Q26 -36 21 -12 Q18 -28 0 -29 Q-18 -28 -21 -12 Z', '#2e2418', .9, head);
+  for (let i = 0; i < 5; i++) {
+    const a = -160 + i * 35;
+    el('circle', { cx: Math.cos(a * D2R) * 20, cy: -26 + Math.sin(a * D2R) * 12, r: 4.6, fill: '#2e2418' }, head);
+  }
+  partPath('M-13 -16 h8 M5 -16 h8', 'none', 0, head, { stroke: '#241a10', 'stroke-width': 1.5 });
+  el('circle', { cx: -9, cy: -14, r: 4.6, fill: 'rgba(200,230,255,.25)', stroke: '#241a10', 'stroke-width': 1.4 }, head);
+  el('circle', { cx: 9, cy: -14, r: 4.6, fill: 'rgba(200,230,255,.25)', stroke: '#241a10', 'stroke-width': 1.4 }, head);
+  el('circle', { cx: -9, cy: -14, r: 1.4, fill: '#241a10' }, head);
+  el('circle', { cx: 9, cy: -14, r: 1.4, fill: '#241a10' }, head);
+  partPath('M0 -12 l-2 5 l2 2 l2 -2 Z', '#c9a06a', .8, head);
+  partPath('M-6 -1 q6 3 12 0', 'none', 0, head, { stroke: '#241a10', 'stroke-width': 1.3 });
+  const J = { g, hip, body, pivot: 142 };
+  function arm(side) {
+    const s = side === 'L' ? -1 : 1;
+    const sh = jt(hip, s * 26, -118);
+    partPath('M0 0 Q' + s * 10 + ' 22 ' + s * 6 + ' 40', '#d3a468', 4.6, sh.el);
+    const fo = jt(sh.el, s * 6, 40);
+    partPath('M0 0 Q' + s * 4 + ' 20 ' + s * 2 + ' 36', '#d3a468', 4, fo.el);
+    const hd = jt(fo.el, s * 2, 36);
+    partPath('M-6 0 q6 -4 12 0 q-2 10 -6 10 q-4 0 -6 -10 Z', '#e0bf8a', 1, hd.el);
+    return { sh, fo, hd };
+  }
+  const aL = arm('L'), aR = arm('R');
+  Object.assign(J, { armL: aL.sh, armR: aR.sh, foreL: aL.fo, foreR: aR.fo });
+  function leg(side) {
+    const s = side === 'L' ? -1 : 1;
+    const th = jt(hip, s * 13, 0);
+    partPath('M0 0 L' + s * 2 + ' 44', '#d3a468', 7.5, th.el);
+    const sh = jt(th.el, s * 2, 44);
+    partPath('M0 0 L' + s * 1 + ' 42', '#d3a468', 6.2, sh.el);
+    const ftg = jt(sh.el, s * 1, 42);
+    partPath('M-9 0 L16 0 L18 6 L-9 6 Z', '#3a2c18', 1, ftg.el);
+    return { th, sh, ftg };
+  }
+  const lL = leg('L'), lR = leg('R');
+  Object.assign(J, { thighL: lL.th, thighR: lR.th, shinL: lL.sh, shinR: lR.sh });
+  return J;
+}
+/* ---- 法宝（挂进 hip：与人偶同缩放，影子滤镜自动覆盖；IP 补偿保持原视觉尺寸） ---- */
+function buildProps(hip) {
+  const IP = 1 / PSC;
+  const rackOut = el('g', { transform: `scale(${IP})` }, hip);
+  const rack = el('g', { opacity: 0 }, rackOut);
+  for (let i = 0; i < 5; i++) {
+    el('rect', { x: -46, y: -300 - i * 26, width: 92, height: 20, rx: 3, fill: 'rgba(40,60,80,.85)', stroke: '#9fd8ef', 'stroke-width': .8 }, rack);
+    el('rect', { x: -40, y: -296 - i * 26, width: 30, height: 12, rx: 2, fill: 'rgba(140,220,255,.5)' }, rack);
+    for (let j = 0; j < 4; j++) el('rect', { x: 2 + j * 10, y: -294 - i * 26, width: 6, height: 8, rx: 1, fill: 'rgba(255,230,150,.8)' }, rack);
+  }
+  const shield = el('g', { opacity: 0, transform: `scale(${IP})` }, hip);
+  partPath('M-34 -190 L34 -190 L34 -140 Q34 -108 0 -96 Q-34 -108 -34 -140 Z', 'rgba(70,110,150,.6)', 1.4, shield);
+  const st = el('text', { x: 0, y: -136, 'font-size': 19, 'text-anchor': 'middle', fill: '#f0e6cc', 'font-family': '"Songti SC","STSong",serif' }, shield);
+  st.textContent = '宪法';
+  el('circle', { cx: 0, cy: -165, r: 5, fill: 'url(#pCutB)' }, shield);
+  return { rack, shield };
+}
+
+/* =====================================================================
+ * 舞台装配：幕后（灯 → 签子 → 人偶暗影）→ 影幕（纸 + 双影 + 贴幕布景）
+ * ===================================================================== */
+/* ---- 四具人偶：幕后真身 ×2（纸后不可见，全彩出场时前台化）+ 幕上影子 ×2（hip 挂滤镜） ---- */
+const R = { sam: buildSam(), dar: buildDario() };                     // 真身关节表
+const propsR = { sam: buildProps(R.sam.hip), dar: buildProps(R.dar.hip) };
+const backSam = R.sam.g, backDar = R.dar.g;
+el('rect', { x: 0, y: 0, width: 1000, height: APRON, fill: 'url(#gSky)' }, stage);
+for (let i = 0; i < 9; i++) el('path', { d: `M0 ${i * 12 + 552} L1000 ${i * 12 + 552}`, stroke: 'rgba(255,220,160,.05)', 'stroke-width': 1 }, stage);
+// 油灯
+const lampG = el('g', { id: 'lampG' }, stage);
+el('ellipse', { cx: 0, cy: 0, rx: 130, ry: 110, fill: 'url(#gGlow)' }, lampG);
+el('path', { d: 'M-16 6 q16 -14 32 0 l-4 22 q-12 6 -24 0 Z', fill: '#5c4426', stroke: '#2e2214', 'stroke-width': 1 }, lampG);
+el('path', { d: 'M-22 28 L22 28 L16 40 L-16 40 Z', fill: '#6e5230', stroke: '#2e2214', 'stroke-width': 1 }, lampG);
+el('rect', { x: -3, y: -12, width: 6, height: 14, fill: '#3a2c18' }, lampG);
+const flame = el('g', null, lampG);
+partPath('M0 -30 q9 12 6 22 q-3 9 -6 9 q-3 0 -6 -9 q-3 -10 6 -22 Z', 'url(#gFlame)', .8, flame);
+partPath('M0 -22 q4 8 3 14 q-1 5 -3 5 q-2 0 -3 -5 q-1 -6 3 -14 Z', 'rgba(255,250,214,.9)', .5, flame);
+// 签子（先画 → 人偶盖住签身上段，柄在台口下露出）
+function makeRod(id) {
+  const g = el('g', null, stage);
+  const stick = el('path', { d: '', stroke: '#7a5c30', 'stroke-width': 2.4, fill: 'none' }, g);
+  const knob = el('circle', { r: 7, fill: '#a5752f', stroke: '#4a3416', 'stroke-width': 1.2, cursor: 'grab' }, g);
+  knob.dataset.rod = id;
+  knob.addEventListener('pointerdown', onRodDown);
+  return { g, stick, knob };
+}
+const rodSamNeck = makeRod('samNeck'), rodSamL = makeRod('samHandL'), rodSamR = makeRod('samHandR');
+const rodDarNeck = makeRod('darNeck'), rodDarL = makeRod('darHandL'), rodDarR = makeRod('darHandR');
+// 幕后真身：直接实例化（不用 use→defs：那条链上挂滤镜会被渲染器整层吞掉），纸后不可见
+stage.appendChild(backSam); stage.appendChild(backDar);
+/* ---------- 影幕 ---------- */
+const screenG = el('g', null, stage);
+el('rect', { x: SCR.x, y: SCR.y, width: SCR.w, height: SCR.h, fill: 'url(#gPaper)' }, screenG);
+// 影子：S = L + m(P−L) 每帧投影；hip 挂 fSh = 整层压暗 34%（透光质感）+ 高斯软边（σ/(m·PSC)）
+const S = { sam: buildSam(), dar: buildDario() };
+S.sam.hip.setAttribute('filter', 'url(#fShS)'); S.dar.hip.setAttribute('filter', 'url(#fShD)');
+const propsS = { sam: buildProps(S.sam.hip), dar: buildProps(S.dar.hip) };
+screenG.appendChild(S.sam.g); screenG.appendChild(S.dar.g);
+// 贴幕布景（硅谷镂空）：刻在幕上，灯动它不动
+const scen = el('g', { id: 'scenery' }, screenG);
+function carve(x, y, d, cut) {
+  const g = el('g', { transform: `translate(${x} ${y})` }, scen);
+  partPath(d, 'rgba(60,44,26,.88)', 1, g);
+  if (cut) partPath(cut, 'url(#pCutA)', .6, g);
+}
+partPath('M40 300 q120 -110 240 -30 q90 60 180 -20 q70 -60 150 -10 q60 40 110 10 L960 330 L40 330 Z', 'rgba(70,54,34,.16)', 1, scen);
+carve(90, 330, 'M0 0 L0 -120 L18 -120 L18 -104 L36 -104 L36 -120 L54 -120 L54 0 Z M8 -96 L26 -96 L26 -78 L8 -78 Z M30 -66 L46 -66 L46 -46 L30 -46 Z');
+carve(160, 330, 'M0 0 L0 -150 L12 -162 L24 -150 L24 0 Z M6 -130 L18 -130 L18 -112 L6 -112 Z');
+carve(240, 330, 'M0 0 L0 -170 L36 0 Z M14 -60 L22 -60 L22 -44 L14 -44 Z', 'M18 -170 L18 -196 M12 -196 L24 -196');
+carve(300, 330, 'M0 0 L0 -96 L70 0 Z M6 -84 L30 -84 L30 -72 L6 -72 Z M40 -84 L64 -84 L64 -72 L40 -72 Z M6 -62 L30 -62 L30 -50 L6 -50 Z M40 -62 L64 -62 L64 -50 L40 -50 Z');
+carve(660, 330, 'M0 0 L0 -200 L30 -210 L60 -200 L60 0 Z M8 -180 L24 -180 L24 -160 L8 -160 Z M36 -160 L52 -160 L52 -140 L36 -140 Z');
+carve(732, 330, 'M0 0 L0 -140 L40 0 Z M10 -120 L28 -120 L28 -100 L10 -100 Z');
+carve(830, 330, 'M0 -130 L130 -130 L130 -118 L118 -118 L118 0 L96 0 L96 -112 L34 -112 L34 0 L12 0 L12 -112 L0 -112 Z');
+el('rect', { x: SCR.x, y: SCR.y + SCR.h - 14, width: SCR.w, height: 14, fill: 'rgba(74,56,32,.9)' }, scen);
+const signT = el('text', { x: 500, y: SCR.y + SCR.h - 4, 'font-size': 8.5, 'text-anchor': 'middle', fill: 'rgba(240,226,190,.75)', 'letter-spacing': 6, 'font-family': '"Songti SC","STSong",serif' }, scen);
+signT.textContent = '硅 谷 论 剑 · 第 一 回';
+el('rect', { x: SCR.x, y: SCR.y, width: SCR.w, height: SCR.h, fill: 'url(#pGrain)', opacity: .5 }, screenG);
+el('rect', { x: SCR.x, y: SCR.y, width: SCR.w, height: SCR.h, fill: 'url(#gFallR)' }, screenG);
+const veil = el('rect', { x: SCR.x, y: SCR.y, width: SCR.w, height: SCR.h, fill: 'rgba(24,17,10,0)', mask: 'url(#veilMask)' }, screenG);
+const holePath = el('path', { d: '', fill: '#000' }, vmask);
+const holeRim = el('path', { d: '', fill: 'none', stroke: 'rgba(30,16,8,.9)', 'stroke-width': 5, 'stroke-linejoin': 'round', opacity: 0 }, screenG);
+const holeDark = el('ellipse', { rx: 0, ry: 0, fill: 'rgba(20,12,6,.98)', opacity: 0 }, screenG);
+const sparks = [];
+for (let i = 0; i < 14; i++) sparks.push({ x: 0, y: 0, vx: 0, vy: 0, life: 0, el: el('circle', { r: 1.8, fill: '#ffcf7a', opacity: 0 }, screenG) });
+const beamA = el('path', { d: '', fill: 'none', stroke: 'url(#gBeamA)', 'stroke-width': 5, 'stroke-linecap': 'round', opacity: 0 }, screenG);
+const beamB = el('path', { d: '', fill: 'none', stroke: 'url(#gBeamB)', 'stroke-width': 5, 'stroke-linecap': 'round', opacity: 0 }, screenG);
+/* ---------- 前台层：全彩出场时人偶移居此处（纸幕之前 → 走出幕布） ---------- */
+const frontG = el('g', null, stage);
+
+/* =====================================================================
+ * 状态
+ * ===================================================================== */
+const P = {
+  sam: { x: 400, z: 300, lean: 0, armL: 8, armR: -8, foreL: 12, foreR: -12, legL: 0, legR: 0, foot: FLOOR, prop: 0 },
+  dar: { x: 600, z: 300, lean: 0, armL: -8, armR: 8, foreL: -12, foreR: 12, legL: 0, legR: 0, foot: FLOOR, prop: 0 },
+};
+const V = { sam: Object.assign({}, P.sam), dar: Object.assign({}, P.dar) };
+const lampBase = { x: 500, y: 430 };
+const lamp = { x: 500, y: 430 };
+let flameT = 0, bump = 0, burn = 0, veilT = 0, out = 0;   // veilT=罩布降下 · out=人偶出台
+let playing = true, perfMode = false, tShow = 0;
+let curBeat = '', cueIdx = 0;
+const rodState = { samNeck: { x: 400, y: 620 }, darNeck: { x: 600, y: 620 }, samHandL: { x: 368, y: 628 }, samHandR: { x: 432, y: 628 }, darHandL: { x: 568, y: 628 }, darHandR: { x: 632, y: 628 } };
+let dragRod = null, dragLamp = false, lampDrag0 = null;
+
+/* ---------- 锣鼓钹（WebAudio 现场合成） ---------- */
+let AC = null, sndOn = true;
+function ac() {
+  if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+  if (AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function noiseBuf(sec) {
+  const a = ac(), n = Math.floor(a.sampleRate * sec), b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  return b;
+}
+function drum() {
+  if (!sndOn) return;
+  try {
+    const a = ac(), t = a.currentTime, o = a.createOscillator(), g = a.createGain(), n = a.createBufferSource(), f = a.createBiquadFilter();
+    o.type = 'sine'; o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(70, t + .09);
+    g.gain.setValueAtTime(.5, t); g.gain.exponentialRampToValueAtTime(.001, t + .14);
+    n.buffer = noiseBuf(.05); f.type = 'bandpass'; f.frequency.value = 420; f.Q.value = 1.1;
+    const g2 = a.createGain(); g2.gain.setValueAtTime(.3, t); g2.gain.exponentialRampToValueAtTime(.001, t + .05);
+    o.connect(g).connect(a.destination); n.connect(f).connect(g2).connect(a.destination);
+    o.start(t); o.stop(t + .15); n.start(t); n.stop(t + .05);
+  } catch (e) {}
+}
+function gong() {
+  if (!sndOn) return;
+  try {
+    const a = ac(), t = a.currentTime;
+    [1, 1.52, 2.13, 2.74, 3.51, 4.42].forEach((r, i) => {
+      const o = a.createOscillator(), g = a.createGain();
+      o.type = i % 2 ? 'sine' : 'triangle'; o.frequency.value = 172 * r * (1 + (Math.random() - .5) * .008);
+      g.gain.setValueAtTime(.001, t); g.gain.exponentialRampToValueAtTime(.34 / (i + 1), t + .012);
+      g.gain.exponentialRampToValueAtTime(.001, t + 2.4 - i * .28);
+      o.connect(g).connect(a.destination); o.start(t); o.stop(t + 2.5);
+    });
+    const n = a.createBufferSource(), f = a.createBiquadFilter(), g2 = a.createGain();
+    n.buffer = noiseBuf(.3); f.type = 'bandpass'; f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(300, t + .3); f.Q.value = .8;
+    g2.gain.setValueAtTime(.12, t); g2.gain.exponentialRampToValueAtTime(.001, t + .3);
+    n.connect(f).connect(g2).connect(a.destination); n.start(t); n.stop(t + .3);
+  } catch (e) {}
+}
+function cymbal() {
+  if (!sndOn) return;
+  try {
+    const a = ac(), t = a.currentTime, n = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+    n.buffer = noiseBuf(.7); f.type = 'highpass'; f.frequency.value = 5200;
+    g.gain.setValueAtTime(.22, t); g.gain.exponentialRampToValueAtTime(.001, t + .8);
+    n.connect(f).connect(g).connect(a.destination); n.start(t); n.stop(t + .7);
+  } catch (e) {}
+}
+
+/* =====================================================================
+ * 导演：四斗法（44.5s）
+ * ===================================================================== */
+const BEATS = [
+  { name: '开场', t0: 0, t1: 3.6, sub: [['', '硅谷论剑 · 第一阵']], cues: [[.1, 'gong']] },
+  { name: '叫阵', t0: 3.6, t1: 9.4,
+    sub: [['Sam', '吾乃 Sam，万卡集群，算力无双！'], ['Dario', '在下 Dario，宪法护体，安全至上。'], ['Sam', '可敢与俺论剑？'], ['Dario', '有何不敢！']],
+    cues: [[.2, 'drum'], [1.4, 'drum'], [2.6, 'drum'], [3.9, 'drum']] },
+  { name: '头阵 · 万卡集群', t0: 9.4, t1: 15.2,
+    sub: [['Sam', '接我这招——万卡集群！'], ['Dario', '好大的火气……']],
+    cues: [[.3, 'cymbal'], [1.6, 'drum'], [2.4, 'drum']] },
+  { name: '二阵 · 宪法盾', t0: 15.2, t1: 21.2,
+    sub: [['Dario', '宪法盾！'], ['Sam', '好硬的盾！看打！'], ['Dario', '安全第一，不与你蛮拼。']],
+    cues: [[.2, 'gong'], [1.8, 'drum'], [3.4, 'cymbal']] },
+  { name: '三阵 · 巨影术', t0: 21.2, t1: 27.6,
+    sub: [['Dario', '且看离幕巨影！'], ['Sam', '影子怎的大了？！这不公道！'], ['Dario', '此乃光学，非我之本意。']],
+    cues: [[.1, 'gong'], [1.5, 'drum'], [2.2, 'drum'], [3.6, 'gong']] },
+  { name: '四阵 · 对波', t0: 27.6, t1: 33.6,
+    sub: [['Sam', '吃我一记 AGI 圣光！'], ['Dario', '安全结界！'], ['', '两道光撞在一处，天地为之一暗']],
+    cues: [[.2, 'cymbal'], [1.2, 'drum'], [1.8, 'drum'], [2.4, 'drum'], [3.0, 'cymbal']] },
+  { name: '破 幕', t0: 33.6, t1: 36.2,
+    sub: [['', '油灯打翻——幕布烧穿了！']],
+    cues: [[.1, 'gong'], [.5, 'cymbal']] },
+  { name: '全彩出场', t0: 36.2, t1: 40.4,
+    sub: [['Sam', '今日不分胜负。'], ['Dario', '和为贵，和为贵。']],
+    cues: [[.3, 'drum'], [2.2, 'drum']] },
+  { name: '和局收场', t0: 40.4, t1: 44.5,
+    sub: [['', '和局 · 四海之内皆兄弟也']],
+    cues: [[.6, 'gong'], [2.4, 'gong']] },
+];
+function beatAt(t) { for (const b of BEATS) if (t >= b.t0 && t < b.t1) return b; return BEATS[BEATS.length - 1]; }
+
+function directPose(t) {
+  const b = beatAt(t);
+  const u = clamp((t - b.t0) / (b.t1 - b.t0), 0, 1);
+  const e = easeIO(u);
+  const S = P.sam, D = P.dar;
+  S.x = 400; S.z = 300; S.foot = FLOOR; S.prop = 0; S.lean = 0;
+  D.x = 600; D.z = 300; D.foot = FLOOR; D.prop = 0; D.lean = 0;
+  S.armL = 8; S.armR = -8; S.foreL = 12; S.foreR = -12;
+  D.armL = -8; D.armR = 8; D.foreL = -12; D.foreR = 12;
+  switch (b.name) {
+    case '开场': {
+      S.foot = lerp(700, FLOOR, e); D.foot = lerp(700, FLOOR, e);
+      S.armL = lerp(-60, 8, e); S.armR = lerp(60, -8, e);
+      D.armL = lerp(60, -8, e); D.armR = lerp(-60, 8, e);
+      break;
+    }
+    case '叫阵': {
+      S.x = lerp(430, 380, Math.sin(e * Math.PI)); D.x = lerp(570, 620, Math.sin(e * Math.PI));
+      S.lean = Math.sin(t * 2.2) * 3; D.lean = Math.sin(t * 1.8 + 2) * 3;
+      if (u > .15 && u < .48) D.foreR = -70;
+      if (u > .5 && u < .62) S.foreL = -78;
+      break;
+    }
+    case '头阵 · 万卡集群': {
+      S.x = lerp(430, 340, e); S.prop = clamp(u * 3, 0, 1);
+      S.armL = lerp(8, -150, e); S.armR = lerp(-8, 150, e);
+      S.lean = -6 * e;
+      D.armL = lerp(-8, -60, e); D.armR = lerp(8, 60, e); D.lean = 4;
+      break;
+    }
+    case '二阵 · 宪法盾': {
+      D.prop = clamp(u * 3, 0, 1); D.x = lerp(600, 560, e);
+      D.armL = lerp(-60, -120, e); D.armR = lerp(60, 120, e);
+      S.armL = lerp(-150, 20, e); S.armR = lerp(150, -20, e);
+      S.x = lerp(340, 420, e); S.prop = 1 - u;
+      S.foreL = Math.sin(t * 6) * 20;
+      break;
+    }
+    case '三阵 · 巨影术': {                                         // 光学阵：贴近灯焰 → 离幕变近
+      D.z = lerp(300, 195, clamp(u * 2.2, 0, 1));
+      D.x = lerp(600, 520, e);
+      D.armL = lerp(-120, -165, e); D.armR = lerp(120, 165, e);
+      D.lean = -8;
+      S.armL = lerp(20, -30, e); S.armR = lerp(-20, 30, e);
+      S.lean = lerp(0, 12, e); S.x = lerp(420, 470, e);
+      break;
+    }
+    case '四阵 · 对波': {
+      const clash = clamp(Math.sin(t * 3.1) * .5 + .5, 0, 1);
+      S.armL = lerp(-30, -95, e); S.armR = lerp(30, 95, e);
+      D.armL = lerp(-165, -95, e); D.armR = lerp(165, 95, e);
+      S.z = lerp(300, 180, e); D.z = lerp(300, 180, e);
+      S.x = lerp(470, 430, e); D.x = lerp(520, 570, e);
+      beamA.setAttribute('opacity', (.9 * clash).toFixed(2));
+      beamB.setAttribute('opacity', (.9 * (1 - clash)).toFixed(2));
+      break;
+    }
+    case '破 幕': {
+      S.armL = -40; S.armR = 40; D.armL = -40; D.armR = 40;
+      S.lean = Math.sin(t * 30) * 4; D.lean = Math.sin(t * 30 + 1) * 4;
+      if (u < .12) bump = 1;
+      break;
+    }
+    case '全彩出场': {
+      S.z = lerp(180, 300, e); D.z = lerp(180, 300, e);
+      S.armL = lerp(-40, -55, e); S.armR = lerp(40, 55, e);
+      D.armL = lerp(-40, -50, e); D.armR = lerp(40, 50, e);
+      break;
+    }
+    case '和局收场': {
+      S.armL = lerp(-55, -35, e); S.armR = lerp(55, 35, e);
+      D.armL = lerp(-50, -30, e); D.armR = lerp(50, 30, e);
+      S.lean = lerp(0, 10, e); D.lean = lerp(0, 10, e);
+      break;
+    }
+  }
+  if (b.name !== '四阵 · 对波') { beamA.setAttribute('opacity', 0); beamB.setAttribute('opacity', 0); }
+}
+
+/* ---------- 字幕 ---------- */
+const subBar = $('subBar'), subText = $('subText');
+let subLine = '';
+function showSub(t) {
+  const b = beatAt(t);
+  const subs = b.sub;
+  const seg = (b.t1 - b.t0) / subs.length;
+  const i = clamp(Math.floor((t - b.t0) / seg), 0, subs.length - 1);
+  const line = subs[i];
+  const txt = line[0] ? line[0] + '：' + line[1] : line[1];
+  if (txt !== subLine) {
+    subLine = txt;
+    subText.innerHTML = '';
+    if (line[0]) {
+      const w = document.createElement('span'); w.className = 'who'; w.textContent = line[0];
+      subText.appendChild(w);
+    }
+    subText.appendChild(document.createTextNode(line[1]));
+    subBar.classList.remove('off');
+  }
+}
+
+/* ---------- 关节点几何（供签子瞄准；臂链两级旋转） ---------- */
+/* 写整具人偶：根部位移 + 上身总成绕颈点倾斜 + 四肢「基准位移 + 旋转」复合。
+ * 旋转永不单独覆写 transform，否则关节会被拽回各自父坐标系原点。
+ * 关 joints（无根位移）单独拆出：幕后真身与幕上影子是两具独立实例，必须同姿写入。 */
+function writeJoints(J, v) {
+  const T = (o, deg) => o.el.setAttribute('transform', `translate(${o.tx},${o.ty}) rotate(${deg.toFixed(2)})`);
+  J.body.setAttribute('transform', `translate(0,${-J.pivot}) rotate(${v.lean.toFixed(2)})`);
+  T(J.armL, v.armL); T(J.armR, v.armR); T(J.foreL, v.foreL); T(J.foreR, v.foreR);
+  T(J.thighL, v.legL); T(J.thighR, v.legR); T(J.shinL, v.legL * .4); T(J.shinR, v.legR * .4);
+}
+function writePuppet(J, v, py) {
+  J.g.setAttribute('transform', `translate(${v.x.toFixed(1)} ${py.toFixed(1)})`);
+  writeJoints(J, v);
+}
+function armJoint(v, side, a, fo) {
+  const s = side === 'L' ? -1 : 1;
+  const shx = v.x + PSC * s * 26, shy = v.foot - HIPH - PSC * 118;
+  const ar = a * D2R, fr = (a + fo) * D2R;
+  const x = shx + PSC * (s * 6 * Math.cos(ar) - 40 * Math.sin(ar) + s * 2 * Math.cos(fr) - 36 * Math.sin(fr));
+  const y = shy + PSC * (s * 6 * Math.sin(ar) + 40 * Math.cos(ar) + s * 2 * Math.sin(fr) + 36 * Math.cos(fr));
+  return { x, y };
+}
+
+/* ---------- 主循环 ---------- */
+const mSamEl = $('mSam'), mDarEl = $('mDar'), bSamEl = $('bSam'), bDarEl = $('bDar'), lampPosEl = $('lampPos'), beatNameEl = $('beatName');
+let last = performance.now();
+function project(px, py, z) {
+  const m = ZS / z;
+  return { m, sigma: FLAME_R * (ZS - z) / z * .3, sx: lamp.x + (px - lamp.x) * m, sy: lamp.y + (py - lamp.y) * m };
+}
+function frame(now) {
+  let dt = (now - last) / 1000; last = now;
+  if (!isFinite(dt) || dt < 0) dt = .016;
+  dt = Math.min(dt, .1);
+  flameT += dt;
+  if (playing) {
+    tShow += dt;
+    if (tShow > 44.5) { tShow = 0; cueIdx = 0; subLine = ''; }
+    const b = beatAt(tShow);
+    if (b.name !== curBeat) { curBeat = b.name; cueIdx = 0; }
+    while (cueIdx < b.cues.length && tShow - b.t0 >= b.cues[cueIdx][0]) {
+      const c = b.cues[cueIdx][1];
+      if (c === 'drum') drum(); else if (c === 'gong') gong(); else cymbal();
+      cueIdx++;
+    }
+    directPose(tShow);
+    showSub(tShow);
+  } else {
+    subBar.classList.add('off');
+  }
+  // 灯焰摇曳 + 撞晃（离幕近者 m 大 → 影子晃得更凶，全由几何放大）
+  bump = Math.max(0, bump - dt * .8);
+  const fl = Math.sin(flameT * 7.3) * 1.5 + Math.sin(flameT * 13.7 + 1) * .8 + Math.sin(flameT * 3.1) * .5;
+  const bumpX = bump ? Math.sin(flameT * 11) * 26 * bump : 0;
+  lamp.x = lampBase.x + fl + bumpX;
+  lamp.y = lampBase.y + Math.sin(flameT * 5.7 + 2) * 1.2;
+  flame.setAttribute('transform', 'scale(' + (1 + Math.sin(flameT * 9.1) * .07).toFixed(3) + ')');
+  lampG.setAttribute('transform', 'translate(' + lamp.x.toFixed(1) + ' ' + lamp.y.toFixed(1) + ')');
+  // 幕前灯柄：随灯基位横移、固定贴台口；操演时点亮
+  lampHandle.setAttribute('transform', 'translate(' + lampBase.x.toFixed(1) + ' 600)');
+  lampHandle.setAttribute('opacity', perfMode ? 1 : .45);
+  hFlame.setAttribute('transform', 'scale(' + (1 + Math.sin(flameT * 8.3 + 1) * .09).toFixed(3) + ')');
+  // 姿态弹簧 + 重力自摆
+  for (const k of ['sam', 'dar']) {
+    const p = P[k], v = V[k];
+    const stiff = k === 'sam' ? 11 : 11;
+    v.x += (p.x - v.x) * (1 - Math.exp(-stiff * dt));
+    v.z += (p.z - v.z) * (1 - Math.exp(-stiff * dt));
+    v.foot += (p.foot - v.foot) * (1 - Math.exp(-7 * dt));
+    v.lean += (p.lean - v.lean) * (1 - Math.exp(-9 * dt));
+    v.armL += (p.armL - v.armL) * (1 - Math.exp(-9 * dt));
+    v.armR += (p.armR - v.armR) * (1 - Math.exp(-9 * dt));
+    v.foreL += (p.foreL - v.foreL) * (1 - Math.exp(-12 * dt));
+    v.foreR += (p.foreR - v.foreR) * (1 - Math.exp(-12 * dt));
+    const sway = Math.sin(flameT * 1.6 + (k === 'sam' ? 0 : 2)) * 1.8;      // 余肢自然摆动
+    v.armL += sway * dt * 2.2; v.armR -= sway * dt * 2.2;
+    v.legL = Math.sin(flameT * 1.1 + (k === 'sam' ? 0 : 1.7)) * 2.4;
+    v.legR = -v.legL;
+  }
+  // 写人偶：真身两具（根位移+全身）+ 影子两具同姿（独立实例，无 defs 共享，必须分别写）
+  writePuppet(R.sam, V.sam, V.sam.foot - HIPH + out * 70);
+  writePuppet(R.dar, V.dar, V.dar.foot - HIPH + out * 70);
+  writeJoints(S.sam, V.sam); writeJoints(S.dar, V.dar);
+  propsR.sam.rack.setAttribute('opacity', P.sam.prop.toFixed(2));
+  propsR.sam.rack.setAttribute('transform', 'scale(' + (0.5 + P.sam.prop * 0.5).toFixed(3) + ')');
+  propsR.dar.shield.setAttribute('opacity', P.dar.prop.toFixed(2));
+  propsS.sam.rack.setAttribute('opacity', P.sam.prop.toFixed(2));
+  propsS.sam.rack.setAttribute('transform', 'scale(' + (0.5 + P.sam.prop * 0.5).toFixed(3) + ')');
+  propsS.dar.shield.setAttribute('opacity', P.dar.prop.toFixed(2));
+  // 签子（柄在台口下）
+  const jS = { n: { x: V.sam.x, y: V.sam.foot - HIPH - PSC * 136 }, l: armJoint(V.sam, 'L', V.sam.armL, V.sam.foreL), r: armJoint(V.sam, 'R', V.sam.armR, V.sam.foreR) };
+  const jD = { n: { x: V.dar.x, y: V.dar.foot - HIPH - PSC * 142 }, l: armJoint(V.dar, 'L', V.dar.armL, V.dar.foreL), r: armJoint(V.dar, 'R', V.dar.armR, V.dar.foreR) };
+  [[rodSamNeck, 'samNeck', jS.n], [rodSamL, 'samHandL', jS.l], [rodSamR, 'samHandR', jS.r],
+   [rodDarNeck, 'darNeck', jD.n], [rodDarL, 'darHandL', jD.l], [rodDarR, 'darHandR', jD.r]].forEach(([r, key, j]) => {
+    const h = rodState[key];
+    r.stick.setAttribute('d', 'M' + h.x + ' ' + h.y + ' L' + j.x.toFixed(1) + ' ' + j.y.toFixed(1));
+    r.knob.setAttribute('cx', h.x); r.knob.setAttribute('cy', h.y);
+  });
+  // ===== 投影核：影子大小 / 虚实 / 位移全部由几何算出 =====
+  const hipSy = V.sam.foot - HIPH, hipDy = V.dar.foot - HIPH;
+  const pS = project(V.sam.x, hipSy, V.sam.z);
+  const pD = project(V.dar.x, hipDy, V.dar.z);
+  S.sam.g.setAttribute('transform', 'translate(' + pS.sx.toFixed(1) + ' ' + pS.sy.toFixed(1) + ') scale(' + pS.m.toFixed(4) + ')');
+  S.dar.g.setAttribute('transform', 'translate(' + pD.sx.toFixed(1) + ' ' + pD.sy.toFixed(1) + ') scale(' + pD.m.toFixed(4) + ')');
+  // 人偶出台后幕上不再有影（已走到光路之外）；半影软边由 σ/(m·PSC) 实时驱动（值不变则不写，免触发滤镜重算）
+  S.sam.g.setAttribute('opacity', (1 - out).toFixed(2));
+  S.dar.g.setAttribute('opacity', (1 - out).toFixed(2));
+  const sdS = Math.max(0, pS.sigma / (pS.m * PSC)).toFixed(3), sdD = Math.max(0, pD.sigma / (pD.m * PSC)).toFixed(3);
+  if (blurS.getAttribute('stdDeviation') !== sdS) blurS.setAttribute('stdDeviation', sdS);
+  if (blurD.getAttribute('stdDeviation') !== sdD) blurD.setAttribute('stdDeviation', sdD);
+  fall.setAttribute('cx', lamp.x.toFixed(1)); fall.setAttribute('cy', lamp.y.toFixed(1));
+  mSamEl.textContent = pS.m.toFixed(2) + ' ×'; mDarEl.textContent = pD.m.toFixed(2) + ' ×';
+  bSamEl.textContent = pS.sigma.toFixed(1) + ' px'; bDarEl.textContent = pD.sigma.toFixed(1) + ' px';
+  lampPosEl.textContent = lamp.x.toFixed(0) + ', ' + lamp.y.toFixed(0);
+  beatNameEl.textContent = playing ? beatAt(tShow).name : '操演中';
+  // 对波光带（光不挡光 → 无影子）
+  if (+beamA.getAttribute('opacity') > 0) {
+    const cx = (pS.sx + pD.sx) / 2, cy = (pS.sy + pD.sy) / 2 - 100;
+    beamA.setAttribute('d', 'M' + (pS.sx + 26).toFixed(1) + ' ' + (pS.sy - 90).toFixed(1) + ' Q' + (cx - 36).toFixed(1) + ' ' + (cy - 30).toFixed(1) + ' ' + cx.toFixed(1) + ' ' + cy.toFixed(1));
+    beamB.setAttribute('d', 'M' + (pD.sx - 26).toFixed(1) + ' ' + (pD.sy - 90).toFixed(1) + ' Q' + (cx + 36).toFixed(1) + ' ' + (cy - 30).toFixed(1) + ' ' + cx.toFixed(1) + ' ' + cy.toFixed(1));
+  }
+  // ===== 破幕 / 罩布时间线 =====
+  // 平时幕上无布（影子全亮）；「破幕」折子降下罩布并烧穿（燃烧锋面+火星）；「和局收场」残布褪去。
+  const b = beatAt(tShow);
+  if (playing) {
+    if (b.name === '破 幕') { burn = clamp(burn + dt * 1.3, 0, 1); veilT = clamp(veilT + dt * 1.4, 0, 1); }
+    else if (b.name === '和局收场') veilT = Math.max(0, veilT - dt * .9);   //  burn 不再回落：烧出的洞留在 mask 里
+    else if (b.name === '开场') { burn = 0; veilT = 0; }
+  }
+  const hx0 = 500, hy0 = 400, hr = 10 + burn * 64;
+  let d = '';
+  if (burn > 0.01) {
+    const n = 14;
+    for (let i = 0; i <= n; i++) {
+      const a = i / n * Math.PI * 2;
+      const rr = hr * (1 + .22 * Math.sin(a * 5 + flameT * 2) + .12 * Math.sin(a * 9 - flameT * 3));
+      d += (i ? 'L' : 'M') + (hx0 + Math.cos(a) * rr * 1.25).toFixed(1) + ' ' + (hy0 + Math.sin(a) * rr).toFixed(1);
+    }
+    d += 'Z';
+  }
+  holePath.setAttribute('d', d);
+  holeRim.setAttribute('d', d);
+  holeRim.setAttribute('opacity', burn > .05 && veilT > .05 ? .9 : 0);
+  holeDark.setAttribute('rx', (hr * 1.1).toFixed(1)); holeDark.setAttribute('ry', (hr * .8).toFixed(1));
+  holeDark.setAttribute('cx', hx0); holeDark.setAttribute('cy', hy0);
+  holeDark.setAttribute('opacity', (burn * .96 * veilT).toFixed(2));
+  for (const s of sparks) {
+    if (burn > .2 && veilT > .1 && Math.random() < burn * .35) {
+      s.x = hx0 + (Math.random() - .5) * hr; s.y = hy0 + (Math.random() - .5) * hr * .7;
+      s.vx = (Math.random() - .5) * 40; s.vy = -30 - Math.random() * 50; s.life = 1;
+    }
+    if (s.life > 0) {
+      s.life -= dt * .8; s.x += s.vx * dt; s.y += s.vy * dt; s.vy += 26 * dt;
+      s.el.setAttribute('cx', s.x.toFixed(1)); s.el.setAttribute('cy', s.y.toFixed(1));
+      s.el.setAttribute('opacity', Math.max(0, s.life).toFixed(2));
+    } else s.el.setAttribute('opacity', 0);
+  }
+  veil.setAttribute('fill', 'rgba(24,17,10,' + (veilT * .66 * (1 - burn * .78)).toFixed(3) + ')');
+  // ===== 全彩出场：人偶走出幕布 → 移居前台层、全彩、下台；和局收场回幕后 =====
+  if (playing) {
+    if (b.name === '全彩出场') out = clamp(out + dt * 1.2, 0, 1);
+    else if (b.name === '和局收场') out = Math.max(0, out - dt * .8);
+    else if (b.name === '开场' || b.name === '破 幕') out = 0;
+  }
+  if (out > .02 && R.sam.g.parentNode !== frontG) { frontG.appendChild(R.sam.g); frontG.appendChild(R.dar.g); }
+  if (out <= .02 && R.sam.g.parentNode === frontG) { stage.insertBefore(R.sam.g, screenG); stage.insertBefore(R.dar.g, screenG); }
+  R.sam.g.setAttribute('opacity', (.5 + out * .5).toFixed(2));
+  R.dar.g.setAttribute('opacity', (.5 + out * .5).toFixed(2));
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* =====================================================================
+ * 操演模式：拖签子柄 / 拖油灯 / 深浅滑杆
+ * ===================================================================== */
+function toVB(e) {
+  const r = stage.getBoundingClientRect();
+  return { x: (e.clientX - r.left) / r.width * 1000, y: (e.clientY - r.top) / r.height * 640 };
+}
+function onRodDown(e) {
+  if (!perfMode) return;
+  e.preventDefault(); e.stopPropagation();
+  dragRod = e.currentTarget.dataset.rod;
+  e.currentTarget.setPointerCapture(e.pointerId);
+  $('hint').textContent = '操演中：拖动这只签子 · 面板实时显示放大率与半影';
+}
+function onRodMove(e) {
+  if (!dragRod || !perfMode) return;
+  const p = toVB(e);
+  const h = rodState[dragRod];
+  h.x = clamp(p.x, 60, 940); h.y = clamp(p.y, 562, 636);
+  const who = dragRod.startsWith('sam') ? 'sam' : 'dar';
+  if (dragRod.endsWith('Neck')) {
+    P[who].x = clamp(p.x, 120, 880);
+    P[who].lean = clamp((p.x - (who === 'sam' ? 400 : 600)) * .05, -14, 14);
+  } else {
+    const isL = dragRod.endsWith('L');
+    const v = V[who];
+    const cx = who === 'sam' ? v.x : v.x;
+    P[who][isL ? 'armL' : 'armR'] = clamp((p.x - cx + (isL ? 26 : -26)) * 1.1, -170, 170);
+    P[who][isL ? 'foreL' : 'foreR'] = clamp((624 - p.y) * 1.6, -120, 60);
+  }
+}
+stage.addEventListener('pointermove', e => { if (perfMode) onRodMove(e); if (dragLamp) onLampMove(e); });
+stage.addEventListener('pointerup', () => { dragRod = null; dragLamp = false; lampDrag0 = null; });
+stage.addEventListener('pointercancel', () => { dragRod = null; dragLamp = false; lampDrag0 = null; });
+/* 幕前灯柄：幕后油灯被纸幕挡住点不到，台口前沿放一个可见把手（delta 拖拽映射灯基位） */
+const lampHandle = el('g', { id: 'lampHandle', cursor: 'grab' }, stage);       // 最后挂 → 最上层
+el('ellipse', { cx: 0, cy: 6, rx: 30, ry: 8, fill: 'rgba(20,13,7,.5)' }, lampHandle);
+el('path', { d: 'M-19 0 q19 -11 38 0 l-5 15 q-14 6 -28 0 Z', fill: '#6e5230', stroke: '#2e2214', 'stroke-width': 1 }, lampHandle);
+el('path', { d: 'M-23 -13 L23 -13 L17 -1 L-17 -1 Z', fill: '#5c4426', stroke: '#2e2214', 'stroke-width': .8 }, lampHandle);
+const hFlame = el('path', { d: 'M0 -33 q9 12 6 21 q-3 8 -6 8 q-3 0 -6 -8 q-3 -9 6 -21 Z', fill: 'url(#gFlame)', opacity: .95 }, lampHandle);
+const hLabel = el('text', { x: 0, y: 30, 'font-size': 10, 'text-anchor': 'middle', fill: 'rgba(240,226,190,.5)', 'font-family': 'Georgia, serif', 'letter-spacing': 2 }, lampHandle);
+hLabel.textContent = '拖我移灯';
+lampHandle.addEventListener('pointerdown', e => {
+  if (!perfMode) return;
+  e.preventDefault(); e.stopPropagation();
+  dragLamp = true;
+  const p = toVB(e);
+  lampDrag0 = { lx: lampBase.x, ly: lampBase.y, px: p.x, py: p.y };
+  lampHandle.setPointerCapture(e.pointerId);
+  $('hint').textContent = '拖动油灯：影子反向走 · 离幕近的影子晃得凶';
+});
+function onLampMove(e) {
+  if (!dragLamp || !lampDrag0) return;
+  const p = toVB(e);
+  lampBase.x = clamp(lampDrag0.lx + (p.x - lampDrag0.px), 80, 920);
+  lampBase.y = clamp(lampDrag0.ly + (p.y - lampDrag0.py), 250, 520);
+}
+
+/* ---------- 控件 ---------- */
+$('btnPlay').onclick = () => { playing = !playing; $('btnPlay').textContent = playing ? '暂 停' : '播 放'; $('btnPlay').classList.toggle('on', playing); };
+$('btnReplay').onclick = () => { tShow = 0; cueIdx = 0; subLine = ''; burn = 0; veilT = 0; out = 0; curBeat = ''; playing = true; $('btnPlay').textContent = '暂 停'; $('btnPlay').classList.add('on'); };
+$('btnPerf').onclick = () => {
+  perfMode = !perfMode;
+  $('btnPerf').classList.toggle('on', perfMode);
+  $('depthCtl').style.display = perfMode ? 'flex' : 'none';
+  $('btnPlay').disabled = perfMode;
+  if (perfMode) { playing = false; $('btnPlay').textContent = '播 放'; $('btnPlay').classList.remove('on'); $('hint').textContent = '操演模式：拖签子柄操纵人偶 · 拖油灯看影子反走 · 滑杆调离幕远近'; }
+  else { playing = true; $('btnPlay').textContent = '暂 停'; $('btnPlay').classList.add('on'); $('hint').textContent = '演出中：静观 · 点「操演模式」后可拖动签子柄与油灯、调节离幕远近'; }
+};
+$('btnSnd').onclick = () => { sndOn = !sndOn; $('btnSnd').classList.toggle('on', sndOn); if (sndOn) ac(); };
+$('zSam').oninput = e => { P.sam.z = +e.target.value; $('zSamN').textContent = e.target.value; };
+$('zDar').oninput = e => { P.dar.z = +e.target.value; $('zDarN').textContent = e.target.value; };
+['pointerdown', 'keydown'].forEach(t => window.addEventListener(t, () => { if (sndOn) ac(); }, { once: true }));
+</script>
+</body>
+</html>

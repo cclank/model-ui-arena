@@ -55,6 +55,13 @@ export default async function TaskPage({ params }: TaskPageProps) {
         <p className="hero-kicker">Task Page</p>
         <h1 className="task-title">{theme.label}</h1>
         <p className="task-objective">{theme.objective}</p>
+        {theme.focus?.length ? (
+          <div className="theme-focus">
+                <span className="theme-focus-kicker">主要考察</span>
+                <div className="theme-focus-words">{theme.focus.join(" · ")}</div>
+                {theme.focusNote ? <p className="theme-focus-note">{theme.focusNote}</p> : null}
+              </div>
+        ) : null}
         <div className="task-stats">
           <span>主题 ID：{theme.id}</span>
           <span>作品数：{submissions.length}</span>

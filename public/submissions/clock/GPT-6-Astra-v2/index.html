@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meridian — A moment, well kept</title>
+<!-- 以精密仪表与温暖纸张为灵感，让时间拥有可触摸的质感。
+     模拟表盘、连续秒针和数字时间共享真实本地时间，昼夜配色自动跟随。
+     单文件原生实现；后台停止绘制，回来立即校准。 -->
+<style>
+*{box-sizing:border-box} :root{color-scheme:light;--paper:#eeeae2;--ink:#282d2b;--muted:#787e75;--dial:#f8f6ef;--rule:#cbcfc3;--accent:#de512e;--shadow:#afa99f}
+body{margin:0;min-height:100svh;background:var(--paper);color:var(--ink);font-family:Arial,Helvetica,sans-serif;display:grid;place-items:center;transition:background .8s,color .8s}
+body.night{color-scheme:dark;--paper:#202625;--ink:#edece3;--muted:#a4ada2;--dial:#303735;--rule:#4a554e;--shadow:#0d1412}
+main{width:min(100%,790px);padding:30px 38px 22px}header,footer,.meta,.digital-row{display:flex;align-items:center;justify-content:space-between;gap:16px}header{border-bottom:1px solid var(--rule);padding-bottom:20px}
+.brand{font-size:13px;font-weight:800;letter-spacing:4px;display:flex;align-items:center;gap:10px}.brand b{font-size:24px;font-weight:400;line-height:1;color:var(--accent)}
+button{font:inherit;background:transparent;color:var(--ink);border:1px solid var(--rule);border-radius:30px;padding:8px 12px;cursor:pointer;font-size:10px;letter-spacing:1px}button:hover{border-color:var(--accent)}button:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
+.intro{margin:23px 0 18px}.eyebrow{font:10px 'Courier New',monospace;letter-spacing:2px;color:var(--muted)}h1{font-family:Georgia,serif;font-size:clamp(32px,6vw,45px);font-weight:400;letter-spacing:-1.7px;margin:7px 0}.work{display:grid;grid-template-columns:1.15fr 1fr;align-items:center;gap:36px}
+.clock{aspect-ratio:1;position:relative;isolation:isolate;border-radius:50%;background:linear-gradient(140deg,#ffffff80,transparent 60%),var(--dial);box-shadow:0 2px 2px #fff4 inset,0 0 0 1px var(--rule),0 0 0 9px var(--paper),0 0 0 10px var(--rule),12px 21px 35px -18px var(--shadow);margin:15px 10px 23px}
+.clock svg{position:absolute;inset:0;width:100%;height:100%}.tick{stroke:var(--rule)}.tick.major{stroke:var(--ink)}.numeral{font:13px Arial;fill:var(--ink);text-anchor:middle;dominant-baseline:middle}.dial-mark{font:6px Arial;letter-spacing:2px;fill:var(--muted);text-anchor:middle}
+.hand{position:absolute;inset:0;border-radius:50%;will-change:transform}.hand:before{content:'';position:absolute;bottom:48%;left:calc(50% - 3px);width:6px;height:26%;background:var(--ink);border-radius:4px;box-shadow:2px 2px 3px #0003}.minute:before{height:35%;width:4px;left:calc(50% - 2px)}.second:before{height:46%;bottom:41%;width:1.6px;left:calc(50% - .8px);background:var(--accent)}.pin{position:absolute;width:12px;height:12px;background:var(--accent);border:3px solid var(--dial);box-shadow:0 0 0 1px var(--accent);border-radius:50%;inset:calc(50% - 6px)}
+.time{font-variant-numeric:tabular-nums;font-size:clamp(36px,6vw,55px);letter-spacing:-3px;line-height:1.15;font-weight:500}.time small{font-size:.44em;letter-spacing:-1px;color:var(--accent);margin-left:5px}.date{font-size:13px;color:var(--muted);margin:14px 0 27px}.live{width:5px;height:5px;background:var(--accent);border-radius:50%;display:inline-block;margin-right:6px;box-shadow:0 0 0 3px #de512e17;animation:breathe 2s infinite}.meta{font:10px 'Courier New',monospace;color:var(--muted);border-top:1px solid var(--rule);padding-top:15px}.meta strong{font-weight:400;color:var(--ink)}.day-progress{height:2px;background:var(--rule);margin:16px 0 10px}.day-progress i{display:block;height:100%;background:var(--accent);transition:width 1s linear}.caption{font:9px 'Courier New',monospace;letter-spacing:1px;color:var(--muted);display:flex;justify-content:space-between}
+footer{border-top:1px solid var(--rule);margin-top:24px;padding-top:17px;font:9px 'Courier New',monospace;letter-spacing:1px;color:var(--muted)}footer span:last-child{color:var(--accent)}@keyframes breathe{50%{opacity:.4}}
+@media(max-width:580px){main{padding:23px 25px}.work{grid-template-columns:1fr;gap:5px}.clock{width:min(100% - 20px,290px);justify-self:center}.intro{margin:20px 0 8px}.time{font-size:48px}.digital-row{justify-content:center}.date{text-align:center;margin:8px 0 19px}.details{max-width:330px;width:100%;justify-self:center}footer{margin-top:19px}}
+@media(prefers-reduced-motion:reduce){*,*:before{animation:none!important;transition:none!important}}
+</style>
+<main>
+<header><div class="brand"><b>◷</b> MERIDIAN</div><button id="theme" aria-label="Change day or night theme">AUTO / DAY</button></header>
+<div class="intro"><div class="eyebrow">THE ART OF PAYING ATTENTION</div><h1>A moment, well kept.</h1></div>
+<section class="work" aria-label="Local clock">
+<div class="clock" role="img" aria-label="Analog local time"><svg viewBox="0 0 300 300" aria-hidden="true"><g id="ticks"></g><g id="numbers"></g><text x="150" y="112" class="dial-mark">MERIDIAN</text><text x="150" y="209" class="dial-mark">LOCAL · 01</text></svg><div class="hand hour" id="hour"></div><div class="hand minute" id="minute"></div><div class="hand second" id="second"></div><i class="pin"></i></div>
+<div class="details"><div class="eyebrow" style="margin-bottom:12px"><i class="live"></i> IN THE PRESENT</div><div class="digital-row"><time class="time" id="digital"></time></div><p class="date" id="date"></p><div class="meta"><span>TIME ZONE</span><strong id="zone"></strong></div><div class="day-progress"><i id="progress"></i></div><div class="caption"><span>TODAY, IN PROGRESS</span><span id="percent"></span></div></div>
+</section><footer><span>EVERY SECOND BELONGS TO YOU.</span><span id="season">LIVE LOCAL TIME</span></footer>
+</main>
+<script>
+const $=id=>document.getElementById(id),reduced=matchMedia('(prefers-reduced-motion:reduce)').matches;let manual=null,last=-1,frame;
+for(let n=0;n<60;n++){const a=n*6*Math.PI/180,r=n%5?132:127;const line=document.createElementNS('http://www.w3.org/2000/svg','line');Object.entries({x1:150+Math.sin(a)*r,y1:150-Math.cos(a)*r,x2:150+Math.sin(a)*139,y2:150-Math.cos(a)*139,'stroke-width':n%5?1:2,class:'tick'+(n%5?'':' major')}).forEach(([k,v])=>line.setAttribute(k,v));$('ticks').append(line)}
+for(let n=1;n<=12;n++){const a=n*Math.PI/6,t=document.createElementNS('http://www.w3.org/2000/svg','text');t.setAttribute('x',150+Math.sin(a)*111);t.setAttribute('y',150-Math.cos(a)*111);t.setAttribute('class','numeral');t.textContent=n;$('numbers').append(t)}
+function setTheme(d){const night=manual??(d.getHours()<6||d.getHours()>=18);document.body.classList.toggle('night',night);$('theme').textContent=(manual===null?'AUTO':'MANUAL')+' / '+(night?'NIGHT':'DAY')}
+$('theme').onclick=()=>{manual=manual===null?!document.body.classList.contains('night'):manual===true?false:null;setTheme(new Date())};
+function update(){const d=new Date(),s=d.getSeconds()+(reduced?0:d.getMilliseconds()/1000),m=d.getMinutes()+s/60,h=d.getHours()+m/60;$('hour').style.transform=`rotate(${h*30}deg)`;$('minute').style.transform=`rotate(${m*6}deg)`;$('second').style.transform=`rotate(${s*6}deg)`;
+if(last!==d.getSeconds()){last=d.getSeconds();$('digital').innerHTML=`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}<small>${String(d.getSeconds()).padStart(2,'0')}</small>`;$('digital').dateTime=d.toISOString();$('date').textContent=d.toLocaleDateString('en',{weekday:'long',month:'long',day:'numeric',year:'numeric'});$('zone').textContent=Intl.DateTimeFormat().resolvedOptions().timeZone.replaceAll('_',' ');const pct=(d.getHours()*3600+d.getMinutes()*60+d.getSeconds())/864;$('progress').style.width=pct+'%';$('percent').textContent=pct.toFixed(1)+'%';setTheme(d)}frame=requestAnimationFrame(update)}
+document.addEventListener('visibilitychange',()=>{cancelAnimationFrame(frame);if(!document.hidden){last=-1;update()}});update();
+</script></html>

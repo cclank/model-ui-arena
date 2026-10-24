@@ -1,0 +1,21 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>夜空来信 · 烟花</title><style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}body{background:radial-gradient(ellipse at 50% 80%,#1a2943 0,#080d1d 58%,#030611 100%);font-family:Arial,"PingFang SC",sans-serif;color:#fff;cursor:crosshair}canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none}.hud{pointer-events:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;width:min(90%,550px);transition:opacity .6s}.hud.hidden{opacity:.25}.overline{color:#e9c985;letter-spacing:.45em;font-size:12px;font-weight:700;margin-bottom:20px}.hud h1{font-family:Georgia,"Songti SC",serif;font-weight:400;letter-spacing:.18em;font-size:clamp(37px,8vw,70px);margin:0 0 12px;text-shadow:0 0 35px #ffc48677}.hud p{color:#b8c0d1;letter-spacing:.1em;font-size:14px;line-height:1.8}.hint{display:inline-block;border:1px solid #e5c79480;padding:10px 19px;border-radius:99px;margin-top:24px;color:#eadab7;font-size:12px;letter-spacing:.12em}.corner{pointer-events:none;position:absolute;left:24px;bottom:24px;color:#8895b6;font-size:11px;letter-spacing:.2em}.count{position:absolute;right:24px;bottom:24px;color:#8895b6;font-size:11px;letter-spacing:.1em;pointer-events:none}@media(max-width:500px){.corner{left:15px;bottom:16px}.count{right:15px;bottom:16px}}
+</style></head><body><canvas id="sky" aria-label="点击任意位置绽放烟花"></canvas><main class="hud" id="hud"><div class="overline">A LETTER TO THE NIGHT</div><h1>夜空来信</h1><p>把今晚的愿望，写成一束光。</p><div class="hint">轻触任意位置 · 绽放烟花</div></main><div class="corner">FIREWORKS / NO. 01</div><div class="count" id="count">已点亮 00 次</div><script>
+const canvas=document.querySelector("#sky"),ctx=canvas.getContext("2d"),count=document.querySelector("#count");let w=0,h=0,dpr=1,particles=[],bursts=0,last=0;const stars=Array.from({length:90},()=>({x:Math.random(),y:Math.random()*.8,r:Math.random()*1.4+.3,a:Math.random()*6}));
+function resize(){dpr=Math.min(devicePixelRatio||1,2);w=innerWidth;h=innerHeight;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}addEventListener("resize",resize);resize();
+function fire(x,y){bursts++;count.textContent="已点亮 "+String(bursts).padStart(2,"0")+" 次";document.querySelector("#hud").classList.add("hidden");const hue=Math.random()*360,n=85+Math.floor(Math.random()*45),force=2.4+Math.random()*2;
+ for(let i=0;i<n;i++){const angle=i/n*Math.PI*2+(Math.random()-.5)*.13,speed=force*(.45+Math.random()*.8),life=60+Math.random()*35;particles.push({x,y,px:x,py:y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life,max:life,hue:hue+(Math.random()-.5)*42,size:Math.random()*1.8+.8})}
+ if(particles.length>1800)particles.splice(0,particles.length-1800)
+}
+canvas.addEventListener("pointerdown",e=>{fire(e.clientX,e.clientY)});
+function frame(t){const dt=Math.min((t-last)/16.67||1,2);last=t;ctx.fillStyle="rgba(3,6,17,.23)";ctx.fillRect(0,0,w,h);
+ for(const s of stars){const alpha=.24+.25*Math.sin(t*.0015+s.a);ctx.fillStyle="rgba(232,238,255,"+alpha+")";ctx.beginPath();ctx.arc(s.x*w,s.y*h,s.r,0,Math.PI*2);ctx.fill()}
+ ctx.globalCompositeOperation="lighter";
+ for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.px=p.x;p.py=p.y;p.vx*=Math.pow(.988,dt);p.vy=p.vy*Math.pow(.988,dt)+.045*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;const a=Math.max(0,p.life/p.max);if(p.life<=0){particles.splice(i,1);continue}
+ ctx.strokeStyle="hsla("+p.hue+",100%,76%,"+a*.72+")";ctx.lineWidth=p.size*a+0.5;ctx.beginPath();ctx.moveTo(p.px,p.py);ctx.lineTo(p.x,p.y);ctx.stroke();
+ ctx.fillStyle="hsla("+p.hue+",100%,85%,"+a+")";ctx.beginPath();ctx.arc(p.x,p.y,p.size*a,0,Math.PI*2);ctx.fill();
+ if(particles.length<1800&&p.life<p.max*.65&&Math.random()<.015){particles.push({x:p.x,y:p.y,px:p.x,py:p.y,vx:(Math.random()-.5)*1.5,vy:(Math.random()-.5)*1.5,life:15,max:15,hue:p.hue,size:.8})}
+ }
+ ctx.globalCompositeOperation="source-over";requestAnimationFrame(frame)
+}requestAnimationFrame(frame);setTimeout(()=>{if(!bursts)fire(w*.5,h*.35)},900);
+</script></body></html>

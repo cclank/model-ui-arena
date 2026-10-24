@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meridian · 时之仪</title>
+<style>
+:root{color-scheme:light;--ink:#15302f;--muted:#64817b;--accent:#b68142;--paper:#f4f1e8;--dial:#faf8f2;--line:#dcd9ca}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%}body{font-family:Georgia,"Songti SC",serif;background:radial-gradient(circle at 50% 37%,#fffdf6 0,#e6ebe4 45%,#c9d8d2 100%);color:var(--ink);display:grid;place-items:center;padding:24px;transition:background 1s}
+body.night{--ink:#e7e6d9;--muted:#93aaa5;--accent:#dfba7c;--paper:#132524;--dial:#172d2b;--line:#34504c;background:radial-gradient(circle at 50% 35%,#26403d,#0c1c1d 70%)}
+.wrap{width:min(100%,620px);text-align:center}.eyebrow{font:600 11px/1.5 Arial,sans-serif;letter-spacing:.38em;color:var(--accent);text-transform:uppercase;margin-bottom:12px}.heading{font-size:clamp(30px,5vw,45px);font-weight:400;letter-spacing:.13em;margin:0 0 26px}.card{background:var(--paper);border:1px solid var(--line);box-shadow:0 28px 70px #172f2a22,inset 0 1px #ffffff80;border-radius:28px;padding:28px 28px 25px}
+.dial{position:relative;width:min(100%,390px);aspect-ratio:1;margin:auto;border-radius:50%;background:var(--dial);border:11px solid #ad986d;box-shadow:0 0 0 2px #5b5544,0 0 0 7px #d9c49a,0 16px 28px #09211c30,inset 0 0 0 2px var(--line),inset 0 0 36px #897b4c25;overflow:hidden}
+.dial:before{content:"";position:absolute;inset:17px;border:1px solid var(--line);border-radius:50%}.tick{position:absolute;inset:0;transform:rotate(var(--a))}.tick:after{content:"";position:absolute;left:calc(50% - 1px);top:20px;width:2px;height:8px;background:var(--muted);opacity:.65}.tick.major:after{width:3px;height:17px;top:19px;background:var(--ink);opacity:1}
+.num{position:absolute;transform:translate(-50%,-50%);font-size:clamp(22px,5vw,31px)}.n12{left:50%;top:17%}.n3{left:83%;top:50%}.n6{left:50%;top:83%}.n9{left:17%;top:50%}
+.mark{position:absolute;left:50%;top:34%;transform:translateX(-50%);font:600 10px Arial,sans-serif;letter-spacing:.28em;color:var(--accent)}.submark{position:absolute;left:50%;top:63%;transform:translateX(-50%);white-space:nowrap;font:10px Arial,sans-serif;letter-spacing:.2em;color:var(--muted)}
+.hand{position:absolute;left:50%;top:50%;transform-origin:50% 100%;border-radius:20px}.hour{width:8px;height:27%;margin-left:-4px;margin-top:-27%;background:var(--ink);box-shadow:1px 2px 3px #0003}.minute{width:5px;height:37%;margin-left:-2.5px;margin-top:-37%;background:var(--ink)}.second{width:2px;height:43%;margin-left:-1px;margin-top:-35%;transform-origin:50% 81%;background:var(--accent)}.pin{position:absolute;left:50%;top:50%;width:15px;height:15px;border-radius:50%;background:var(--accent);border:3px solid var(--ink);transform:translate(-50%,-50%)}
+.readout{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-top:29px;text-align:left}.readout small{display:block;color:var(--muted);font:600 10px Arial,sans-serif;letter-spacing:.22em;text-transform:uppercase;margin-bottom:8px}.digital{font-size:clamp(27px,6vw,43px);font-variant-numeric:tabular-nums;letter-spacing:.06em;line-height:1}.date{font-size:17px;line-height:1.4;text-align:right}.footer{margin-top:20px;color:var(--muted);font:11px Arial,sans-serif;letter-spacing:.14em}
+@media(max-width:500px){.card{padding:19px}.dial{border-width:8px}.readout{align-items:start}.date{font-size:14px}.footer{font-size:10px}}
+</style>
+</head>
+<body>
+<main class="wrap"><div class="eyebrow">LOCAL TIME · 时区随设备</div><h1 class="heading">MERIDIAN</h1><section class="card" aria-label="实时本地时钟"><div class="dial" id="dial"><span class="num n12">12</span><span class="num n3">3</span><span class="num n6">6</span><span class="num n9">9</span><span class="mark">MERIDIAN</span><span class="submark">AUTOMATIC · LOCAL</span><div class="hand hour" id="hour"></div><div class="hand minute" id="minute"></div><div class="hand second" id="second"></div><div class="pin"></div></div><div class="readout"><div><small>Current time</small><div class="digital" id="digital">00:00:00</div></div><div><small>Today</small><div class="date" id="date"></div></div></div></section><div class="footer">每一秒，都在此刻</div></main>
+<script>
+const dial=document.querySelector("#dial");
+for(let i=0;i<60;i++){const tick=document.createElement("i");tick.className="tick"+(i%5===0?" major":"");tick.style.setProperty("--a",i*6+"deg");dial.prepend(tick)}
+const pad=n=>String(n).padStart(2,"0");
+let last=-1;
+function draw(){
+ const now=new Date(),s=now.getSeconds(),fraction=s+now.getMilliseconds()/1000,m=now.getMinutes()+fraction/60,h=now.getHours()+m/60;
+ document.querySelector("#hour").style.transform="rotate("+h*30+"deg)";
+ document.querySelector("#minute").style.transform="rotate("+m*6+"deg)";
+ document.querySelector("#second").style.transform="rotate("+fraction*6+"deg)";
+ if(s!==last){last=s;document.querySelector("#digital").textContent=pad(now.getHours())+":"+pad(now.getMinutes())+":"+pad(s);document.querySelector("#date").textContent=new Intl.DateTimeFormat("zh-CN",{month:"long",day:"numeric",weekday:"long"}).format(now);document.body.classList.toggle("night",now.getHours()<6||now.getHours()>=18)}
+ requestAnimationFrame(draw)
+}draw();
+</script>
+</body></html>

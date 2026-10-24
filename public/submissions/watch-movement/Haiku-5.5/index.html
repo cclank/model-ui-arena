@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>机芯 · 怀表</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0c0e12; overflow: hidden; }
+  body { font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif; color: #dfe6f0; -webkit-user-select: none; user-select: none; touch-action: none; }
+  #c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+  #tip { position: fixed; left: 14px; top: 12px; font-size: 12px; color: #9fb8dd; opacity: .85; pointer-events: none; }
+  #panel { position: fixed; right: 14px; top: 14px; width: 262px; max-height: calc(100% - 28px); overflow: auto; background: rgba(12, 16, 24, .84); border: 1px solid rgba(160, 190, 230, .22); border-radius: 12px; padding: 12px 14px; font-size: 12px; line-height: 1.6; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  #panel h1 { margin: 0 0 6px; font-size: 16px; letter-spacing: .12em; color: #f1d78e; font-weight: 600; }
+  #panel h2 { margin: 12px 0 4px; font-size: 12px; color: #9fb8dd; letter-spacing: .08em; font-weight: 600; }
+  #panel b { color: #fff3cc; font-weight: 600; font-variant-numeric: tabular-nums; }
+  #panel table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  #panel td { padding: 3px 0; border-bottom: 1px solid rgba(160, 190, 230, .1); vertical-align: top; color: #c9d7ea; }
+  #panel td:first-child { color: #e9f0fa; }
+  .bar { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, .08); overflow: hidden; margin: 6px 0 4px; }
+  .bar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #5d86c6, #f1d78e); transition: width .2s; }
+  #state { font-weight: 600; color: #f1d78e; }
+  #ctrl { position: fixed; left: 14px; bottom: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+  button { font: inherit; font-size: 13px; color: #e7eef9; background: rgba(20, 28, 40, .85); border: 1px solid rgba(160, 190, 230, .35); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+  button:hover { background: rgba(40, 54, 74, .9); }
+  button.on { background: rgba(241, 215, 142, .2); border-color: #f1d78e; color: #fff3cc; }
+  @media (max-width: 700px) {
+    #tip { top: 10px; left: 10px; right: 10px; }
+    #panel { left: 8px; right: 8px; top: auto; bottom: 58px; width: auto; max-height: 34vh; font-size: 11px; padding: 8px 10px; }
+    #panel h1 { font-size: 14px; margin-bottom: 2px; }
+    #ctrl { left: 8px; bottom: 8px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="机芯：拖动齿轮或指针可联动，拖动表冠上弦或调时"></canvas>
+<div id="tip">拖动任意齿轮或指针，全表按传动比联动 · 拖动表冠上弦（推回）或调时（拔出）</div>
+<aside id="panel">
+  <h1>机芯 · 传动表</h1>
+  <div>状态：<span id="state">走时</span></div>
+  <div>动力储存 <b id="pw">40.0</b> / 40 h</div>
+  <div class="bar"><i id="pwbar"></i></div>
+  <div>机芯时间 <b id="clock">--:--:--</b> · 倍速 <b id="rate">1×</b></div>
+  <h2>齿轮与周期（可人工验算）</h2>
+  <table id="tbl"></table>
+</aside>
+<div id="ctrl">
+  <button id="btn-pull">拔出表冠（调时）</button>
+  <button id="btn-rate">倍速 1×</button>
+</div>
+<script>
+(() => {
+  const TAU = Math.PI * 2, DEG = Math.PI / 180;
+  const BPH = 21600;                  // 21600 bph：每小时 21600 拍，即每秒 6 拍（摆轮 3 Hz，每个全振两拍）
+  const MAX_P = 40, A0 = 1.05;        // 动力储存上限（小时）；摆轮满振幅（弧度）
+  const CROWN = { x: 104, y: -27 };   // 表冠位置（模数单位）
+  const BAL = { x: 70, y: -6, r: 17 };  // 摆轮
+  const FORK = { x: 48, y: -30 };     // 擒纵叉轴
+  const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+  const $ = id => document.getElementById(id);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  // 齿轮表：z 齿数（模数 1，节圆半径 = z/2）；(x,y) 轴心（模数单位）；
+  // r 为相对中心轮的转速比（负号表示反向）；th 为初始相位（度），相邻啮合的齿与齿槽已按几何校准
+  const GEARS = [
+    { n: '时轮', z: 45, x: 0, y: 0, r: 1 / 12, th: 3, m: 'gold', hour: true },
+    { n: '中心轮（分针轴）', z: 60, x: 0, y: 0, r: 1, th: 0, m: 'gold', min: true },
+    { n: '中心小齿（接发条盒）', z: 12, x: 0, y: 0, r: 1, th: 0, m: 'steel' },
+    { n: '中心小齿（接跨轮）', z: 12, x: 0, y: 0, r: 1, th: 0, m: 'steel' },
+    { n: '发条盒轮', z: 72, x: -40.57, y: -10.87, r: -1 / 6, th: 0, m: 'gold', barrel: true },
+    { n: '跨轮', z: 48, x: -21.21, y: 21.21, r: -1 / 4, th: 75, m: 'gold' },
+    { n: '跨轮小齿（接时轮）', z: 15, x: -21.21, y: 21.21, r: -1 / 4, th: 75, m: 'steel' },
+    { n: '三轮小齿', z: 10, x: 0, y: -35, r: -6, th: 0, m: 'steel' },
+    { n: '三轮', z: 60, x: 0, y: -35, r: -6, th: 0, m: 'gold' },
+    { n: '秒轮小齿', z: 6, x: 0, y: -68, r: 60, th: 0, m: 'steel' },
+    { n: '秒轮（小秒针）', z: 60, x: 0, y: -68, r: 60, th: 0, m: 'gold', sec: true },
+    { n: '过轮小齿', z: 12, x: 36, y: -68, r: -300, th: 15, m: 'steel' },
+    { n: '过轮', z: 48, x: 36, y: -68, r: -300, th: 15, m: 'gold' },
+    { n: '擒纵小齿', z: 10, x: 56.51, y: -47.49, r: 1440, th: 27, m: 'steel' },
+    { n: '擒纵轮', z: 15, x: 56.51, y: -47.49, r: 1440, th: 27, m: 'gold', esc: true }
+  ];
+
+  // 齿形（由齿数生成）：节圆 z/2，齿顶 +1，齿根 -1.25
+  function toothPoly(z) {
+    const rp = z / 2, ro = rp + 1, rr = rp - 1.25, P = TAU / z, pts = [];
+    for (let k = 0; k < z; k++) {
+      const a = k * P;
+      pts.push([rr * Math.cos(a - P * 0.38), rr * Math.sin(a - P * 0.38)]);
+      pts.push([ro * Math.cos(a - P * 0.22), ro * Math.sin(a - P * 0.22)]);
+      pts.push([ro * Math.cos(a + P * 0.22), ro * Math.sin(a + P * 0.22)]);
+      pts.push([rr * Math.cos(a + P * 0.38), rr * Math.sin(a + P * 0.38)]);
+    }
+    return pts;
+  }
+  for (const g of GEARS) { g.poly = toothPoly(g.z); g.rp = g.z / 2; }
+  const RATCHET = toothPoly(20);
+
+  // 运行状态：只有一个走时量 N（拍数），所有齿轮与指针角度都由它推出
+  let N = 0, P = MAX_P, amp = A0, setting = false, rate = 1, windAcc = 0, drag = null;
+  let W = 0, H = 0, DPR = 1, K = 4, OX = 0, OY = 0;
+  const cwRev = () => Math.floor(N) / BPH;                 // 中心轮（分针）转数
+  const angleOf = g => g.r * cwRev() * TAU + g.th * DEG;   // 齿轮相位（含啮合校准）
+
+  function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    const narrow = W < 700;
+    K = narrow ? Math.min(W * 0.92 / 208, H * 0.5 / 208) : Math.min((W - 300) * 0.92 / 208, H * 0.9 / 208);   // 表盘直径约 208 模数
+    OX = narrow ? W / 2 : (W - 290) / 2;
+    OY = narrow ? H * 0.36 : H * 0.5;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  // 擒纵与动力：走时消耗动力；摆轮振幅随运行建立，耗尽或拔出表冠时衰减至停摆
+  function step(dt) {
+    const running = !setting && P > 0;
+    const k = setting ? 8 : running ? 1.2 : 0.9;       // 起振 / 止秒 / 耗尽后衰减的速度
+    amp += ((running ? A0 : 0) - amp) * Math.min(1, k * dt);
+    if (running && amp > 0.25 * A0) {
+      const dN = rate * 6 * dt;                        // 每秒 6 拍 × 倍速
+      N += dN;
+      P = Math.max(0, P - dN / BPH);                   // 1 小时的走时消耗 1 小时动力
+    }
+  }
+  // 上弦：表冠顺转一圈约储存 1.2 小时动力，棘轮随之转动
+  function windBy(d) { windAcc += d; P = Math.min(MAX_P, P + d / TAU * 1.2); }
+  // 调时：拔出表冠后转动一圈 = 1 分钟（360 拍），跨轮系与指针随之转动
+  function setBy(d) { N = Math.max(0, N + d / TAU * 360); }
+  // 拖动任意齿轮：按传动比换算成拍数，全表联动
+  function turnGear(g, d) { N = Math.max(0, N + d * BPH / (TAU * g.r)); }
+  // 打开即显示本地时间：每秒 6 拍
+  function initTime() {
+    const t = new Date();
+    N = Math.floor((t.getHours() * 3600 + t.getMinutes() * 60 + t.getSeconds() + t.getMilliseconds() / 1000) * 6);
+  }
+  // ---- 绘制（模数单位，原点为中心轮轴心，y 向下）----
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
+  }
+  function drawPlate() {                               // 机芯底板：铑镀层 + 日内瓦波纹（斜纹）
+    const g = ctx.createRadialGradient(-12, -40, 10, 0, -27, 104);
+    g.addColorStop(0, '#cdd4de'); g.addColorStop(0.7, '#6c7580'); g.addColorStop(1, '#3a4149');
+    ctx.beginPath(); ctx.arc(0, -27, 104, 0, TAU); ctx.fillStyle = g; ctx.fill();
+    ctx.save(); ctx.clip();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.075)'; ctx.lineWidth = 0.4;
+    for (let i = -150; i < 150; i += 2.6) { ctx.beginPath(); ctx.moveTo(i, -150); ctx.lineTo(i + 120, 150); ctx.stroke(); }
+    ctx.restore();
+  }
+  function drawBridge(x, y, w, h) {                    // 镀金夹板：太阳纹
+    const cx = x + w / 2, cy = y + h / 2;
+    roundRect(x, y, w, h, 2.5);
+    const g = ctx.createLinearGradient(x, y, x, y + h);
+    g.addColorStop(0, '#f8e7ad'); g.addColorStop(1, '#a27a2e');
+    ctx.fillStyle = g; ctx.fill();
+    ctx.save(); roundRect(x, y, w, h, 2.5); ctx.clip();
+    ctx.strokeStyle = 'rgba(255, 250, 225, 0.22)'; ctx.lineWidth = 0.22;
+    for (let i = 0; i < 60; i++) { const a = i * TAU / 60; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * 90, cy + Math.sin(a) * 90); ctx.stroke(); }
+    ctx.restore();
+    roundRect(x, y, w, h, 2.5); ctx.strokeStyle = 'rgba(60, 40, 10, 0.6)'; ctx.lineWidth = 0.3; ctx.stroke();
+  }
+  function drawGear(g) {                               // 齿轮：齿形由齿数生成，按传动比旋转
+    ctx.save();
+    ctx.translate(g.x, g.y); ctx.rotate(angleOf(g));
+    const rp = g.rp, grd = ctx.createRadialGradient(0, 0, rp * 0.2, 0, 0, rp + 1);
+    if (g.m === 'gold') { grd.addColorStop(0, '#fbeab4'); grd.addColorStop(0.6, '#d7a64a'); grd.addColorStop(1, '#8c6522'); }
+    else { grd.addColorStop(0, '#e6eefc'); grd.addColorStop(0.6, '#86a7da'); grd.addColorStop(1, '#2d5288'); }
+    ctx.beginPath(); g.poly.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath();
+    ctx.fillStyle = grd; ctx.fill();
+    ctx.strokeStyle = 'rgba(25, 18, 8, 0.6)'; ctx.lineWidth = 0.2; ctx.stroke();
+    if (rp >= 12) {                                    // 轮辐镂空
+      ctx.fillStyle = 'rgba(20, 22, 28, 0.5)';
+      for (let i = 0; i < 5; i++) { const b = i * TAU / 5 + 0.3; ctx.beginPath(); ctx.arc(Math.cos(b) * rp * 0.52, Math.sin(b) * rp * 0.52, rp * 0.13, 0, TAU); ctx.fill(); }
+    }
+    ctx.beginPath(); ctx.arc(0, 0, Math.max(0.8, rp * 0.14), 0, TAU); ctx.fillStyle = '#2b2722'; ctx.fill();
+    ctx.restore();
+  }
+  function drawBarrel(g) {                             // 发条盒：盒内螺旋发条随发条盒转动；棘轮随表冠转动，棘爪随齿振动
+    ctx.save(); ctx.translate(g.x, g.y); ctx.rotate(angleOf(g));
+    ctx.beginPath();
+    for (let i = 0; i <= 90; i++) {
+      const t = i / 90, r = 6 + 22 * t, a = t * TAU * 5;
+      if (i) ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); else ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    ctx.strokeStyle = 'rgba(40, 28, 12, 0.75)'; ctx.lineWidth = 0.6; ctx.stroke();
+    ctx.restore();
+    ctx.save(); ctx.translate(g.x, g.y); ctx.rotate(windAcc); ctx.scale(0.42, 0.42);
+    ctx.beginPath(); RATCHET.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath();
+    ctx.fillStyle = '#e8edf5'; ctx.fill();
+    ctx.restore();
+    ctx.save(); ctx.translate(g.x + 11, g.y - 6); ctx.rotate(Math.PI * 0.75 + 0.06 * Math.sin(windAcc * 20));
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-7, 0.6); ctx.strokeStyle = '#cfd8e6'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.restore();
+  }
+  function drawBalance(phi) {                          // 摆轮与游丝：摆轮角度 = 振幅 × sin(相位)，与擒纵同步
+    ctx.save(); ctx.translate(BAL.x, BAL.y); ctx.rotate(amp * Math.sin(phi));
+    ctx.beginPath(); ctx.arc(0, 0, BAL.r, 0, TAU); ctx.strokeStyle = '#e0bd62'; ctx.lineWidth = 2.2; ctx.stroke();
+    for (let i = 0; i < 4; i++) {
+      const a = i * TAU / 4;
+      ctx.beginPath(); ctx.moveTo(Math.cos(a) * 2, Math.sin(a) * 2); ctx.lineTo(Math.cos(a) * BAL.r, Math.sin(a) * BAL.r);
+      ctx.lineWidth = 1.4; ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(0, 0, 2, 0, TAU); ctx.fillStyle = '#c0182f'; ctx.fill();
+    ctx.restore();
+    const k = 1 + 0.12 * Math.sin(phi);                // 游丝随振幅伸缩
+    ctx.beginPath();
+    for (let i = 0; i <= 60; i++) {
+      const t = i / 60, r = (2.5 + 5.5 * t) * k, a = t * TAU * 4;
+      const x = BAL.x + Math.cos(a) * r, y = BAL.y + Math.sin(a) * r;
+      if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+    }
+    ctx.strokeStyle = 'rgba(120, 180, 255, 0.85)'; ctx.lineWidth = 0.45; ctx.stroke();
+  }
+  function drawFork(phi) {                             // 擒纵叉：红宝石瞬石随摆轮摆动
+    ctx.save(); ctx.translate(FORK.x, FORK.y); ctx.rotate(0.18 * amp * Math.sin(phi));
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(9, -10); ctx.moveTo(0, 0); ctx.lineTo(-2, -12);
+    ctx.strokeStyle = '#9fc1ec'; ctx.lineWidth = 1.6; ctx.stroke();
+    ctx.beginPath(); ctx.arc(9, -10, 1.1, 0, TAU); ctx.arc(-2, -12, 1.1, 0, TAU); ctx.fillStyle = '#c0182f'; ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, 1.5, 0, TAU); ctx.fillStyle = '#c0182f'; ctx.fill();
+    ctx.restore();
+  }
+  function hand(ang, len, w, fill) {                   // 表针：0 指向上方
+    ctx.save(); ctx.rotate(ang);
+    ctx.beginPath(); ctx.moveTo(-w, 6); ctx.lineTo(-w * 0.55, -len * 0.7); ctx.lineTo(0, -len); ctx.lineTo(w * 0.55, -len * 0.7); ctx.lineTo(w, 6); ctx.closePath();
+    ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = 'rgba(10, 20, 40, 0.7)'; ctx.lineWidth = 0.25; ctx.stroke();
+    ctx.restore();
+  }
+  function drawCrown() {                               // 表冠：拔出时向右移动
+    const cx = CROWN.x + (setting ? 4 : 0), cy = CROWN.y;
+    ctx.beginPath(); ctx.moveTo(98, cy); ctx.lineTo(cx - 5, cy); ctx.strokeStyle = '#8b7a55'; ctx.lineWidth = 2.2; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, 5, 0, TAU);
+    const g = ctx.createRadialGradient(cx - 2, cy - 2, 1, cx, cy, 5);
+    g.addColorStop(0, '#fff3c8'); g.addColorStop(1, '#9d7628');
+    ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = '#4a3512'; ctx.lineWidth = 0.4; ctx.stroke();
+    ctx.strokeStyle = 'rgba(70, 46, 12, 0.7)'; ctx.lineWidth = 0.35;
+    for (let i = 0; i < 24; i++) {
+      const a = i * TAU / 24;
+      ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * 3.9, cy + Math.sin(a) * 3.9); ctx.lineTo(cx + Math.cos(a) * 5, cy + Math.sin(a) * 5); ctx.stroke();
+    }
+  }
+  function render() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = '#0c0e12'; ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.setTransform(DPR * K, 0, 0, DPR * K, DPR * OX, DPR * (OY + 27 * K));
+    drawPlate();
+    drawBridge(-38, -90, 80, 9);
+    drawBridge(-62, 20, 46, 8);
+    for (const g of GEARS) { drawGear(g); if (g.barrel) drawBarrel(g); }
+    drawBalance(Math.PI * N);
+    drawFork(Math.PI * N);
+    const sec = GEARS.find(g => g.sec);
+    ctx.save(); ctx.translate(sec.x, sec.y); ctx.rotate(angleOf(sec));
+    ctx.beginPath(); ctx.moveTo(0, 4); ctx.lineTo(0, -21); ctx.strokeStyle = '#ff8a5c'; ctx.lineWidth = 0.7; ctx.stroke();
+    ctx.restore();
+    const hr = GEARS.find(g => g.hour), mn = GEARS.find(g => g.min);
+    hand(hr.r * cwRev() * TAU, 36, 1.8, '#9dbbe6');     // 时针：经 跨轮 → 时轮 由分针导出（12:1）
+    hand(mn.r * cwRev() * TAU, 58, 1.2, '#c8dcf7');     // 分针：中心轮
+    ctx.beginPath(); ctx.arc(0, 0, 1.6, 0, TAU); ctx.fillStyle = '#f1d78e'; ctx.fill();
+    drawCrown();
+  }
+
+  // ---- 输入：拖动齿轮 / 指针联动；拖动表冠上弦或调时 ----
+  const toMech = (px, py) => [(px - OX) / K, (py - OY) / K - 27];
+  cv.addEventListener('pointerdown', e => {
+    const [x, y] = toMech(e.clientX, e.clientY);
+    cv.setPointerCapture(e.pointerId);
+    if (Math.hypot(x - CROWN.x, y - CROWN.y) < 8) { drag = { t: 'crown', a: Math.atan2(y - CROWN.y, x - CROWN.x) }; return; }
+    if (Math.hypot(x, y) < 6) { const g = GEARS.find(q => q.min); drag = { t: 'gear', g, a: Math.atan2(y, x) }; return; }
+    let best = null;
+    for (const g of GEARS) {
+      if (Math.hypot(x - g.x, y - g.y) < g.rp + 1.5 && (!best || g.rp < best.rp)) best = g;
+    }
+    if (best) drag = { t: 'gear', g: best, a: Math.atan2(y - best.y, x - best.x) };
+  });
+  cv.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const [x, y] = toMech(e.clientX, e.clientY);
+    const c = drag.t === 'crown' ? CROWN : drag.g;
+    const a = Math.atan2(y - c.y, x - c.x);
+    let d = a - drag.a;
+    d = Math.atan2(Math.sin(d), Math.cos(d));          // 归一到 (-π, π]
+    drag.a = a;
+    if (drag.t === 'crown') { if (setting) setBy(d); else if (d > 0) windBy(d); }
+    else turnGear(drag.g, d);
+  });
+  const endDrag = () => { drag = null; };
+  cv.addEventListener('pointerup', endDrag);
+  cv.addEventListener('pointercancel', endDrag);
+
+  $('btn-pull').addEventListener('click', () => {
+    setting = !setting;
+    $('btn-pull').textContent = setting ? '推回表冠（走时）' : '拔出表冠（调时）';
+    $('btn-pull').classList.toggle('on', setting);
+  });
+  $('btn-rate').addEventListener('click', () => {
+    rate = rate === 1 ? 60 : rate === 60 ? 3600 : 1;
+    $('btn-rate').textContent = '倍速 ' + rate + '×';
+    $('btn-rate').classList.toggle('on', rate > 1);
+    $('rate').textContent = rate + '×';
+  });
+
+  function hud() {
+    const sec = Math.floor(N) / 6;
+    $('state').textContent = setting ? '调时 · 已止秒' : P <= 0 ? '停摆 · 请上弦' : amp > 0.25 * A0 ? '走时' : '起振中';
+    $('pw').textContent = P.toFixed(1);
+    $('pwbar').style.width = (P / MAX_P * 100).toFixed(1) + '%';
+    $('clock').textContent = [Math.floor(sec / 3600) % 24, Math.floor(sec / 60) % 60, Math.floor(sec) % 60]
+      .map(v => String(v).padStart(2, '0')).join(':');
+  }
+
+  const ROWS = [
+    ['发条盒轮', '72 齿', '1/6 转 / 时'],
+    ['中心轮（分针）', '60 齿 · 小齿 12', '1 转 / 时'],
+    ['跨轮 → 时轮', '48 · 15 → 45 齿', '时针 1/12 转 / 时（12 : 1）'],
+    ['三轮', '60 齿 · 小齿 10', '6 转 / 时'],
+    ['秒轮（小秒针）', '60 齿 · 小齿 6', '60 转 / 时 = 1 转 / 分'],
+    ['过轮', '48 齿 · 小齿 12', '5 转 / 分'],
+    ['擒纵轮', '15 齿 · 小齿 10', '24 转 / 分（2.5 秒 / 转，每拍一齿）'],
+    ['摆轮 / 游丝', '擒纵节拍同步', '21600 bph = 3 Hz（每秒 6 拍）']
+  ];
+  $('tbl').innerHTML = ROWS.map(([a, b, c]) => `<tr><td>${a}</td><td>${b}</td><td>${c}</td></tr>`).join('');
+
+  initTime();
+  let prev = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - prev) / 1000);
+    prev = now;
+    step(dt); render(); hud();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>

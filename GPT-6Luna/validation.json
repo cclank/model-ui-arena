@@ -1,0 +1,117 @@
+{
+  "model": "GPT-6Luna",
+  "themeCount": 13,
+  "checks": [
+    "one file per active theme",
+    "standard visual line limits",
+    "inline JavaScript syntax",
+    "SVG/replica bitmap restrictions",
+    "13 generated prompts"
+  ],
+  "results": [
+    {
+      "theme": "clock",
+      "file": "index.html",
+      "lines": 13,
+      "bytes": 7293,
+      "inlineScripts": 1,
+      "withinLineLimit": true
+    },
+    {
+      "theme": "weather-card",
+      "file": "index.html",
+      "lines": 9,
+      "bytes": 8313,
+      "inlineScripts": 1,
+      "withinLineLimit": true
+    },
+    {
+      "theme": "stock-panel",
+      "file": "index.html",
+      "lines": 9,
+      "bytes": 8356,
+      "inlineScripts": 1,
+      "withinLineLimit": true
+    },
+    {
+      "theme": "click-fireworks",
+      "file": "index.html",
+      "lines": 8,
+      "bytes": 6505,
+      "inlineScripts": 1,
+      "withinLineLimit": true
+    },
+    {
+      "theme": "neon-countdown",
+      "file": "index.html",
+      "lines": 9,
+      "bytes": 5729,
+      "inlineScripts": 1,
+      "withinLineLimit": true
+    },
+    {
+      "theme": "particle-gravity",
+      "file": "index.html",
+      "lines": 9,
+      "bytes": 6957,
+      "inlineScripts": 1,
+      "withinLineLimit": true
+    },
+    {
+      "theme": "cheetah-trophy-run",
+      "file": "index.html",
+      "lines": 10,
+      "bytes": 9505,
+      "inlineScripts": 0,
+      "withinLineLimit": true
+    },
+    {
+      "theme": "pelican-bicycle",
+      "file": "index.html",
+      "lines": 9,
+      "bytes": 9328,
+      "inlineScripts": 1,
+      "withinLineLimit": true
+    },
+    {
+      "theme": "dslr-camera",
+      "file": "index.html",
+      "lines": 9,
+      "bytes": 10459,
+      "inlineScripts": 1,
+      "withinLineLimit": true
+    },
+    {
+      "theme": "schwarzschild-black-hole",
+      "file": "index.html",
+      "lines": 27,
+      "bytes": 15858,
+      "inlineScripts": 1,
+      "withinLineLimit": true
+    },
+    {
+      "theme": "kintsugi",
+      "file": "index.html",
+      "lines": 9,
+      "bytes": 11033,
+      "inlineScripts": 1,
+      "withinLineLimit": true
+    },
+    {
+      "theme": "watch-movement",
+      "file": "index.html",
+      "lines": 9,
+      "bytes": 17293,
+      "inlineScripts": 1,
+      "withinLineLimit": true
+    },
+    {
+      "theme": "carwash-decision",
+      "file": "response.md",
+      "lines": 4,
+      "bytes": 261,
+      "inlineScripts": 0,
+      "withinLineLimit": true
+    }
+  ]
+}

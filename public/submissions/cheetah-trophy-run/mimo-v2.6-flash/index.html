@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>猎豹托举大力神杯冲刺</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#07060f;font-family:-apple-system,"PingFang SC",sans-serif}
+.poster{position:relative;width:min(96vw,660px);box-shadow:0 40px 90px rgba(0,0,0,.7);border-radius:10px;overflow:hidden}
+svg{display:block;width:100%;height:auto}
+#runner{animation:bob .42s ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(-8px)}}
+#tail{transform-origin:272px 642px;animation:sway 1s ease-in-out infinite alternate}
+@keyframes sway{from{transform:rotate(-5deg)}to{transform:rotate(7deg)}}
+.speedline{animation:speed .5s linear infinite}
+@keyframes speed{0%{transform:translateX(0);opacity:.8}100%{transform:translateX(-70px);opacity:0}}
+.confetti{animation:fall linear infinite}
+@keyframes fall{0%{transform:translateY(-80px) rotate(0)}100%{transform:translateY(1160px) rotate(720deg)}}
+.flash{animation:blink 2.4s steps(1) infinite}
+@keyframes blink{0%,88%{opacity:.12}90%,94%{opacity:1}96%,100%{opacity:.12}}
+.beam{animation:beam 4s ease-in-out infinite}
+@keyframes beam{50%{opacity:.5}}
+.spark{animation:twk 1.6s ease-in-out infinite alternate}
+@keyframes twk{from{opacity:.15;transform:scale(.7)}to{opacity:1;transform:scale(1.15)}}
+.ball{animation:roll 5.5s linear infinite;transform-origin:center}
+@keyframes roll{0%{transform:translate(-120px,0) rotate(-360deg)}100%{transform:translate(320px,0) rotate(360deg)}}
+.title{position:absolute;top:16px;left:0;right:0;text-align:center;pointer-events:none;
+  color:#ffe9b0;font-weight:800;letter-spacing:.42em;font-size:clamp(11px,2.4vw,15px);
+  text-shadow:0 2px 12px rgba(0,0,0,.8);opacity:.92}
+</style>
+</head>
+<body>
+<div class="poster">
+  <div class="title">FINAL · 补时绝杀 · 冠军之夜</div>
+  <svg viewBox="0 0 800 1080" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="猎豹举杯冲刺海报">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a0920"/><stop offset=".55" stop-color="#191445"/><stop offset="1" stop-color="#33286b"/>
+    </linearGradient>
+    <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2c7a3d"/><stop offset="1" stop-color="#1c5529"/>
+    </linearGradient>
+    <linearGradient id="fur" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f9bd5e"/><stop offset="1" stop-color="#e08526"/>
+    </linearGradient>
+    <linearGradient id="furDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d9912f"/><stop offset="1" stop-color="#b96b1c"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff3b8"/><stop offset=".35" stop-color="#ffd75e"/>
+      <stop offset=".7" stop-color="#e8a91b"/><stop offset="1" stop-color="#9c6a06"/>
+    </linearGradient>
+    <linearGradient id="malachite" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2ea86a"/><stop offset="1" stop-color="#0d5c36"/>
+    </linearGradient>
+    <linearGradient id="beamG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff8d8" stop-opacity=".55"/><stop offset="1" stop-color="#fff8d8" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="crowdA" width="27" height="19" patternUnits="userSpaceOnUse">
+      <circle cx="5" cy="6" r="3" fill="#5f6bd8"/><circle cx="17" cy="4" r="2.6" fill="#d85f8f"/>
+      <circle cx="24" cy="12" r="3" fill="#4fb9d8"/><circle cx="10" cy="14" r="2.8" fill="#d8b45f"/>
+      <circle cx="19" cy="15" r="2.4" fill="#77d86b"/>
+    </pattern>
+    <pattern id="crowdB" width="31" height="21" patternUnits="userSpaceOnUse">
+      <circle cx="8" cy="9" r="3" fill="#8f5fd8"/><circle cx="22" cy="7" r="2.7" fill="#d85f5f"/>
+      <circle cx="14" cy="17" r="3" fill="#5fa8d8"/><circle cx="28" cy="17" r="2.5" fill="#e0d05f"/>
+    </pattern>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+    <filter id="blur2" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.5"/></filter>
+
+    <!-- ===== 主角：拟人化猎豹（奔跑 + 双爪举杯） ===== -->
+    <g id="cheetah">
+      <!-- 速度残影层内不做处理，残影由 use + blur 生成 -->
+      <!-- 后腿（远侧，蹬地） -->
+      <g stroke-linecap="round" fill="none">
+        <path d="M 335,655 Q 275,758 264,782 Q 252,832 226,884" stroke="url(#furDark)" stroke-width="40"/>
+        <path d="M 335,655 Q 275,758 264,782 Q 252,832 226,884" stroke="#241505" stroke-width="40" opacity=".14"/>
+        <ellipse cx="216" cy="890" rx="34" ry="15" fill="#f7dcae" transform="rotate(-14 216 890)"/>
+        <path d="M 196,896 q 14,-12 34,-9" stroke="#241505" stroke-width="4" fill="none"/>
+      </g>
+      <!-- 后腿（近侧，抬起跨步） -->
+      <g stroke-linecap="round" fill="none">
+        <path d="M 368,662 Q 462,712 472,764 Q 478,812 448,844" stroke="url(#fur)" stroke-width="42"/>
+        <ellipse cx="442" cy="852" rx="34" ry="15" fill="#fde6c4" transform="rotate(10 442 852)"/>
+        <path d="M 424,858 q 16,-11 36,-7" stroke="#241505" stroke-width="4" fill="none"/>
+      </g>
+      <!-- 尾巴：长尾向后形成动势弧线（黑尖） -->
+      <g id="tail">
+        <path d="M 275,642 C 205,632 152,594 146,536 C 142,500 160,472 192,470"
+              fill="none" stroke="#e8963c" stroke-width="26" stroke-linecap="round"/>
+        <path d="M 178,474 C 168,472 158,482 156,500" fill="none" stroke="#1c1108"
+              stroke-width="24" stroke-linecap="round"/>
+        <path d="M 232,640 q 6,14 2,26 M 196,614 q 8,12 6,24" stroke="#241505" stroke-width="7"
+              opacity=".75" fill="none"/>
+      </g>
+      <!-- 尾巴根部盖回 -->
+      <ellipse cx="292" cy="652" rx="52" ry="46" fill="url(#furDark)"/>
+      <!-- 躯干（前倾流线型） -->
+      <path d="M 262,648 C 285,582 362,552 448,558 C 508,562 556,586 566,620
+               C 575,652 546,692 470,706 C 388,721 300,712 262,648 Z" fill="url(#fur)"/>
+      <!-- 胸腹高光 -->
+      <path d="M 300,676 C 360,706 452,706 520,676 C 500,706 420,722 352,712 C 324,707 306,694 300,676 Z"
+            fill="#fde9c8" opacity=".92"/>
+      <!-- 肌肉线条 -->
+      <path d="M 380,580 q 40,26 44,66 M 470,572 q 34,22 48,54" stroke="#c9761f"
+            stroke-width="5" fill="none" opacity=".5"/>
+      <!-- 前腿（双爪高举奖杯，位于头后侧） -->
+      <g stroke-linecap="round" fill="none">
+        <path d="M 505,588 C 492,528 508,468 546,414" stroke="#d9862f" stroke-width="36"/>
+        <path d="M 545,578 C 588,540 632,494 652,424" stroke="#e89a3e" stroke-width="36"/>
+      </g>
+      <!-- 头部（猫科：短吻、泪痕、耳） -->
+      <g>
+        <path d="M 588,470 C 578,436 594,404 626,394 C 660,383 694,402 698,436
+                 C 701,459 690,478 670,486 C 646,496 604,494 588,470 Z" fill="url(#fur)"/>
+        <!-- 吻部 -->
+        <path d="M 676,442 C 700,436 722,442 726,456 C 729,470 716,480 696,478
+                 C 680,476 672,462 676,442 Z" fill="#fdecd2"/>
+        <ellipse cx="722" cy="454" rx="9" ry="7" fill="#17100a"/>
+        <!-- 耳朵 -->
+        <path d="M 604,404 C 598,384 604,368 618,366 C 632,364 642,378 640,396 Z" fill="#e08526"/>
+        <path d="M 610,398 C 607,386 610,377 619,376 C 628,375 633,384 632,395 Z" fill="#4a2a12"/>
+        <path d="M 652,392 C 652,372 662,360 675,362 C 688,364 694,380 688,398 Z" fill="#e08526"/>
+        <path d="M 659,392 C 659,380 665,372 674,373 C 683,374 686,384 682,396 Z" fill="#4a2a12"/>
+        <!-- 眼睛 + 黑色泪痕（猎豹标志） -->
+        <path d="M 646,432 q 14,-10 30,-2 q -14,12 -30,2 Z" fill="#fff"/>
+        <circle cx="661" cy="432" r="6.5" fill="#17100a"/>
+        <circle cx="663" cy="430" r="2" fill="#fff"/>
+        <path d="M 652,444 C 654,462 660,478 670,490" stroke="#17100a" stroke-width="8"
+              fill="none" stroke-linecap="round"/>
+        <path d="M 634,430 C 630,446 632,462 640,474" stroke="#17100a" stroke-width="6"
+              fill="none" stroke-linecap="round" opacity=".85"/>
+        <!-- 嘴线与胡须 -->
+        <path d="M 710,464 q -16,10 -34,6" stroke="#17100a" stroke-width="4" fill="none"/>
+        <path d="M 706,470 l 26,8 M 704,476 l 24,16" stroke="#17100a" stroke-width="2" opacity=".6"/>
+        <!-- 头部斑点 -->
+        <g fill="#2b1a0e" opacity=".85">
+          <ellipse cx="610" cy="440" rx="7" ry="5"/><ellipse cx="630" cy="418" rx="6" ry="4.5"/>
+          <ellipse cx="664" cy="406" rx="7" ry="5"/><ellipse cx="686" cy="424" rx="6" ry="4.5"/>
+          <ellipse cx="606" cy="466" rx="6" ry="4"/>
+        </g>
+      </g>
+      <!-- 身体斑点 -->
+      <g fill="#2b1a0e" opacity=".88">
+        <ellipse cx="300" cy="620" rx="10" ry="7" transform="rotate(12 300 620)"/>
+        <ellipse cx="336" cy="596" rx="9" ry="6.5" transform="rotate(-8 336 596)"/>
+        <ellipse cx="374" cy="614" rx="10.5" ry="7"/>
+        <ellipse cx="412" cy="588" rx="9" ry="6"/>
+        <ellipse cx="446" cy="612" rx="10" ry="7" transform="rotate(10 446 612)"/>
+        <ellipse cx="484" cy="590" rx="9" ry="6.5"/>
+        <ellipse cx="516" cy="614" rx="10" ry="7" transform="rotate(-12 516 614)"/>
+        <ellipse cx="544" cy="640" rx="8.5" ry="6"/>
+        <ellipse cx="322" cy="666" rx="9" ry="6.5"/>
+        <ellipse cx="364" cy="684" rx="10" ry="7"/>
+        <ellipse cx="408" cy="662" rx="9" ry="6"/>
+        <ellipse cx="452" cy="684" rx="10" ry="7"/>
+        <ellipse cx="496" cy="664" rx="9" ry="6.5"/>
+        <ellipse cx="290" cy="676" rx="8" ry="6"/>
+        <ellipse cx="396" cy="558" rx="8" ry="5.5"/>
+        <ellipse cx="470" cy="556" rx="8" ry="5.5"/>
+        <ellipse cx="348" cy="562" rx="7.5" ry="5"/>
+        <ellipse cx="318" cy="706" rx="8" ry="5.5"/>
+        <ellipse cx="436" cy="704" rx="8" ry="5.5"/>
+        <!-- 腿上斑点 -->
+        <ellipse cx="276" cy="760" rx="7" ry="5"/><ellipse cx="256" cy="820" rx="6.5" ry="4.5"/>
+        <ellipse cx="434" cy="726" rx="7" ry="5"/><ellipse cx="466" cy="788" rx="6.5" ry="4.5"/>
+        <!-- 臂上斑点 -->
+        <ellipse cx="506" cy="530" rx="7" ry="5"/><ellipse cx="526" cy="470" rx="6.5" ry="4.5"/>
+        <ellipse cx="576" cy="546" rx="7" ry="5"/><ellipse cx="624" cy="494" rx="6.5" ry="4.5"/>
+      </g>
+      <!-- 双前爪（扣住奖杯底座两侧，最后绘制形成“握住”关系） -->
+      <g fill="#fde6c4" stroke="#241505" stroke-width="3">
+        <path d="M 548,406 q -10,-16 4,-24 q 14,-8 24,4 q 8,10 2,22 q -12,8 -30,-2 Z"/>
+        <path d="M 640,414 q -6,-18 10,-24 q 15,-5 22,8 q 6,12 -2,22 q -14,7 -30,-6 Z"/>
+      </g>
+      <path d="M 552,392 q 8,-8 18,-6 M 646,398 q 9,-7 18,-4" stroke="#241505" stroke-width="3" fill="none"/>
+    </g>
+  </defs>
+
+  <!-- ================= 背景 ================= -->
+  <rect width="800" height="1080" fill="url(#sky)"/>
+  <!-- 探照灯光束 -->
+  <g opacity=".8">
+    <polygon class="beam" points="80,96 20,640 330,640" fill="url(#beamG)"/>
+    <polygon class="beam" style="animation-delay:1.4s" points="720,96 470,640 780,640" fill="url(#beamG)"/>
+  </g>
+  <!-- 顶棚与灯架 -->
+  <rect x="0" y="60" width="800" height="52" fill="#0c0a24"/>
+  <g fill="#fff6cf" filter="url(#glow)">
+    <rect x="52" y="72" width="56" height="26" rx="5"/><rect x="128" y="72" width="56" height="26" rx="5"/>
+    <rect x="616" y="72" width="56" height="26" rx="5"/><rect x="692" y="72" width="56" height="26" rx="5"/>
+  </g>
+  <!-- 看台 -->
+  <rect x="0" y="148" width="800" height="284" fill="#131130"/>
+  <rect x="0" y="148" width="800" height="284" fill="url(#crowdA)" opacity=".5"/>
+  <rect x="6" y="158" width="788" height="264" fill="url(#crowdB)" opacity=".45"/>
+  <rect x="0" y="286" width="800" height="10" fill="#0c0a24" opacity=".8"/>
+  <!-- 相机闪光 -->
+  <g fill="#ffffff">
+    <circle class="flash" cx="92" cy="210" r="4"/><circle class="flash" style="animation-delay:.7s" cx="264" cy="180" r="3.5"/>
+    <circle class="flash" style="animation-delay:1.3s" cx="452" cy="230" r="4"/><circle class="flash" style="animation-delay:.3s" cx="612" cy="196" r="3.5"/>
+    <circle class="flash" style="animation-delay:1.9s" cx="738" cy="250" r="4"/><circle class="flash" style="animation-delay:1.1s" cx="170" cy="330" r="3.5"/>
+    <circle class="flash" style="animation-delay:2.2s" cx="530" cy="356" r="4"/><circle class="flash" style="animation-delay:.5s" cx="350" cy="300" r="3.5"/>
+  </g>
+  <!-- 广告挡板（原创文案，无任何真实标志） -->
+  <rect x="0" y="432" width="800" height="58" fill="#101a3e"/>
+  <rect x="0" y="432" width="800" height="58" fill="none" stroke="#31407e" stroke-width="3"/>
+  <text x="400" y="469" text-anchor="middle" fill="#8fa2e8" font-size="26" font-weight="700"
+        letter-spacing="10" font-family="Arial, sans-serif">CHAMPIONS FINALE</text>
+
+  <!-- ================= 草皮 ================= -->
+  <rect x="0" y="490" width="800" height="590" fill="url(#grass)"/>
+  <g opacity=".35" fill="#3d9450">
+    <rect x="0" y="510" width="800" height="58"/><rect x="0" y="626" width="800" height="58"/>
+    <rect x="0" y="742" width="800" height="58"/><rect x="0" y="858" width="800" height="58"/>
+    <rect x="0" y="974" width="800" height="58"/>
+  </g>
+  <!-- 边线与中圈（透视） -->
+  <ellipse cx="400" cy="905" rx="300" ry="74" fill="none" stroke="#eaf6ea" stroke-width="6" opacity=".75"/>
+  <path d="M 0,560 H 800" stroke="#eaf6ea" stroke-width="6" opacity=".7"/>
+  <!-- 草痕（冲刺刮痕） -->
+  <g stroke="#123f1e" stroke-width="7" stroke-linecap="round" opacity=".8">
+    <path d="M 60,930 q 80,-14 170,-6"/><path d="M 240,956 q 90,-16 190,-8"/>
+    <path d="M 480,938 q 70,-12 150,-4"/><path d="M 120,986 q 110,-18 220,-8"/>
+  </g>
+
+  <!-- ================= 比分牌 ================= -->
+  <g>
+    <rect x="30" y="30" width="216" height="104" rx="14" fill="#0b0a1c" stroke="#3d3a7c" stroke-width="3"/>
+    <text x="138" y="60" text-anchor="middle" fill="#ffb02e" font-size="22" font-weight="800"
+          font-family="'Courier New', monospace">90+7'</text>
+    <text x="138" y="106" text-anchor="middle" fill="#f4f6ff" font-size="40" font-weight="900"
+          font-family="'Courier New', monospace" letter-spacing="4">3:2</text>
+    <text x="52" y="126" fill="#7f88c9" font-size="13" font-family="Arial, sans-serif">FT</text>
+  </g>
+
+  <!-- ================= 主角 ================= -->
+  <!-- 速度残影（同一主体的两层虚影） -->
+  <use href="#cheetah" x="-128" y="6" opacity=".10" filter="url(#soft)"/>
+  <use href="#cheetah" x="-64" y="3" opacity=".18" filter="url(#blur2)"/>
+  <!-- 速度线 -->
+  <g stroke="#eaf3ff" stroke-width="6" stroke-linecap="round" opacity=".85">
+    <line class="speedline" x1="120" y1="600" x2="220" y2="600"/>
+    <line class="speedline" style="animation-delay:.15s" x1="60" y1="672" x2="180" y2="672"/>
+    <line class="speedline" style="animation-delay:.3s" x1="140" y1="748" x2="230" y2="748"/>
+    <line class="speedline" style="animation-delay:.42s" x1="90" y1="820" x2="200" y2="820"/>
+  </g>
+  <g id="runner">
+    <use href="#cheetah"/>
+    <!-- ===== 大力神杯：金色杯身 + 地球球体 + 双人托举 + 绿色底座 ===== -->
+    <g id="trophy" filter="url(#glow)">
+      <!-- 绿色底座（两层） -->
+      <rect x="558" y="372" width="104" height="24" rx="9" fill="url(#malachite)"/>
+      <rect x="572" y="352" width="76" height="20" rx="8" fill="url(#malachite)"/>
+      <rect x="558" y="372" width="104" height="7" rx="3" fill="#57d99a" opacity=".55"/>
+      <!-- 金色杯身：双人托举轮廓 -->
+      <path d="M 586,352 C 588,318 592,292 604,272 C 596,300 598,330 606,352 Z" fill="url(#gold)"/>
+      <path d="M 634,352 C 632,318 628,292 616,272 C 624,300 622,330 614,352 Z" fill="url(#gold)"/>
+      <path d="M 604,272 C 590,286 578,306 574,330 C 570,350 574,364 584,372
+               L 636,372 C 646,364 650,350 646,330 C 642,306 630,286 616,272
+               C 614,282 606,282 604,272 Z" fill="url(#gold)"/>
+      <!-- 双人造型浮雕 -->
+      <g stroke="#8a5c07" stroke-width="5" fill="none" opacity=".8" stroke-linecap="round">
+        <path d="M 594,364 C 590,340 592,314 602,294"/>
+        <path d="M 626,364 C 630,340 628,314 618,294"/>
+        <path d="M 600,318 q 10,-8 20,0"/>
+      </g>
+      <!-- 地球球体 -->
+      <circle cx="610" cy="238" r="44" fill="url(#gold)"/>
+      <g fill="none" stroke="#8a5c07" stroke-width="3.4" opacity=".85">
+        <circle cx="610" cy="238" r="44"/>
+        <ellipse cx="610" cy="238" rx="19" ry="44"/>
+        <path d="M 570,224 h 80 M 570,252 h 80 M 567,238 h 86"/>
+      </g>
+      <path d="M 592,212 q 14,-14 34,-16 q -22,4 -30,20 Z" fill="#fff" opacity=".9"/>
+      <!-- 火星点 -->
+      <g fill="#ffffff" class="spark">
+        <path d="M 656,206 l 4,10 10,4 -10,4 -4,10 -4,-10 -10,-4 10,-4 Z"/>
+        <path d="M 562,258 l 3,7 7,3 -7,3 -3,7 -3,-7 -7,-3 7,-3 Z" style="animation-delay:.7s"/>
+      </g>
+    </g>
+    <!-- 蹿起带起的草屑 -->
+    <g fill="#59b86c">
+      <ellipse cx="240" cy="874" rx="9" ry="4" transform="rotate(30 240 874)"/>
+      <ellipse cx="262" cy="856" rx="7" ry="3.4" transform="rotate(-20 262 856)"/>
+      <ellipse cx="216" cy="852" rx="8" ry="3.6" transform="rotate(60 216 852)"/>
+      <ellipse cx="196" cy="878" rx="6" ry="3" transform="rotate(-40 196 878)"/>
+    </g>
+  </g>
+
+  <!-- ================= 滚动的足球 ================= -->
+  <g class="ball" transform="translate(560,0)">
+    <g transform="translate(120,896)">
+      <ellipse cx="0" cy="26" rx="30" ry="7" fill="#0d3318" opacity=".55"/>
+      <circle cx="0" cy="0" r="27" fill="#f6f8f6" stroke="#c9cfc9" stroke-width="2"/>
+      <path d="M 0,-11 l 10,7 -4,12 h-12 l-4,-12 Z" fill="#171a17"/>
+      <path d="M -24,-6 q 8,4 10,14 M 24,-6 q -8,4 -10,14 M 8,20 q 6,-4 12,-10 M -8,20 q -6,-4 -12,-10"
+            stroke="#171a17" stroke-width="2.6" fill="none"/>
+      <path d="M -16,-18 a 27,27 0 0 1 18,-6" stroke="#fff" stroke-width="4" fill="none" opacity=".8"/>
+    </g>
+  </g>
+
+  <!-- ================= 金色纸带雨 ================= -->
+  <g id="confetti" fill="#ffd75e">
+    <rect class="confetti" x="60"  y="0" width="7" height="17" animation-duration="7s"  animation-delay="0s"/>
+    <rect class="confetti" x="130" y="0" width="6" height="14" animation-duration="9s"  animation-delay="1.2s" fill="#fff3b8"/>
+    <rect class="confetti" x="205" y="0" width="8" height="18" animation-duration="6.5s" animation-delay="2.4s"/>
+    <rect class="confetti" x="268" y="0" width="6" height="15" animation-duration="8.4s" animation-delay=".6s" fill="#f19a2e"/>
+    <rect class="confetti" x="330" y="0" width="7" height="16" animation-duration="7.6s" animation-delay="3.1s"/>
+    <rect class="confetti" x="396" y="0" width="6" height="14" animation-duration="9.6s" animation-delay="1.8s" fill="#fff3b8"/>
+    <rect class="confetti" x="458" y="0" width="8" height="19" animation-duration="6.8s" animation-delay="4s"/>
+    <rect class="confetti" x="520" y="0" width="6" height="15" animation-duration="8.8s" animation-delay=".3s"/>
+    <rect class="confetti" x="584" y="0" width="7" height="17" animation-duration="7.2s" animation-delay="2.9s" fill="#f19a2e"/>
+    <rect class="confetti" x="646" y="0" width="6" height="14" animation-duration="10s" animation-delay="1.5s"/>
+    <rect class="confetti" x="708" y="0" width="8" height="18" animation-duration="6.2s" animation-delay="3.6s" fill="#fff3b8"/>
+    <rect class="confetti" x="764" y="0" width="6" height="15" animation-duration="8.2s" animation-delay="2.1s"/>
+    <rect class="confetti" x="96"  y="0" width="6" height="14" animation-duration="9.2s" animation-delay="4.4s" fill="#f19a2e"/>
+    <rect class="confetti" x="366" y="0" width="7" height="16" animation-duration="7.8s" animation-delay=".9s" fill="#fff3b8"/>
+    <rect class="confetti" x="616" y="0" width="7" height="16" animation-duration="9.4s" animation-delay="3.3s" fill="#fff3b8"/>
+    <rect class="confetti" x="486" y="0" width="6" height="14" animation-duration="7.4s" animation-delay="4.8s" fill="#f19a2e"/>
+    <rect class="confetti" x="176" y="0" width="7" height="17" animation-duration="8.6s" animation-delay="5.2s"/>
+    <rect class="confetti" x="680" y="0" width="6" height="14" animation-duration="6.6s" animation-delay="5.8s"/>
+  </g>
+  <!-- 底部暗角 -->
+  <rect y="1010" width="800" height="70" fill="#05040e" opacity=".45"/>
+  </svg>
+</div>
+</body>
+</html>

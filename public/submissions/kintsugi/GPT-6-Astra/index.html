@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>金缮 · 裂隙有光</title>
+<style>
+:root{color-scheme:dark;--bg:#17231f;--text:#e1e0c9;--muted:#94a294;--gold:#c9a86a;--line:#63736555}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"PingFang SC",sans-serif}button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}button:focus-visible,#stage:focus-visible{outline:1px solid #e5c586;outline-offset:5px}button:disabled{cursor:default;opacity:.3}.page{max-width:1280px;margin:auto;padding:28px 52px 23px}.masthead{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:20px;font-size:10px;letter-spacing:2.5px;color:var(--muted)}.brand{display:flex;align-items:center;gap:13px;color:var(--text)}.brand-mark{width:28px;height:28px;border:1px solid #b7a16f;transform:rotate(45deg);display:grid;place-items:center}.brand-mark span{transform:rotate(-45deg);font-family:ui-serif,"Songti SC",serif;font-size:14px;letter-spacing:0}.sound{background:none;border:0;color:var(--muted);font-size:10px;letter-spacing:1px;padding:7px;display:flex;align-items:center;gap:8px}.sound svg{width:17px;height:17px}.sound[aria-pressed=true]{color:var(--gold)}.composition{position:relative;margin-top:22px}.heading{position:absolute;top:30px;left:24px;z-index:2;pointer-events:none}.eyebrow{font-size:9px;letter-spacing:3px;color:var(--gold);margin:0 0 20px}.heading h1{font-family:ui-serif,"Songti SC","STSong",serif;font-size:72px;line-height:1.1;font-weight:400;letter-spacing:15px;margin:0 0 16px}.heading .english{font:10px Georgia;letter-spacing:6px;color:var(--muted)}.vertical{position:absolute;right:28px;top:47px;writing-mode:vertical-rl;font-family:ui-serif,"Songti SC",serif;font-size:12px;line-height:2.3;letter-spacing:5px;color:#b3bbaa;pointer-events:none}.vertical .seal{margin-top:23px;align-self:center;border:1px solid #9d664b;color:#b67c5b;padding:6px 2px;font-size:11px;letter-spacing:2px}.stage{display:block;width:100%;height:min(64vh,640px);min-height:440px;overflow:visible;touch-action:manipulation;outline:none}.stage[data-ready=true]{cursor:pointer}.guide{position:absolute;bottom:6.8%;left:0;width:100%;text-align:center;pointer-events:none;font-size:12px;letter-spacing:3px;color:#b5c1ad;transition:opacity .4s}.guide small{display:block;font-size:9px;letter-spacing:2px;margin-top:10px;color:#778d7e}.halo{transform-origin:500px 363px;animation:breathe 4s ease-in-out infinite}@keyframes breathe{50%{opacity:.28;transform:scale(1.08)}}.dust{animation:drift var(--dur) ease-in-out infinite alternate;animation-delay:var(--delay)}@keyframes drift{to{transform:translate(18px,-22px);opacity:.12}}.bottom{border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:25px 24px 23px;gap:22px}.stats{display:flex;gap:39px}.stat{display:flex;flex-direction:column;gap:8px;min-width:42px}.stat strong{font:30px Georgia;font-variant-numeric:tabular-nums;line-height:1;color:#d7dcca;font-weight:400}.stat span{font-size:9px;letter-spacing:2px;color:var(--muted)}.controls{display:flex;gap:12px;align-items:center}.controls button{padding:12px 24px;border:1px solid #8b927558;border-radius:2px;font-size:11px;letter-spacing:2px;background:none;color:#c9d0bb;transition:background .2s}.controls button.primary{background:#c3a16a;color:#1d2b22;border-color:#c3a16a}.controls button:not(:disabled):hover{background:#44533e}.controls button.primary:not(:disabled):hover{background:#e5c386}.progress{display:flex;align-items:center;gap:12px;color:#899c8b;font-size:10px;letter-spacing:2px}.progress i{width:5px;height:5px;background:#c4a363;border-radius:50%;box-shadow:0 0 9px #cbac6e55}.progress-track{height:1px;width:85px;background:#495848;overflow:hidden}.progress-track span{display:block;width:0;height:100%;background:var(--gold);transition:width .5s}.footer{border-top:1px solid var(--line);padding-top:19px;display:flex;justify-content:space-between;gap:10px;color:#768f7f;font-size:9px;letter-spacing:2px}.inscription{font-family:ui-serif,"Songti SC",serif;font-size:11px;letter-spacing:2px}.gold-path{fill:none;stroke-linecap:round;stroke-linejoin:round}.no-js{padding:12px;color:var(--gold);text-align:center;font-size:12px}@media(min-width:1450px){.page{max-width:1320px}.composition{max-width:1100px;margin:22px auto 0}}@media(max-width:760px){.page{padding:21px 22px}.masthead{font-size:8px;letter-spacing:1.4px;padding-bottom:17px}.heading{top:22px;left:7px}.heading h1{font-size:50px;letter-spacing:10px}.heading .english{font-size:8px;letter-spacing:4px}.eyebrow{font-size:8px;letter-spacing:2px;margin-bottom:13px}.vertical{right:7px;top:22px;font-size:10px;letter-spacing:4px}.vertical .seal{font-size:9px}.composition{margin-top:14px}.stage{width:calc(100% + 20px);margin-left:-10px;height:480px;overflow:hidden}.guide{bottom:6%;font-size:11px;letter-spacing:2px}.guide small{font-size:8px}.bottom{padding:21px 0;flex-wrap:wrap;gap:24px}.stats{gap:30px}.stat strong{font-size:27px}.stat span{font-size:8px}.progress-track{width:40px}.controls{width:100%;justify-content:center}.controls button{width:calc(50% - 6px);padding:14px 15px}.footer{font-size:8px;letter-spacing:1px;align-items:center}.inscription{font-size:10px;max-width:175px;line-height:1.7}.footer .edition{max-width:95px;line-height:1.8;text-align:right}}@media(prefers-reduced-motion:reduce){.dust,.halo{animation:none}}
+</style>
+</head>
+<body>
+<main class="page">
+<header class="masthead"><div class="brand"><div class="brand-mark"><span>拾</span></div><span>SHI · 物的第二次生命</span></div><button class="sound" id="sound" aria-pressed="false" aria-label="开启声音"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3zM16 9q4 3 0 6M19 6q7 6 0 12"/></svg><span id="sound-label">声音关闭</span></button></header>
+<section class="composition" aria-label="金缮互动作品">
+<div class="heading"><p class="eyebrow">一器 · 一期 · 一会</p><h1>金缮</h1><div class="english">KINTSUGI</div></div>
+<div class="vertical">裂隙收下一线光<br>旧瓷又盛一盏春<span class="seal">惜物</span></div>
+<svg class="stage" id="stage" viewBox="0 0 1000 680" xmlns="http://www.w3.org/2000/svg" tabindex="0" role="button" aria-label="点击青瓷碗使其碎裂，或按回车开始" data-ready="true">
+<title>点击青瓷，让裂痕成为新的纹理</title>
+<defs id="defs">
+<radialGradient id="air"><stop stop-color="#7d8f62" stop-opacity=".2"/><stop offset=".6" stop-color="#657b56" stop-opacity=".07"/><stop offset="1" stop-color="#17231f" stop-opacity="0"/></radialGradient>
+<linearGradient id="table" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#536040" stop-opacity=".07"/><stop offset=".22" stop-color="#5b6349" stop-opacity=".16"/><stop offset="1" stop-color="#0c1a14" stop-opacity="0"/></linearGradient>
+<radialGradient id="glaze" cx=".32" cy=".18" r=".9"><stop stop-color="#c7dbbd"/><stop offset=".3" stop-color="#a7c9b0"/><stop offset=".65" stop-color="#7aa994"/><stop offset=".88" stop-color="#507e6c"/><stop offset="1" stop-color="#3b6556"/></radialGradient>
+<linearGradient id="rim" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#93b99e"/><stop offset=".44" stop-color="#6b9a83"/><stop offset=".85" stop-color="#d9e5c5"/><stop offset="1" stop-color="#92b49a"/></linearGradient>
+<radialGradient id="inside" cx=".48" cy=".8" r=".82"><stop stop-color="#86b096"/><stop offset=".5" stop-color="#5f8c78"/><stop offset="1" stop-color="#294b40"/></radialGradient>
+<linearGradient id="foot" x1="0" x2="1"><stop stop-color="#436654"/><stop offset=".3" stop-color="#9aba98"/><stop offset=".7" stop-color="#75a18a"/><stop offset="1" stop-color="#305446"/></linearGradient>
+<linearGradient id="shine" x1="0" y1="0" x2="1" y2=".4"><stop stop-color="#f3f3d4" stop-opacity=".6"/><stop offset=".45" stop-color="#e6eacb" stop-opacity=".12"/><stop offset="1" stop-color="#e6eacb" stop-opacity="0"/></linearGradient>
+<linearGradient id="metal" gradientUnits="userSpaceOnUse" x1="290" y1="240" x2="703" y2="479"><stop stop-color="#7c5628"/><stop offset=".17" stop-color="#cf9d4e"/><stop offset=".3" stop-color="#fff1b7"/><stop offset=".44" stop-color="#ad772f"/><stop offset=".58" stop-color="#e2bd70"/><stop offset=".71" stop-color="#f9eab0"/><stop offset=".87" stop-color="#b98a3f"/><stop offset="1" stop-color="#efce81"/></linearGradient>
+<linearGradient id="sweep"><stop stop-color="#efd98e" stop-opacity="0"/><stop offset=".5" stop-color="#fff3c2" stop-opacity=".55"/><stop offset="1" stop-color="#efd98e" stop-opacity="0"/></linearGradient>
+<radialGradient id="shadow"><stop stop-color="#050d09" stop-opacity=".8"/><stop offset="1" stop-color="#050d09" stop-opacity="0"/></radialGradient>
+<filter id="soft"><feGaussianBlur stdDeviation="3"/></filter>
+<path id="outline" d="M280 274C280 249 378 229 500 229C622 229 720 249 720 274C708 366 650 432 574 461L561 467L558 485Q554 493 544 493H456Q446 493 442 485L439 467L426 461C350 432 292 366 280 274Z"/>
+<clipPath id="bowl-clip"><use href="#outline"/></clipPath>
+<g id="ceramic-art" clip-path="url(#bowl-clip)">
+<use href="#outline" fill="url(#glaze)"/>
+<path d="M438 461Q500 477 562 461L558 485Q554 494 544 493H456Q446 493 442 485Z" fill="url(#foot)"/>
+<path d="M447 480Q500 491 553 480M447 488Q500 497 553 488" fill="none" stroke="#c6d4ac" stroke-width="1.4" opacity=".45"/>
+<path d="M288 284C307 359 355 411 428 448Q369 379 365 300Z" fill="url(#shine)"/>
+<path d="M635 330Q617 402 556 452" fill="none" stroke="#c4dbb5" stroke-width="2.5" opacity=".15"/>
+<path d="M350 389Q500 467 650 389M365 411Q500 476 635 411" fill="none" stroke="#4e8067" stroke-width=".8" opacity=".2"/>
+<g id="glaze-speckle" opacity=".16"/>
+<ellipse cx="500" cy="274" rx="220" ry="45" fill="url(#rim)"/>
+<ellipse cx="500" cy="271" rx="208" ry="34" fill="url(#inside)"/>
+<path d="M302 275C354 239 644 239 700 275" fill="none" stroke="#2f5448" stroke-width="2" opacity=".35"/>
+<path d="M287 275C296 297 382 318 501 318C617 318 698 296 713 280" fill="none" stroke="#e2e9ca" stroke-width="2.2" opacity=".82"/>
+<path d="M317 255Q416 227 553 239" fill="none" stroke="#dee6c5" stroke-width="1.5" opacity=".48"/>
+<ellipse cx="400" cy="285" rx="69" ry="7" fill="#d3dfbc" opacity=".08"/>
+</g>
+<g id="gold-history"/>
+<g id="piece-clips"/>
+</defs>
+<ellipse cx="500" cy="340" rx="430" ry="330" fill="url(#air)"/>
+<g id="dust" fill="#c1ce9a" opacity=".35"/>
+<path d="M0 485Q500 469 1000 485V680H0Z" fill="url(#table)"/>
+<path d="M30 486Q500 476 970 486" fill="none" stroke="#a1ad7c" stroke-width=".6" opacity=".09"/>
+<path d="M173 558Q500 548 827 558M256 602Q488 594 717 602" fill="none" stroke="#74875c" opacity=".05"/>
+<ellipse id="bowl-shadow" cx="500" cy="496" rx="193" ry="25" fill="url(#shadow)"/>
+<g id="reflection" transform="translate(0 986) scale(1 -.25) translate(0 -493)" opacity=".055"><use href="#ceramic-art"/></g>
+<g id="piece-shadows"/>
+<g id="whole"><use href="#ceramic-art"/><use href="#gold-history"/></g>
+<g id="shards"/>
+<g id="new-gold"/>
+<g clip-path="url(#bowl-clip)" pointer-events="none"><rect id="gold-sweep" x="120" y="215" width="120" height="310" fill="url(#sweep)" transform="skewX(-18)" opacity="0"/></g>
+<g id="chips"/>
+<circle id="touch-halo" class="halo" cx="500" cy="363" r="26" fill="none" stroke="#f1e9c9" stroke-width=".8" opacity=".14" pointer-events="none"/>
+<g id="impact-mark" opacity="0" fill="none" stroke="#ecdfb5" pointer-events="none"><circle id="impact-ring" r="3" stroke-width="1"/></g>
+</svg>
+<div class="guide" aria-live="polite"><span id="hint">轻触碗身，让故事开始</span><small id="subhint">每一次裂痕，都是仅此一次的纹理</small></div>
+</section>
+<div class="bottom"><div class="stats" aria-label="作品状态"><div class="stat"><strong id="count-pieces">00</strong><span>片碎瓷</span></div><div class="stat"><strong id="count-seams">00</strong><span>道新缝</span></div><div class="stat"><strong id="count-repairs">00</strong><span>次新生</span></div></div><div class="progress"><i></i><span id="phase-label">静置</span><div class="progress-track"><span id="progress-fill"></span></div></div><div class="controls"><button class="primary" id="repair" disabled>修复</button><button id="reset">重新来过</button></div></div>
+<footer class="footer"><span class="inscription">让时间留下的，慢慢成为光。</span><span class="edition">CELADON STUDY · NO. 01</span></footer>
+<noscript><p class="no-js">启用 JavaScript，即可轻触青瓷，体验碎裂与金缮。</p></noscript>
+</main>
+<script>
+'use strict';
+// All cells are intersections of one shared silhouette with Voronoi half-planes.
+// The same cell polygons drive rendering, mass properties and table contacts.
+const NS='http://www.w3.org/2000/svg', $=id=>document.getElementById(id);
+const svg=$('stage'), whole=$('whole'), shardLayer=$('shards'), clips=$('piece-clips'), history=$('gold-history');
+const make=(tag,attrs={},parent)=>{const n=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,v);if(parent)parent.append(n);return n};
+const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v)), lerp=(a,b,t)=>a+(b-a)*t, ease=t=>t*t*(3-2*t);
+const outline=[[280,274]];
+function cubic(a,b,c,d,n=20){for(let i=1;i<=n;i++){const t=i/n,u=1-t;outline.push([u*u*u*a[0]+3*u*u*t*b[0]+3*u*t*t*c[0]+t*t*t*d[0],u*u*u*a[1]+3*u*u*t*b[1]+3*u*t*t*c[1]+t*t*t*d[1]])}}
+cubic([280,274],[280,249],[378,229],[500,229]);cubic([500,229],[622,229],[720,249],[720,274]);cubic([720,274],[708,366],[650,432],[574,461]);
+outline.push([561,467],[558,485]);cubic([558,485],[555.3,490.3],[550.7,493],[544,493],5);outline.push([456,493]);cubic([456,493],[449.3,493],[444.7,490.3],[442,485],5);outline.push([439,467],[426,461]);cubic([426,461],[350,432],[292,366],[280,274]);outline.pop();
+const pathFor=p=>'M'+p.map(v=>v[0].toFixed(4)+' '+v[1].toFixed(4)).join('L')+'Z';
+$('outline').setAttribute('d',pathFor(outline));
+function inside(p,poly=outline){let hit=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])hit=!hit}return hit}
+function properties(p){let cross=0,x=0,y=0;for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length],k=a[0]*b[1]-b[0]*a[1];cross+=k;x+=(a[0]+b[0])*k;y+=(a[1]+b[1])*k}return {area:Math.abs(cross/2),cx:x/(3*cross),cy:y/(3*cross)}}
+function halfPlane(poly,nx,ny,c){const out=[];for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],da=a[0]*nx+a[1]*ny-c,db=b[0]*nx+b[1]*ny-c;if(da<=1e-8)out.push(a);if((da<0&&db>0)||(da>0&&db<0)){const t=da/(da-db);out.push([lerp(a[0],b[0],t),lerp(a[1],b[1],t)])}}return out}
+function fracture(impact){
+  const seeds=[],target=36+Math.floor(Math.random()*7),distance2=(a,b)=>(a[0]-b[0])**2+(a[1]-b[1])**2;
+  // Dense impact cluster + well spread distant sites; no saved fracture paths.
+  for(let attempts=0;seeds.length<target&&attempts<20000;attempts++){
+    let p;if(seeds.length<14){const a=Math.random()*Math.PI*2,r=3+Math.pow(Math.random(),.8)*68;p=[impact[0]+Math.cos(a)*r,impact[1]+Math.sin(a)*r]}else p=[280+Math.random()*440,230+Math.random()*263];
+    const gap=seeds.length<14?5:29;
+    if(inside(p)&&seeds.every(q=>distance2(p,q)>gap*gap))seeds.push(p);
+  }
+  const cells=seeds.map((s,i)=>{let poly=outline.map(p=>p.slice());for(let j=0;j<seeds.length&&poly.length;j++){if(i===j)continue;const q=seeds[j];poly=halfPlane(poly,q[0]-s[0],q[1]-s[1],(q[0]**2+q[1]**2-s[0]**2-s[1]**2)/2)}return {poly,site:s,id:i,...properties(poly)}}).filter(c=>c.poly.length>=3&&c.area>.1);
+  const edges=new Map();for(const cell of cells){for(let i=0;i<cell.poly.length;i++){const a=cell.poly[i],b=cell.poly[(i+1)%cell.poly.length],mid=[(a[0]+b[0])/2,(a[1]+b[1])/2];if(Math.hypot(a[0]-b[0],a[1]-b[1])<.5||!inside(mid))continue;const da=distance2(mid,cell.site);for(let j=0;j<seeds.length;j++){if(j===cell.id)continue;if(Math.abs(da-distance2(mid,seeds[j]))<.02){const key=[cell.id,j].sort((x,y)=>x-y).join('-');if(!edges.has(key)){let start=a,end=b;if(distance2(a,impact)>distance2(b,impact))[start,end]=[b,a];edges.set(key,{a:start,b:end,distance:Math.sqrt(distance2(start,impact))})}break}}}}
+  return {cells,edges:[...edges.values()],seeds,area:properties(outline).area};
+}
+let phase='ready',elapsed=0,repairs=0,bodies=[],seams=[],dustChips=[],generation=0,current=null,settledFor=0,last=0,accumulator=0,returnDuration=1.65;
+const FLOOR=544, STEP=1/120, GRAVITY=860;
+function setPhase(p){phase=p;elapsed=0;svg.dataset.ready=String(p==='ready'||p==='healed');$('touch-halo').style.display=p==='ready'?'':'none';$('repair').disabled=!['falling','resting'].includes(p);const labels={ready:'静置',falling:'碎落',resting:'静候',returning:'归位',gilding:'描金',healed:'新生'};const hints={ready:['轻触碗身，让故事开始','每一次裂痕，都是仅此一次的纹理'],falling:['容它碎落，容它停留','碎片静止后会自动修复，也可轻点「修复」'],resting:['静候片刻，散落的会再相逢','让时间，把所有碎片带回'],returning:['一片一片，回到彼此身边','沿着来时的轮廓，重新相拥'],gilding:['以金为线，把裂隙留给光','光正沿着每一道新生的缝隙生长'],healed:['多了一道光，也多了一段故事','再次轻触碗身，旧金线会与新纹理相遇']};$('phase-label').textContent=labels[p];$('hint').textContent=hints[p][0];$('subhint').textContent=hints[p][1];$('progress-fill').style.width=({ready:0,falling:18,resting:34,returning:58,gilding:82,healed:100}[p])+'%';}
+function updateBody(b){b.node.setAttribute('transform',`translate(${b.x.toFixed(3)} ${b.y.toFixed(3)}) rotate(${(b.angle*180/Math.PI).toFixed(3)}) translate(${-b.cx} ${-b.cy})`);if(b.shadow){b.shadow.setAttribute('cx',b.x);b.shadow.setAttribute('rx',Math.max(6,b.radius*.66));b.shadow.setAttribute('opacity',clamp(.2-(FLOOR-b.y)/700,.015,.2));}}
+function breakBowl(point){if(!['ready','healed'].includes(phase))return;current=fracture(point);generation++;clips.replaceChildren();shardLayer.replaceChildren();$('piece-shadows').replaceChildren();$('new-gold').replaceChildren();$('chips').replaceChildren();seams=current.edges;bodies=[];dustChips=[];whole.style.visibility='hidden';$('bowl-shadow').setAttribute('opacity','.15');$('reflection').setAttribute('opacity','0');
+  for(const c of current.cells){const id=`cell-${generation}-${c.id}`,clip=make('clipPath',{id},clips);make('path',{d:pathFor(c.poly)},clip);const node=make('g',{'data-piece':c.id},shardLayer);const edge=make('path',{d:pathFor(c.poly),fill:'#73937b',stroke:'#365844','stroke-width':1.8,'stroke-linejoin':'round',transform:'translate(0 1.5)'},node);const painted=make('g',{'clip-path':`url(#${id})`},node);make('use',{href:'#ceramic-art'},painted);make('use',{href:'#gold-history'},painted);make('path',{d:pathFor(c.poly),fill:'none',stroke:'#d1d8b5','stroke-width':.65,opacity:.48},node);
+    const local=c.poly.map(p=>[p[0]-c.cx,p[1]-c.cy]),radius=Math.max(...local.map(p=>Math.hypot(...p))),dx=c.cx-point[0],dy=c.cy-point[1],dist=Math.hypot(dx,dy)||1;
+    const b={...c,node,edge,local,radius,x:c.cx,y:c.cy,angle:0,vx:dx/dist*(60+Math.random()*85)+(Math.random()-.5)*35,vy:dy/dist*45-80-Math.random()*70,omega:(Math.random()-.5)*7,inertia:Math.max(20,local.reduce((sum,p)=>sum+p[0]**2+p[1]**2,0)/local.length/2),sleep:false,quiet:0,contacts:0,shadow:make('ellipse',{cy:FLOOR+2,ry:3,fill:'#050f09',opacity:0},$('piece-shadows'))};bodies.push(b);updateBody(b);
+  }
+  for(let i=0;i<28;i++){const a=Math.random()*Math.PI*2,v=35+Math.random()*190;dustChips.push({x:point[0],y:point[1],vx:Math.cos(a)*v,vy:Math.sin(a)*v-70,age:0,node:make('path',{d:'M-1 -2L2 0L0 2Z',fill:i%4?'#bad2b1':'#d7b66d'},$('chips'))})}
+  $('count-pieces').textContent=String(bodies.length).padStart(2,'0');$('count-seams').textContent=String(seams.length).padStart(2,'0');$('impact-mark').setAttribute('transform',`translate(${point[0]} ${point[1]})`);$('impact-mark').setAttribute('opacity','.7');setPhase('falling');accumulator=0;settledFor=0;playBreak();
+}
+function transformed(b){const c=Math.cos(b.angle),s=Math.sin(b.angle);return b.local.map(p=>[c*p[0]-s*p[1],s*p[0]+c*p[1]])}
+function physics(b,dt){if(b.sleep)return;b.vy+=GRAVITY*dt;b.vx*=Math.exp(-.17*dt);b.omega*=Math.exp(-.2*dt);b.x+=b.vx*dt;b.y+=b.vy*dt;b.angle+=b.omega*dt;
+  const vertices=transformed(b);let low=vertices[0],left=Infinity,right=-Infinity;for(const v of vertices){if(v[1]>low[1])low=v;left=Math.min(left,v[0]);right=Math.max(right,v[0])}const wall=mobile.matches?165:45;if(b.x+left<wall){b.x=wall-left;b.vx=Math.abs(b.vx)*.3}if(b.x+right>1000-wall){b.x=1000-wall-right;b.vx=-Math.abs(b.vx)*.3}
+  if(b.y+low[1]>=FLOOR-0.01){b.y=FLOOR-low[1];const speed=b.vy+b.omega*low[0];if(speed>0){const restitution=speed>45?.27:0,j=-(1+restitution)*speed/(1+low[0]**2/b.inertia);b.vy+=j;b.omega+=low[0]*j/b.inertia;const tangent=b.vx-b.omega*low[1],jt=clamp(-tangent/(1+low[1]**2/b.inertia),-.48*Math.abs(j),.48*Math.abs(j));b.vx+=jt;b.omega-=low[1]*jt/b.inertia;if(speed>65&&b.contacts<3)playTick(b.area,speed);b.contacts++}b.vx*=Math.exp(-2.8*dt);b.omega*=Math.exp(-3.8*dt);if(Math.abs(b.vx)+Math.abs(b.vy)<20&&Math.abs(b.omega)<.5)b.quiet+=dt;else b.quiet=0;if(b.quiet>.18||elapsed>3.3){b.sleep=true;b.vx=b.vy=b.omega=0}}
+  // Enforce nonpenetration after every fixed step, also during the final sleep frame.
+  let bottom=-Infinity;for(const p of transformed(b))bottom=Math.max(bottom,b.y+p[1]);if(bottom>FLOOR)b.y-=bottom-FLOOR;
+}
+function beginReturn(){if(!['falling','resting'].includes(phase))return;for(const b of bodies){b.from={x:b.x,y:b.y,angle:b.angle};b.delay=Math.random()*.2;b.sleep=true}setPhase('returning');$('chips').replaceChildren();dustChips=[];playTone(392,.25,.024);}
+function beginGold(){for(const b of bodies){b.x=b.cx;b.y=b.cy;b.angle=0;updateBody(b)}$('piece-shadows').replaceChildren();$('bowl-shadow').setAttribute('opacity','1');$('reflection').setAttribute('opacity','.055');$('new-gold').replaceChildren();
+  for(const seam of seams){const d=`M${seam.a[0]} ${seam.a[1]}L${seam.b[0]} ${seam.b[1]}`;seam.delay=seam.distance/370*.85;seam.duration=.5+Math.hypot(seam.a[0]-seam.b[0],seam.a[1]-seam.b[1])/180;seam.glow=make('path',{d,class:'gold-path',stroke:'#deb864','stroke-width':5,opacity:.11,pathLength:1,'stroke-dasharray':1,'stroke-dashoffset':1,filter:'url(#soft)'},$('new-gold'));seam.line=make('path',{d,class:'gold-path',stroke:'url(#metal)','stroke-width':1.75,pathLength:1,'stroke-dasharray':1,'stroke-dashoffset':1},$('new-gold'));seam.highlight=make('path',{d,class:'gold-path',stroke:'#fff3c7','stroke-width':.38,opacity:.57,pathLength:1,'stroke-dasharray':1,'stroke-dashoffset':1},$('new-gold'));seam.bead=make('circle',{cx:seam.a[0],cy:seam.a[1],r:2.3,fill:'#f8e5a0',opacity:0},$('new-gold'));}
+  setPhase('gilding');
+}
+function finishGold(){for(const s of seams){s.bead.remove();for(const n of [s.glow,s.line,s.highlight]){n.removeAttribute('stroke-dasharray');n.removeAttribute('stroke-dashoffset')}}while($('new-gold').firstChild)history.append($('new-gold').firstChild);shardLayer.replaceChildren();clips.replaceChildren();whole.style.visibility='visible';repairs++;$('count-repairs').textContent=String(repairs).padStart(2,'0');setPhase('healed');playBell();}
+function reset(){setPhase('ready');bodies=[];seams=[];dustChips=[];current=null;repairs=0;history.replaceChildren();clips.replaceChildren();for(const id of ['shards','chips','piece-shadows','new-gold'])$(id).replaceChildren();whole.style.visibility='visible';$('bowl-shadow').setAttribute('opacity','1');$('reflection').setAttribute('opacity','.055');$('gold-sweep').setAttribute('opacity','0');$('impact-mark').setAttribute('opacity','0');for(const id of ['count-pieces','count-seams','count-repairs'])$(id).textContent='00';}
+function tick(now){const dt=last?Math.min((now-last)/1000,.06):0;last=now;elapsed+=dt;
+  if(phase==='falling'){accumulator+=dt;while(accumulator>=STEP){for(const b of bodies)physics(b,STEP);accumulator-=STEP}for(const b of bodies)updateBody(b);$('impact-ring').setAttribute('r',3+elapsed*130);$('impact-mark').setAttribute('opacity',Math.max(0,.7-elapsed*2));if(bodies.every(b=>b.sleep)){setPhase('resting');settledFor=0}}
+  else if(phase==='resting'){settledFor+=dt;if(settledFor>1.25)beginReturn()}
+  else if(phase==='returning'){let done=true;for(const b of bodies){const t=clamp((elapsed-b.delay)/returnDuration),e=ease(t);b.x=lerp(b.from.x,b.cx,e);b.y=lerp(b.from.y,b.cy,e)-Math.sin(Math.PI*t)*46;b.angle=b.from.angle*(1-e);if(t<1)done=false;updateBody(b)}if(done)beginGold()}
+  else if(phase==='gilding'){for(const s of seams){const p=clamp((elapsed-s.delay)/s.duration);for(const n of [s.glow,s.line,s.highlight])n.setAttribute('stroke-dashoffset',1-p);s.bead.setAttribute('cx',lerp(s.a[0],s.b[0],p));s.bead.setAttribute('cy',lerp(s.a[1],s.b[1],p));s.bead.setAttribute('opacity',p>0&&p<1?.85:0)}if(elapsed>2.6)finishGold()}
+  else if(phase==='healed'){const t=elapsed/1.5;$('gold-sweep').setAttribute('x',lerp(170,930,clamp(t)));$('gold-sweep').setAttribute('opacity',t<1?Math.sin(t*Math.PI)*.55:0)}
+  for(const p of dustChips){p.age+=dt;p.vy+=650*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;if(p.y>FLOOR){p.y=FLOOR;p.vy*=-.2;p.vx*=.6}p.node.setAttribute('transform',`translate(${p.x} ${p.y}) rotate(${p.age*160})`);p.node.setAttribute('opacity',clamp(1-p.age/1.6))}
+  requestAnimationFrame(tick);
+}
+svg.addEventListener('click',event=>{const matrix=svg.getScreenCTM();if(!matrix)return;const p=new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse());if(inside([p.x,p.y]))breakBowl([p.x,p.y])});
+svg.addEventListener('keydown',e=>{if(e.code==='Enter'||e.code==='Space'){e.preventDefault();breakBowl([500,360])}});
+$('repair').onclick=beginReturn;$('reset').onclick=reset;
+document.addEventListener('visibilitychange',()=>{last=0;accumulator=0});
+const mobile=matchMedia('(max-width:760px)');function resizeStage(){svg.setAttribute('viewBox',mobile.matches?'130 0 740 680':'0 0 1000 680')}mobile.addEventListener('change',resizeStage);resizeStage();
+// Gesture-gated procedural audio. No sound files or network requests.
+let sound=false,audio=null,lastTick=0;
+function getAudio(){if(!audio){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;audio=new AC()}if(audio.state==='suspended')audio.resume().catch(()=>{});return audio}
+function playTone(freq,duration,gain=.035,delay=0){if(!sound)return;const ctx=getAudio();if(!ctx)return;const t=ctx.currentTime+delay,o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=freq;g.gain.setValueAtTime(.00001,t);g.gain.exponentialRampToValueAtTime(gain,t+.004);g.gain.exponentialRampToValueAtTime(.00001,t+duration);o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+duration+.02);o.onended=()=>{o.disconnect();g.disconnect()}}
+function playBreak(){if(!sound)return;const ctx=getAudio();if(!ctx)return;const b=ctx.createBuffer(1,Math.floor(ctx.sampleRate*.065),ctx.sampleRate),data=b.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*(1-i/data.length)**3;const source=ctx.createBufferSource(),gain=ctx.createGain(),filter=ctx.createBiquadFilter();source.buffer=b;gain.gain.value=.18;filter.type='highpass';filter.frequency.value=1800;source.connect(filter);filter.connect(gain);gain.connect(ctx.destination);source.start();source.onended=()=>{source.disconnect();gain.disconnect();filter.disconnect()};[1470,2211,3280].forEach((f,i)=>playTone(f,.19,.038/(i+1)));}
+function playTick(area,speed){if(!sound||performance.now()-lastTick<45)return;lastTick=performance.now();playTone(750+18000/Math.sqrt(area),.1,.012*clamp(speed/150,.2,1))}
+function playBell(){[523.25,1046.5,1569.75,2093].forEach((f,i)=>playTone(f,2.1-i*.27,.045/(i+1),i*.018))}
+$('sound').onclick=function(){sound=!sound;if(sound)getAudio();this.setAttribute('aria-pressed',sound);this.setAttribute('aria-label',sound?'关闭声音':'开启声音');$('sound-label').textContent=sound?'声音开启':'声音关闭';if(sound)playTone(1046.5,.4,.025)};
+// Stable ceramic microtexture, independent of random fracture geometry.
+let grainSeed=79;const grainRandom=()=>((grainSeed=Math.imul(grainSeed,1664525)+1013904223>>>0)/4294967296);
+for(let i=0;i<580;i++){const x=280+grainRandom()*440,y=230+grainRandom()*263;if(inside([x,y]))make('circle',{cx:x,cy:y,r:.23+grainRandom()*.65,fill:i%3?'#dce4c1':'#254d3d'},$('glaze-speckle'))}
+for(let i=0;i<19;i++)make('circle',{cx:160+grainRandom()*680,cy:150+grainRandom()*340,r:.6+grainRandom()*.6,class:'dust',style:`--dur:${7+grainRandom()*9}s;--delay:${-grainRandom()*12}s`},$('dust'));
+// Read-only diagnostic snapshot for reproducible geometric and physics acceptance.
+window.kintsugiInspect=()=>({phase,repairs,fragments:bodies.length,seams:seams.length,generation,area:current?.area||0,fragmentArea:current?.cells.reduce((sum,c)=>sum+c.area,0)||0,impactSites:current?.seeds.map(p=>p.slice())||[],cells:current?.cells.map(c=>({area:c.area,polygon:c.poly.map(p=>p.slice()),center:[c.cx,c.cy]}))||[],floor:FLOOR,bodies:bodies.map(b=>({x:b.x,y:b.y,angle:b.angle,sleep:b.sleep,bottom:Math.max(...transformed(b).map(p=>b.y+p[1])),error:Math.hypot(b.x-b.cx,b.y-b.cy),contacts:b.contacts})),oldGoldPaths:history.querySelectorAll('path').length});
+setPhase('ready');requestAnimationFrame(tick);
+</script>
+</body>
+</html>

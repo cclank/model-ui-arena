@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="w1mSWQkwchafhBe9nnuXN7">
+<head data-page-node-id="3bYF3mxklzu2IBVzv3jsGS">
+<meta charset="utf-8" data-page-node-id="SwlDJmlUqwCmUVY83cSm9I">
+<meta name="viewport" content="width=device-width,initial-scale=1" data-page-node-id="X3XI2dbtyOaoPtjuAMpdNo">
+<title>昼夜时钟</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#dbe4ff;--dial:rgba(255,255,255,.07);--accent:#7dd3fc;--dim:#7f8db8;--glow:rgba(125,211,252,.35)}
+body.day{--ink:#3b2410;--dial:rgba(255,255,255,.5);--accent:#ff8a3d;--dim:#96602f;--glow:rgba(255,138,61,.4)}
+body{min-height:100vh;display:grid;place-items:center;font-family:-apple-system,"PingFang SC","Segoe UI",sans-serif;color:var(--ink);transition:background 1.2s}
+body.night{background:radial-gradient(circle at 50% 25%,#27355d 0%,#0a0e21 70%)}
+body.day{background:radial-gradient(circle at 50% 25%,#ffe9c9 0%,#ffb870 75%)}
+.wrap{display:flex;flex-direction:column;align-items:center;gap:26px;padding:32px 16px;width:100%;max-width:430px}
+.mode{letter-spacing:.35em;font-size:12px;opacity:.75;text-transform:uppercase}
+.stage{position:relative;width:min(86vw,340px);aspect-ratio:1}
+#dial{width:100%;height:100%;filter:drop-shadow(0 10px 30px rgba(0,0,0,.25))}
+#ticks{animation:breathe 4s ease-in-out infinite;transform-origin:100px 100px}
+@keyframes breathe{0%,100%{opacity:.55}50%{opacity:1}}
+.hand{transform-origin:100px 100px;stroke-linecap:round}
+#hh{stroke:var(--ink);stroke-width:6}
+#mh{stroke:var(--ink);stroke-width:4}
+#sh{stroke:var(--accent);stroke-width:2}
+.hub{fill:var(--accent);stroke:var(--ink);stroke-width:2}
+.orbit{position:absolute;inset:0;border-radius:50%;border:1px dashed var(--glow);animation:spin 24s linear infinite;pointer-events:none}
+.orbit::after{content:"";position:absolute;top:-5px;left:50%;width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.digit{font-variant-numeric:tabular-nums;font-size:clamp(44px,13vw,64px);font-weight:200;letter-spacing:.06em;text-shadow:0 0 18px var(--glow)}
+.digit b{font-weight:700;color:var(--accent)}
+.meta{display:flex;gap:14px;font-size:13px;color:var(--dim)}
+.meta span{padding:5px 12px;border:1px solid var(--glow);border-radius:999px;backdrop-filter:blur(4px)}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--accent);align-self:center;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:.15}}
+@media(max-width:390px){.wrap{gap:18px;padding:20px 10px}.stage{width:84vw}}
+</style>
+</head>
+<body data-page-node-id="2bEwpDkIVT85ZL7vvorCPX">
+<div class="wrap" data-page-node-id="tCzbVcwKaKxlWLpTSsT2nE">
+  <div class="mode" id="mode" data-page-node-id="SaRK7cZjVDfWrbPBeGWKF2">NIGHT MODE</div>
+  <div class="stage" data-page-node-id="dU4H20YUpwgTey4BfjGCCp">
+    <div class="orbit" data-page-node-id="lfySfwd9CwsoFQebXMRGIv"></div>
+    <svg id="dial" viewBox="0 0 200 200" aria-label="模拟时钟" data-page-node-id="Gel2ipdqYpn8LVMAnJd8r2">
+      <circle cx="100" cy="100" r="94" fill="var(--dial)" stroke="var(--glow)" stroke-width="1.5" data-page-node-id="sARLxoHfyLGVHMd4WxALPc"/>
+      <circle cx="100" cy="100" r="86" fill="none" stroke="var(--accent)" stroke-width=".5" opacity=".5" data-page-node-id="CCIWUIYR0HoEO0sqAF6HrY"/>
+      <g id="ticks" data-page-node-id="DigoRhlWspVwnFWsRwp879"></g>
+      <line id="hh" class="hand" x1="100" y1="100" x2="100" y2="55" data-page-node-id="1ADOVP3C6WcJFzOjoUnmEA"/>
+      <line id="mh" class="hand" x1="100" y1="100" x2="100" y2="40" data-page-node-id="rdqK0sy9aHohBdJuX2RN6P"/>
+      <line id="sh" class="hand" x1="100" y1="112" x2="100" y2="34" data-page-node-id="s4aWUP718JUcJ4CiCl207i"/>
+      <circle class="hub" cx="100" cy="100" r="5" data-page-node-id="zmtg2jpSxgMcyqfLifmfdD"/>
+    </svg>
+  </div>
+  <div class="digit" id="digital" data-page-node-id="1PnbJbsbLVTqlRrQXJFOtx">00<b data-page-node-id="KzAHoxvNHTs5YQIv4OEcQl">:</b>00<b data-page-node-id="ZdYUsOLYUEVkGANJPEZfO5">:</b>00</div>
+  <div class="meta" data-page-node-id="y8nmkMcqFelxMmchMbQHNd">
+    <span id="date" data-page-node-id="VdtypTM8I4zamwSCafmFgD">—</span><span id="week" data-page-node-id="5qau8P2W55lUGkB5nGEw8d">—</span>
+    <span style="display:flex;align-items:center;gap:8px" data-page-node-id="m78ZcClDhvxBz0CVsu9A6v"><i class="pulse" data-page-node-id="dCk6mo0yKKhujVZKx2D7rd"></i><span id="tz" data-page-node-id="xiriL4Afg89p5D0eLZDxph">local</span></span>
+  </div>
+</div>
+<script>
+const SVGNS="http://www.w3.org/2000/svg",ticks=document.getElementById("ticks");
+for(let i=0;i<60;i++){const a=i*6*Math.PI/180,maj=i%5===0,r1=maj?76:80,r2=84,
+  l=document.createElementNS(SVGNS,"line");
+  l.setAttribute("x1",100+r1*Math.sin(a));l.setAttribute("y1",100-r1*Math.cos(a));
+  l.setAttribute("x2",100+r2*Math.sin(a));l.setAttribute("y2",100-r2*Math.cos(a));
+  l.setAttribute("stroke","currentColor");l.setAttribute("stroke-width",maj?2.4:1);
+  l.setAttribute("opacity",maj?.95:.4);ticks.appendChild(l);}
+document.getElementById("tz").textContent=Intl.DateTimeFormat().resolvedOptions().timeZone.split("/").pop().replace("_"," ");
+const hh=document.getElementById("hh"),mh=document.getElementById("mh"),sh=document.getElementById("sh"),
+  dig=document.getElementById("digital"),dateEl=document.getElementById("date"),weekEl=document.getElementById("week"),
+  modeEl=document.getElementById("mode"),WEEK=["日","一","二","三","四","五","六"];
+let lastSec=-1;
+function frame(){
+  const n=new Date(),ms=n.getMilliseconds(),s=n.getSeconds()+ms/1000,m=n.getMinutes()+s/60,h=(n.getHours()%12)+m/60;
+  sh.setAttribute("transform",`rotate(${s*6} 100 100)`);
+  mh.setAttribute("transform",`rotate(${m*6} 100 100)`);
+  hh.setAttribute("transform",`rotate(${h*30} 100 100)`);
+  if(n.getSeconds()!==lastSec){
+    lastSec=n.getSeconds();
+    const p=v=>String(v).padStart(2,"0");
+    dig.innerHTML=`${p(n.getHours())}<b>:</b>${p(n.getMinutes())}<b>:</b>${p(n.getSeconds())}`;
+    dateEl.textContent=`${n.getFullYear()}-${p(n.getMonth()+1)}-${p(n.getDate())}`;
+    weekEl.textContent="星期"+WEEK[n.getDay()];
+    const day=n.getHours()>=6&&n.getHours()<18;
+    document.body.className=day?"day":"night";
+    modeEl.textContent=day?"DAY MODE":"NIGHT MODE";
+  }
+  requestAnimationFrame(frame);
+}
+frame();
+</script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NEON COUNTDOWN · 最炫倒计时</title>
+<style>
+:root{--c1:#22e6ff;--c2:#7b5bff;--gl:.55;--bg:#05060d;--ring:9;--sc:1}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:#e9f3ff;font:400 15px/1.45 ui-sans-serif,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+#cv{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+.bg{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(120% 78% at 50% 4%,rgba(255,255,255,.055),transparent 62%),radial-gradient(95% 60% at 50% 118%,var(--c2),transparent 68%),var(--bg);opacity:.9;transition:background .45s linear}
+.bg::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 1px,transparent 1px 4px);opacity:.3;mix-blend-mode:overlay}
+#wrap{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(7px,2vh,18px);padding:16px 14px calc(16px + env(safe-area-inset-bottom));text-align:center}
+.brand{display:flex;align-items:center;gap:10px;letter-spacing:.32em;font-size:11px;color:#8fa6c8;text-transform:uppercase;white-space:nowrap}
+.brand b{color:var(--c1);text-shadow:0 0 12px var(--c1)}
+.pill{font:600 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.18em;padding:6px 10px;border:1px solid color-mix(in srgb,var(--c1) 45%,transparent);border-radius:99px;color:var(--c1);background:color-mix(in srgb,var(--c1) 10%,transparent);transition:.3s}
+#stage{position:relative;width:min(82vw,44vh,330px);aspect-ratio:1;display:grid;place-items:center}
+#stage>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;transform:rotate(-90deg) scale(var(--sc));transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.ring{fill:none;stroke-linecap:round}
+.base{stroke:#131a2c;stroke-width:var(--ring)}
+#prog{stroke:var(--c1);stroke-width:var(--ring);filter:drop-shadow(0 0 10px var(--c1));transition:stroke-width .35s linear}
+.tkw{position:absolute;inset:0}
+.tk{position:absolute;left:50%;top:0;width:2px;height:50%;margin-left:-1px;transform-origin:50% 100%;transform:rotate(var(--a));background:linear-gradient(to top,#1d2740 0 18%,#243050 18% 100%);transition:background .25s}
+.tk.on{background:linear-gradient(to top,var(--c1) 0 22%,color-mix(in srgb,var(--c1) 45%,transparent) 22% 100%)}
+.core{position:relative;display:flex;align-items:baseline;justify-content:center;gap:.04em;font:800 clamp(56px,19vw,124px)/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:#fff;text-shadow:0 0 9px var(--c1),0 0 26px var(--c2);text-shadow:0 0 9px var(--c1),0 0 26px color-mix(in srgb,var(--c2) 75%,transparent),0 0 62px color-mix(in srgb,var(--c1) var(--gl),transparent);animation:pulse var(--pd,1.1s) ease-in-out infinite}
+.core i{font-size:.4em;font-style:normal;opacity:.9;letter-spacing:0}
+@keyframes pulse{0%,100%{transform:scale(1)}12%{transform:scale(1.045)}30%{transform:scale(1)}46%{transform:scale(1.03)}}
+.sub{margin-top:9px;font:600 11px/1 ui-monospace,Menlo,monospace;letter-spacing:.34em;color:#8fa6c8}
+#state{min-height:18px;font:700 12px/1.5 ui-monospace,Menlo,monospace;letter-spacing:.22em;color:var(--c1);text-shadow:0 0 14px color-mix(in srgb,var(--c1) 55%,transparent);transition:.25s}
+#state.hot{color:#ff2f6d;text-shadow:0 0 18px #ff2f6d;animation:blink .3s steps(2,end) infinite}
+@keyframes blink{50%{opacity:.3}}
+#state.done{color:#fff;font-size:16px;letter-spacing:.4em;text-shadow:0 0 18px var(--c1),0 0 46px var(--c2)}
+.bar{width:min(88vw,420px);height:3px;border-radius:3px;background:#141c2e;overflow:hidden}
+.bar i{display:block;height:100%;width:100%;transform-origin:left;transform:scaleX(0);background:linear-gradient(90deg,var(--c2),var(--c1),#fff);box-shadow:0 0 12px var(--c1)}
+.row{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;max-width:600px}
+button{font:600 12px/1 inherit;letter-spacing:.08em;color:#dceaff;background:#0d1322;border:1px solid #26304a;border-radius:10px;padding:10px 13px;cursor:pointer;transition:.18s}
+button:hover{border-color:var(--c1);color:#fff;box-shadow:0 0 16px color-mix(in srgb,var(--c1) 32%,transparent);transform:translateY(-1px)}
+button:active{transform:scale(.97)}
+button.pri{background:linear-gradient(180deg,color-mix(in srgb,var(--c1) 24%,#0d1322),#0d1322);border-color:var(--c1);color:#fff;text-shadow:0 0 10px var(--c1)}
+button.on{border-color:var(--c1);color:var(--c1)}
+#sec{width:88px;font:600 13px/1 ui-monospace,Menlo,monospace;color:#fff;background:#0d1322;border:1px solid #26304a;border-radius:10px;padding:10px;text-align:center}
+#sec:focus{outline:none;border-color:var(--c1);box-shadow:0 0 14px color-mix(in srgb,var(--c1) 38%,transparent)}
+.hint{font-size:11px;color:#5f708c;letter-spacing:.04em}
+#flash{position:fixed;inset:0;z-index:5;pointer-events:none;background:#fff;opacity:0}
+#shock{position:fixed;left:50%;top:50%;width:min(66vmin,400px);aspect-ratio:1;z-index:4;pointer-events:none;border:2px solid var(--c1);border-radius:50%;transform:translate(-50%,-50%) scale(.2);opacity:0}
+.go#shock{animation:boom .95s cubic-bezier(.1,.7,.3,1) forwards}
+@keyframes boom{0%{opacity:.95;transform:translate(-50%,-50%) scale(.24);border-width:16px}70%{opacity:.28}100%{opacity:0;transform:translate(-50%,-50%) scale(2.7);border-width:1px}}
+.go#flash{animation:fl .6s ease-out forwards}
+@keyframes fl{0%{opacity:.9}100%{opacity:0}}
+#wrap.shake{animation:sk .5s cubic-bezier(.36,.07,.19,.97)}
+@keyframes sk{10%,90%{transform:translate(-2px,1px)}30%,70%{transform:translate(5px,-3px)}50%{transform:translate(-7px,2px)}}
+@media (max-width:400px){.brand{letter-spacing:.18em;font-size:10px}.core{font-size:clamp(52px,18vw,84px)}button{padding:9px 11px}}
+@media (prefers-reduced-motion:reduce){.core{animation:none}#wrap.shake{animation:none}}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="bg"></div>
+<div id="shock"></div>
+<div id="flash"></div>
+<main id="wrap">
+  <div class="brand"><span class="pill" id="lbl">SYNC</span><span>NEON <b>COUNTDOWN</b></span></div>
+  <div id="stage">
+    <svg viewBox="0 0 320 320" aria-hidden="true">
+      <circle class="ring base" cx="160" cy="160" r="150"/>
+      <circle class="ring" id="prog" cx="160" cy="160" r="150" stroke-dasharray="0 999"/>
+    </svg>
+    <div class="tkw" id="ticks"></div>
+    <div>
+      <div class="core" id="core"><span id="big">10</span><i id="ms"></i></div>
+      <div class="sub" id="phase">CHARGING</div>
+    </div>
+  </div>
+  <div id="state">READY</div>
+  <div class="bar"><i id="bar"></i></div>
+  <div class="row">
+    <button class="pri" id="go">START</button>
+    <button data-t="10" class="on">10s</button>
+    <button data-t="30">30s</button>
+    <button data-t="60">60s</button>
+    <button data-t="300">5m</button>
+    <input id="sec" type="number" min="1" max="9999" placeholder="秒" inputmode="numeric">
+    <button id="go3" title="跳到最后 3 秒">最后一刻</button>
+    <button id="snd">音效 关</button>
+  </div>
+  <div class="hint">真实时间戳驱动 · 加载即自动开始</div>
+</main>
+<script>
+const $=s=>document.querySelector(s),cv=$('#cv'),cx=cv.getContext('2d'),W=$('#wrap'),core=$('#core'),big=$('#big'),ms=$('#ms'),
+pr=$('#prog'),bar=$('#bar'),st=$('#state'),ph=$('#phase'),lbl=$('#lbl'),tkw=$('#ticks');
+const C=2*Math.PI*150,N=60;let T=10,target=0,run=false,lastSec=-1,raf=0,P=[];
+const dpr=Math.min(devicePixelRatio||1,2);
+const size=()=>{cv.width=innerWidth*dpr;cv.height=innerHeight*dpr;cx.setTransform(dpr,0,0,dpr,0,0)};
+addEventListener('resize',size);size();
+const ticks=[];
+for(let i=0;i<N;i++){const d=document.createElement('i');d.className='tk';d.style.setProperty('--a',(i*360/N)+'deg');tkw.appendChild(d);ticks.push(d)}
+const A=window.AudioContext||window.webkitAudioContext;let ac=null,sound=false;
+const unlock=()=>{if(!ac)try{ac=new A()}catch(e){}if(ac&&ac.state==='suspended')ac.resume()};
+['pointerdown','keydown'].forEach(e=>addEventListener(e,unlock));
+function tone(f,d,v){if(!sound||!ac)return;try{const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime;
+ o.type='square';o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.008);
+ g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+d+.02)}catch(e){}}
+function shoot(n,burst){for(let i=0;i<n;i++){const a=Math.random()*6.283,r=(burst?140:40)+Math.random()*(burst?70:120),
+ s=burst?3+Math.random()*12:.25+Math.random()*1.2;
+ P.push({x:innerWidth/2+Math.cos(a)*r*.25,y:innerHeight/2+Math.sin(a)*r*.25,vx:Math.cos(a)*s*(burst?1:.4),
+ vy:Math.sin(a)*s*(burst?1:.4)-1,life:1,g:burst?.015:.006,w:burst?2+Math.random()*4:1+Math.random()*2,hue:burst?(Math.random()<.5?188:330):205})}}
+function draw(){cx.clearRect(0,0,innerWidth,innerHeight);
+ for(let i=P.length-1;i>=0;i--){const p=P[i];p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.vx*=.994;p.life-=p.g*2.2;
+  if(p.life<=0){P.splice(i,1);continue}cx.globalAlpha=Math.max(.22,p.life)*.9;
+  cx.fillStyle='hsl('+p.hue+' 100% '+(52+40*p.life)+'%)';cx.fillRect(p.x,p.y,p.w,p.w)}
+ cx.globalAlpha=1;if(P.length<110&&Math.random()<.45)shoot(1)}
+function paint(left,p){const k=Math.min(1,(1-Math.min(left,10)/10)*1.15+p*.15),h=Math.round(188+k*170),r=document.documentElement.style;
+ r.setProperty('--c1','hsl('+h+' 100% 62%)');r.setProperty('--c2','hsl('+(h+58)%360+' 96% 62%)');
+ r.setProperty('--gl',(.4+k*.5).toFixed(2));r.setProperty('--ring',(7+k*9).toFixed(1));r.setProperty('--sc',(1+k*.04).toFixed(3));
+ core.style.setProperty('--pd',(left<=3?.4:left<=6?.66:1.15)+'s');
+ const hot=left<=3&&left>0;st.classList.toggle('hot',hot);
+ if(hot){st.textContent='最后 '+Math.ceil(left)+' 秒';ph.textContent='CRITICAL'}
+ else if(left<=6&&left>0){st.textContent='蓄力中 · 加速';ph.textContent='RAMP UP'}
+ else if(left>0){st.textContent='运行中 '+Math.ceil(left)+'s';ph.textContent='CHARGING'}}
+function render(){draw();if(!run){raf=0;return}
+ const left=Math.max(0,target-Date.now())/1000,p=1-left/T;
+ pr.setAttribute('stroke-dasharray',(C*p).toFixed(1)+' 999');bar.style.transform='scaleX('+p.toFixed(4)+')';
+ big.textContent=left<10?left.toFixed(2):String(Math.ceil(left));ms.textContent='s';
+ const s=Math.ceil(left);
+ if(s!==lastSec){lastSec=s;if(s>0){ticks.forEach((l,i)=>l.classList.toggle('on',i/N<=p));
+  tone(200+s*14,.09,.13);if(s<=3){shoot(16);W.classList.add('shake');setTimeout(()=>W.classList.remove('shake'),520)}else shoot(24)}}
+ paint(left,p);
+ if(left<=0){run=false;raf=0;zero();return}
+ raf=requestAnimationFrame(render)}
+function zero(){pr.setAttribute('stroke-dasharray','0 999');bar.style.transform='scaleX(1)';big.textContent='0.00';ms.textContent='s';
+ ph.textContent='IGNITION';lbl.textContent='DONE';st.textContent='完成 · TIME UP';st.classList.remove('hot');st.classList.add('done');
+ W.classList.add('go','shake');setTimeout(()=>W.classList.remove('go','shake'),1000);
+ shoot(190,1);shoot(80,1);tone(660,.5,.26);setTimeout(()=>tone(990,.7,.18),90);setTimeout(()=>tone(1320,.9,.12),190);
+ ticks.forEach(l=>l.classList.add('on'));let f=0;
+ (function boom(){if(f++<170){draw();requestAnimationFrame(boom)}})()}
+function start(sec){T=Math.max(.5,+sec||10);target=Date.now()+T*1000;run=true;lastSec=-1;
+ cancelAnimationFrame(raf);lbl.textContent='SYNC';st.classList.remove('done');W.classList.remove('go','shake');P.length=0;
+ $('#go').textContent='PAUSE';render()}
+$('#go').onclick=()=>{if(run){run=false;raf=0;lbl.textContent='PAUSE';$('#go').textContent='RESUME'}else start(T)};
+document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-t]').forEach(x=>x.classList.remove('on'));b.classList.add('on');start(+b.dataset.t)});
+$('#go3').onclick=()=>{document.querySelectorAll('[data-t]').forEach(x=>x.classList.remove('on'));start(3.2)};
+$('#sec').onchange=e=>{const v=Math.min(9999,Math.max(1,+e.target.value||0));if(v){e.target.value='';document.querySelectorAll('[data-t]').forEach(x=>x.classList.remove('on'));start(v)}};
+$('#snd').onclick=e=>{sound=!sound;e.target.textContent='音效 '+(sound?'开':'关');e.target.classList.toggle('on',sound);if(sound)unlock()};
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&run){cancelAnimationFrame(raf);raf=requestAnimationFrame(render)}});
+start(10);
+</script>
+</body>
+</html>

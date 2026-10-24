@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>拟物复刻：单反相机（3/4 视角）· AURIGA PX-9000</title>
+<style>
+  html,body{margin:0;height:100%;background:#3a3f46;display:flex;align-items:center;justify-content:center}
+  .stage{width:min(100vw,1040px)}
+  .stage svg{width:100%;height:auto;display:block;border-radius:14px}
+</style>
+</head>
+<body>
+<!-- ============================================================
+  拟物复刻：单反相机（3/4 侧前方视角）· 全手绘 SVG（无位图 / emoji / 现成素材）
+  ── 透视方案（正交轴测投影，全部几何一致）────────────────
+  本体坐标系：X = 机身横向（-X 为手柄侧），Y = 竖直向上，Z = 镜头光轴（朝观察者）。
+  取方位角 a = -35°、俯角 e = -14° 做正交投影，三轴屏幕像：
+    X̂ → u = ( 0.8192, -0.1388)   前脸横向（右端后退）
+    Ŷ → v = ( 0.0000, -0.9703)   竖直（轻微缩短）
+    Ẑ → n = (-0.5736, -0.1982)   深度，指向观察者（屏幕左上）
+  前脸所有元素画在 matrix(0.8192 -0.1388 0 0.9703 330 300) 内的局部坐标系，
+  因此前脸上的任何正圆（镜头口、转盘、快门投影）自动成为正确椭圆
+  （该矩阵奇异值 1.001 / 0.802 → 椭圆轴比 0.80）。
+  挤出（厚度）方向在局部系内为每单位深度 d = (-0.7001, -0.3045)；
+  顶面（模式转盘 / 快门 / 热靴平面）再嵌套 matrix(1 0 -0.7001 -0.3045 cx cy)，
+  顶面圆盘即正圆 → 复合投影轴比 0.24，符合低俯角观察。
+  镜筒各环面圆心 = 镜头中心 + t·d（t 为镜筒深度），切点局部偏移 ±r(0.399, -0.917)
+  （由 det(u,d)=0 的轮廓条件解出），可见半环恒为 θ∈[-66.5°, 113.5°]。
+  ── 材质区分（同一左上主光方向）──────────────────────────
+  金属（卡口环 / 红圈 / 热靴 / 刻环）：高对比硬分段渐变 + 锐利高光条；
+  玻璃（前组镜片）：径向深色渐变 + 四层同心圆 + 新月高光 + SMIL 流动反光；
+  磨砂塑料（机身 / 手柄）：低对比柔和渐变 + pattern 防滑纹理。
+  品牌型号均为自创：AURIGA PX-9000（与任何真实相机厂商无关）。
+============================================================ -->
+<div class="stage">
+<svg viewBox="0 0 1000 780" xmlns="http://www.w3.org/2000/svg" role="img"
+     aria-label="AURIGA PX-9000 单反相机 3/4 视角拟物插画：机身厚度、多层镜筒、同心圆前组镜片">
+<defs>
+  <linearGradient id="plasticFront" x1=".15" y1="0" x2=".85" y2="1">
+    <stop offset="0" stop-color="#3a3f46"/><stop offset=".45" stop-color="#272b31"/>
+    <stop offset="1" stop-color="#15181c"/>
+  </linearGradient>
+  <linearGradient id="plasticGrip" x1=".1" y1="0" x2=".9" y2="1">
+    <stop offset="0" stop-color="#33383f"/><stop offset=".55" stop-color="#21252b"/>
+    <stop offset="1" stop-color="#101317"/>
+  </linearGradient>
+  <linearGradient id="plasticSide" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#2c3137"/><stop offset=".5" stop-color="#1d2227"/>
+    <stop offset="1" stop-color="#0e1114"/>
+  </linearGradient>
+  <linearGradient id="topFaceG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#464c54"/><stop offset="1" stop-color="#282d33"/>
+  </linearGradient>
+  <linearGradient id="metalRing" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#f4f7f9"/><stop offset=".34" stop-color="#c3ccd3"/>
+    <stop offset=".5" stop-color="#8d979f"/><stop offset=".64" stop-color="#e6ecf0"/>
+    <stop offset="1" stop-color="#5f6970"/>
+  </linearGradient>
+  <linearGradient id="metalDark" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#c9d2d8"/><stop offset=".4" stop-color="#79848c"/>
+    <stop offset=".55" stop-color="#aab4bb"/><stop offset="1" stop-color="#3f4850"/>
+  </linearGradient>
+  <linearGradient id="redRingG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#e0574a"/><stop offset=".5" stop-color="#b3231a"/>
+    <stop offset="1" stop-color="#6e120c"/>
+  </linearGradient>
+  <linearGradient id="barrelBody" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#4a5158"/><stop offset=".42" stop-color="#272d33"/>
+    <stop offset=".62" stop-color="#333a41"/><stop offset="1" stop-color="#12151a"/>
+  </linearGradient>
+  <linearGradient id="barrelRing" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#363d45"/><stop offset=".5" stop-color="#1d2226"/>
+    <stop offset="1" stop-color="#0d1013"/>
+  </linearGradient>
+  <radialGradient id="glassG" cx=".38" cy=".32" r=".85">
+    <stop offset="0" stop-color="#2e5b63"/><stop offset=".4" stop-color="#12262e"/>
+    <stop offset=".75" stop-color="#0a1218"/><stop offset="1" stop-color="#05080b"/>
+  </radialGradient>
+  <linearGradient id="glassCrescent" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#ffffff" stop-opacity=".85"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="groundShadow" cx=".5" cy=".5" r=".5">
+    <stop offset="0" stop-color="#0b0d10" stop-opacity=".7"/><stop offset=".7" stop-color="#0b0d10" stop-opacity=".3"/>
+    <stop offset="1" stop-color="#0b0d10" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="bgWall" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#4a5057"/><stop offset="1" stop-color="#31363c"/>
+  </linearGradient>
+  <pattern id="gripKnit" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">
+    <path d="M0 0 H8 M0 4 H8" stroke="#0b0e11" stroke-width="1.6" opacity=".55"/>
+  </pattern>
+  <pattern id="gripDots" width="6" height="6" patternUnits="userSpaceOnUse">
+    <circle cx="3" cy="3" r="1.15" fill="#0b0e11" opacity=".5"/>
+  </pattern>
+  <clipPath id="glassClip"><circle cx="0" cy="0" r="70"/></clipPath>
+  <clipPath id="zoomClip">
+    <path d="M204.1 53.6 A93 93 0 0 1 129.9 224.2 L82.1 200 A90 90 0 0 0 153.9 35 Z"/>
+  </clipPath>
+  <filter id="blurLg" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="16"/></filter>
+  <filter id="blurSm" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3"/></filter>
+  <!-- 机身剪影（前脸轮廓并集），用于背面挤出体 -->
+  <path id="body-sil" d="M-38 40 L118 40 L128 -16 L242 -16 L256 40 L360 40 L360 250 L36 250 L36 262
+                         L-38 262 Q-72 262 -72 228 L-72 74 Q-72 40 -38 40 Z"/>
+</defs>
+
+<!-- 背景与台面 -->
+<rect x="0" y="0" width="1000" height="780" fill="url(#bgWall)"/>
+<rect x="0" y="560" width="1000" height="220" fill="#2b3036"/>
+<rect x="0" y="556" width="1000" height="5" fill="#565d65" opacity=".7"/>
+<!-- 接触投影（地面，沿 u 方向倾斜 -9.6°）+ 环境光遮蔽 -->
+<g transform="rotate(-9.6 470 622)">
+  <ellipse cx="470" cy="622" rx="335" ry="60" fill="url(#groundShadow)" filter="url(#blurLg)"/>
+  <ellipse cx="430" cy="616" rx="185" ry="30" fill="#0b0d10" opacity=".5" filter="url(#blurSm)"/>
+</g>
+
+<!-- ============ 相机主体（轴测 matrix 局部坐标系） ============ -->
+<g transform="matrix(0.8192 -0.1388 0 0.9703 330 300)">
+
+  <!-- 背面挤出体（补角防漏光） -->
+  <use href="#body-sil" transform="translate(-77 -33.5)" fill="#0d0f12"/>
+
+  <!-- 可见厚度面：手柄侧面（防滑纹理） -->
+  <path d="M-72 74 L-72 228 L-149 194.5 L-149 40.5 Z" fill="url(#plasticSide)"/>
+  <path d="M-72 74 L-72 228 L-149 194.5 L-149 40.5 Z" fill="url(#gripDots)" opacity=".8"/>
+  <path d="M-72 74 L-149 40.5" stroke="#4a5158" stroke-width="2.4"/>
+  <path d="M-72 228 L-149 194.5" stroke="#05070a" stroke-width="2.4"/>
+  <!-- 顶面（机身 + 军舰头） -->
+  <path d="M-38 40 L360 40 L283 6.5 L-115 6.5 Z" fill="url(#topFaceG)"/>
+  <path d="M128 -16 L242 -16 L165 -49.5 L51 -49.5 Z" fill="url(#topFaceG)"/>
+  <path d="M128 -16 L128 40 L51 6.5 L51 -49.5 Z" fill="url(#plasticSide)"/>
+  <path d="M-38 40 L360 40" stroke="#5a6167" stroke-width="2" opacity=".6"/>
+  <path d="M128 -16 L242 -16" stroke="#5a6167" stroke-width="1.8" opacity=".5"/>
+
+  <!-- ---- 快门按钮（顶面圆柱，顶面圆 → 正确椭圆） ---- -->
+  <g id="shutter-assembly">
+    <path d="M-8 36 L22 33 L22 23 L-8 26 Z" fill="url(#metalDark)"/>
+    <g transform="matrix(1 0 -0.7001 -0.3045 7.5 32.5)">
+      <ellipse cx="0" cy="0" rx="21" ry="21" fill="url(#metalRing)" stroke="#4c545b" stroke-width="1.4"/>
+      <ellipse cx="0" cy="0" rx="13" ry="13" fill="url(#metalDark)"/>
+    </g>
+  </g>
+
+  <!-- ---- 模式转盘（分段刻度，点击转动） ---- -->
+  <g id="mode-dial">
+    <path d="M218 30 L302 22 L302 8 L218 16 Z" fill="url(#metalDark)"/>
+    <g transform="matrix(1 0 -0.7001 -0.3045 260 25)">
+      <g id="dial-rot">
+        <animateTransform attributeName="transform" type="rotate" values="0;0;45" keyTimes="0;.06;1"
+                          dur=".9s" begin="dial-hit.click" fill="freeze" calcMode="spline"
+                          keySplines="0 0 1 1;.3 0 .2 1"/>
+        <circle cx="0" cy="0" r="45" fill="url(#metalRing)" stroke="#59616a" stroke-width="1.3"/>
+        <circle cx="0" cy="0" r="37" fill="#2b3037" stroke="#14171b" stroke-width="1.4"/>
+        <g stroke="#c8d0d6" stroke-width="2.6" stroke-linecap="round">
+          <path d="M0 -45 V-32"/><path d="M22.5 -39 L16 -28"/><path d="M39 -22.5 L28.3 -16"/>
+          <path d="M45 0 H32"/><path d="M39 22.5 L28.3 16"/><path d="M22.5 39 L16 28"/>
+          <path d="M0 45 V32"/><path d="M-22.5 39 L-16 28"/><path d="M-39 22.5 L-28.3 16"/>
+          <path d="M-45 0 H-32"/><path d="M-39 -22.5 L-28.3 -16"/><path d="M-22.5 -39 L-16 -28"/>
+        </g>
+        <g font-family="Helvetica,Arial,sans-serif" font-size="12" font-weight="700" fill="#e8eef2" text-anchor="middle">
+          <text x="0" y="-16">P</text><text x="16" y="4">A</text><text x="0" y="22">S</text>
+          <text x="-16" y="4">M</text>
+        </g>
+        <circle cx="0" cy="0" r="9" fill="#1a1e23" stroke="#6d757d" stroke-width="1.3"/>
+        <rect x="-2" y="-29" width="4" height="11" rx="2" fill="#e0574a"/>
+      </g>
+      <circle id="dial-hit" cx="0" cy="0" r="47" fill="#000" opacity="0"/>
+    </g>
+  </g>
+
+  <!-- ---- 热靴（军舰头顶面导轨） ---- -->
+  <g id="hot-shoe">
+    <path d="M134 -25 L204 -25 L169 -40 L99 -40 Z" fill="url(#metalRing)" stroke="#565f66" stroke-width="1.3"/>
+    <path d="M138 -26.5 L200 -26.5 L170 -37 L108 -37 Z" fill="#14171b"/>
+    <path d="M134 -25 L137 -19 M204 -25 L207 -19" stroke="#8d979f" stroke-width="3"/>
+    <path d="M99 -40 L102 -34 M169 -40 L172 -34" stroke="#8d979f" stroke-width="2.4"/>
+  </g>
+
+  <!-- ---- 机身前脸（磨砂塑料 + 手柄纹理） ---- -->
+  <use href="#body-sil" fill="url(#plasticFront)"/>
+  <path d="M-38 40 L36 40 L36 250 L36 262 L-38 262 Q-72 262 -72 228 L-72 74 Q-72 40 -38 40 Z"
+        fill="url(#plasticGrip)"/>
+  <path d="M-38 40 L36 40 L36 250 L36 262 L-38 262 Q-72 262 -72 228 L-72 74 Q-72 40 -38 40 Z"
+        fill="url(#gripKnit)" opacity=".75"/>
+  <path d="M128 40 L128 -16 L242 -16 L256 40 Z" fill="url(#plasticFront)"/>
+  <!-- 前脸分模缝（AO） -->
+  <path d="M38 44 L38 252" stroke="#0e1114" stroke-width="2.4" opacity=".8"/>
+  <path d="M342 44 L342 246" stroke="#0e1114" stroke-width="1.8" opacity=".6"/>
+  <path d="M130 -12 L130 38 M240 -12 L254 38" stroke="#0d0f12" stroke-width="2.2" opacity=".85"/>
+  <!-- 自创品牌排版（置于卡口右侧的净空区） -->
+  <g font-family="Georgia,'Times New Roman',serif" fill="#dfe6eb">
+    <text x="294" y="76" font-size="17" font-weight="700" letter-spacing="1.5">AURIGA</text>
+    <text x="296" y="96" font-size="10.5" letter-spacing="2.2" fill="#9fa9b1">PX-9000</text>
+    <text x="296" y="112" font-size="7" letter-spacing="1.6" fill="#79848c">DIGITAL SLR</text>
+    <text x="352" y="212" font-size="7" letter-spacing="1.4" fill="#6d757d" transform="rotate(-90 352 212)">AURIGA OPTICAL CO.</text>
+  </g>
+  <text x="-64" y="150" font-family="Helvetica,Arial,sans-serif" font-size="9" letter-spacing="1.5"
+        fill="#79848c" transform="rotate(-90 -64 150)">PX-9000</text>
+  <text x="-52" y="252" font-family="Helvetica,Arial,sans-serif" font-size="7.5" letter-spacing="1.2" fill="#5f6970">MADE IN AURIGA</text>
+  <!-- AF 辅助灯 / 自拍灯 / 镜头释放钮 -->
+  <circle cx="302" cy="150" r="11" fill="#2a1f1c" stroke="#14171b" stroke-width="2"/>
+  <circle cx="302" cy="150" r="6.5" fill="#c7553d" opacity=".85"/>
+  <circle cx="302" cy="180" r="5.5" fill="#1c2226" stroke="#14171b" stroke-width="1.6"/>
+  <circle cx="100" cy="226" r="10" fill="url(#metalDark)" stroke="#14171b" stroke-width="2"/>
+  <!-- 手柄铭牌 -->
+  <rect x="-60" y="70" width="64" height="16" rx="4" fill="#14171b" stroke="#4d545b" stroke-width="1.2"/>
+  <text x="-28" y="82" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="9"
+        letter-spacing="1.8" fill="#c9d2d8">AURIGA</text>
+  <!-- 手柄侧面：金属背带扣 -->
+  <g id="strap-lug">
+    <path d="M-138 66 L-118 75 L-118 100 L-138 91 Z" fill="url(#metalRing)" stroke="#565f66" stroke-width="1.3"/>
+    <path d="M-134 75 L-124 80 L-124 88 L-134 83 Z" fill="#14171b"/>
+  </g>
+
+  <!-- ---- 镜头：多层镜筒（同 matrix → 所有截面圆均为正确椭圆） ---- -->
+  <g id="lens" transform="translate(41.4 32.6) scale(0.78)">
+    <!-- 筒身凸包：两切线 + 前端远半椭圆 + 卡口近半椭圆 -->
+    <path d="M226.3 60 L79.5 14.7 A79 79 0 0 0 16.5 159.5 L149.7 236 A96 96 0 0 0 226.3 60 Z"
+          fill="url(#barrelBody)" stroke="#0d0f12" stroke-width="2"/>
+    <!-- 分段环面（可见半环带）：卡口基座 / 变焦环 / 对焦环 / 红圈 / 前端压环 -->
+    <path d="M226.3 60 A96 96 0 0 1 149.7 236 L129.9 224.2 A93 93 0 0 0 204.1 53.6 Z"
+          fill="url(#barrelRing)" stroke="#0d0f12" stroke-width="1.6"/>
+    <g id="zoom-ring">
+      <path d="M204.1 53.6 A93 93 0 0 1 129.9 224.2 L82.1 200 A90 90 0 0 0 153.9 35 Z"
+            fill="#20252a" stroke="#0d0f12" stroke-width="1.6"/>
+      <path d="M204.1 53.6 A93 93 0 0 1 129.9 224.2 L82.1 200 A90 90 0 0 0 153.9 35 Z"
+            fill="url(#gripKnit)" opacity=".85"/>
+      <g clip-path="url(#zoomClip)" stroke="#0b0e11" stroke-width="2.2" opacity=".65">
+        <path d="M226.8 67.7 L175.9 48.6"/><path d="M247.6 92.4 L195.9 72.5"/><path d="M258.6 122.7 L206.7 101.8"/>
+        <path d="M258.6 155.1 L206.7 133.2"/><path d="M247.6 185.4 L195.9 162.5"/><path d="M226.8 210.1 L175.9 186.4"/>
+        <path d="M198.8 226.3 L148.8 202.1"/><path d="M167 231.9 L118 207.5"/><path d="M135.2 226.3 L87.2 202.1"/>
+      </g>
+    </g>
+    <g id="focus-ring">
+      <path d="M153.9 35 A90 90 0 0 1 82.1 200 L45.6 178.8 A85 85 0 0 0 113.4 22.8 Z"
+            fill="#242a2f" stroke="#0d0f12" stroke-width="1.6"/>
+      <path d="M153.9 35 A90 90 0 0 1 82.1 200 L45.6 178.8 A85 85 0 0 0 113.4 22.8 Z"
+            fill="url(#gripKnit)" opacity=".7"/>
+      <g stroke="#0b0e11" stroke-width="1.8" opacity=".6">
+        <path d="M181.6 53.9 L139.6 40.7"/><path d="M202.6 86.7 L159.4 71.7"/><path d="M207.6 125.3 L164.2 108.2"/>
+        <path d="M195.9 162.5 L153.1 143.3"/><path d="M169.7 191.2 L128.3 170.4"/><path d="M133.7 206.2 L94.3 184.5"/>
+        <path d="M94.7 204.5 L57.5 182.9"/>
+      </g>
+    </g>
+    <!-- 装饰红圈（自创） -->
+    <path d="M113.4 22.8 A85 85 0 0 1 45.6 178.8 L37.3 172.9 A83 83 0 0 0 103.5 20.7 Z"
+          fill="url(#redRingG)" stroke="#0d0f12" stroke-width="1.4"/>
+    <path d="M110 24 A84 84 0 0 1 47 177" fill="none" stroke="#ff8a7a" stroke-width="1.8" opacity=".7"/>
+    <!-- 前端金属压环 -->
+    <path d="M103.5 20.7 A83 83 0 0 1 37.3 172.9 L16.5 159.5 A79 79 0 0 0 79.5 14.7 Z"
+          fill="url(#metalRing)" stroke="#3a4046" stroke-width="1.4"/>
+    <!-- 对焦距离窗（随镜筒透视放置于可见环带上） -->
+    <g id="distance-window" transform="translate(147 143) rotate(23.5)">
+      <rect x="-34" y="-12" width="68" height="24" rx="5" fill="#0c0f12" stroke="#5a6167" stroke-width="1.5"/>
+      <g stroke="#c9d2d8" stroke-width="1.4">
+        <path d="M-22 -5 V2"/><path d="M-11 -7 V3"/><path d="M0 -8 V4"/><path d="M11 -7 V3"/><path d="M22 -5 V2"/>
+      </g>
+      <text x="0" y="10" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="7"
+            fill="#8fa0ab">0.45  0.7  1.5  3  INF</text>
+    </g>
+    <!-- 镜头规格字样（沿筒身可见环带方向） -->
+    <text transform="translate(126 116) rotate(23.5)" font-family="Helvetica,Arial,sans-serif" font-size="10"
+          letter-spacing="1.1" fill="#aeb8bf">AURIGA 24-70mm 1:2.8</text>
+    <!-- 卡口金属环（贴于机身前脸；远半侧被镜筒遮挡 → 只画可见半环） -->
+    <g id="mount-flange">
+      <path d="M228.7 54.5 A102 102 0 0 1 147.3 241.5 L152.9 228.7 A88 88 0 0 0 223.1 67.3 Z"
+            fill="url(#metalRing)" stroke="#3a4046" stroke-width="1.6"/>
+      <path d="M232.4 48.3 A106 106 0 0 1 143.6 247.7" fill="none" stroke="#3a4046" stroke-width="3"/>
+      <g stroke="#5f6970" stroke-width="2.6">
+        <path d="M222 62 L214 59"/><path d="M165 232 L158 226"/><path d="M212 214 L204 210"/>
+      </g>
+    </g>
+    <!-- 前组镜片：同心圆 + 新月高光 + 流动反光（玻璃质感） -->
+    <g id="front-element" transform="translate(48 87.1)">
+      <circle cx="0" cy="0" r="72" fill="url(#metalRing)" stroke="#59616a" stroke-width="1.4"/>
+      <circle cx="0" cy="0" r="65" fill="#0d1a1f"/>
+      <circle cx="0" cy="0" r="70" fill="url(#glassG)"/>
+      <circle cx="0" cy="0" r="70" fill="none" stroke="#1e3a42" stroke-width="2.4"/>
+      <circle cx="0" cy="0" r="56" fill="none" stroke="#2c525c" stroke-width="1.6" opacity=".8"/>
+      <circle cx="0" cy="0" r="41" fill="none" stroke="#2c525c" stroke-width="1.4" opacity=".7"/>
+      <circle cx="0" cy="0" r="24" fill="none" stroke="#2c525c" stroke-width="1.2" opacity=".6"/>
+      <path d="M-50 -33 C-38 -55 -13 -65 8 -61 C-19 -53 -41 -33 -47 -11 Z" fill="url(#glassCrescent)"/>
+      <ellipse cx="25" cy="29" rx="15" ry="6.5" fill="#7fd4c9" opacity=".35" transform="rotate(28 25 29)"/>
+      <g clip-path="url(#glassClip)">
+        <path d="M-88 20 C-58 -8 -28 -22 6 -30 L30 -46 C-6 -34 -42 -12 -72 34 Z" fill="#bfeee6" opacity=".26">
+          <animateTransform attributeName="transform" type="translate" values="-28 28;28 -28;-28 28"
+                            dur="7s" repeatCount="indefinite" calcMode="spline" keySplines=".4 0 .6 1;.4 0 .6 1"/>
+        </path>
+      </g>
+      <circle cx="0" cy="0" r="70" fill="none" stroke="#05080b" stroke-width="3.5"/>
+    </g>
+  </g>
+
+  <!-- ---- 边缘高光与底部 AO ---- -->
+  <path d="M-36 37.5 L244 -14.5" stroke="#5f6970" stroke-width="1.8" opacity=".45"/>
+  <path d="M258 38 L358 38" stroke="#5f6970" stroke-width="1.4" opacity=".3"/>
+  <path d="M-70 76 L-70 226" stroke="#565f66" stroke-width="1.6" opacity=".35"/>
+  <path d="M36 250 L36 262 L-38 262 Q-72 262 -72 228" fill="none" stroke="#05070a" stroke-width="3" opacity=".7"/>
+</g>
+
+<!-- 说明角标 -->
+<text x="34" y="750" font-family="Helvetica,Arial,sans-serif" font-size="13" letter-spacing="2"
+      fill="#8d979f">AURIGA PX-9000 · 3/4 VIEW · 点击模式转盘可转动 · 反光随光流动</text>
+</svg>
+</div>
+</body>
+</html>

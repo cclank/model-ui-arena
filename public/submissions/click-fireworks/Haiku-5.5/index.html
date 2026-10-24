@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>点击放烟花</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: #03040f; }
+  body {
+    font-family: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    color: #f4f2ff; cursor: crosshair; touch-action: none;
+    user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #fx { pointer-events: none; }
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1; pointer-events: none;
+    padding: calc(env(safe-area-inset-top) + 22px) 16px 0; text-align: center;
+  }
+  h1 {
+    font-size: 24px; font-weight: 600; letter-spacing: .32em; padding-left: .32em;
+    text-shadow: 0 0 18px rgba(255, 180, 110, .65);
+  }
+  .hint { margin-top: 10px; font-size: 14px; color: #aeb7de; transition: opacity 1.2s ease; }
+  .hint.gone { opacity: 0; }
+  .hud {
+    position: fixed; z-index: 1; left: 16px; bottom: calc(env(safe-area-inset-bottom) + 18px);
+    padding: 7px 14px; border-radius: 999px; pointer-events: none;
+    background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .16);
+    font-size: 14px; color: #dfe3fb; font-variant-numeric: tabular-nums;
+  }
+  .hud b { color: #ffd98a; font-weight: 600; }
+  @media (max-width: 480px) { h1 { font-size: 21px; } .hint { font-size: 13px; } }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<canvas id="fx"></canvas>
+<header>
+  <h1>点击放烟花</h1>
+  <p class="hint" id="hint">点击夜空任意位置，绽放一朵烟花</p>
+</header>
+<div class="hud">已绽放 <b id="count">0</b> 朵</div>
+<script>
+(() => {
+  const bgEl = document.getElementById('bg'), fxEl = document.getElementById('fx');
+  const bg = bgEl.getContext('2d'), fx = fxEl.getContext('2d');
+  const hint = document.getElementById('hint'), countEl = document.getElementById('count');
+  const TAU = Math.PI * 2, GRAVITY = 62, DRAG = 1.6, MAX_PARTS = 1500;
+  const rockets = [], parts = [], flashes = [];
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  let W = 0, H = 0, fired = 0, last = 0, raf = 0, resizeTimer = 0;
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    for (const c of [bgEl, fxEl]) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+    bg.setTransform(dpr, 0, 0, dpr, 0, 0);
+    fx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawSky();
+  }
+
+  function drawSky() {
+    const sky = bg.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, '#02030c'); sky.addColorStop(0.55, '#0b1131'); sky.addColorStop(1, '#2a1846');
+    bg.fillStyle = sky; bg.fillRect(0, 0, W, H);
+    bg.fillStyle = '#fff';
+    for (let i = Math.round(W * H / 2600); i > 0; i--) {
+      bg.globalAlpha = rnd(0.25, 0.9);
+      bg.beginPath(); bg.arc(rnd(0, W), rnd(0, H * 0.75), rnd(0.3, 1.2), 0, TAU); bg.fill();
+    }
+    bg.globalAlpha = 1;
+    const glow = bg.createRadialGradient(W / 2, H, 0, W / 2, H, W * 0.85);
+    glow.addColorStop(0, 'rgba(255, 150, 120, .3)'); glow.addColorStop(1, 'rgba(255, 150, 120, 0)');
+    bg.fillStyle = glow; bg.fillRect(0, 0, W, H);
+    for (let x = -4; x < W;) {
+      const bw = rnd(26, 58), bh = rnd(26, Math.min(170, H * 0.22));
+      bg.fillStyle = '#070816'; bg.fillRect(x, H - bh, bw, bh);
+      bg.fillStyle = 'rgba(255, 206, 120, .85)';
+      for (let wy = H - bh + 8; wy < H - 6; wy += 9)
+        for (let wx = x + 5; wx < x + bw - 7; wx += 8)
+          if (Math.random() < .2) bg.fillRect(wx, wy, 3, 4);
+      x += bw + rnd(2, 6);
+    }
+  }
+
+  function launch(x, y) {
+    const sx = x + rnd(-24, 24), sy = H + 6;
+    rockets.push({ sx, sy, tx: x, ty: y, t: 0, d: Math.min(0.95, 0.28 + Math.hypot(x - sx, y - sy) / 1400) });
+    kick();
+  }
+
+  function burst(x, y) {
+    const hue = rnd(0, 360), mode = Math.random(), V = rnd(140, 340), n = Math.round(rnd(90, 130));
+    const ring = Math.random() < .3;
+    flashes.push({ x, y, t: 0, h: hue });
+    for (let i = 0; i < n; i++) {
+      const a = ring ? (i / n) * TAU : rnd(0, TAU);
+      const v = V * (ring ? rnd(.96, 1.04) : rnd(.5, 1));
+      const h = mode < .45 ? hue + rnd(-14, 14) : mode < .75 ? hue + (Math.random() < .5 ? 0 : 150) : rnd(0, 360);
+      parts.push({
+        x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, age: 0, life: rnd(2.6, 3.6),
+        r: rnd(1.8, 2.8), tw: Math.random() < .35 ? rnd(10, 24) : 0, ph: rnd(0, TAU),
+        c: `hsl(${(h + 360) % 360} 100% ${rnd(66, 78)}%)`
+      });
+    }
+  }
+
+  function spark(x, y) {
+    parts.push({ x, y, vx: rnd(-16, 16), vy: rnd(-6, 20), age: 0, life: rnd(.3, .6), r: rnd(.8, 1.5), tw: 0, ph: 0, c: 'hsl(42 100% 82%)' });
+  }
+
+  function kick() { if (!raf) raf = requestAnimationFrame(step); }
+
+  function step(now) {
+    raf = 0;
+    if (!rockets.length && !parts.length && !flashes.length) { fx.clearRect(0, 0, W, H); last = 0; return; }
+    const dt = last ? Math.min(0.033, (now - last) / 1000) : 0.016;
+    last = now;
+    fx.globalCompositeOperation = 'destination-out';
+    fx.fillStyle = `rgba(0, 0, 0, ${1 - Math.pow(0.78, dt * 60)})`;
+    fx.fillRect(0, 0, W, H);
+    fx.globalCompositeOperation = 'lighter';
+    const damp = Math.exp(-DRAG * dt);
+
+    for (let i = rockets.length - 1; i >= 0; i--) {
+      const r = rockets[i];
+      r.t += dt;
+      const p = Math.min(1, r.t / r.d), e = 1 - (1 - p) * (1 - p);
+      const x = r.sx + (r.tx - r.sx) * e, y = r.sy + (r.ty - r.sy) * e;
+      if (p >= 1) { burst(r.tx, r.ty); rockets.splice(i, 1); continue; }
+      if (Math.random() < .8) spark(x, y);
+      fx.fillStyle = '#fff8e0';
+      fx.beginPath(); fx.arc(x, y, 2.2, 0, TAU); fx.fill();
+    }
+
+    let n = 0;
+    for (let i = 0; i < parts.length; i++) {
+      const q = parts[i];
+      q.age += dt;
+      if (q.age >= q.life) continue;
+      q.vx *= damp; q.vy = q.vy * damp + GRAVITY * dt;
+      q.x += q.vx * dt; q.y += q.vy * dt;
+      const f = 1 - q.age / q.life;
+      let a = Math.min(1, f * 2.2);
+      if (q.tw) a *= .55 + .45 * Math.sin(q.age * q.tw + q.ph);
+      fx.globalAlpha = a; fx.fillStyle = q.c;
+      fx.beginPath(); fx.arc(q.x, q.y, q.r * (.5 + .5 * f), 0, TAU); fx.fill();
+      parts[n++] = q;
+    }
+    parts.length = n;
+    if (n > MAX_PARTS) parts.splice(0, n - MAX_PARTS);
+    fx.globalAlpha = 1;
+
+    for (let i = flashes.length - 1; i >= 0; i--) {
+      const f = flashes[i];
+      f.t += dt;
+      if (f.t >= .35) { flashes.splice(i, 1); continue; }
+      const k = 1 - f.t / .35, R = 12 + 56 * (1 - k);
+      const g = fx.createRadialGradient(f.x, f.y, 0, f.x, f.y, R);
+      g.addColorStop(0, `hsla(${f.h}, 100%, 88%, ${.75 * k})`);
+      g.addColorStop(1, `hsla(${f.h}, 100%, 70%, 0)`);
+      fx.fillStyle = g;
+      fx.beginPath(); fx.arc(f.x, f.y, R, 0, TAU); fx.fill();
+    }
+    raf = requestAnimationFrame(step);
+  }
+
+  function fire(x, y) {
+    launch(x, y);
+    countEl.textContent = ++fired;
+    hint.classList.add('gone');
+  }
+  addEventListener('pointerdown', e => fire(e.clientX, e.clientY));
+  addEventListener('keydown', e => {
+    if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); fire(rnd(.15, .85) * W, rnd(.12, .6) * H); }
+  });
+  addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(resize, 150); });
+  resize();
+})();
+</script>
+</body>
+</html>

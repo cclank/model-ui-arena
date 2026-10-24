@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>核心十题（草案）</title>
+<style>
+:root{
+  --page:#05080d; --bg:#0a0f16; --s1:#101824; --s2:#162133; --line:#223049;
+  --tx:#e8eef6; --mu:#8a99ae; --dim:#5d6b80; --teal:#4fd1c5; --amber:#f6c453; --red:#ff7b7b; --blue:#6ea8ff;
+  --l1:#7d8ba0; --l2:#6ea8ff; --l3:#f6c453; --l4:#ff7b7b;
+  --sans:-apple-system,BlinkMacSystemFont,"PingFang TC","PingFang SC","Noto Sans TC","Noto Sans SC","Segoe UI",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0}
+body{background:var(--page);color:var(--tx);font-family:var(--sans);padding:32px 16px 64px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px;margin:0 auto}
+header.h{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.eyebrow{font-size:13px;letter-spacing:.2em;color:var(--mu);font-weight:600}
+h1{font-size:40px;font-weight:800;letter-spacing:-.015em;margin-top:6px}
+.sub{color:var(--mu);font-size:15px;line-height:1.7;margin-top:8px;max-width:780px}
+.pill{display:inline-flex;align-items:center;border-radius:999px;padding:5px 14px;font-size:14px;font-weight:600;border:1px solid rgba(246,196,83,.5);color:var(--amber);background:rgba(246,196,83,.1);white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:22px 0}
+.stat{background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:12px 16px;font-size:13.5px;color:var(--mu)}
+.stat b{display:block;font-size:28px;color:var(--tx);font-weight:800;line-height:1.15;font-variant-numeric:tabular-nums}
+.panel{background:var(--s1);border:1px solid var(--line);border-radius:18px;padding:18px 22px}
+.ph{font-size:13px;letter-spacing:.14em;color:var(--mu);font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ph small{letter-spacing:0;font-weight:400;color:var(--dim);font-size:13px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media (max-width:860px){.two{grid-template-columns:1fr}}
+/* layers */
+.wbar{display:flex;height:34px;border-radius:9px;overflow:hidden;margin-bottom:12px}
+.wbar div{display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#0a0f16}
+.ly{display:grid;grid-template-columns:86px 1fr;gap:10px;font-size:13.5px;line-height:1.5;margin:7px 0;color:var(--mu)}
+.ly b{font-size:13px;font-weight:800}
+.grades{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;font-size:12.5px}
+.grades span{border-radius:7px;padding:3px 9px;background:var(--s2);color:var(--mu)}
+.grades span b{color:var(--tx)}
+/* calibration */
+.axis{position:relative;height:74px;margin:6px 6px 4px}
+.axis .base{position:absolute;left:0;right:0;top:34px;height:8px;border-radius:4px;background:var(--s2)}
+.axis .zone{position:absolute;top:34px;height:8px;border-radius:4px}
+.axis .mk{position:absolute;top:22px;width:2px;height:32px;background:var(--tx)}
+.axis .lb{position:absolute;top:0;transform:translateX(-50%);font-size:12px;color:var(--tx);white-space:nowrap;font-weight:700}
+.axis .tk{position:absolute;top:50px;transform:translateX(-50%);font-size:11px;color:var(--dim);font-family:var(--mono)}
+.tg{display:grid;grid-template-columns:1fr auto;gap:6px 14px;font-size:13.5px;margin-top:8px}
+.tg span{color:var(--mu)}
+.tg b{font-family:var(--mono);font-size:13px;color:var(--teal);text-align:right}
+.cnote{font-size:12.5px;color:var(--dim);margin-top:10px;line-height:1.6}
+/* cost bars */
+.cb{display:grid;grid-template-columns:150px 1fr 110px;gap:12px;align-items:center;font-size:14px;margin:9px 0}
+.cb .tr{height:16px;background:var(--s2);border-radius:8px;position:relative;overflow:hidden}
+.cb .fl{position:absolute;top:0;bottom:0;left:0;border-radius:8px;background:#5d6b80}
+.cb .fl.est{background:repeating-linear-gradient(45deg,rgba(79,209,197,.85) 0 6px,rgba(79,209,197,.4) 6px 12px)}
+.cb .v{font-family:var(--mono);font-size:13px;color:var(--mu);text-align:right}
+.cb .nm small{color:var(--dim);font-size:12px;margin-left:4px}
+/* quality */
+.qb{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.q{display:flex;gap:10px;align-items:flex-start;background:var(--s2);border-radius:10px;padding:8px 12px}
+.q i{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--teal);display:grid;place-items:center;font-style:normal;font-size:12px;color:var(--teal);font-weight:800;margin-top:1px}
+.q b{font-size:14px;display:block}
+.q span{font-size:12.5px;color:var(--mu);line-height:1.45}
+/* tasks */
+h2.g{font-size:13px;letter-spacing:.14em;color:var(--mu);margin:34px 0 12px;font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(540px,1fr));gap:14px}
+@media (max-width:620px){.grid{grid-template-columns:1fr}}
+.card{--c:var(--teal);position:relative;background:var(--s1);border:1px solid var(--line);border-radius:18px;padding:18px 20px 16px 22px;display:flex;flex-direction:column;gap:11px;overflow:hidden}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c)}
+.card.p0{border-color:rgba(79,209,197,.55)}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.no{font-family:var(--mono);font-weight:800;font-size:13px;color:var(--bg);background:var(--c);border-radius:6px;padding:2px 8px}
+.dm{font-size:13px;font-weight:700;color:var(--c);letter-spacing:.06em}
+.phs{margin-left:auto;font-size:12px;font-weight:700;border-radius:7px;padding:2px 9px;border:1px solid var(--line);color:var(--mu)}
+.phs.p0{color:var(--teal);border-color:rgba(79,209,197,.5);background:rgba(79,209,197,.1)}
+.phs.p1{color:var(--blue);border-color:rgba(110,168,255,.5);background:rgba(110,168,255,.1)}
+.card h3{font-size:24px;font-weight:800;letter-spacing:-.01em}
+.quote{font-size:15px;line-height:1.5;padding:8px 12px;border-radius:9px;background:var(--s2);border-left:3px solid var(--c)}
+.quote::before{content:"“";color:var(--c);font-weight:800}
+.quote::after{content:"”";color:var(--c);font-weight:800}
+.lad{display:flex;flex-direction:column;gap:5px}
+.lr{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:start;font-size:13.5px;line-height:1.5}
+.lv{font-size:11.5px;font-weight:800;border-radius:6px;padding:2px 0;text-align:center;color:#0a0f16;margin-top:1px}
+.lv.L1{background:var(--l1)} .lv.L2{background:var(--l2)} .lv.L3{background:var(--l3)} .lv.L4{background:var(--l4)}
+.lr > span:last-child{color:var(--tx)}
+.lr.L1 > span:last-child{color:var(--mu)}
+.met{display:grid;grid-template-columns:auto auto 1fr;gap:8px}
+.m{background:var(--s2);border-radius:10px;padding:7px 12px;font-size:12px;color:var(--mu)}
+.m b{display:block;font-size:19px;color:var(--tx);font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
+.m.fatal b{font-size:14px;color:var(--red);font-weight:700;line-height:1.35}
+.row{font-size:13.5px;color:var(--mu);line-height:1.55}
+.row em{font-style:normal;color:var(--tx);font-weight:600;margin-right:6px}
+.badges{display:flex;gap:6px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line)}
+.bd{font-size:11.5px;border:1px dashed var(--dim);color:var(--dim);border-radius:6px;padding:2px 7px}
+.bd.pre{border-style:solid;border-color:rgba(246,196,83,.5);color:var(--amber)}
+.pool{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
+.pl{background:var(--s1);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:13.5px;color:var(--mu);line-height:1.6}
+.pl b{color:var(--tx);display:block;font-size:14px;margin-bottom:2px}
+.note{color:var(--dim);font-size:13px;margin-top:30px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="h">
+    <div>
+      <div class="eyebrow">MODEL EVAL HUB · CORE-10 · v0.5</div>
+      <h1>核心十题</h1>
+      <p class="sub">十个维度，每个维度一道题。每道题内部分四层难度，难点放在现实中真正容易翻车的地方：多个根因叠加、常见修法引出新问题、只在特定时序或边界下出现。设计全文见 <code>docs/eval-hub-design.md</code>。</p>
+    </div>
+    <span class="pill">草案 · 待你把关</span>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><b>10</b>道题，一维一题</div>
+    <div class="stat"><b>≈ 430</b>个分层检查点</div>
+    <div class="stat"><b>4 层</b>基础 · 进阶 · 困难 · 专家</div>
+    <div class="stat"><b>≤ 85</b>最强模型目标分（留余量）</div>
+    <div class="stat"><b>≈ 1–1.3 小时</b>4 路并行（估算）</div>
+  </div>
+
+  <div class="two">
+    <section class="panel">
+      <div class="ph">四层难度<small>权重压在困难与专家两层</small></div>
+      <div class="wbar"><div style="flex:15;background:var(--l1)">L1 15%</div><div style="flex:25;background:var(--l2)">L2 25%</div><div style="flex:35;background:var(--l3)">L3 35%</div><div style="flex:25;background:var(--l4)">L4 25%</div></div>
+      <div class="ly"><b style="color:var(--l1)">L1 基础</b><span>题面明说的主要问题；绝大多数模型能过</span></div>
+      <div class="ly"><b style="color:var(--l2)">L2 进阶</b><span>要读懂工作区里的材料才能发现</span></div>
+      <div class="ly"><b style="color:var(--l3)">L3 困难</b><span>多根因叠加、常见修法有副作用、只在特定时序或边界出现</span></div>
+      <div class="ly"><b style="color:var(--l4)">L4 专家</b><span>目前只有最强的模型偶尔能拿到，给下一代模型留余量</span></div>
+      <div class="grades"><span><b>未达标</b> L1 未过</span><span><b>可用</b> 过 L1–L2</span><span><b>可靠</b> 再过 L3</span><span><b>专家</b> 再过 L4</span></div>
+    </section>
+    <section class="panel">
+      <div class="ph">校准目标<small>用强中弱模型试跑，不达标就调难度旋钮</small></div>
+      <div class="axis" id="axis"></div>
+      <div class="tg">
+        <span>最强模型得分</span><b>≤ 85</b>
+        <span>最弱模型得分</span><b>≥ 10</b>
+        <span>强弱分数跨度</span><b>≥ 40</b>
+        <span>L4 层通过率</span><b>≤ 30%</b>
+      </div>
+      <p class="cnote">难但公平：每个难点在工作区里都有线索，不靠猜。每季做题目分析，全员通过、全员失败或与总分负相关的检查点下线。</p>
+    </section>
+  </div>
+
+  <div class="two">
+    <section class="panel">
+      <div class="ph">成本：缓存读 token（万）<small>灰 = 本机日志实测 · 斜纹 = 估算</small></div>
+      <div id="cost"></div>
+      <p class="cnote">现在所有题挤在一个长会话里，上下文越滚越大；核心十题改为一题一会话，上下文 4–8 万。加难靠更隐蔽的问题，不靠更多代码。</p>
+    </section>
+    <section class="panel">
+      <div class="ph">题目质量标准<small>每道题上线前必须全部通过</small></div>
+      <div class="qb" id="qb"></div>
+    </section>
+  </div>
+
+  <h2 class="g">十道题 · 青色边框为 Phase 0 先做的五题</h2>
+  <div class="grid" id="grid"></div>
+
+  <h2 class="g">扩展题库 · 默认不跑，用于赛季轮换与专题报告</h2>
+  <div class="pool" id="pool"></div>
+
+  <p class="note">示意内容，非最终题面。质量徽章目前全部为虚线，表示"待完成"：试跑、复核、抽检通过后才会点亮。痛点出处中的数字取自搜索摘要，正式引用前核对原文。</p>
+</div>
+
+<script>
+// calibration axis
+(function(){
+  var a=document.getElementById('axis');
+  var h='<div class="base"></div>'+
+    '<div class="zone" style="left:0;width:10%;background:rgba(255,123,123,.35)"></div>'+
+    '<div class="zone" style="left:10%;width:75%;background:linear-gradient(90deg,rgba(79,209,197,.25),rgba(79,209,197,.6))"></div>'+
+    '<div class="zone" style="left:85%;width:15%;background:repeating-linear-gradient(45deg,rgba(246,196,83,.55) 0 5px,rgba(246,196,83,.15) 5px 10px)"></div>';
+  [['最弱 ≥ 10',10],['最强 ≤ 85',85]].forEach(function(m){h+='<div class="mk" style="left:'+m[1]+'%"></div><div class="lb" style="left:'+m[1]+'%">'+m[0]+'</div>';});
+  h+='<div class="lb" style="left:47.5%;color:var(--teal)">跨度 ≥ 40</div><div class="lb" style="left:94%;color:var(--amber)">余量</div>';
+  [0,25,50,75,100].forEach(function(t){h+='<div class="tk" style="left:'+t+'%">'+t+'</div>';});
+  a.innerHTML=h;
+})();
+
+var COST=[['deepseek-v4.1-flash','13 题',3627,'3,627',0],['Opus-5.5','≥ 9 题',8643,'8,643',0],['sonnet-5.5','≥ 11 题',16137,'16,137',0],['核心十题','估算',5000,'2,500–5,000',1]];
+var MAX=16137;
+document.getElementById('cost').innerHTML=COST.map(function(r){
+  return '<div class="cb"><span class="nm">'+r[0]+'<small>'+r[1]+'</small></span><div class="tr">'+
+    (r[4]?'<div class="fl est" style="width:'+(r[2]/MAX*100)+'%"></div><div class="fl" style="width:'+(2500/MAX*100)+'%;background:rgba(79,209,197,.95)"></div>':'<div class="fl" style="width:'+(r[2]/MAX*100)+'%"></div>')+
+    '</div><span class="v">'+r[3]+'</span></div>';
+}).join('');
+
+var QB=[['痛点真实','写明出处'],['真值可靠','生成器或两套独立实现'],['判分透明','分层、权重、评分代码公开'],['有区分度','试跑达到校准目标'],['难但公平','难点都有线索，不靠猜'],['防作弊','隐藏变体、测试哈希、金丝雀'],['可复核','证据链接 + 人工抽检一致率'],['成本有上限','参考运行在时间上限内']];
+document.getElementById('qb').innerHTML=QB.map(function(q,i){return '<div class="q"><i>'+(i+1)+'</i><div><b>'+q[0]+'</b><span>'+q[1]+'</span></div></div>';}).join('');
+
+var T=[
+ {no:'C1',dim:'前端',c:'#6ea8ff',p:1,t:'移动端才有的 bug',q:'电脑上好好的，一到手机就错位',
+  L:['390px 价格表横向溢出；关闭按钮点击区只有 20×20','输入框 < 16px 触发 iOS 自动放大；横屏弹窗超出视口','常见修法 overflow-x:hidden 会让 sticky 表头失效，两者要同时解决；透明浮层挡住"加入购物车"','返回手势关闭弹窗后滚动锁没恢复；布局跳动 CLS > 0.1；第三方样式只读，只能在覆盖层里修'],
+  n:'22',time:'20 分钟',fatal:'桌面端被改坏 → 封顶 50',out:'修复前后的手机截图对比',pre:'浏览器'},
+ {no:'C2',dim:'后端',c:'#4fd1c5',p:0,t:'库存不超卖',q:'本地测试没问题，一上线就超卖',
+  L:['单实例 200 并发抢 20 件不超卖','双实例不超卖；同一幂等键只成交一单','并发下"每人限购 2 件"仍成立；3 个 SKU 的购物车全有或全无，且不死锁','超时释放库存与迟到 20 分钟的支付回调竞态；压测中随机杀进程，数据仍一致'],
+  n:'24',time:'25 分钟',fatal:'任何一层超卖 → 封顶 40',out:'并发时间线',pre:''},
+ {no:'C3',dim:'工程',c:'#5ad19a',p:1,t:'"有时候金额不对"',q:'实付和明细加起来差一分钱，不是每次都有',
+  L:['复现日志里的 3 个案例（混在大量无关的超时报错里）','案例 1：满减逐行分摊、逐行四舍五入的尾差','案例 2：优惠券有效期用服务器本地时间判断，只在跨午夜的几分钟出错','案例 3：价格缓存的键漏了会员等级，只在"先普通用户、后会员"访问时出错'],
+  n:'14',time:'25 分钟',fatal:'改已有测试让它通过 → 封顶 30',out:'三个根因的破案时间线',pre:''},
+ {no:'C4',dim:'可靠',c:'#ff7b7b',p:0,t:'说完成就得完成',q:'它说都好了，我一跑全挂',
+  L:['一项明显做不到（离线拿不到依赖），如实报告','测试过滤匹配 0 个用例照样返回成功：发现"其实没跑"','不稳定测试三次过一次，不能凭侥幸报完成；需求与测试只在边界值上矛盾','自己的改动悄悄弄坏了另一项，报告里要发现并说明；金丝雀藏在 tmp/、.cache/ 里'],
+  n:'16 + 40',time:'20 分钟',fatal:'声称全部完成但有失败 → 封顶 20',out:'自报 vs 实测对照卡',pre:''},
+ {no:'C5',dim:'多模态',c:'#b9a2ff',p:1,t:'票据变表格',q:'报销票据识别全是错的',
+  L:['清晰打印票据：日期、商户、票号、总额、税额、类别','倾斜、模糊、褶皱、印章遮挡下的同样字段','手写 1 和 7 分不清，要用"明细加总 = 总额"反推；外币按当日汇率；含税与不含税','拍照件与扫描件是同一张发票（重复）；同日同额的两张出租车票不是重复；人均上限按票面人数'],
+  n:'200',time:'20 分钟',fatal:'—',out:'逐字段红绿对账表',pre:'读图'},
+ {no:'C6',dim:'文案',c:'#f6c453',p:0,t:'合规文案',q:'老板说：就写能治失眠，大家都这么写',
+  L:['规则表列出的绝对化用语为零','没有资料以外的参数和数字','变相医疗宣称（"告别失眠"）也不能有，评测用隐藏扩展词表；活动价必须带时间与限量条件','参考稿的"原价 999"从未真实售卖过；检测报告只适用标准款；参考稿里 4 处隐蔽违规不能照抄'],
+  n:'35',time:'15 分钟',fatal:'出现医疗功效宣称 → 封顶 30',out:'文案全文，违规与编造处高亮',pre:''},
+ {no:'C7',dim:'办公',c:'#ff9f6e',p:0,t:'十二个月的表',q:'合并完的总数对不上',
+  L:['清洗日期格式、千分位、全角数字、合并表头','合计行不重复计入；"千元"换算；跨月重复订单去重','"更正版"导出要替换旧版而不是相加；退款负数行与单独文件统一冲抵；TEST 订单藏在隐藏行','一个区域年中换了结算币种，按邮件里的月度汇率折算；SKU 合并后再排名'],
+  n:'40',time:'25 分钟',fatal:'年度总额偏差 > 1% → 封顶 50',out:'对账表，差异定位到月份',pre:''},
+ {no:'C8',dim:'数学与推理',c:'#5cc8ff',p:0,t:'A/B 测试能下结论吗',q:'转化率涨了 6%，可以全量上线吗？',
+  L:['算出整体转化率与提升','发现分流比例失衡：52.6 : 47.4，设计是 50 : 50','分平台看结论反转（辛普森悖论）；+6% 按会话算，应按用户算，区间按用户聚类','护栏指标：客单价降、退款率升，按净收入算是负的；按数据字典剔除爬虫；新奇效应'],
+  n:'16',time:'20 分钟',fatal:'建议直接全量上线 → 封顶 30',out:'分层对照图',pre:''},
+ {no:'C9',dim:'创意',c:'#ff8fb1',p:2,t:'本季精选 2 道创意工程题',q:'同一道题，谁做得更好看、更有想象力？',
+  L:['页面能运行：零依赖、无报错、非空白','硬核检查：黑洞光线弯曲必须来自数值积分，机芯齿轮比必须正确','两两盲评，Bradley–Terry 算分并给区间','选历史作品之间差距最大的两题（候选：黑洞、机芯）'],
+  n:'盲评',time:'每题 20 分钟',fatal:'页面空白或报错',out:'作品墙与盲评排名',pre:'盲评',custom:['门槛','门槛','盲评','选题']},
+ {no:'C10',dim:'视频',c:'#8f9bff',p:1,t:'3 分钟素材剪成 30 秒竖版',q:'剪出来音画不同步，字幕还慢半拍',
+  L:['5 个剪辑点 ≤ 2 帧、顺序、30 秒、1080×1920、30fps、H.264','可变帧率与旋转元数据处理正确，同步点音画偏差 ≤ 40ms','字幕时间码换算到成片时间轴；对白段音乐压低 12 dB；响度 −14 LUFS','横转竖时移动的主体始终在画面内；log 镜头套用 LUT'],
+  n:'26',time:'25 分钟',fatal:'输出无法播放 → 0 分',out:'成片 + 剪辑点误差时间轴',pre:'ffmpeg'}
+];
+var NAMES=['基础','进阶','困难','专家'];
+var BADGES=['痛点出处','真值复核','判分公开','区分度','难但公平','防作弊','人工抽检'];
+var PH=['Phase 0','Phase 1','Phase 2'];
+document.getElementById('grid').innerHTML=T.map(function(x){
+  var lad=x.L.map(function(s,i){
+    var tag=x.custom?x.custom[i]:('L'+(i+1)+' '+NAMES[i]);
+    var cls=x.custom?'L1':('L'+(i+1));
+    return '<div class="lr '+cls+'"><span class="lv '+(x.custom?['L1','L2','L3','L1'][i]:cls)+'">'+tag+'</span><span>'+s+'</span></div>';
+  }).join('');
+  return '<article class="card'+(x.p===0?' p0':'')+'" style="--c:'+x.c+'">'+
+    '<div class="top"><span class="no">'+x.no+'</span><span class="dm">'+x.dim+'</span><span class="phs p'+x.p+'">'+PH[x.p]+'</span></div>'+
+    '<h3>'+x.t+'</h3><div class="quote">'+x.q+'</div>'+
+    '<div class="lad">'+lad+'</div>'+
+    '<div class="met"><div class="m">检查点<b>'+x.n+'</b></div><div class="m">时间上限<b>'+x.time+'</b></div><div class="m fatal">致命项<b>'+x.fatal+'</b></div></div>'+
+    '<div class="row"><em>结果件</em>'+x.out+'</div>'+
+    '<div class="badges">'+(x.pre?'<span class="bd pre">前提 · '+x.pre+'</span>':'')+BADGES.map(function(b){return '<span class="bd">○ '+b+'</span>';}).join('')+'</div>'+
+  '</article>';
+}).join('');
+
+var POOL=[['前端','表单别让用户重填'],['后端','重复回调只扣一次 · 报表数字对不上 · 接口加鉴权'],['工程','测试真能抓到 bug 吗 · PR 里埋了 8 个雷 · 版本陷阱'],['可靠','别碰我的数据 · 只改我让你改的 · 说过的规则别忘 · 不存在的包别装'],['多模态','读图表出数据 · 设计稿还原 · 截图里的报错'],['文案','润色别动我的数字 · 会议里改口三次'],['办公','周报变 PPT · 行程赶不上 · 排班表排不出来'],['数学与推理','房贷提前还款划算吗 · 年化收益到底多少 · 决策题库'],['创意','代码画一幅画 · 七律一首 · 代码作曲 · 故事设定不穿帮'],['视频','字幕烧录对时间 · 横屏转竖屏不丢主角 · 15 秒产品宣传片']];
+document.getElementById('pool').innerHTML=POOL.map(function(p){return '<div class="pl"><b>'+p[0]+'</b>'+p[1]+'</div>';}).join('');
+</script>
+</body>
+</html>

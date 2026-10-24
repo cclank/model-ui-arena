@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>日出 · 日落 · 月相</title>
+<style>
+  :root { --ink: #eef2ff; --dim: rgba(238, 242, 255, .62); --gold: #f7c95c; --line: rgba(255, 255, 255, .14); --glass: rgba(6, 10, 26, .46); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 18px 12px 32px; background: #060912; color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
+  .card { width: 100%; min-width: 0; max-width: 760px; border-radius: 24px; overflow: hidden; background: #0d1226; box-shadow: 0 32px 80px rgba(0, 0, 0, .6), inset 0 0 0 1px var(--line); }
+  .stage { position: relative; }
+  .top { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 18px 22px 0; }
+  h1 { font: 600 20px/1.2 "Iowan Old Style", "Palatino Linotype", "Songti SC", Georgia, serif; letter-spacing: .08em; text-shadow: 0 1px 12px rgba(0, 0, 0, .35); }
+  .sub { font-size: 13px; color: var(--dim); text-align: right; text-shadow: 0 1px 8px rgba(0, 0, 0, .35); }
+  .sky { display: block; width: 100%; height: auto; }
+  .sky text { font-family: ui-sans-serif, system-ui, sans-serif; }
+  .panel { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 10px; padding: 14px 18px 16px; background: var(--glass); }
+  .tile { padding: 12px 10px 10px; border-radius: 14px; background: rgba(255, 255, 255, .05); border: 1px solid var(--line); min-width: 0; }
+  .tile b { display: block; font: 600 11px/1 ui-sans-serif, system-ui, sans-serif; color: var(--dim); letter-spacing: .14em; margin-bottom: 8px; }
+  .tile span { font: 500 26px/1 "Iowan Old Style", "Palatino Linotype", Georgia, serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .moon { display: grid; grid-template-columns: 64px 1fr; gap: 10px; align-items: center; padding: 8px 14px 8px 8px; border-radius: 14px; background: rgba(255, 255, 255, .05); border: 1px solid var(--line); }
+  .moon svg { width: 64px; height: 64px; }
+  .moon strong { display: block; font-size: 17px; font-weight: 600; white-space: nowrap; }
+  .moon small { color: var(--dim); font-size: 12px; white-space: nowrap; }
+  .result { padding: 10px 22px; font-size: 13px; color: var(--dim); border-top: 1px solid var(--line); background: var(--glass); font-variant-numeric: tabular-nums; }
+  .controls { padding: 14px 18px 20px; display: grid; gap: 12px; background: #0b1020; }
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; }
+  .presets button { font: 500 13px/1 ui-sans-serif, system-ui, sans-serif; color: var(--ink); background: rgba(255, 255, 255, .07); border: 1px solid var(--line); border-radius: 999px; padding: 8px 13px; cursor: pointer; }
+  .presets button:hover, .presets button.on { background: var(--gold); color: #1a1405; border-color: var(--gold); }
+  .fields { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  label { display: grid; gap: 5px; min-width: 0; font-size: 12px; color: var(--dim); }
+  input { width: 100%; min-width: 0; font: 500 15px/1.2 ui-sans-serif, system-ui, sans-serif; color: var(--ink); background: rgba(255, 255, 255, .06); border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; color-scheme: dark; }
+  input[type=range] { padding: 0; height: 32px; accent-color: var(--gold); background: none; border: 0; }
+  .time { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; font-size: 13px; color: var(--dim); }
+  .time output { font: 500 16px/1 "Iowan Old Style", Georgia, serif; color: var(--ink); font-variant-numeric: tabular-nums; min-width: 3.2em; text-align: right; }
+  :is(button, input):focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  @media (max-width: 560px) {
+    .panel { grid-template-columns: 1fr 1fr; }
+    .moon { grid-column: 1 / -1; }
+    .fields { grid-template-columns: 1fr 1fr; }
+    .top { flex-direction: column; align-items: flex-start; gap: 2px; }
+    .sub { text-align: left; }
+    .tile span { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="stage">
+    <header class="top"><h1>日出 · 日落 · 月相</h1><p class="sub" id="where"></p></header>
+    <svg class="sky" viewBox="0 0 600 300" role="img" aria-label="天穹图：当天太阳轨迹、日出正午日落位置与当前太阳位置">
+      <defs>
+        <linearGradient id="skyg" x1="0" y1="0" x2="0" y2="1"><stop id="g1" offset="0" stop-color="#3f8ff5"/><stop id="g2" offset="1" stop-color="#d8ecff"/></linearGradient>
+        <radialGradient id="sung"><stop offset="0" stop-color="#fff7d6"/><stop offset=".4" stop-color="#ffd76a" stop-opacity=".9"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/></radialGradient>
+        <clipPath id="up"><rect x="0" y="0" width="600" height="220"/></clipPath>
+        <clipPath id="down"><rect x="0" y="220" width="600" height="80"/></clipPath>
+      </defs>
+      <rect width="600" height="300" fill="url(#skyg)"/>
+      <g id="stars" fill="#fff"></g>
+      <g id="skymoon"><path id="skymoonpath" fill="#f4f1e6"/></g>
+      <path id="arc" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="1.6" clip-path="url(#up)"/>
+      <path id="arc2" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2" stroke-dasharray="3 5" clip-path="url(#down)"/>
+      <circle id="sunglow" r="36" fill="url(#sung)"/>
+      <circle id="sun" r="9" fill="#fff4c2"/>
+      <rect y="220" width="600" height="80" fill="rgba(4,6,16,.72)"/>
+      <line x1="0" y1="220" x2="600" y2="220" stroke="rgba(255,255,255,.38)"/>
+      <g id="marks" font-size="11" fill="rgba(255,255,255,.78)" text-anchor="middle"></g>
+    </svg>
+  </div>
+  <section class="panel">
+    <div class="tile"><b>日出</b><span id="rise">--:--</span></div>
+    <div class="tile"><b>日落</b><span id="set">--:--</span></div>
+    <div class="tile"><b>昼长</b><span id="len">--</span></div>
+    <div class="tile"><b>正午高度</b><span id="alt">--</span></div>
+    <div class="moon">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <defs><radialGradient id="mg" cx=".38" cy=".34" r=".85"><stop offset="0" stop-color="#fffbea"/><stop offset="1" stop-color="#d6ceb2"/></radialGradient></defs>
+        <circle cx="50" cy="50" r="44" fill="#1a2140" stroke="rgba(255,255,255,.2)"/><path id="moonpath" fill="url(#mg)"/>
+      </svg>
+      <div><strong id="moonname">--</strong><small id="moonk">--</small></div>
+    </div>
+  </section>
+  <p class="result" id="q-result"></p>
+  <section class="controls">
+    <div class="presets" id="presets"></div>
+    <div class="fields">
+      <label>纬度 °<input id="q-lat" type="number" step="0.0001" min="-90" max="90"></label>
+      <label>经度 °<input id="q-lon" type="number" step="0.0001" min="-180" max="180"></label>
+      <label>时区 UTC±h<input id="q-tz" type="number" step="0.5" min="-12" max="14"></label>
+      <label>日期<input id="q-date" type="date"></label>
+    </div>
+    <label class="time">当地时刻<input id="time" type="range" min="0" max="1439" step="1" aria-label="当地时刻"><output id="timeval">12:00</output></label>
+  </section>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id), D2R = Math.PI / 180, R2D = 180 / Math.PI, MS = 864e5, WEEK = "日一二三四五六";
+  const jdOf = (y, m, d, ut) => Date.UTC(y, m - 1, d) / MS + 2440587.5 + ut / 24;
+  // NOAA 太阳算法：几何平黄经、平近点角、中心差、视黄经、黄赤交角、赤纬与时差（Equation of Time）
+  function solar(jd, lon, tz) {
+    const jc = (jd - 2451545) / 36525, L0 = (280.46646 + jc * (36000.76983 + jc * 0.0003032)) % 360, M = 357.52911 + jc * (35999.05029 - 0.0001537 * jc);
+    const e = 0.016708634 - jc * (0.000042037 + 0.0000001267 * jc), omega = (125.04 - 1934.136 * jc) * D2R;
+    const C = Math.sin(M * D2R) * (1.914602 - jc * (0.004817 + 0.000014 * jc)) + Math.sin(2 * M * D2R) * (0.019993 - 0.000101 * jc) + Math.sin(3 * M * D2R) * 0.000289;
+    const appLong = L0 + C - 0.00569 - 0.00478 * Math.sin(omega);
+    const obliq = 23 + (26 + (21.448 - jc * (46.815 + jc * (0.00059 - jc * 0.001813))) / 60) / 60 + 0.00256 * Math.cos(omega);
+    const decl = Math.asin(Math.sin(obliq * D2R) * Math.sin(appLong * D2R)) * R2D, y = Math.tan(obliq / 2 * D2R) ** 2;
+    const eqt = 4 * R2D * (y * Math.sin(2 * L0 * D2R) - 2 * e * Math.sin(M * D2R) + 4 * e * y * Math.sin(M * D2R) * Math.cos(2 * L0 * D2R) - 0.5 * y * y * Math.sin(4 * L0 * D2R) - 1.25 * e * e * Math.sin(2 * M * D2R));
+    return { noon: 720 - 4 * lon - eqt + tz * 60, decl };
+  }
+  function hourAngle(lat, decl) { // 太阳中心 -0.833°（折射 + 视半径）
+    const c = Math.cos(90.833 * D2R) / (Math.cos(lat * D2R) * Math.cos(decl * D2R)) - Math.tan(lat * D2R) * Math.tan(decl * D2R);
+    return c > 1 ? "极夜" : c < -1 ? "极昼" : Math.acos(c) * R2D;
+  }
+  function sunTimes(y, m, d, lat, lon, tz) {
+    const s = solar(jdOf(y, m, d, 12 - tz), lon, tz), h = hourAngle(lat, s.decl);
+    if (typeof h === "string") return { polar: h, ...s };
+    let rise = s.noon - h * 4, set = s.noon + h * 4;
+    for (let i = 0; i < 2; i++) { // 在日出、日落时刻重算赤纬与时差，精度进入 ±1 分钟
+      const a = solar(jdOf(y, m, d, rise / 60 - tz), lon, tz), b = solar(jdOf(y, m, d, set / 60 - tz), lon, tz), ha = hourAngle(lat, a.decl), hb = hourAngle(lat, b.decl);
+      if (typeof ha === "string" || typeof hb === "string") break;
+      rise = a.noon - ha * 4; set = b.noon + hb * 4;
+    }
+    return { rise, set, ...s };
+  }
+  const altitude = (t, lat, decl, noon) => Math.asin(Math.sin(lat * D2R) * Math.sin(decl * D2R) + Math.cos(lat * D2R) * Math.cos(decl * D2R) * Math.cos((t - noon) / 4 * D2R)) * R2D;
+  const norm = (x) => ((x % 360) + 360) % 360;
+  function moon(jd) { // Meeus 第 48 章：月日平距角 D、太阳平近点角 M、月亮平近点角 M′ → 相位角 i → 照亮比例 k；真距角 → 相位比例 p
+    const T = (jd - 2451545) / 36525, D = norm(297.8501921 + 445267.1114034 * T - 0.0018819 * T * T);
+    const M = norm(357.5291092 + 35999.0502909 * T - 0.0001536 * T * T), Mp = norm(134.9633964 + 477198.8675055 * T + 0.0087414 * T * T);
+    const corr = 6.289 * Math.sin(Mp * D2R) - 2.1 * Math.sin(M * D2R) + 1.274 * Math.sin((2 * D - Mp) * D2R) + 0.658 * Math.sin(2 * D * D2R) + 0.214 * Math.sin(2 * Mp * D2R) + 0.11 * Math.sin(D * D2R);
+    return { k: (1 + Math.cos((180 - D - corr) * D2R)) / 2, p: norm(D + corr) / 360 };
+  }
+  function phaseName(p) {
+    const near = (c) => Math.min(Math.abs(p - c), Math.abs(p - c - 1), Math.abs(p - c + 1)) <= 0.03;
+    if (near(0)) return "新月"; if (near(0.25)) return "上弦月"; if (near(0.5)) return "满月"; if (near(0.75)) return "下弦月";
+    return p < 0.25 ? "蛾眉月" : p < 0.5 ? "盈凸月" : p < 0.75 ? "亏凸月" : "残月";
+  }
+  function moonPath(cx, cy, r, p, k) { // 亮面 = 半圆 + 明暗界线椭圆弧；北半球视角，盈月亮面在右
+    const right = p < 0.5, gibbous = k > 0.5, rx = (r * Math.abs(Math.cos(2 * Math.PI * p))).toFixed(2);
+    return `M${cx},${cy - r} A${r},${r} 0 0 ${right ? 1 : 0} ${cx},${cy + r} A${rx},${r} 0 0 ${right === gibbous ? 1 : 0} ${cx},${cy - r} Z`;
+  }
+  const fmt = (min) => { const t = ((Math.round(min) % 1440) + 1440) % 1440; return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`; };
+  const SKY = [[-18, "#05070f", "#0c1128"], [-8, "#10163a", "#3a2652"], [-2, "#2b3a86", "#e8744f"], [4, "#4a86dd", "#f8c46a"], [14, "#4c9df8", "#c9e2ff"], [90, "#3f8ff5", "#d8ecff"]];
+  const lerp = (a, b, t) => { const A = parseInt(a.slice(1), 16), B = parseInt(b.slice(1), 16), ch = (s) => Math.round(((A >> s) & 255) + (((B >> s) & 255) - ((A >> s) & 255)) * t); return `rgb(${ch(16)},${ch(8)},${ch(0)})`; };
+  function skyColors(alt) {
+    let i = 0; while (i < SKY.length - 2 && alt > SKY[i + 1][0]) i++;
+    const [a0, t0, b0] = SKY[i], [a1, t1, b1] = SKY[i + 1], t = Math.min(1, Math.max(0, (alt - a0) / (a1 - a0)));
+    return [lerp(t0, t1, t), lerp(b0, b1, t)];
+  }
+  const CITIES = [["北京", 39.9042, 116.4074, 8], ["上海", 31.2304, 121.4737, 8], ["乌鲁木齐", 43.8256, 87.6168, 8], ["新加坡", 1.3521, 103.8198, 8], ["伦敦", 51.5074, -0.1278, 0], ["悉尼", -33.8688, 151.2093, 10], ["特罗姆瑟", 69.6496, 18.956, 1], ["雷克雅未克", 64.1466, -21.9426, 0]];
+  let city = "北京", seed = 9; const rnd = () => (seed = (seed * 48271) % 2147483647) / 2147483647;
+  $("stars").innerHTML = Array.from({ length: 80 }, () => `<circle cx="${(rnd() * 600).toFixed(1)}" cy="${(rnd() * 205).toFixed(1)}" r="${(0.4 + rnd() * 1.3).toFixed(2)}" opacity="${(0.35 + rnd() * 0.65).toFixed(2)}"/>`).join("");
+  const X = (min) => 30 + min / 1440 * 540, Y = (a) => 220 - a / 90 * 192, clamp01 = (v) => Math.min(1, Math.max(0, v)).toFixed(2);
+  function render() {
+    const lat = +$("q-lat").value, lon = +$("q-lon").value, tz = +$("q-tz").value, [y, m, d] = $("q-date").value.split("-").map(Number), t = +$("time").value;
+    if (!y || [lat, lon, tz].some(Number.isNaN)) return;
+    const s = sunTimes(y, m, d, lat, lon, tz), mo = moon(jdOf(y, m, d, 12 - tz)), name = phaseName(mo.p), k = Math.round(mo.k * 100);
+    const riseTxt = s.polar || fmt(s.rise), setTxt = s.polar || fmt(s.set), len = s.polar === "极昼" ? 1440 : s.polar ? 0 : s.set - s.rise;
+    $("q-result").textContent = `日出：${riseTxt} · 日落：${setTxt} · 月相：${name} · 照亮：${k}%`;
+    $("rise").textContent = riseTxt; $("set").textContent = setTxt;
+    $("len").textContent = `${Math.floor(len / 60)}h ${String(Math.round(len % 60)).padStart(2, "0")}m`; $("alt").textContent = `${(90 - Math.abs(lat - s.decl)).toFixed(1)}°`;
+    $("moonname").textContent = name; $("moonk").textContent = `照亮 ${k}% · 相位 ${mo.p.toFixed(2)}`;
+    $("moonpath").setAttribute("d", moonPath(50, 50, 44, mo.p, mo.k)); $("skymoonpath").setAttribute("d", moonPath(500, 92, 15, mo.p, mo.k));
+    $("where").textContent = `${city} · ${y}年${m}月${d}日 星期${WEEK[new Date(y, m - 1, d).getDay()]}`; $("timeval").value = fmt(t);
+    let path = ""; for (let mm = 0; mm <= 1440; mm += 6) path += `${mm ? "L" : "M"}${X(mm).toFixed(1)},${Y(altitude(mm, lat, s.decl, s.noon)).toFixed(1)}`;
+    $("arc").setAttribute("d", path); $("arc2").setAttribute("d", path);
+    const alt = altitude(t, lat, s.decl, s.noon), [c1, c2] = skyColors(alt);
+    $("g1").setAttribute("stop-color", c1); $("g2").setAttribute("stop-color", c2);
+    $("stars").setAttribute("opacity", clamp01((-alt - 3) / 12)); $("skymoon").setAttribute("opacity", clamp01(-alt / 8));
+    for (const id of ["sun", "sunglow"]) { $(id).setAttribute("cx", X(t).toFixed(1)); $(id).setAttribute("cy", Y(alt).toFixed(1)); $(id).setAttribute("opacity", alt < -12 ? 0 : 1); }
+    const marks = s.polar ? [[s.noon, `正午 ${fmt(s.noon)} · ${s.polar}`]] : [[s.rise, `日出 ${fmt(s.rise)}`], [s.noon, `正午 ${fmt(s.noon)}`], [s.set, `日落 ${fmt(s.set)}`]];
+    $("marks").innerHTML = marks.map(([mm, txt]) => `<line x1="${X(mm).toFixed(1)}" y1="214" x2="${X(mm).toFixed(1)}" y2="226" stroke="rgba(255,255,255,.8)"/><text x="${X(mm).toFixed(1)}" y="246">${txt}</text>`).join("");
+  }
+  const presets = $("presets");
+  CITIES.forEach(([name, lat, lon, tz], i) => {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = name; b.className = i ? "" : "on";
+    b.onclick = () => { $("q-lat").value = lat; $("q-lon").value = lon; $("q-tz").value = tz; city = name; presets.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); render(); };
+    presets.appendChild(b);
+  });
+  const now = new Date();
+  $("q-date").value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  $("time").value = now.getHours() * 60 + now.getMinutes();
+  for (const id of ["q-lat", "q-lon", "q-tz", "q-date"]) $(id).addEventListener("input", () => { city = "自定义地点"; presets.querySelectorAll("button").forEach((x) => x.classList.remove("on")); render(); });
+  $("time").addEventListener("input", render);
+  presets.firstChild.click();
+</script>
+</body>
+</html>

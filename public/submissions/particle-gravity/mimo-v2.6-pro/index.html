@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>粒子引力场</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { height:100%; overflow:hidden; }
+  body { background:#04060f; font-family:"Avenir Next","PingFang SC","Microsoft YaHei",sans-serif; color:#cfe0ff; }
+  canvas { display:block; width:100%; height:100%; touch-action:none; }
+  .hud { position:fixed; top:14px; left:50%; transform:translateX(-50%); display:flex; gap:8px;
+         background:rgba(8,14,32,.66); border:1px solid rgba(90,120,220,.3); border-radius:999px; padding:7px 14px;
+         font-size:11.5px; letter-spacing:.5px; backdrop-filter:blur(6px); white-space:nowrap; max-width:96vw;
+         overflow-x:auto; font-variant-numeric:tabular-nums; }
+  .hud b { color:#ffd166; font-weight:600; }
+  .hud span { color:#7d92c8; }
+  .mode { position:fixed; bottom:18px; left:50%; transform:translateX(-50%); display:flex; gap:8px; }
+  .mode button { border:1px solid rgba(90,120,220,.4); background:rgba(8,14,32,.7); color:#aebedd;
+                 font-family:inherit; font-size:12px; letter-spacing:2px; padding:9px 18px; border-radius:999px;
+                 cursor:pointer; transition:all .2s; }
+  .mode button.on { background:#3d6bff; border-color:#6f92ff; color:#fff; box-shadow:0 0 18px rgba(80,120,255,.5); }
+  .mode button:active { transform:scale(.94); }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="hud" id="hud"></div>
+<div class="mode">
+  <button data-m="attract" class="on">引力</button>
+  <button data-m="repel">斥力</button>
+  <button data-m="wave">冲击波</button>
+</div>
+<script>
+  const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  let W = 0, H = 0, dpr = 1;
+  function resize() {
+    dpr = Math.min(2, devicePixelRatio || 1);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  addEventListener('resize', () => { resize(); seed(); }); resize();
+  // ---- 粒子：三维投影出深度层次（z → 大小/亮度） ----
+  const N = 420;
+  const P = [];
+  let mode = 'attract', wells = [], shock = null;
+  const core = { x: 0, y: 0, pulse: 0 };
+  function seed() {
+    core.x = W / 2; core.y = H / 2;
+    P.length = 0;
+    for (let i = 0; i < N; i++) {
+      const a = Math.random() * Math.PI * 2, r = 60 + Math.random() * Math.min(W, H) * 0.42;
+      const z = Math.random();
+      // 给一个切向初速度 → 绕核椭圆轨道，而非直接坠落
+      const sp = Math.sqrt(28000 / r) * (0.85 + Math.random() * 0.3);
+      P.push({ x: core.x + Math.cos(a) * r, y: core.y + Math.sin(a) * r * 0.82,
+               vx: -Math.sin(a) * sp, vy: Math.cos(a) * sp * 0.82,
+               z, life: Math.random() * 300, hue: 195 + z * 60 });
+    }
+  }
+  seed();
+  let px = -999, py = -999, pdown = false;
+  function pos(e) { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+  cv.addEventListener('pointermove', e => { [px, py] = pos(e); });
+  cv.addEventListener('pointerleave', () => { px = py = -999; });
+  cv.addEventListener('pointerdown', e => {
+    const [x, y] = pos(e); pdown = true;
+    if (mode === 'wave') { shock = { x, y, r: 8, a: 1 }; for (const p of P) {           // 冲击波：径向脉冲
+      const dx = p.x - x, dy = p.y - y, d = Math.hypot(dx, dy) || 1, k = Math.max(0, 1 - d / 260) * 7.5;
+      p.vx += dx / d * k; p.vy += dy / d * k;
+    } core.pulse = 1; }
+    else wells.push({ x, y, s: mode === 'attract' ? 1 : -1, t: 0 });
+    if (wells.length > 3) wells.shift();
+  });
+  addEventListener('pointerup', () => pdown = false);
+  document.querySelector('.mode').onclick = e => {
+    const m = e.target.dataset.m; if (!m) return;
+    mode = m;
+    document.querySelectorAll('.mode button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+    wells = [];
+  };
+  let fps = 60, fA = 0, fC = 0, last = performance.now(), energy = 0;
+  function frame(t) {
+    const dt = Math.min(2, (t - last) / 16.7); last = t;
+    fC++; fA += t - (frame.p || t); frame.p = t;
+    // 拖尾：低透明度覆盖而非清屏
+    ctx.fillStyle = 'rgba(4,6,15,0.30)';
+    ctx.fillRect(0, 0, W, H);
+    // 能量核心：发光球 + 脉动光环
+    core.pulse *= 0.94;
+    const cg = ctx.createRadialGradient(core.x, core.y, 0, core.x, core.y, 60 + core.pulse * 30);
+    cg.addColorStop(0, 'rgba(255,240,200,.95)');
+    cg.addColorStop(.25, 'rgba(255,180,90,.55)');
+    cg.addColorStop(1, 'rgba(255,120,60,0)');
+    ctx.fillStyle = cg;
+    ctx.beginPath(); ctx.arc(core.x, core.y, 60 + core.pulse * 30, 0, 7); ctx.fill();
+    // 指针力场可视化
+    if (px > -900) {
+      const c = mode === 'repel' ? '120,220,255' : mode === 'wave' ? '255,220,120' : '255,160,255';
+      ctx.strokeStyle = `rgba(${c},.4)`; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.arc(px, py, 18 + Math.sin(t / 200) * 4, 0, 7); ctx.stroke();
+    }
+    if (shock) {                                              // 冲击波环
+      shock.r += 6 * dt; shock.a -= 0.03 * dt;
+      if (shock.a > 0) { ctx.strokeStyle = `rgba(140,200,255,${shock.a})`; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(shock.x, shock.y, shock.r, 0, 7); ctx.stroke(); } else shock = null;
+    }
+    let ek = 0;
+    for (const p of P) {
+      // 中心引力（1/r²，软化半径防发散）
+      const dx = core.x - p.x, dy = core.y - p.y;
+      const d2 = dx * dx + dy * dy + 900, d = Math.sqrt(d2), g = 28000 / d2;
+      p.vx += dx / d * g * dt; p.vy += dy / d * g * dt;
+      // 临时引力点 / 斥力点
+      for (const w of wells) {
+        const wx = w.x - p.x, wy = w.y - p.y, wd2 = wx * wx + wy * wy + 500, wd = Math.sqrt(wd2);
+        const wg = w.s * 16000 / wd2 * (pdown ? 1.8 : 1);
+        p.vx += wx / wd * wg * dt; p.vy += wy / wd * wg * dt;
+      }
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      p.life += dt;
+      // 生命周期：坠入核心或飞出边界 → 借道重生，保持群活
+      if (d < 26 || p.x < -80 || p.x > W + 80 || p.y < -80 || p.y > H + 80 || p.life > 600) {
+        const a = Math.random() * Math.PI * 2, r = Math.min(W, H) * 0.45;
+        p.x = core.x + Math.cos(a) * r; p.y = core.y + Math.sin(a) * r * 0.8;
+        const sp = Math.sqrt(28000 / r);
+        p.vx = -Math.sin(a) * sp; p.vy = Math.cos(a) * sp * 0.8;
+        p.life = 0;
+      }
+      const sp2 = p.vx * p.vx + p.vy * p.vy; ek += sp2;
+      // 速度映射亮度 + 深度映射半径
+      const spd = Math.min(1, Math.sqrt(sp2) / 9);
+      const r = 0.7 + p.z * 2.3;
+      ctx.fillStyle = `hsla(${p.hue + spd * 40},${70 + spd * 25}%,${55 + spd * 30}%,${0.35 + p.z * 0.5})`;
+      ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 7); ctx.fill();
+    }
+    energy = ek / N;
+    for (const w of wells) w.t += dt;
+    // HUD 遥测
+    if (fA > 400) { fps = Math.round(1000 / (fA / fC)); fA = 0; fC = 0;
+      document.getElementById('hud').innerHTML =
+        `<span>粒子</span> <b>${N}</b> <span>· 能量</span> <b>${energy.toFixed(1)}</b> ` +
+        `<span>· FPS</span> <b>${fps}</b> <span>· 模式</span> <b>${{ attract:'引力', repel:'斥力', wave:'冲击波' }[mode]}</b>` +
+        `<span>· 力点</span> <b>${wells.length}</b>`; }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+</script>
+</body>
+</html>

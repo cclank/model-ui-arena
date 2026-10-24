@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>晷 · 日出月相</title>
+<style>
+:root{color-scheme:dark;--ink:#f4efe4;--muted:#d5cbb8;--card:#ffffff14;--line:#ffffff2e}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font:14px/1.4 "Iowan Old Style",Palatino,Georgia,"Songti SC",serif;color:var(--ink);background:#102033;padding:12px 10px 24px}
+.wrap{width:min(440px,100%);margin:0 auto}
+.kicker{font:11px ui-monospace,Menlo,monospace;letter-spacing:.22em;color:#f0d7a2}
+h1{font-weight:500;font-size:32px;margin:2px 0 8px;letter-spacing:.14em}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.presets button,input{font:inherit;color:inherit}
+.presets button{flex:1 1 30%;min-width:0;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 4px;cursor:pointer}
+.presets button.on{background:#f4efe4;color:#1b2430}
+:focus-visible{outline:2px solid #f0d7a2;outline-offset:2px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--muted);min-width:0}
+input{width:100%;min-width:0;border:1px solid var(--line);background:#0004;border-radius:10px;padding:7px}
+.stage{display:grid;grid-template-columns:1.3fr .8fr;gap:8px;align-items:center}
+svg{width:100%;height:auto;display:block}
+.moon{width:min(150px,34vw);margin-left:auto}
+#q-result{margin:8px 0 0;font-size:15px;line-height:1.55}
+.extra{color:var(--muted);font-size:12px;margin-top:4px}
+.slider{margin-top:8px}
+input[type=range]{padding:0;accent-color:#f0d7a2}
+@media(max-width:390px){.stage{grid-template-columns:1fr}.moon{margin:0 auto}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="kicker">HORIZON</div>
+  <h1>晷</h1>
+  <div class="presets" id="presets"></div>
+  <div class="fields">
+    <label>纬度<input id="q-lat" type="number" min="-90" max="90" step="0.0001" value="39.9042"></label>
+    <label>经度<input id="q-lon" type="number" min="-180" max="180" step="0.0001" value="116.4074"></label>
+    <label>日期<input id="q-date" type="date"></label>
+    <label>时区<input id="q-tz" type="number" min="-12" max="14" step="0.5" value="8"></label>
+  </div>
+  <div class="stage">
+    <svg id="sky" viewBox="0 0 320 180" role="img" aria-label="天穹弧线"></svg>
+    <svg class="moon" id="moon" viewBox="0 0 120 120" role="img" aria-label="月相"></svg>
+  </div>
+  <div id="q-result"></div>
+  <div class="extra" id="extra"></div>
+  <label class="slider">时刻 <span id="hour-label">12:00</span><input id="hour" type="range" min="0" max="24" step="0.05" value="12"></label>
+</main>
+<script>
+const D2R=Math.PI/180,R2D=180/Math.PI,MS=864e5,$=id=>document.getElementById(id);
+const jdOf=(y,m,d,ut)=>Date.UTC(y,m-1,d)/MS+2440587.5+ut/24;
+function solar(jd,lon,tz){
+  const jc=(jd-2451545)/36525;
+  const L0=(280.46646+jc*(36000.76983+jc*0.0003032))%360,M=357.52911+jc*(35999.05029-0.0001537*jc);
+  const e=0.016708634-jc*(0.000042037+0.0000001267*jc);
+  const C=Math.sin(M*D2R)*(1.914602-jc*(0.004817+0.000014*jc))+Math.sin(2*M*D2R)*(0.019993-0.000101*jc)+Math.sin(3*M*D2R)*0.000289;
+  const omega=(125.04-1934.136*jc)*D2R,appLong=L0+C-0.00569-0.00478*Math.sin(omega);
+  const obliq=23+(26+(21.448-jc*(46.815+jc*(0.00059-jc*0.001813)))/60)/60+0.00256*Math.cos(omega);
+  const decl=Math.asin(Math.sin(obliq*D2R)*Math.sin(appLong*D2R))*R2D,y=Math.tan((obliq/2)*D2R)**2;
+  const eqt=4*R2D*(y*Math.sin(2*L0*D2R)-2*e*Math.sin(M*D2R)+4*e*y*Math.sin(M*D2R)*Math.cos(2*L0*D2R)-0.5*y*y*Math.sin(4*L0*D2R)-1.25*e*e*Math.sin(2*M*D2R));
+  return{noon:720-4*lon-eqt+tz*60,decl};
+}
+function hourAngle(lat,decl){const c=Math.cos(90.833*D2R)/(Math.cos(lat*D2R)*Math.cos(decl*D2R))-Math.tan(lat*D2R)*Math.tan(decl*D2R);return c>1?{polar:"极夜"}:c<-1?{polar:"极昼"}:{ha:Math.acos(c)*R2D}}
+function sunTimes(y,m,d,lat,lon,tz){
+  let s=solar(jdOf(y,m,d,12-tz),lon,tz),h=hourAngle(lat,s.decl);if(h.polar)return h;
+  let rise=s.noon-h.ha*4,set=s.noon+h.ha*4;
+  for(let i=0;i<2;i++){
+    const sr=solar(jdOf(y,m,d,rise/60-tz),lon,tz),hr=hourAngle(lat,sr.decl),ss=solar(jdOf(y,m,d,set/60-tz),lon,tz),hs=hourAngle(lat,ss.decl);
+    if(hr.polar||hs.polar)return hr.polar?hr:hs;
+    rise=sr.noon-hr.ha*4;set=ss.noon+hs.ha*4;
+  }
+  return{rise,set,decl:s.decl};
+}
+const norm=x=>((x%360)+360)%360;
+function moon(jd){
+  const T=(jd-2451545)/36525,D=norm(297.8501921+445267.1114034*T-0.0018819*T*T),M=norm(357.5291092+35999.0502909*T-0.0001536*T*T),Mp=norm(134.9633964+477198.8675055*T+0.0087414*T*T);
+  const corr=6.289*Math.sin(Mp*D2R)-2.1*Math.sin(M*D2R)+1.274*Math.sin((2*D-Mp)*D2R)+0.658*Math.sin(2*D*D2R)+0.214*Math.sin(2*Mp*D2R)+0.11*Math.sin(D*D2R);
+  return{k:(1+Math.cos((180-D-corr)*D2R))/2,p:norm(D+corr)/360};
+}
+function phaseName(p){const near=c=>Math.min(Math.abs(p-c),Math.abs(p-c-1),Math.abs(p-c+1))<=0.03;if(near(0))return"新月";if(near(0.25))return"上弦月";if(near(0.5))return"满月";if(near(0.75))return"下弦月";return p<0.25?"蛾眉月":p<0.5?"盈凸月":p<0.75?"亏凸月":"残月"}
+const fmt=min=>{const t=((Math.round(min)%1440)+1440)%1440;return`${String(Math.floor(t/60)).padStart(2,"0")}:${String(t%60).padStart(2,"0")}`};
+const CITIES=[["北京",39.9042,116.4074,8],["悉尼",-33.8688,151.2093,10],["雷克雅未克",64.1466,-21.9426,0],["伦敦",51.5074,-0.1278,0],["新加坡",1.3521,103.8198,8],["布宜诺斯艾利斯",-34.6037,-58.3816,-3],["新德里",28.6139,77.209,5.5]];
+let active=0;
+function moonPath(p){
+  const cx=60,cy=60,r=46,mag=Math.cos(((p%1)+1)%1*2*Math.PI),rx=Math.max(Math.abs(mag)*r,0.8);
+  const sweep=p<=0.5?0:1,term=mag>=0?1-sweep:sweep;
+  return`M ${cx} ${cy-r} A ${r} ${r} 0 0 ${sweep} ${cx} ${cy+r} A ${rx} ${r} 0 0 ${term} ${cx} ${cy-r} Z`;
+}
+function paint(data){
+  const hour=+ $("hour").value, minutes=hour*60;
+  $("hour-label").textContent=`${String(Math.floor(hour)).padStart(2,"0")}:${String(Math.floor((hour%1)*60)).padStart(2,"0")}`;
+  const polar=data.polar||"";
+  let t=0.5, below=false;
+  if(polar==="极昼") t=0.5+0.45*Math.sin((hour/24)*Math.PI*2);
+  else if(polar==="极夜"){t=0.5;below=true}
+  else {t=(minutes-data.rise)/(data.set-data.rise);below=t<0||t>1;t=Math.min(1,Math.max(0,t))}
+  const x=30+(1-Math.cos(t*Math.PI))*(260/2), y=150-Math.sin(Math.min(1,Math.max(0,t))*Math.PI)*108;
+  const sunY=below?168:y;
+  const skyTop=polar==="极夜"||below&& (polar|| minutes<data.rise-40||minutes>data.set+40)?"#07101c":"#4ea4e0";
+  const skyBot=below?"#1b2433":"#f6d7a4";
+  document.body.style.background=`linear-gradient(${skyTop},${skyBot})`;
+  $("sky").innerHTML=`<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${skyTop}"/><stop offset="1" stop-color="${skyBot}"/></linearGradient></defs>
+    <rect width="320" height="180" fill="url(#g)"/>
+    <path d="M20 150 Q160 18 300 150" fill="none" stroke="#fff8" stroke-width="1.4"/>
+    <line x1="16" y1="150" x2="304" y2="150" stroke="#f4efe4" stroke-width="1.2"/>
+    <circle cx="30" cy="150" r="3" fill="#f0d7a2"/><circle cx="160" cy="42" r="3" fill="#fff"/><circle cx="290" cy="150" r="3" fill="#e38b5a"/>
+    <circle cx="${x.toFixed(1)}" cy="${sunY.toFixed(1)}" r="9" fill="${below?"#9bb":"#ffe08a"}" stroke="#fff6"/>`;
+  $("moon").innerHTML=`<circle cx="60" cy="60" r="46" fill="#1b2430" stroke="#f0d7a2" stroke-width="1.5"/>
+    <path d="${moonPath(data.p)}" fill="#f7f1df"/>
+    <circle cx="60" cy="60" r="46" fill="none" stroke="#f0d7a288"/>`;
+}
+function compute(){
+  const lat=+$("q-lat").value,lon=+$("q-lon").value,tz=+$("q-tz").value,date=$("q-date").value;
+  if(!date||Number.isNaN(lat)||Number.isNaN(lon)||Number.isNaN(tz)) return;
+  const [y,m,d]=date.split("-").map(Number);
+  const s=sunTimes(y,m,d,lat,lon,tz), mo=moon(jdOf(y,m,d,12-tz));
+  const phase=phaseName(mo.p), k=Math.round(mo.k*100);
+  const sun=s.polar?`日出：${s.polar} · 日落：${s.polar}`:`日出：${fmt(s.rise)} · 日落：${fmt(s.set)}`;
+  $("q-result").textContent=`${sun} · 月相：${phase} · 照亮：${k}%`;
+  let extra=`相位 ${(mo.p*100).toFixed(1)}%`;
+  if(!s.polar){
+    const day=(s.set-s.rise)/60;
+    const prev=new Date(Date.UTC(y,m-1,d)-MS);
+    const ps=sunTimes(prev.getUTCFullYear(),prev.getUTCMonth()+1,prev.getUTCDate(),lat,lon,tz);
+    const delta=ps.polar?null:(day-(ps.set-ps.rise)/60);
+    let alt=90-lat+s.decl; if(alt>90) alt=180-alt;
+    extra=`昼长 ${day.toFixed(2)} 小时${delta==null?"":` · 较昨日 ${delta>=0?"+":""}${(delta*60).toFixed(0)} 分钟`} · 正午高度 ${alt.toFixed(1)}°`;
+  } else extra=`${s.polar} · 无日出日落`;
+  $("extra").textContent=extra;
+  paint({...s,p:mo.p});
+  [...document.querySelectorAll(".presets button")].forEach((b,i)=>b.classList.toggle("on",i===active&&Math.abs(lat-CITIES[i][1])<1e-3));
+}
+$("presets").innerHTML=CITIES.map((c,i)=>`<button type="button" data-i="${i}">${c[0]}</button>`).join("");
+$("presets").onclick=e=>{const b=e.target.closest("button");if(!b)return;active=+b.dataset.i;const c=CITIES[active];$("q-lat").value=c[1];$("q-lon").value=c[2];$("q-tz").value=c[3];compute()};
+for(const id of["q-lat","q-lon","q-date","q-tz"]){$(id).addEventListener("input",compute);$(id).addEventListener("change",compute)}
+$("hour").addEventListener("input",compute);
+const n=new Date();
+$("q-date").value=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`;
+$("hour").value=String(n.getHours()+n.getMinutes()/60);
+compute();
+</script>
+</body>
+</html>

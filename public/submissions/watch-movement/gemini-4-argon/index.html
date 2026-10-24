@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CHRONOMÈTRE AETHERIA CAL. 8901 — 机械怀表机芯</title>
+<style>
+  :root {
+    --bg: #080a0f;
+    --panel: rgba(14, 18, 26, 0.88);
+    --border: rgba(212, 175, 55, 0.28);
+    --gold: #e5c158;
+    --rose: #f3b98c;
+    --steel: #cbd5e1;
+    --blue-steel: #38bdf8;
+    --ruby: #e11d48;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body {
+    min-height: 100vh;
+    background: radial-gradient(circle at 50% 25%, #182032 0%, #0b0e17 60%, #05070b 100%);
+    color: #f1f5f9;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 10px; overflow-x: hidden;
+  }
+  .workbench {
+    width: 100%; max-width: 1120px;
+    display: grid; grid-template-columns: 1.35fr 0.85fr;
+    gap: 14px; align-items: start;
+  }
+  .caliber-stage {
+    position: relative;
+    background: radial-gradient(circle at 50% 45%, #1c2436, #0b0e16 80%);
+    border: 1px solid var(--border);
+    border-radius: 26px;
+    padding: 12px;
+    box-shadow: 0 28px 70px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.1);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  canvas#movementCanvas {
+    width: 100%; max-width: 620px; aspect-ratio: 1 / 1;
+    display: block; cursor: grab; touch-action: none;
+  }
+  canvas#movementCanvas:active { cursor: grabbing; }
+  .stage-hint {
+    margin-top: 6px; font-size: 11px; color: #94a3b8; text-align: center;
+  }
+  .side-panel {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 14px 16px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+    backdrop-filter: blur(12px);
+  }
+  .card-title {
+    font-size: 12px; font-weight: 800; color: var(--gold);
+    letter-spacing: 0.14em; text-transform: uppercase;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .readout-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    margin-bottom: 10px;
+  }
+  .r-box {
+    background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px; padding: 8px; text-align: center;
+  }
+  .r-label { font-size: 10px; color: #94a3b8; }
+  .r-val {
+    font-size: 15px; font-weight: 800; color: #fff; margin-top: 2px;
+    font-family: "SF Mono", "JetBrains Mono", monospace; font-variant-numeric: tabular-nums;
+  }
+  .pr-bar-wrap {
+    width: 100%; height: 8px; background: rgba(255,255,255,0.08);
+    border-radius: 99px; overflow: hidden; margin-bottom: 10px;
+  }
+  .pr-bar-fill {
+    height: 100%; width: 78%;
+    background: linear-gradient(90deg, #ef4444, #f59e0b 40%, #10b981);
+    transition: width 0.15s;
+  }
+  .btn-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+  }
+  .w-btn {
+    border: 1px solid rgba(229, 193, 88, 0.4);
+    background: rgba(229, 193, 88, 0.1);
+    color: #f8fafc; font-size: 12px; font-weight: 700;
+    padding: 8px 10px; border-radius: 11px; cursor: pointer;
+    transition: 0.2s; text-align: center;
+  }
+  .w-btn:hover, .w-btn.active {
+    background: var(--gold); color: #090c12; border-color: var(--gold);
+  }
+  .speed-row {
+    display: flex; gap: 6px; margin-top: 8px;
+  }
+  .s-btn {
+    flex: 1; border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.05); color: #cbd5e1;
+    font-size: 11px; font-weight: 700; padding: 6px 4px;
+    border-radius: 9px; cursor: pointer;
+  }
+  .s-btn.active {
+    background: rgba(56, 189, 248, 0.22); border-color: var(--blue-steel); color: #fff;
+  }
+  table.spec-table {
+    width: 100%; border-collapse: collapse; font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+  table.spec-table th {
+    text-align: left; color: #94a3b8; font-weight: 600;
+    padding: 4px 4px; border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  table.spec-table td {
+    padding: 5px 4px; border-bottom: 1px solid rgba(255,255,255,0.05);
+    color: #e2e8f0;
+  }
+  table.spec-table td.num { font-family: monospace; color: var(--gold); text-align: right; }
+  @media (max-width: 860px) {
+    .workbench { grid-template-columns: 1fr; max-width: 480px; }
+    body { padding: 6px; }
+    .caliber-stage { padding: 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="workbench">
+  <div class="caliber-stage">
+    <canvas id="movementCanvas" width="680" height="680"></canvas>
+    <div class="stage-hint" id="stageHint">
+      直接拖拽机芯内任意齿轮全表按传动比联动 · 按住表冠上弦 · 拔出表冠止秒调时
+    </div>
+  </div>
+
+  <div class="side-panel">
+    <div class="card">
+      <div class="card-title">
+        <span>CALIBER 8901 // 走时与动力控制台</span>
+        <span id="crownStateBadge" style="color:#10b981">正常走时 (RUN)</span>
+      </div>
+      <div class="readout-row">
+        <div class="r-box">
+          <div class="r-label">机芯走时</div>
+          <div class="r-val" id="timeReadout">00:00:00</div>
+        </div>
+        <div class="r-box">
+          <div class="r-label">动力储存</div>
+          <div class="r-val" id="prReadout">78%</div>
+        </div>
+        <div class="r-box">
+          <div class="r-label">摆频 / 振幅</div>
+          <div class="r-val" id="bphReadout">18000 / 285°</div>
+        </div>
+      </div>
+      <div class="pr-bar-wrap"><div class="pr-bar-fill" id="prBarFill"></div></div>
+
+      <div class="btn-grid">
+        <button class="w-btn" id="windBtn" type="button">按住/点击上弦 (+18%)</button>
+        <button class="w-btn" id="crownPullBtn" type="button">拔出表冠 (止秒调时)</button>
+        <button class="w-btn" id="loupeBtn" type="button">目镜放大镜 (2.6×): 关</button>
+        <button class="w-btn" id="soundBtn" type="button">擒纵滴答声: 关</button>
+      </div>
+
+      <div class="speed-row" id="speedGroup">
+        <button class="s-btn active" data-mult="1" type="button">1× 实时</button>
+        <button class="s-btn" data-mult="60" type="button">60× (1分/秒)</button>
+        <button class="s-btn" data-mult="3600" type="button">3600× (1时/秒)</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>GEAR TRAIN // 传动链齿数与周期验算表</span>
+        <span>模数 m = 1.65</span>
+      </div>
+      <table class="spec-table">
+        <thead>
+          <tr>
+            <th>部件名称</th>
+            <th>主轮齿数 z</th>
+            <th>齿轴 zp</th>
+            <th style="text-align:right">旋转周期</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>发条盒 (Barrel)</td>
+            <td>80 齿</td>
+            <td>棘轮 36</td>
+            <td class="num">8.0 h / 圈</td>
+          </tr>
+          <tr>
+            <td>中心轮 (Center / 分针)</td>
+            <td>80 齿</td>
+            <td>10 齿</td>
+            <td class="num">1.0 h (3600s)</td>
+          </tr>
+          <tr>
+            <td>三轮 (Third Wheel)</td>
+            <td>75 齿</td>
+            <td>10 齿</td>
+            <td class="num">7.5 min (450s)</td>
+          </tr>
+          <tr>
+            <td>秒轮 (Fourth / 小秒针)</td>
+            <td>80 齿</td>
+            <td>10 齿</td>
+            <td class="num">60.0 s (1min)</td>
+          </tr>
+          <tr>
+            <td>擒纵轮 (Escape Wheel)</td>
+            <td>15 齿 (斜齿)</td>
+            <td>8 齿</td>
+            <td class="num">6.0 s (30拍)</td>
+          </tr>
+          <tr>
+            <td>擒纵叉 & 摆轮游丝</td>
+            <td>2 叉瓦</td>
+            <td>5 拍/秒</td>
+            <td class="num">18,000 bph</td>
+          </tr>
+          <tr>
+            <td>跨轮系 (分轮→跨轮→时轮)</td>
+            <td>12→36, 10→40</td>
+            <td>总比 12:1</td>
+            <td class="num">时针 12.0 h</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+/**
+ * ============================================================================
+ * 机械怀表机芯 (Caliber 8901) — 严格数理啮合与单一走时状态引擎
+ * ============================================================================
+ * 1. 【单一走时状态源】：
+ *    全表所有齿轮、齿轴、分针、时针、小秒针的角位置全部由单一标量状态 `masterHours`
+ *    （以小时为单位的连续/阶跃角度基准）严格按齿数传动比导出：
+ *    - 中心轮 (Center Wheel, z=80, zp=10) & 分针：ω_C = +1 圈/小时 (顺时针 CW)
+ *    - 发条盒 (Barrel, z=80) 啮合中心轮齿轴 (zp=10)：ω_B = -1/8 圈/小时 (CCW, 8h/圈)
+ *    - 三轮 (Third Wheel, z=75, zp=10) 啮合中心轮 (z=80)：ω_T = -8 圈/小时 (CCW, 450s/圈)
+ *    - 秒轮 (Fourth Wheel, z=80, zp=10) 啮合三轮 (z=75)：ω_F = +60 圈/小时 (CW, 60s/圈，带动小秒针)
+ *    - 擒纵轮 (Escape Wheel, z=15, zp=8) 啮合秒轮 (z=80)：ω_E = -600 圈/小时 (CCW, 6s/圈)
+ *    - 跨轮系 (Motion Works, 12:1)：
+ *      分轮 (z=12, CW +1圈/h) → 跨轮 (z=36, zp=10, CCW -1/3圈/h) → 时轮 & 时针 (z=40, CW +1/12圈/h)
+ *
+ * 2. 【严格几何中心距与零打齿啮合】：
+ *    统一模数 m = 1.65 px/齿（跨轮系 m_m = 1.60 px/齿）。
+ *    任意两啮合轮 i, j 的轴心距严格设为 d = m * (z_i + z_j) / 2，
+ *    并在初始化时精确计算两轴连线倾角 α，设定从动轮相位偏置 θ_20，使得主动轮齿尖与从动轮齿槽
+ *    在连心线上 100% 严丝合缝交错咬合。
+ * ============================================================================
+ */
+
+const cvs = document.getElementById('movementCanvas');
+const ctx = cvs.getContext('2d');
+const SIZE = 680;
+const CX = 340, CY = 350;
+const MOD = 1.65; // 主传动链模数
+
+// 根据本地当前时间初始化单一主状态 masterHours (单位：小时)
+const initNow = new Date();
+let masterHours = (initNow.getHours() % 12) + initNow.getMinutes() / 60 + initNow.getSeconds() / 3600 + initNow.getMilliseconds() / 3600000;
+
+let powerReserve = 78.0; // 0 ~ 100%
+let crownPulled = false; // false = 正常走时/上弦, true = 拔出止秒调时
+let speedMult = 1;       // 1x, 60x, 3600x
+let loupeEnabled = false;
+let soundEnabled = false;
+let pointerPos = { x: CX, y: CY };
+let draggingGear = null;
+let dragLastAngle = 0;
+let ratchetClickAngle = 0;
+let crownWindOffset = 0;
+
+// WebAudio 机械擒纵滴答声与棘爪上弦声
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) audioCtx = new AC();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playTickSound(isTock = false) {
+  if (!soundEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(isTock ? 3600 : 4200, now);
+  osc.frequency.exponentialRampToValueAtTime(1200, now + 0.018);
+  gain.gain.setValueAtTime(0.035, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.02);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.022);
+}
+
+function playRatchetClick() {
+  ensureAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(2400, now);
+  gain.gain.setValueAtTime(0.04, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.025);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.028);
+}
+
+// 精确计算各轮轴心坐标：确保每对啮合轮的圆心距 d === m * (z1 + z2) / 2
+// 1. 中心轮 Center Wheel: 位于机芯中央 (CX, CY) = (340, 350)
+const posCenter = { x: CX, y: CY };
+
+// 2. 发条盒 Barrel (z=80) 啮合 中心轮齿轴 (zp=10)：d_BC = 1.65 * (80 + 10) / 2 = 74.25 px
+const angleBC = -2.22; // 左上方 11 点方向
+const distBC = MOD * (80 + 10) / 2;
+const posBarrel = {
+  x: posCenter.x + Math.cos(angleBC) * distBC,
+  y: posCenter.y + Math.sin(angleBC) * distBC
+};
+
+// 3. 三轮 Third Wheel (zp=10) 啮合 中心轮 (z=80)：d_CT = 1.65 * (80 + 10) / 2 = 74.25 px
+const angleCT = -0.18; // 右侧偏上
+const distCT = MOD * (80 + 10) / 2;
+const posThird = {
+  x: posCenter.x + Math.cos(angleCT) * distCT,
+  y: posCenter.y + Math.sin(angleCT) * distCT
+};
+
+// 4. 秒轮 Fourth Wheel (zp=10) 啮合 三轮 (z=75)：d_TF = 1.65 * (75 + 10) / 2 = 70.125 px
+const angleTF = 1.92; // 向左下方延伸至 6 点位附近
+const distTF = MOD * (75 + 10) / 2;
+const posFourth = {
+  x: posThird.x + Math.cos(angleTF) * distTF,
+  y: posThird.y + Math.sin(angleTF) * distTF
+};
+
+// 5. 擒纵轮 Escape Wheel (zp=8) 啮合 秒轮 (z=80)：d_FE = 1.65 * (80 + 8) / 2 = 72.6 px
+const angleFE = 2.68; // 向左下方延伸至 7~8 点位
+const distFE = MOD * (80 + 8) / 2;
+const posEscape = {
+  x: posFourth.x + Math.cos(angleFE) * distFE,
+  y: posFourth.y + Math.sin(angleFE) * distFE
+};
+
+// 6. 擒纵叉枢轴 Pallet Fork Pivot 与 摆轮中心 Balance Wheel Center
+const angleEP = -2.35;
+const posPallet = {
+  x: posEscape.x + Math.cos(angleEP) * 34,
+  y: posEscape.y + Math.sin(angleEP) * 34
+};
+const posBalance = {
+  x: posPallet.x + Math.cos(angleEP - 0.15) * 48,
+  y: posPallet.y + Math.sin(angleEP - 0.15) * 48
+};
+
+// 7. 跨轮 Minute Wheel (z=36, zp=10) 啮合 分轮 Cannon Pinion (z=12) 与 时轮 Hour Wheel (z=40)
+// 模数 m_m = 1.55，使 d_CM = 1.55 * (12 + 36) / 2 = 37.2 px，同时 1.55 * (10 + 40) / 2 = 38.75 px
+const MOD_M = 1.55;
+const angleCM = 0.85; // 右下方 4~5 点方向
+const distCM = MOD_M * (12 + 36) / 2;
+const posMinuteWheel = {
+  x: posCenter.x + Math.cos(angleCM) * distCM,
+  y: posCenter.y + Math.sin(angleCM) * distCM
+};
+
+// 计算啮合相位对齐函数：当轮1在 (x1,y1) 齿数 z1 角速度比 r1，轮2在 (x2,y2) 齿数 z2 角速度比 r2 (符号相反)
+// 保证在任意 masterHours 下，连心线方向 alpha 上轮1的齿尖恰好对准轮2的齿槽（相差 π / z2）
+function computeMeshPhase(p1, z1, phi1, p2, z2) {
+  const alpha = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+  const alpha2 = alpha + Math.PI;
+  // 在 t = 0 时，轮1在连心线 alpha 处的齿相位为 (alpha - phi1) * z1
+  // 令轮2在 alpha2 处的齿相位满足 (alpha2 - phi2) * z2 = -(alpha - phi1) * z1 + π
+  return alpha2 + ((alpha - phi1) * z1 - Math.PI) / z2;
+}
+
+const phiCenter = 0;
+const phiBarrel = computeMeshPhase(posCenter, 10, phiCenter, posBarrel, 80);
+const phiThirdPinion = computeMeshPhase(posCenter, 80, phiCenter, posThird, 10);
+const phiFourthPinion = computeMeshPhase(posThird, 75, phiThirdPinion, posFourth, 10);
+const phiEscapePinion = computeMeshPhase(posFourth, 80, phiFourthPinion, posEscape, 8);
+const phiMinuteWheel = computeMeshPhase(posCenter, 12, phiCenter, posMinuteWheel, 36);
+const phiHourWheel = computeMeshPhase(posMinuteWheel, 10, phiMinuteWheel, posCenter, 40);
+
+// 预构建离屏打磨纹理底盘（镀铑日内瓦波纹夹板 + 鱼鳞纹主夹板 + 蓝钢螺丝）
+const offPlate = document.createElement('canvas');
+offPlate.width = SIZE;
+offPlate.height = SIZE;
+function buildMovementPlates() {
+  const pCtx = offPlate.getContext('2d');
+  pCtx.clearRect(0, 0, SIZE, SIZE);
+
+  // 1. 怀表外壳表圈 (18K 黄金拉丝外圈)
+  const caseGrad = pCtx.createLinearGradient(60, 60, 620, 620);
+  caseGrad.addColorStop(0, '#fef08a');
+  caseGrad.addColorStop(0.28, '#d4af37');
+  caseGrad.addColorStop(0.55, '#854d0e');
+  caseGrad.addColorStop(0.82, '#facc15');
+  caseGrad.addColorStop(1, '#713f12');
+  pCtx.beginPath();
+  pCtx.arc(CX, CY, 286, 0, Math.PI * 2);
+  pCtx.fillStyle = caseGrad;
+  pCtx.fill();
+
+  pCtx.beginPath();
+  pCtx.arc(CX, CY, 270, 0, Math.PI * 2);
+  pCtx.fillStyle = '#141822';
+  pCtx.fill();
+  pCtx.lineWidth = 3;
+  pCtx.strokeStyle = '#fef08a';
+  pCtx.stroke();
+
+  // 2. 主夹板鱼鳞纹打磨 (Perlage Circular Graining on Base Mainplate)
+  pCtx.save();
+  pCtx.beginPath();
+  pCtx.arc(CX, CY, 264, 0, Math.PI * 2);
+  pCtx.clip();
+
+  pCtx.fillStyle = '#1e2433';
+  pCtx.fillRect(CX - 270, CY - 270, 540, 540);
+
+  for (let r = 24; r <= 260; r += 18) {
+    const count = Math.max(8, Math.floor((2 * Math.PI * r) / 18));
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2 + (r % 36 === 0 ? 0.15 : 0);
+      const px = CX + Math.cos(a) * r;
+      const py = CY + Math.sin(a) * r;
+      const g = pCtx.createRadialGradient(px - 3, py - 3, 1, px, py, 12);
+      g.addColorStop(0, 'rgba(226, 232, 240, 0.22)');
+      g.addColorStop(0.7, 'rgba(100, 116, 139, 0.12)');
+      g.addColorStop(1, 'rgba(15, 23, 42, 0.28)');
+      pCtx.fillStyle = g;
+      pCtx.beginPath();
+      pCtx.arc(px, py, 11, 0, Math.PI * 2);
+      pCtx.fill();
+    }
+  }
+
+  // 3. 镀铑夹板 + 日内瓦波纹 (Rhodium-Plated Bridges with Côtes de Genève Stripes)
+  function drawGenevaBridge(points) {
+    pCtx.save();
+    pCtx.beginPath();
+    points.forEach((pt, idx) => idx === 0 ? pCtx.moveTo(pt[0], pt[1]) : pCtx.lineTo(pt[0], pt[1]));
+    pCtx.closePath();
+    pCtx.save();
+    pCtx.clip();
+
+    const bg = pCtx.createLinearGradient(120, 120, 560, 560);
+    bg.addColorStop(0, '#475569');
+    bg.addColorStop(0.5, '#334155');
+    bg.addColorStop(1, '#1e293b');
+    pCtx.fillStyle = bg;
+    pCtx.fillRect(60, 60, 560, 560);
+
+    // 日内瓦平行斜波纹
+    pCtx.translate(CX, CY);
+    pCtx.rotate(-0.42);
+    for (let x = -320; x <= 320; x += 16) {
+      const stripe = pCtx.createLinearGradient(x, -300, x + 16, -300);
+      stripe.addColorStop(0, 'rgba(255,255,255,0.16)');
+      stripe.addColorStop(0.45, 'rgba(255,255,255,0.03)');
+      stripe.addColorStop(0.85, 'rgba(0,0,0,0.22)');
+      stripe.addColorStop(1, 'rgba(255,255,255,0.12)');
+      pCtx.fillStyle = stripe;
+      pCtx.fillRect(x, -320, 16, 640);
+    }
+    pCtx.restore();
+
+    // 夹板镜面抛光倒角 (Anglage / Beveled Edges)
+    pCtx.lineWidth = 3.2;
+    pCtx.strokeStyle = 'rgba(226, 232, 240, 0.55)';
+    pCtx.stroke();
+    pCtx.lineWidth = 1.2;
+    pCtx.strokeStyle = '#0f172a';
+    pCtx.stroke();
+    pCtx.restore();
+  }
+
+  // 发条盒夹板 (Barrel Bridge)
+  drawGenevaBridge([
+    [165, 160], [345, 145], [362, 248], [265, 315], [148, 285]
+  ]);
+  // 传动轮系夹板 (Train Wheel Bridge)
+  drawGenevaBridge([
+    [355, 255], [528, 268], [545, 425], [395, 488], [322, 425]
+  ]);
+
+  // 品牌与机芯烫金铭文雕刻
+  pCtx.fillStyle = '#facc15';
+  pCtx.font = 'bold 11px Georgia, serif';
+  pCtx.textAlign = 'center';
+  pCtx.fillText('CHRONOMÈTRE AETHERIA', 258, 190);
+  pCtx.fillStyle = '#cbd5e1';
+  pCtx.font = '600 9.5px monospace';
+  pCtx.fillText('CAL. 8901 · 29 RUBIS · SWISS', 445, 302);
+
+  // 4. 外圈怀表轨道式分钟刻度与罗马数字时标
+  for (let i = 0; i < 60; i++) {
+    const a = (i * 6 - 90) * Math.PI / 180;
+    const isFive = i % 5 === 0;
+    const r1 = isFive ? 246 : 252, r2 = 260;
+    pCtx.beginPath();
+    pCtx.moveTo(CX + Math.cos(a) * r1, CY + Math.sin(a) * r1);
+    pCtx.lineTo(CX + Math.cos(a) * r2, CY + Math.sin(a) * r2);
+    pCtx.strokeStyle = isFive ? '#fde047' : 'rgba(226,232,240,0.45)';
+    pCtx.lineWidth = isFive ? 2.4 : 1.1;
+    pCtx.stroke();
+  }
+  const numerals = ['XII','I','II','III','IV','V','VI','VII','VIII','IX','X','XI'];
+  pCtx.fillStyle = '#fef08a';
+  pCtx.font = 'bold 13px Georgia, serif';
+  pCtx.textAlign = 'center';
+  pCtx.textBaseline = 'middle';
+  numerals.forEach((num, idx) => {
+    const a = (idx * 30 - 90) * Math.PI / 180;
+    pCtx.fillText(num, CX + Math.cos(a) * 231, CY + Math.sin(a) * 231);
+  });
+
+  pCtx.restore();
+}
+buildMovementPlates();
+
+// 程序化生成钟表齿轮路径并绘制（支持玫瑰金、黄铜、镀铑钢、太阳纹打磨、轮辐镂空）
+function drawHorologyWheel(ctx, x, y, z, mod, angle, opts = {}) {
+  const pitchR = (mod * z) / 2;
+  const addendum = mod * 0.92;
+  const dedendum = mod * 1.08;
+  const outerR = pitchR + addendum;
+  const rootR = Math.max(2, pitchR - dedendum);
+  const step = (Math.PI * 2) / z;
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+
+  // 齿轮阴影
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+  ctx.shadowBlur = 6;
+  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetY = 3;
+
+  // 绘制全部 z 个钟表渐开线/摆线齿廓
+  ctx.beginPath();
+  for (let i = 0; i < z; i++) {
+    const a0 = i * step;
+    const aRoot1 = a0 - step * 0.28;
+    const aPitch1 = a0 - step * 0.17;
+    const aTip1 = a0 - step * 0.08;
+    const aTip2 = a0 + step * 0.08;
+    const aPitch2 = a0 + step * 0.17;
+    const aRoot2 = a0 + step * 0.28;
+
+    if (i === 0) {
+      ctx.moveTo(Math.cos(aRoot1) * rootR, Math.sin(aRoot1) * rootR);
+    } else {
+      ctx.lineTo(Math.cos(aRoot1) * rootR, Math.sin(aRoot1) * rootR);
+    }
+    ctx.lineTo(Math.cos(aPitch1) * pitchR, Math.sin(aPitch1) * pitchR);
+    ctx.lineTo(Math.cos(aTip1) * outerR, Math.sin(aTip1) * outerR);
+    ctx.lineTo(Math.cos(aTip2) * outerR, Math.sin(aTip2) * outerR);
+    ctx.lineTo(Math.cos(aPitch2) * pitchR, Math.sin(aPitch2) * pitchR);
+    ctx.lineTo(Math.cos(aRoot2) * rootR, Math.sin(aRoot2) * rootR);
+  }
+  ctx.closePath();
+
+  // 轮辐镂空（5 辐条）
+  const spokes = opts.spokes || 0;
+  if (spokes > 0 && rootR > 16) {
+    const innerRim = rootR * 0.78;
+    const hubR = Math.max(6, rootR * 0.26);
+    const spokeAng = (Math.PI * 2) / spokes;
+    for (let s = 0; s < spokes; s++) {
+      const sa1 = s * spokeAng + 0.14;
+      const sa2 = (s + 1) * spokeAng - 0.14;
+      ctx.moveTo(Math.cos(sa1) * hubR, Math.sin(sa1) * hubR);
+      ctx.arc(0, 0, innerRim, sa1, sa2, false);
+      ctx.arc(0, 0, hubR, sa2, sa1, true);
+      ctx.closePath();
+    }
+  }
+
+  const grad = ctx.createLinearGradient(-outerR, -outerR, outerR, outerR);
+  if (opts.material === 'steel') {
+    grad.addColorStop(0, '#f8fafc');
+    grad.addColorStop(0.45, '#94a3b8');
+    grad.addColorStop(0.8, '#cbd5e1');
+    grad.addColorStop(1, '#475569');
+  } else if (opts.material === 'rose') {
+    grad.addColorStop(0, '#fed7aa');
+    grad.addColorStop(0.45, '#e09f67');
+    grad.addColorStop(0.8, '#f6ad55');
+    grad.addColorStop(1, '#9c4221');
+  } else {
+    // 18K 黄金钟表黄铜
+    grad.addColorStop(0, '#fef08a');
+    grad.addColorStop(0.4, '#eab308');
+    grad.addColorStop(0.75, '#facc15');
+    grad.addColorStop(1, '#854d0e');
+  }
+  ctx.fillStyle = grad;
+  ctx.fill('evenodd');
+
+  ctx.shadowColor = 'transparent';
+  ctx.lineWidth = 0.9;
+  ctx.strokeStyle = opts.material === 'steel' ? '#334155' : '#713f12';
+  ctx.stroke();
+
+  // 太阳放射打磨纹 (Soleillage Sunburst lines)
+  if (opts.sunburst && rootR > 18) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+    ctx.lineWidth = 0.8;
+    for (let k = 0; k < 24; k++) {
+      const ka = (k / 24) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(ka) * 8, Math.sin(ka) * 8);
+      ctx.lineTo(Math.cos(ka) * (rootR * 0.85), Math.sin(ka) * (rootR * 0.85));
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+// 绘制瑞士杠杆式擒纵轮（15 齿俱乐部斜齿）
+function drawEscapeWheel(ctx, x, y, z, mod, angle) {
+  const pitchR = (mod * z) / 2;
+  const outerR = pitchR + mod * 1.35;
+  const innerR = pitchR - mod * 1.4;
+  const step = (Math.PI * 2) / z;
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+
+  ctx.beginPath();
+  for (let i = 0; i < z; i++) {
+    const a = i * step;
+    ctx.moveTo(Math.cos(a) * innerR, Math.sin(a) * innerR);
+    ctx.lineTo(Math.cos(a + step * 0.28) * outerR, Math.sin(a + step * 0.28) * outerR);
+    ctx.lineTo(Math.cos(a + step * 0.42) * (outerR * 0.94), Math.sin(a + step * 0.42) * (outerR * 0.94));
+    ctx.lineTo(Math.cos(a + step * 0.22) * innerR, Math.sin(a + step * 0.22) * innerR);
+  }
+  ctx.closePath();
+  ctx.fillStyle = '#facc15';
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = '#854d0e';
+  ctx.stroke();
+
+  // 内环与三辐条
+  ctx.beginPath();
+  ctx.arc(0, 0, innerR, 0, Math.PI * 2);
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = '#eab308';
+  ctx.stroke();
+  for (let s = 0; s < 3; s++) {
+    const sa = (s * Math.PI * 2) / 3;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(Math.cos(sa) * innerR, Math.sin(sa) * innerR);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// 绘制合成红宝石轴承与黄金套筒 (Ruby Jewel + Gold Chaton + Blued Screws)
+function drawRubyJewel(ctx, x, y, r = 5.5) {
+  ctx.save();
+  ctx.translate(x, y);
+  // 黄金套筒
+  ctx.beginPath();
+  ctx.arc(0, 0, r + 2.4, 0, Math.PI * 2);
+  ctx.fillStyle = '#eab308';
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = '#713f12';
+  ctx.stroke();
+  // 鸽血红宝石
+  const rg = ctx.createRadialGradient(-r * 0.3, -r * 0.3, 0.5, 0, 0, r);
+  rg.addColorStop(0, '#fda4af');
+  rg.addColorStop(0.45, '#e11d48');
+  rg.addColorStop(1, '#881337');
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fillStyle = rg;
+  ctx.fill();
+  // 中心钢轴眼
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.35, 0, Math.PI * 2);
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fill();
+  ctx.restore();
+}
+
+// 绘制淬火烤蓝钢螺丝
+function drawBluedScrew(ctx, x, y, r = 4.2, slotAngle = 0.5) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(slotAngle);
+  const bg = ctx.createLinearGradient(-r, -r, r, r);
+  bg.addColorStop(0, '#60a5fa');
+  bg.addColorStop(0.5, '#1d4ed8');
+  bg.addColorStop(1, '#1e3a8a');
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fillStyle = bg;
+  ctx.fill();
+  ctx.strokeStyle = '#93c5fd';
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.85, 0);
+  ctx.lineTo(r * 0.85, 0);
+  ctx.strokeStyle = '#0f172a';
+  ctx.lineWidth = 1.3;
+  ctx.stroke();
+  ctx.restore();
+}
+
+// 可拖拽齿轮列表（用于鼠标命中检测与全表联动换算）
+const INTERACTIVE_GEARS = [
+  { id: 'barrel', name: '发条盒 (Barrel)', pos: posBarrel, r: 66, ratioToHours: -1 / 8 },
+  { id: 'center', name: '中心轮 (Center)', pos: posCenter, r: 66, ratioToHours: 1 },
+  { id: 'third',  name: '三轮 (Third)',    pos: posThird,  r: 62, ratioToHours: -8 },
+  { id: 'fourth', name: '秒轮 (Fourth)',   pos: posFourth, r: 66, ratioToHours: 60 },
+  { id: 'escape', name: '擒纵轮 (Escape)', pos: posEscape, r: 22, ratioToHours: -600 },
+  { id: 'minute', name: '跨轮 (Minute)',   pos: posMinuteWheel, r: 30, ratioToHours: -1 / 3 }
+];
+
+// 绘制整块机芯场景到指定 context
+function renderCaliberScene(ctx, nowSec, stepHours, balanceAngle, palletAngle) {
+  ctx.drawImage(offPlate, 0, 0);
+
+  // 1. 顶部 12 点位表冠 (Crown)、柄轴 (Winding Stem) 与止秒杆 (Hacking Lever)
+  const crownY = crownPulled ? 22 : 42;
+  ctx.save();
+  // 柄轴
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillRect(CX - 5, crownY + 14, 10, 48);
+  // 表冠本体与滚花槽
+  const cGrad = ctx.createLinearGradient(CX - 28, crownY, CX + 28, crownY);
+  cGrad.addColorStop(0, '#fef08a');
+  cGrad.addColorStop(0.5, '#d4af37');
+  cGrad.addColorStop(1, '#78350f');
+  ctx.fillStyle = cGrad;
+  ctx.beginPath();
+  ctx.roundRect(CX - 28, crownY - 12, 56, 26, 8);
+  ctx.fill();
+  ctx.strokeStyle = '#451a03';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  for (let kx = -22; kx <= 22; kx += 5.5) {
+    const shift = ((kx + crownWindOffset) % 5.5);
+    ctx.beginPath();
+    ctx.moveTo(CX + kx + shift * 0.2, crownY - 10);
+    ctx.lineTo(CX + kx + shift * 0.2, crownY + 12);
+    ctx.strokeStyle = 'rgba(69, 26, 3, 0.55)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 根据单一主状态 stepHours 计算各齿轮精确角度（单位：弧度）
+  const TAU = Math.PI * 2;
+  const angCenter = phiCenter + stepHours * 1 * TAU;
+  const angBarrel = phiBarrel + stepHours * (-1 / 8) * TAU;
+  const angThird  = phiThirdPinion + stepHours * (-8) * TAU;
+  const angFourth = phiFourthPinion + stepHours * 60 * TAU;
+  const angEscape = phiEscapePinion + stepHours * (-600) * TAU;
+  const angMinWhl = phiMinuteWheel + stepHours * (-1 / 3) * TAU;
+  const angHourWhl = phiHourWheel + stepHours * (1 / 12) * TAU;
+
+  // 2. 绘制发条盒 (Barrel, z=80) + 内部可视阿基米德发条涡卷 + 太阳纹棘轮 + 蓝钢止逆棘爪
+  drawHorologyWheel(ctx, posBarrel.x, posBarrel.y, 80, MOD, angBarrel, { material: 'gold', spokes: 0, sunburst: true });
+  // 发条盒镂空视窗展示内部蓝钢主发条收紧程度
+  ctx.save();
+  ctx.translate(posBarrel.x, posBarrel.y);
+  ctx.beginPath();
+  ctx.arc(0, 0, 44, 0, TAU);
+  ctx.fillStyle = '#0f172a';
+  ctx.fill();
+  // 绘制阿基米德螺旋发条（圈数密度随 powerReserve 动态收紧）
+  const turns = 3.2 + (powerReserve / 100) * 3.2;
+  ctx.beginPath();
+  for (let a = 0; a <= turns * TAU; a += 0.15) {
+    const frac = a / (turns * TAU);
+    const r = 10 + frac * (38 - (powerReserve / 100) * 8);
+    const sx = Math.cos(a + angBarrel * 2) * r;
+    const sy = Math.sin(a + angBarrel * 2) * r;
+    if (a === 0) ctx.moveTo(sx, sy);
+    else ctx.lineTo(sx, sy);
+  }
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2.1;
+  ctx.stroke();
+  ctx.restore();
+
+  // 大钢轮/棘轮 (Ratchet Wheel, z=36) 与止逆棘爪 (Click)
+  drawHorologyWheel(ctx, posBarrel.x, posBarrel.y, 36, 1.35, angBarrel + ratchetClickAngle, { material: 'steel', sunburst: true });
+  drawBluedScrew(ctx, posBarrel.x, posBarrel.y, 6, angBarrel);
+  // 蓝钢棘爪 (Click)
+  ctx.save();
+  ctx.translate(posBarrel.x + 34, posBarrel.y - 18);
+  ctx.rotate(0.45 + Math.sin(ratchetClickAngle * 18) * 0.08);
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(-16, 8);
+  ctx.lineTo(-12, 13);
+  ctx.closePath();
+  ctx.fillStyle = '#2563eb';
+  ctx.fill();
+  drawBluedScrew(ctx, 0, 0, 3.5);
+  ctx.restore();
+
+  // 3. 中心轮 (Center Wheel, z=80, zp=10)
+  drawHorologyWheel(ctx, posCenter.x, posCenter.y, 80, MOD, angCenter, { material: 'gold', spokes: 5 });
+  drawHorologyWheel(ctx, posCenter.x, posCenter.y, 10, MOD, angCenter, { material: 'steel' });
+
+  // 4. 三轮 (Third Wheel, z=75, zp=10)
+  drawHorologyWheel(ctx, posThird.x, posThird.y, 10, MOD, angThird, { material: 'steel' });
+  drawHorologyWheel(ctx, posThird.x, posThird.y, 75, MOD, angThird, { material: 'rose', spokes: 5 });
+  drawRubyJewel(ctx, posThird.x, posThird.y, 5.5);
+
+  // 5. 秒轮 (Fourth Wheel, z=80, zp=10)
+  drawHorologyWheel(ctx, posFourth.x, posFourth.y, 10, MOD, angFourth, { material: 'steel' });
+  drawHorologyWheel(ctx, posFourth.x, posFourth.y, 80, MOD, angFourth, { material: 'gold', spokes: 5 });
+
+  // 6. 擒纵轮 (Escape Wheel, z=15, zp=8)
+  drawHorologyWheel(ctx, posEscape.x, posEscape.y, 8, MOD, angEscape, { material: 'steel' });
+  drawEscapeWheel(ctx, posEscape.x, posEscape.y, 15, MOD, angEscape);
+  drawRubyJewel(ctx, posEscape.x, posEscape.y, 4.5);
+
+  // 7. 擒纵叉 (Pallet Fork) — 带两颗红宝石叉瓦，随摆轮往复左右拨动
+  ctx.save();
+  ctx.translate(posPallet.x, posPallet.y);
+  ctx.rotate(palletAngle);
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 3.2;
+  ctx.lineCap = 'round';
+  // 叉身连向摆轮圆盘钉，叉臂张开抱住擒纵轮
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(-28, -22);
+  ctx.moveTo(-12, 16);
+  ctx.lineTo(0, 0);
+  ctx.lineTo(18, 8);
+  ctx.stroke();
+  // 进瓦与出瓦红宝石 (Entry & Exit Pallet Jewels)
+  ctx.fillStyle = '#e11d48';
+  ctx.fillRect(-15, 14, 6, 3);
+  ctx.fillRect(15, 6, 6, 3);
+  drawRubyJewel(ctx, 0, 0, 4);
+  ctx.restore();
+
+  // 8. 摆轮 (Balance Wheel) + 宝玑蓝钢呼吸游丝 (Hairspring) + 快慢针夹板
+  ctx.save();
+  ctx.translate(posBalance.x, posBalance.y);
+
+  // 宝玑蓝钢游丝（随摆轮角度呼吸收放）
+  const springBreath = 1 + 0.09 * Math.sin(balanceAngle);
+  ctx.beginPath();
+  for (let a = 0; a <= 4.5 * TAU; a += 0.14) {
+    const r = (4 + (a / (4.5 * TAU)) * 22) * springBreath;
+    const sx = Math.cos(a + balanceAngle * 0.25) * r;
+    const sy = Math.sin(a + balanceAngle * 0.25) * r;
+    if (a === 0) ctx.moveTo(sx, sy);
+    else ctx.lineTo(sx, sy);
+  }
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+
+  // 摆轮轮缘与配重微调金螺丝 (Glucydur Balance Wheel with Gold Timing Screws)
+  ctx.rotate(balanceAngle);
+  const balR = 44;
+  ctx.beginPath();
+  ctx.arc(0, 0, balR, 0, TAU);
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = '#facc15';
+  ctx.stroke();
+  // 三臂摆轮辐条
+  for (let i = 0; i < 3; i++) {
+    const a = (i * TAU) / 3;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(Math.cos(a) * balR, Math.sin(a) * balR);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#fde047';
+    ctx.stroke();
+  }
+  // 轮缘配重螺丝
+  for (let i = 0; i < 12; i++) {
+    const a = (i * TAU) / 12;
+    ctx.beginPath();
+    ctx.arc(Math.cos(a) * (balR + 3), Math.sin(a) * (balR + 3), 2, 0, TAU);
+    ctx.fillStyle = '#fef08a';
+    ctx.fill();
+  }
+  drawRubyJewel(ctx, 0, 0, 5.5);
+  ctx.restore();
+
+  // 止秒杆 (Hacking Lever)：当拔出表冠调时时，蓝钢止秒簧贴紧摆轮外缘刹停摆轮
+  ctx.save();
+  ctx.strokeStyle = crownPulled ? '#38bdf8' : '#64748b';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(posBalance.x - 62, posBalance.y - 36);
+  if (crownPulled) {
+    ctx.lineTo(posBalance.x - 32, posBalance.y - 28);
+  } else {
+    ctx.lineTo(posBalance.x - 48, posBalance.y - 46);
+  }
+  ctx.stroke();
+  drawBluedScrew(ctx, posBalance.x - 62, posBalance.y - 36, 3.8);
+  ctx.restore();
+
+  // 9. 跨轮系 (Motion Works: 分轮 z=12 → 跨轮 z=36, zp=10 → 时轮 z=40)
+  drawHorologyWheel(ctx, posCenter.x, posCenter.y, 12, MOD_M, angCenter, { material: 'steel' });
+  drawHorologyWheel(ctx, posMinuteWheel.x, posMinuteWheel.y, 36, MOD_M, angMinWhl, { material: 'rose', spokes: 4 });
+  drawHorologyWheel(ctx, posMinuteWheel.x, posMinuteWheel.y, 10, MOD_M, angMinWhl, { material: 'steel' });
+  drawRubyJewel(ctx, posMinuteWheel.x, posMinuteWheel.y, 4.2);
+  drawHorologyWheel(ctx, posCenter.x, posCenter.y, 40, MOD_M, angHourWhl, { material: 'rose', spokes: 5 });
+  drawRubyJewel(ctx, posCenter.x, posCenter.y, 6);
+
+  // 夹板固定蓝钢螺丝点缀
+  drawBluedScrew(ctx, 185, 182, 4.5, 0.3);
+  drawBluedScrew(ctx, 325, 165, 4.5, 1.1);
+  drawBluedScrew(ctx, 505, 285, 4.5, 0.8);
+  drawBluedScrew(ctx, 520, 405, 4.5, 2.1);
+
+  // 10. 小秒盘刻度圈与烤蓝钢小秒针（位于秒轮 posFourth，严格 1 圈/分钟，随摆轮节拍跳动）
+  ctx.save();
+  ctx.translate(posFourth.x, posFourth.y);
+  ctx.beginPath();
+  ctx.arc(0, 0, 52, 0, TAU);
+  ctx.fillStyle = 'rgba(10, 14, 24, 0.52)';
+  ctx.fill();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = 'rgba(250, 204, 21, 0.65)';
+  ctx.stroke();
+  for (let s = 0; s < 60; s++) {
+    const a = (s * 6 - 90) * Math.PI / 180;
+    const r1 = s % 5 === 0 ? 45 : 48;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * r1, Math.sin(a) * r1);
+    ctx.lineTo(Math.cos(a) * 51, Math.sin(a) * 51);
+    ctx.strokeStyle = s % 5 === 0 ? '#fde047' : 'rgba(226,232,240,0.45)';
+    ctx.lineWidth = s % 5 === 0 ? 1.5 : 0.8;
+    ctx.stroke();
+  }
+  // 小秒针（直接由秒轮转角驱动）
+  const secHandAng = (stepHours * 60) * TAU - Math.PI / 2;
+  ctx.rotate(secHandAng);
+  ctx.beginPath();
+  ctx.moveTo(-12, 0);
+  ctx.lineTo(44, 0);
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2.2;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(0, 0, 3.5, 0, TAU);
+  ctx.fillStyle = '#fde047';
+  ctx.fill();
+  ctx.restore();
+
+  // 11. 中央宝玑式时针与分针（严格由时轮 angHourWhl 与中心轮 angCenter 导出）
+  const hourHandAng = (stepHours / 12) * TAU - Math.PI / 2;
+  const minHandAng  = (stepHours) * TAU - Math.PI / 2;
+
+  // 时针 (Breguet Moon-tip Hour Hand)
+  ctx.save();
+  ctx.translate(CX, CY);
+  ctx.rotate(hourHandAng);
+  ctx.shadowColor = 'rgba(0,0,0,0.7)';
+  ctx.shadowBlur = 6;
+  ctx.strokeStyle = '#f8fafc';
+  ctx.fillStyle = '#f8fafc';
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-22, 0);
+  ctx.lineTo(132, 0);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(102, 0, 9, 0, TAU);
+  ctx.stroke();
+  ctx.restore();
+
+  // 分针 (Breguet Minute Hand)
+  ctx.save();
+  ctx.translate(CX, CY);
+  ctx.rotate(minHandAng);
+  ctx.shadowColor = 'rgba(0,0,0,0.7)';
+  ctx.shadowBlur = 6;
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 3.4;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-28, 0);
+  ctx.lineTo(208, 0);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(168, 0, 7, 0, TAU);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(0, 0, 7, 0, TAU);
+  ctx.fillStyle = '#fde047';
+  ctx.fill();
+  ctx.restore();
+}
+
+// 指针与齿轮拖拽交互
+function canvasCoords(e) {
+  const rect = cvs.getBoundingClientRect();
+  return {
+    x: ((e.clientX - rect.left) / rect.width) * SIZE,
+    y: ((e.clientY - rect.top) / rect.height) * SIZE
+  };
+}
+
+let draggingCrown = false;
+let crownStartX = 0;
+
+cvs.addEventListener('pointerdown', e => {
+  ensureAudio();
+  cvs.setPointerCapture(e.pointerId);
+  const pt = canvasCoords(e);
+  pointerPos = pt;
+
+  // 检查是否点击了 12 点位表冠 (CX ± 36, y < 65)
+  if (Math.abs(pt.x - CX) < 38 && pt.y < 68) {
+    draggingCrown = true;
+    crownStartX = pt.x;
+    return;
+  }
+
+  // 检查是否命中任一可拨动齿轮（优先小齿轮，再到大齿轮）
+  const order = ['escape', 'minute', 'third', 'fourth', 'barrel', 'center'];
+  for (const id of order) {
+    const g = INTERACTIVE_GEARS.find(item => item.id === id);
+    const d = Math.hypot(pt.x - g.pos.x, pt.y - g.pos.y);
+    if (d <= g.r) {
+      draggingGear = g;
+      dragLastAngle = Math.atan2(pt.y - g.pos.y, pt.x - g.pos.x);
+      document.getElementById('stageHint').textContent = `正在拨动「${g.name}」· 全表齿轮与三针按传动比实时联动`;
+      return;
+    }
+  }
+});
+
+cvs.addEventListener('pointermove', e => {
+  const pt = canvasCoords(e);
+  pointerPos = pt;
+
+  if (draggingCrown) {
+    const dx = pt.x - crownStartX;
+    crownStartX = pt.x;
+    crownWindOffset += dx;
+    if (crownPulled) {
+      // 调时模式：转动表冠带动跨轮系与全表指针调时
+      masterHours += dx * 0.008;
+    } else {
+      // 上弦模式：转动表冠带动棘轮与棘爪上弦
+      if (dx > 0) {
+        powerReserve = Math.min(100, powerReserve + dx * 0.25);
+        ratchetClickAngle += dx * 0.02;
+        if (Math.random() < 0.35) playRatchetClick();
+      }
+    }
+    return;
+  }
+
+  if (draggingGear) {
+    const curAngle = Math.atan2(pt.y - draggingGear.pos.y, pt.x - draggingGear.pos.x);
+    let deltaRad = curAngle - dragLastAngle;
+    if (deltaRad > Math.PI) deltaRad -= Math.PI * 2;
+    if (deltaRad < -Math.PI) deltaRad += Math.PI * 2;
+    dragLastAngle = curAngle;
+
+    const deltaTurns = deltaRad / (Math.PI * 2);
+    // 任意齿轮旋转 deltaTurns 圈，反推主状态 masterHours 变化量
+    masterHours += deltaTurns / draggingGear.ratioToHours;
+  }
+});
+
+function endDrag() {
+  draggingCrown = false;
+  if (draggingGear) {
+    draggingGear = null;
+    document.getElementById('stageHint').textContent =
+      '直接拖拽机芯内任意齿轮全表按传动比联动 · 按住表冠上弦 · 拔出表冠止秒调时';
+  }
+}
+cvs.addEventListener('pointerup', endDrag);
+cvs.addEventListener('pointercancel', endDrag);
+
+// 按钮控制绑定
+let windInterval = null;
+function doWindStep() {
+  ensureAudio();
+  powerReserve = Math.min(100, powerReserve + 6);
+  ratchetClickAngle += 0.22;
+  crownWindOffset += 8;
+  playRatchetClick();
+}
+const windBtn = document.getElementById('windBtn');
+windBtn.addEventListener('pointerdown', () => {
+  doWindStep();
+  windInterval = setInterval(doWindStep, 110);
+});
+window.addEventListener('pointerup', () => {
+  if (windInterval) { clearInterval(windInterval); windInterval = null; }
+});
+
+document.getElementById('crownPullBtn').addEventListener('click', e => {
+  crownPulled = !crownPulled;
+  const badge = document.getElementById('crownStateBadge');
+  if (crownPulled) {
+    badge.textContent = '拔出调时 (HACKING 止秒)';
+    badge.style.color = '#fbbf24';
+    e.currentTarget.classList.add('active');
+    e.currentTarget.textContent = '推回表冠 (恢复走时)';
+  } else {
+    badge.textContent = '正常走时 (RUN)';
+    badge.style.color = '#10b981';
+    e.currentTarget.classList.remove('active');
+    e.currentTarget.textContent = '拔出表冠 (止秒调时)';
+  }
+});
+
+document.getElementById('loupeBtn').addEventListener('click', e => {
+  loupeEnabled = !loupeEnabled;
+  e.currentTarget.classList.toggle('active', loupeEnabled);
+  e.currentTarget.textContent = `目镜放大镜 (2.6×): ${loupeEnabled ? '开' : '关'}`;
+});
+
+document.getElementById('soundBtn').addEventListener('click', e => {
+  ensureAudio();
+  soundEnabled = !soundEnabled;
+  e.currentTarget.classList.toggle('active', soundEnabled);
+  e.currentTarget.textContent = `擒纵滴答声: ${soundEnabled ? '开' : '关'}`;
+});
+
+document.getElementById('speedGroup').addEventListener('click', e => {
+  const btn = e.target.closest('.s-btn');
+  if (!btn) return;
+  speedMult = Number(btn.dataset.mult);
+  document.querySelectorAll('.s-btn').forEach(b => b.classList.toggle('active', b === btn));
+});
+
+// 离屏缓冲用于渲染制表师 2.6x 放大镜
+const zoomCvs = document.createElement('canvas');
+zoomCvs.width = SIZE;
+zoomCvs.height = SIZE;
+const zoomCtx = zoomCvs.getContext('2d');
+
+let lastT = performance.now();
+let lastBeatIndex = -1;
+
+function tick(now) {
+  const dt = Math.min(0.05, (now - lastT) / 1000);
+  lastT = now;
+
+  const isRunning = !crownPulled && !draggingGear && powerReserve > 0.05;
+  if (isRunning) {
+    masterHours += (dt * speedMult) / 3600;
+    // 消耗发条动力（高倍速下适度消耗以便观察完整走时与耗尽停摆）
+    const drainRate = speedMult === 1 ? 0.15 : (speedMult === 60 ? 1.2 : 4.5);
+    powerReserve = Math.max(0, powerReserve - dt * drainRate);
+  }
+
+  // 18,000 bph = 5 拍/秒 (2.5 Hz 简谐摆轮振荡)
+  // 当 1x 实时走时时，擒纵轮与小秒针按每 0.2s 一拍阶跃跳动，并与摆轮过平衡位同步！
+  const totalSeconds = masterHours * 3600;
+  const beatIndex = Math.floor(totalSeconds * 5);
+  const beatFrac = (totalSeconds * 5) - beatIndex;
+
+  if (isRunning && speedMult === 1 && beatIndex !== lastBeatIndex) {
+    lastBeatIndex = beatIndex;
+    playTickSound(beatIndex % 2 === 0);
+  }
+
+  // 阶跃走时状态（1x 下真实体现每拍半个齿距的瑞士杠杆擒纵跳跃，高速档平滑推进）
+  const stepSeconds = speedMult === 1
+    ? (beatIndex + Math.pow(beatFrac, 6)) / 5
+    : totalSeconds;
+  const stepHours = stepSeconds / 3600;
+
+  // 摆轮振幅随动力储存变化（满弦 ~295°，动力接近 0 时衰减停摆）
+  const ampFactor = (!crownPulled && powerReserve > 0.05) ? Math.min(1, 0.35 + 0.65 * (powerReserve / 100)) : 0;
+  const maxAmpRad = (295 * Math.PI / 180) * ampFactor;
+  const oscPhase = now * 0.001 * 2.5 * Math.PI * 2;
+  const balanceAngle = Math.sin(oscPhase) * maxAmpRad;
+  // 擒纵叉随摆轮过零点在 ±0.16 rad 之间方波切换
+  const palletAngle = (beatIndex % 2 === 0 ? 1 : -1) * 0.16 * (ampFactor > 0 ? 1 : 0);
+
+  // 更新右侧数字与动力面板
+  const normSec = ((Math.floor(totalSeconds) % 43200) + 43200) % 43200;
+  const hh = Math.floor(normSec / 3600) || 12;
+  const mm = Math.floor((normSec % 3600) / 60);
+  const ss = Math.floor(normSec % 60);
+  const pad = n => String(n).padStart(2, '0');
+  document.getElementById('timeReadout').textContent = `${pad(hh)}:${pad(mm)}:${pad(ss)}`;
+  document.getElementById('prReadout').textContent = `${Math.round(powerReserve)}%`;
+  document.getElementById('prBarFill').style.width = `${powerReserve.toFixed(1)}%`;
+  const degAmp = Math.round(295 * ampFactor);
+  document.getElementById('bphReadout').textContent = ampFactor > 0 ? `18000 / ${degAmp}°` : `0 / 停摆`;
+
+  // 绘制主画布
+  ctx.clearRect(0, 0, SIZE, SIZE);
+  renderCaliberScene(ctx, now * 0.001, stepHours, balanceAngle, palletAngle);
+
+  // 如果开启了 2.6x 制表师目镜放大镜，在指针处绘制高倍啮合细节镜
+  if (loupeEnabled) {
+    zoomCtx.clearRect(0, 0, SIZE, SIZE);
+    zoomCtx.drawImage(cvs, 0, 0);
+    const lx = pointerPos.x, ly = pointerPos.y, lr = 96, zoom = 2.6;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(lx, ly, lr, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.fillStyle = '#090d16';
+    ctx.fillRect(lx - lr, ly - lr, lr * 2, lr * 2);
+    ctx.drawImage(
+      zoomCvs,
+      lx - lr / zoom, ly - lr / zoom, (lr * 2) / zoom, (lr * 2) / zoom,
+      lx - lr, ly - lr, lr * 2, lr * 2
+    );
+    ctx.restore();
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(lx, ly, lr, 0, Math.PI * 2);
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = '#eab308';
+    ctx.stroke();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#ffffff';
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  requestAnimationFrame(tick);
+}
+
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

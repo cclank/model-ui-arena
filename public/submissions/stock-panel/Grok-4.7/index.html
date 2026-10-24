@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>市井 · 股票面板</title>
+<style>
+:root{--bg:#f4f0e6;--ink:#1b1a17;--muted:#6f6a60;--line:#ddd6c8;--card:#fffcf6;--up:#c5362b;--down:#0e7a45}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 "Iowan Old Style",Palatino,Georgia,"Songti SC",serif}
+body{padding:16px 12px 28px}
+.wrap{width:min(460px,100%);margin:0 auto}
+.top{display:flex;justify-content:space-between;align-items:end;gap:8px}
+h1{font-size:28px;font-weight:500;margin:0;letter-spacing:.12em}
+.kicker{font:11px ui-monospace,Menlo,monospace;letter-spacing:.16em;color:var(--muted)}
+button{font:inherit;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer}
+button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+button:focus-visible,.row:focus-visible{outline:2px solid var(--up);outline-offset:2px}
+.note{min-height:1.4em;margin:10px 0;color:var(--up);font-size:13px}
+.row{width:100%;display:grid;grid-template-columns:1.3fr .8fr .7fr;gap:6px;align-items:center;text-align:left;padding:10px;border-radius:12px;border:1px solid transparent;background:transparent;margin:0 0 4px}
+.row.on{background:var(--card);border-color:var(--line)}
+.name{font-size:16px}.code{display:block;color:var(--muted);font:11px ui-monospace,Menlo,monospace}
+.px{font-variant-numeric:tabular-nums;font-size:18px}
+.chg{font-variant-numeric:tabular-nums;text-align:right}
+.up{color:var(--up)}.down{color:var(--down)}
+.chart{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;margin-top:8px}
+.chart header{display:flex;justify-content:space-between;color:var(--muted);font-size:12px}
+svg{width:100%;height:140px;display:block;margin-top:6px}
+.legend{margin-top:8px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="top"><div><div class="kicker">MARKET BRIEF</div><h1>市井</h1></div><button id="live" type="button" aria-pressed="true">行情滚动</button></div>
+  <p class="note" id="note">红涨绿跌 · 模拟报价</p>
+  <div id="list"></div>
+  <section class="chart">
+    <header><span id="chart-name">趋势</span><span id="chart-range">近 32 笔</span></header>
+    <svg id="svg" viewBox="0 0 320 140" preserveAspectRatio="none" role="img" aria-label="价格折线"></svg>
+    <div class="legend" id="legend"></div>
+  </section>
+</main>
+<script>
+const names=[["北桥精密","NBQ",128.4],["云岫材料","YUN",56.2],["潮声医药","TID",33.15]];
+const stocks=names.map(([name,code,px])=>{
+  const hist=[]; let p=px;
+  for(let i=0;i<32;i++){p=Math.max(1,p*(1+(Math.sin(i*1.7+px)+Math.cos(i*.4))*.004));hist.push(p)}
+  return {name,code,px:hist.at(-1),open:hist[0],hist};
+});
+let sel=0, on=true;
+const $=id=>document.getElementById(id);
+function chg(s){return (s.px-s.open)/s.open}
+function money(n){return n.toFixed(2)}
+function draw(){
+  const s=stocks[sel], h=s.hist, min=Math.min(...h), max=Math.max(...h), span=max-min||1;
+  const pts=h.map((v,i)=>`${(i/(h.length-1))*320},${128-((v-min)/span)*112}`).join(" ");
+  const up=chg(s)>=0, color=up?"#c5362b":"#0e7a45";
+  $("svg").innerHTML=`<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.4" stroke-linejoin="round"/>
+    <polygon points="0,140 ${pts} 320,140" fill="${color}" opacity=".12"/>`;
+  $("chart-name").textContent=`${s.name} · ${s.code}`;
+  const vol=Math.max(...h)-Math.min(...h);
+  $("legend").textContent=`区间 ${money(min)} – ${money(max)} · 振幅 ${money(vol)}`;
+}
+function list(){
+  $("list").innerHTML=stocks.map((s,i)=>{
+    const c=chg(s), up=c>=0;
+    return `<button class="row ${i===sel?"on":""}" data-i="${i}" type="button"><span><b class="name">${s.name}</b><span class="code">${s.code}</span></span><span class="px">${money(s.px)}</span><span class="chg ${up?"up":"down"}">${up?"▲":"▼"} ${(c*100).toFixed(2)}%</span></button>`;
+  }).join("");
+  const hot=stocks.find(s=>Math.abs(chg(s))>=0.02);
+  $("note").textContent=hot?`波动提示：${hot.name} 相对开盘已 ${chg(hot)>=0?"上涨":"下跌"} ${Math.abs(chg(hot)*100).toFixed(2)}%`:"红涨绿跌 · 模拟报价，暂无大幅波动";
+  draw();
+}
+$("list").onclick=e=>{const b=e.target.closest("button"); if(!b)return; sel=+b.dataset.i; list()};
+$("live").onclick=()=>{on=!on; $("live").setAttribute("aria-pressed",String(on)); $("live").textContent=on?"行情滚动":"已暂停"};
+setInterval(()=>{
+  if(!on) return;
+  for(const s of stocks){
+    const last=s.hist.at(-1);
+    const next=Math.max(.5,last*(1+(Math.random()-.48)*.006));
+    s.hist.push(next); if(s.hist.length>32) s.hist.shift();
+    s.px=next;
+  }
+  list();
+},1000);
+list();
+</script>
+</body>
+</html>

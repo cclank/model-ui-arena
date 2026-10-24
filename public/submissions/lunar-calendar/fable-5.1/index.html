@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>农历日历 · Lunar Calendar</title>
+<style>
+  :root{--bg:#f3ede0;--paper:#fffaf0;--ink:#2a2420;--muted:#8a7f72;--line:rgba(60,40,20,.13);--red:#c0392b;--jade:#1f8a70;--gold:#a8760b;--sel:#2a2420;--selInk:#fffaf0;--tint:rgba(192,57,43,.11)}
+  @media (prefers-color-scheme:dark){:root{--bg:#141210;--paper:#1f1b17;--ink:#f1e9dc;--muted:#9a8f80;--line:rgba(255,235,200,.13);--red:#ff8577;--jade:#4fd1a8;--gold:#e5b94a;--sel:#f1e9dc;--selInk:#1f1b17;--tint:rgba(255,133,119,.16)}}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;background:var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;display:grid;place-items:center;padding:14px}
+  .app{width:min(100%,440px);background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:16px;box-shadow:0 24px 60px rgba(40,25,10,.18);display:grid;gap:12px}
+  header{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px}
+  .nav{display:flex;gap:4px}
+  button{font:inherit;color:inherit;cursor:pointer;border:1px solid var(--line);background:transparent;border-radius:10px;padding:7px 9px;font-size:13px;font-weight:700;transition:.15s;line-height:1}
+  button:hover{background:var(--tint)}button:focus-visible,input:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+  .ttl{text-align:center}.ttl h1{font-size:19px;font-weight:800;font-family:"Songti SC","STSong","Noto Serif SC",serif}
+  .ttl p{font-size:11px;color:var(--muted);margin-top:3px}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .wd{text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:3px 0}.wd.rest{color:var(--red)}
+  .cell{display:grid;justify-items:center;align-content:center;gap:1px;padding:5px 0 4px;border:1px solid transparent;border-radius:12px;min-height:52px;position:relative}
+  .cell b{font-size:16px;font-variant-numeric:tabular-nums;line-height:1.1}
+  .cell small{font-size:10px;color:var(--muted);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .cell.out{opacity:.32}.cell.rest b{color:var(--red)}.cell.term small{color:var(--jade);font-weight:800}.cell.fest small{color:var(--red);font-weight:800}
+  .cell.today{background:var(--tint)}.cell.today::after{content:"";position:absolute;top:6px;right:7px;width:5px;height:5px;border-radius:50%;background:var(--red)}
+  .cell.sel,.cell.sel:hover{background:var(--sel);color:var(--selInk)}.cell.sel small,.cell.sel b{color:inherit}
+  .detail{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:center;padding:12px 14px;border-radius:16px;background:var(--tint);border:1px solid var(--line)}
+  .big{font-size:46px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;font-family:"Songti SC","STSong","Noto Serif SC",serif;min-width:58px;text-align:center}
+  .info{display:grid;gap:3px;font-size:12.5px}.info b{font-size:15px;font-weight:800}.info span{color:var(--muted)}
+  .chips{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:5px}
+  .chip{font-size:11px;font-weight:700;padding:4px 8px;border-radius:999px;border:1px solid var(--line);background:var(--paper)}
+  .chip.red{color:var(--red)}.chip.jade{color:var(--jade)}.chip.gold{color:var(--gold)}
+  .query{display:grid;gap:6px;padding:12px 14px;border-radius:16px;border:1px dashed var(--line)}
+  .query label{font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--muted)}
+  .query input{font:inherit;color:inherit;background:transparent;border:1px solid var(--line);border-radius:10px;padding:8px 10px;width:100%;color-scheme:light dark}
+  .query output{font-size:12.5px;line-height:1.65}
+  footer{font-size:10.5px;color:var(--muted);text-align:center;line-height:1.5}
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <div class="nav"><button id="py" title="上一年" aria-label="上一年">«</button><button id="pm" title="上一月" aria-label="上一月">‹</button></div>
+    <div class="ttl"><h1 id="title"></h1><p id="sub"></p></div>
+    <div class="nav"><button id="nm" title="下一月" aria-label="下一月">›</button><button id="ny" title="下一年" aria-label="下一年">»</button></div>
+  </header>
+  <div class="grid" id="grid" role="grid" aria-label="月历（方向键移动，PageUp/PageDown 翻月，T 回到今天）"></div>
+  <section class="detail" id="detail" aria-live="polite"></section>
+  <section class="query"><label for="q-date">公历 → 农历 查询</label><input type="date" id="q-date" min="1900-01-31" max="2100-12-31"><output id="q-result" for="q-date"></output></section>
+  <footer>方向键移动 · PgUp / PgDn 翻月 · T 回到今天 · 农历基于 1900–2100 历表，节气按太阳视黄经（Meeus 公式，北京时间）计算</footer>
+</main>
+<script>
+  const $ = (i) => document.getElementById(i);
+  const LI = [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,
+    0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,
+    0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,
+    0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,
+    0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,
+    0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,
+    0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,
+    0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,
+    0x0a2e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,
+    0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520]; // 1900–2100 农历历表：低 4 位闰月，bit16 闰月大小，bit15..4 各月大小
+  const GAN = "甲乙丙丁戊己庚辛壬癸", ZHI = "子丑寅卯辰巳午未申酉戌亥", ZOD = "鼠牛虎兔龙蛇马羊猴鸡狗猪", MON = "正二三四五六七八九十冬腊", WK = "日一二三四五六";
+  const DAY = ["初一","初二","初三","初四","初五","初六","初七","初八","初九","初十","十一","十二","十三","十四","十五","十六","十七","十八","十九","二十","廿一","廿二","廿三","廿四","廿五","廿六","廿七","廿八","廿九","三十"];
+  const TERMS = ["春分","清明","谷雨","立夏","小满","芒种","夏至","小暑","大暑","立秋","处暑","白露","秋分","寒露","霜降","立冬","小雪","大雪","冬至","小寒","大寒","立春","雨水","惊蛰"]; // 按太阳黄经 0°,15°,… 排序
+  const LFEST = { "1-1": "春节", "1-15": "元宵", "2-2": "龙抬头", "5-5": "端午", "7-7": "七夕", "7-15": "中元", "8-15": "中秋", "9-9": "重阳", "12-8": "腊八", "12-23": "小年" };
+  const SFEST = { "1-1": "元旦", "2-14": "情人节", "3-8": "妇女节", "3-12": "植树节", "5-1": "劳动节", "5-4": "青年节", "6-1": "儿童节", "8-1": "建军节", "9-10": "教师节", "10-1": "国庆" };
+  const EPOCH = Date.UTC(1900, 0, 31), MS = 864e5, ymd = (y, m, d) => Date.UTC(y, m - 1, d), info = (y) => LI[y - 1900];
+  const leapMonth = (y) => info(y) & 0xf, leapDays = (y) => leapMonth(y) ? (info(y) & 0x10000 ? 30 : 29) : 0, monthDays = (y, m) => info(y) & (0x10000 >> m) ? 30 : 29;
+  function months(y) { const seq = []; for (let m = 1; m <= 12; m++) { seq.push({ m, leap: false, days: monthDays(y, m) }); if (m === leapMonth(y)) seq.push({ m, leap: true, days: leapDays(y) }); } return seq; }
+  const yearDays = (y) => months(y).reduce((a, x) => a + x.days, 0);
+  function toLunar(y, m, d) {                                   // 公历 → 农历：从 1900-01-31（庚子年正月初一）逐年逐月递减天数
+    let off = Math.round((ymd(y, m, d) - EPOCH) / MS), ly = 1900; if (off < 0) return null;
+    for (let n; ly < 2100 && off >= (n = yearDays(ly)); ly++) off -= n;
+    for (const mo of months(ly)) { if (off < mo.days) return { y: ly, m: mo.m, leap: mo.leap, d: off + 1, days: mo.days }; off -= mo.days; }
+    return null;
+  }
+  function newYear(Y) { let off = 0; for (let y = 1900; y < Y; y++) off += yearDays(y); return EPOCH + off * MS; }   // 农历 Y 年春节对应公历（ms）
+  const gz = (n) => GAN[((n % 10) + 10) % 10] + ZHI[((n % 12) + 12) % 12], yearGZ = (ly) => gz(ly - 4), zodiac = (ly) => ZOD[((ly - 4) % 12 + 12) % 12];
+  const dayGZ = (y, m, d) => gz(Math.round(ymd(y, m, d) / MS) + 25577);                                              // 1970-01-01 = 辛巳日
+  const lunarName = (L) => (L.leap ? "闰" : "") + MON[L.m - 1] + "月", lunarStr = (L) => lunarName(L) + DAY[L.d - 1];
+  const D2R = Math.PI / 180;
+  function sunLon(jd) {                                          // 太阳视黄经（Meeus 低精度公式，约 0.01°）
+    const T = (jd - 2451545) / 36525, L = 280.46646 + 36000.76983 * T + 3.032e-4 * T * T, M = (357.52911 + 35999.05029 * T - 1.537e-4 * T * T) * D2R;
+    const C = (1.914602 - 0.004817 * T - 1.4e-5 * T * T) * Math.sin(M) + (0.019993 - 1.01e-4 * T) * Math.sin(2 * M) + 2.89e-4 * Math.sin(3 * M);
+    return (((L + C - 0.00569 - 0.00478 * Math.sin((125.04 - 1934.136 * T) * D2R)) % 360) + 360) % 360;
+  }
+  function termOf(y, m, d) {                                     // 当天（北京时间 0 点→次日 0 点）内黄经跨过 15° 整数倍即为该节气
+    const jd = ymd(y, m, d) / MS + 2440587.5 - 1 / 3, a = Math.floor(sunLon(jd) / 15), b = Math.floor(sunLon(jd + 1) / 15); return a === b ? "" : TERMS[b];
+  }
+  function festOf(y, m, d, L) { const s = SFEST[m + "-" + d]; if (s) return s; if (!L || L.leap) return ""; if (L.m === 12 && L.d === L.days) return "除夕"; return LFEST[L.m + "-" + L.d] || ""; }
+  const T0 = new Date(), today = { y: T0.getFullYear(), m: T0.getMonth() + 1, d: T0.getDate() };
+  let view = { y: today.y, m: today.m }, sel = { ...today };
+  const same = (a, b) => a.y === b.y && a.m === b.m && a.d === b.d, fromMs = (t) => { const x = new Date(t); return { y: x.getUTCFullYear(), m: x.getUTCMonth() + 1, d: x.getUTCDate() }; };
+  const clampY = (y) => Math.min(2100, Math.max(1900, y));
+  function render() {
+    const first = new Date(ymd(view.y, view.m, 1)).getUTCDay(), L1 = toLunar(view.y, view.m, 1), L2 = toLunar(view.y, view.m, new Date(Date.UTC(view.y, view.m, 0)).getUTCDate());
+    $("title").textContent = `${view.y}年${view.m}月`;
+    $("sub").textContent = L1 && L2 ? (L1.y === L2.y ? `${yearGZ(L1.y)}${zodiac(L1.y)}年 · 农历${lunarName(L1)}至${lunarName(L2)}` : `${yearGZ(L1.y)}${zodiac(L1.y)}年 → ${yearGZ(L2.y)}${zodiac(L2.y)}年 · ${lunarName(L1)}至${lunarName(L2)}`) : "超出历表范围";
+    let html = [...WK].map((w, i) => `<div class="wd${i % 6 ? "" : " rest"}" role="columnheader">${w}</div>`).join("");
+    for (let i = 0; i < 42; i++) {
+      const c = fromMs(ymd(view.y, view.m, i - first + 1)), L = toLunar(c.y, c.m, c.d), t = termOf(c.y, c.m, c.d), f = festOf(c.y, c.m, c.d, L), wd = (first + i) % 7;
+      const small = f || t || (L ? (L.d === 1 ? lunarName(L) : DAY[L.d - 1]) : "—"), cls = ["cell", c.m !== view.m && "out", wd % 6 === 0 && "rest", f && "fest", !f && t && "term", same(c, today) && "today", same(c, sel) && "sel"].filter(Boolean).join(" ");
+      html += `<button class="${cls}" role="gridcell" data-d="${c.y}-${c.m}-${c.d}" tabindex="${same(c, sel) ? 0 : -1}" aria-selected="${same(c, sel)}"${same(c, today) ? ' aria-current="date"' : ""}><b>${c.d}</b><small>${small}</small></button>`;
+    }
+    $("grid").innerHTML = html; detail();
+  }
+  function detail() {
+    const { y, m, d } = sel, L = toLunar(y, m, d), t = termOf(y, m, d), f = festOf(y, m, d, L), wd = new Date(ymd(y, m, d)).getUTCDay();
+    if (!L) { $("detail").innerHTML = `<div class="big">${d}</div><div class="info"><b>${y}年${m}月${d}日 星期${WK[wd]}</b><span>超出 1900–2100 历表范围</span></div>`; return; }
+    const doy = Math.round((ymd(y, m, d) - ymd(y, 1, 1)) / MS) + 1, week = Math.ceil((doy + new Date(ymd(y, 1, 1)).getUTCDay()) / 7), toNY = Math.round((newYear(L.y + 1) - ymd(y, m, d)) / MS);
+    let next = ""; for (let k = 1; k <= 31 && !next; k++) { const n = fromMs(ymd(y, m, d + k)), nt = termOf(n.y, n.m, n.d); if (nt) next = `下一节气 ${nt} · ${k} 天后`; }
+    const chips = [t && `<span class="chip jade">节气 · ${t}</span>`, f && `<span class="chip red">节日 · ${f}</span>`, !t && next && `<span class="chip">${next}</span>`,
+      `<span class="chip gold">${L.m === 1 && L.d === 1 ? "今日春节" : `距春节 ${toNY} 天`}</span>`, `<span class="chip">本年第 ${doy} 天 · 第 ${week} 周</span>`].filter(Boolean).join("");
+    $("detail").innerHTML = `<div class="big">${d}</div><div class="info"><b>${y}年${m}月${d}日 · 星期${WK[wd]}</b><span>农历 ${lunarStr(L)} · ${yearGZ(L.y)}年 属${zodiac(L.y)} · ${dayGZ(y, m, d)}日</span></div><div class="chips">${chips}</div>`;
+  }
+  function select(c, focus) { c.y = clampY(c.y); sel = c; if (c.y !== view.y || c.m !== view.m) view = { y: c.y, m: c.m }; render(); if (focus) $("grid").querySelector(".sel")?.focus(); }
+  const shift = (days) => select(fromMs(ymd(sel.y, sel.m, sel.d + days)), true), shiftMonth = (n) => { const x = new Date(Date.UTC(sel.y, sel.m - 1 + n, 1)), dim = new Date(Date.UTC(x.getUTCFullYear(), x.getUTCMonth() + 1, 0)).getUTCDate(); select({ y: x.getUTCFullYear(), m: x.getUTCMonth() + 1, d: Math.min(sel.d, dim) }, true); };
+  $("grid").addEventListener("click", (e) => { const b = e.target.closest("[data-d]"); if (b) { const [y, m, d] = b.dataset.d.split("-").map(Number); select({ y, m, d }, true); } });
+  $("grid").addEventListener("keydown", (e) => {
+    const k = { ArrowLeft: () => shift(-1), ArrowRight: () => shift(1), ArrowUp: () => shift(-7), ArrowDown: () => shift(7), PageUp: () => shiftMonth(e.shiftKey ? -12 : -1), PageDown: () => shiftMonth(e.shiftKey ? 12 : 1), Home: () => select({ ...today }, true) }[e.key] || (e.key.toLowerCase() === "t" && (() => select({ ...today }, true)));
+    if (k) { e.preventDefault(); k(); }
+  });
+  $("pm").onclick = () => shiftMonth(-1); $("nm").onclick = () => shiftMonth(1); $("py").onclick = () => shiftMonth(-12); $("ny").onclick = () => shiftMonth(12);
+  function query() {                                             // 自动校验入口：#q-date → #q-result（固定片段格式）
+    const [y, m, d] = $("q-date").value.split("-").map(Number); if (!y) return; const L = toLunar(y, m, d);
+    $("q-result").textContent = L ? `农历：${yearGZ(L.y)}年 ${lunarName(L)} ${DAY[L.d - 1]} · 生肖：${zodiac(L.y)} · 节气：${termOf(y, m, d) || "无"} · 节日：${festOf(y, m, d, L) || "无"} · 干支日：${dayGZ(y, m, d)} · 星期${WK[new Date(ymd(y, m, d)).getUTCDay()]}` : "超出 1900-01-31 至 2100-12-31 范围";
+  }
+  $("q-date").addEventListener("input", query); $("q-date").addEventListener("change", query);
+  $("q-date").value = `${today.y}-${String(today.m).padStart(2, "0")}-${String(today.d).padStart(2, "0")}`; query(); render();
+</script>
+</body>
+</html>

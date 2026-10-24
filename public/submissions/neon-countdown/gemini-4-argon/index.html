@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hypernova Neon Countdown</title>
+<style>
+  :root {
+    --bg: #060814; --card: rgba(13, 18, 36, 0.85); --accent: #00f5d4;
+    --accent2: #7b2cbf; --text: #f8fafc; --sub: #94a3b8;
+  }
+  body.state-urgent { --accent: #ff2a85; --accent2: #ff7b00; }
+  body.state-finished { --accent: #fde047; --accent2: #00f5d4; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 50% 35%, rgba(123,44,191,0.28), var(--bg) 70%);
+    color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding: 16px; overflow: hidden; transition: background 0.35s;
+  }
+  canvas#burstCanvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+  .stage-card {
+    position: relative; z-index: 1; width: 100%; max-width: 390px;
+    background: var(--card); border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 32px; padding: 24px 20px; text-align: center;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 36px rgba(0,245,212,0.12);
+    backdrop-filter: blur(16px); display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .stage-card.pulse-beat { animation: beat 0.36s ease-out; }
+  @keyframes beat { 0% { transform: scale(1.035); } 100% { transform: scale(1); } }
+  .top-tag {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--accent); padding: 4px 12px; border-radius: 99px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+  }
+  .ring-wrap { position: relative; width: 250px; height: 250px; display: flex; align-items: center; justify-content: center; }
+  svg.ring-svg { width: 100%; height: 100%; overflow: visible; transform: rotate(-90deg); }
+  .center-readout {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .big-num {
+    font-size: 88px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 26px var(--accent); transition: color 0.2s, transform 0.2s;
+  }
+  body.state-urgent .big-num { color: #ff2a85; animation: urgentShake 0.25s infinite alternate; }
+  @keyframes urgentShake { from { transform: scale(1); } to { transform: scale(1.08); } }
+  .sub-ms { font-size: 14px; font-family: monospace; color: var(--sub); margin-top: 6px; letter-spacing: 0.08em; }
+  .finish-banner {
+    font-size: 16px; font-weight: 800; color: #fde047; letter-spacing: 0.08em;
+    min-height: 24px; text-shadow: 0 0 14px rgba(253,224,71,0.6);
+  }
+  .bar-track {
+    width: 100%; height: 8px; background: rgba(255,255,255,0.08);
+    border-radius: 99px; overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%; width: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 99px; transition: width 0.08s linear;
+  }
+  .restart-btn {
+    width: 100%; padding: 13px 20px; border-radius: 16px; border: 1px solid var(--accent);
+    background: rgba(0, 245, 212, 0.14); color: #fff; font-size: 14px; font-weight: 800;
+    letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: 0.2s;
+  }
+  .restart-btn:hover { background: var(--accent); color: #050814; box-shadow: 0 0 24px var(--accent); }
+</style>
+</head>
+<body>
+<canvas id="burstCanvas"></canvas>
+<div class="stage-card" id="card">
+  <div class="top-tag" id="statusTag">SEQUENCE // ACTIVE</div>
+  <div class="ring-wrap">
+    <svg class="ring-svg" viewBox="-125 -125 250 250">
+      <circle r="108" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="10"/>
+      <g id="segGroup"></g>
+      <circle id="arcProg" r="108" fill="none" stroke="var(--accent)" stroke-width="10"
+              stroke-linecap="round" stroke-dasharray="678.6 678.6"/>
+    </svg>
+    <div class="center-readout">
+      <div class="big-num" id="numDisplay">10</div>
+      <div class="sub-ms" id="msDisplay">10.00s</div>
+    </div>
+  </div>
+  <div class="finish-banner" id="bannerText">能量核心充能倒计时中...</div>
+  <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
+  <button class="restart-btn" id="restartBtn" type="button">Restart 重新启动</button>
+</div>
+<script>
+const segG = document.getElementById('segGroup');
+const segEls = [];
+for (let i = 0; i < 10; i++) {
+  const a = (i * 36) * Math.PI / 180;
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', (Math.cos(a) * 88).toFixed(1));
+  line.setAttribute('y1', (Math.sin(a) * 88).toFixed(1));
+  line.setAttribute('x2', (Math.cos(a) * 95).toFixed(1));
+  line.setAttribute('y2', (Math.sin(a) * 95).toFixed(1));
+  line.setAttribute('stroke', 'var(--accent)');
+  line.setAttribute('stroke-width', '3');
+  line.setAttribute('stroke-linecap', 'round');
+  segG.appendChild(line);
+  segEls.push(line);
+}
+
+const cvs = document.getElementById('burstCanvas'), ctx = cvs.getContext('2d');
+let W = window.innerWidth, H = window.innerHeight;
+function resize() { W = cvs.width = window.innerWidth; H = cvs.height = window.innerHeight; }
+window.addEventListener('resize', resize); resize();
+const particles = [];
+
+function triggerExplosion() {
+  for (let i = 0; i < 110; i++) {
+    const ang = Math.random() * Math.PI * 2;
+    const spd = 2 + Math.random() * 8;
+    particles.push({
+      x: W / 2, y: H / 2,
+      vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd,
+      a: 1, c: ['#00f5d4', '#fde047', '#ff2a85', '#38bdf8'][i % 4], r: 2 + Math.random() * 3
+    });
+  }
+}
+
+const DURATION = 10000, CIRC = 2 * Math.PI * 108;
+let startTime = performance.now(), lastSec = 10, finished = false;
+
+function resetCountdown() {
+  startTime = performance.now();
+  lastSec = 10;
+  finished = false;
+  document.body.classList.remove('state-urgent', 'state-finished');
+  document.getElementById('statusTag').textContent = 'SEQUENCE // ACTIVE';
+  document.getElementById('bannerText').textContent = '能量核心充能倒计时中...';
+}
+document.getElementById('restartBtn').addEventListener('click', resetCountdown);
+
+function tick(now) {
+  const elapsed = now - startTime;
+  const remain = Math.max(0, DURATION - elapsed);
+  const ratio = remain / DURATION;
+  const secCeil = Math.ceil(remain / 1000);
+
+  if (secCeil !== lastSec && secCeil > 0) {
+    lastSec = secCeil;
+    const card = document.getElementById('card');
+    card.classList.remove('pulse-beat');
+    void card.offsetWidth;
+    card.classList.add('pulse-beat');
+  }
+
+  document.getElementById('numDisplay').textContent = String(secCeil);
+  document.getElementById('msDisplay').textContent = `${(remain / 1000).toFixed(2)}s`;
+  document.getElementById('arcProg').setAttribute('stroke-dasharray', `${(ratio * CIRC).toFixed(1)} ${CIRC.toFixed(1)}`);
+  document.getElementById('barFill').style.width = `${(ratio * 100).toFixed(1)}%`;
+  segEls.forEach((el, idx) => { el.style.opacity = idx < secCeil ? '1' : '0.18'; });
+
+  if (remain > 0 && remain <= 3000) {
+    document.body.classList.add('state-urgent');
+    document.getElementById('statusTag').textContent = 'WARNING // FINAL 3 SECONDS';
+    document.getElementById('bannerText').textContent = '临界冲刺！准备超新星爆发！';
+  } else if (remain <= 0 && !finished) {
+    finished = true;
+    document.body.classList.remove('state-urgent');
+    document.body.classList.add('state-finished');
+    document.getElementById('statusTag').textContent = 'IGNITION // COMPLETE';
+    document.getElementById('bannerText').textContent = '0 秒抵达 · 超新星点火成功！';
+    triggerExplosion();
+  }
+
+  ctx.clearRect(0, 0, W, H);
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.a -= 0.016;
+    if (p.a <= 0) { particles.splice(i, 1); continue; }
+    ctx.globalAlpha = p.a; ctx.fillStyle = p.c;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

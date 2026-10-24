@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>点击夜空 · Fireworks</title>
+<style>
+  :root { --ink: #05070d; --fg: #f4f7ff; --muted: #97a5bd; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; overflow: hidden; background: var(--ink); color: var(--fg);
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased; touch-action: manipulation;
+  }
+  .sky { position: fixed; inset: 0; background:
+      radial-gradient(120% 90% at 22% 8%, #16294d 0%, transparent 55%),
+      radial-gradient(90% 70% at 82% 0%, #2a1a3d 0%, transparent 52%),
+      linear-gradient(180deg, #060a15 0%, #04060c 58%, #020306 100%); }
+  .stars { position: fixed; inset: 0; opacity: .75; background-image:
+      radial-gradient(1.4px 1.4px at 24px 38px, #fff, transparent),
+      radial-gradient(1.1px 1.1px at 132px 92px, #dfe9ff, transparent),
+      radial-gradient(1.7px 1.7px at 208px 24px, #fff, transparent),
+      radial-gradient(1px 1px at 78px 168px, #cfe0ff, transparent),
+      radial-gradient(1.3px 1.3px at 186px 142px, #fff, transparent);
+    background-size: 240px 200px; animation: twinkle 7s ease-in-out infinite alternate; }
+  @keyframes twinkle { from { opacity: .5; } to { opacity: .95; } }
+  .moon { position: fixed; top: 8%; right: 11%; width: 92px; height: 92px; border-radius: 50%;
+    background: radial-gradient(circle at 36% 34%, #fff7e2 0%, #ffe6b8 42%, #e7c48b 70%, #c9a066 100%);
+    box-shadow: 0 0 60px rgba(255,226,166,.28), 0 0 160px rgba(255,214,150,.16); }
+  .moon::after { content: ""; position: absolute; inset: 0; border-radius: 50%;
+    background: radial-gradient(circle at 66% 30%, rgba(190,160,115,.55) 0 12%, transparent 13%),
+      radial-gradient(circle at 40% 68%, rgba(190,160,115,.4) 0 9%, transparent 10%),
+      radial-gradient(circle at 72% 66%, rgba(190,160,115,.35) 0 7%, transparent 8%); }
+  .horizon { position: fixed; left: 0; right: 0; bottom: 0; height: 26vh; background: linear-gradient(180deg, transparent, rgba(255,164,86,.11) 72%, rgba(255,150,70,.03)); pointer-events: none; }
+  #city { position: fixed; left: 0; right: 0; bottom: 0; width: 100%; height: 24vh; display: block; }
+  #fx { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .hud { position: fixed; left: 0; right: 0; top: clamp(34px, 9vh, 92px); text-align: center; pointer-events: none; transition: opacity .7s ease, transform .7s ease; }
+  .hud.gone { opacity: 0; transform: translateY(-14px); }
+  .eyebrow { font-size: 10px; letter-spacing: .5em; color: rgba(190,205,232,.55); text-transform: uppercase; }
+  .hud h1 { margin: 14px 0 10px; font-size: clamp(34px, 7vw, 62px); font-weight: 200; letter-spacing: .18em; text-shadow: 0 0 40px rgba(140,180,255,.35); }
+  .hud p { margin: 0; font-size: 12.5px; letter-spacing: .18em; color: var(--muted); }
+  .foot { position: fixed; left: 0; right: 0; bottom: 18px; display: flex; align-items: center; justify-content: center; gap: 16px; font-size: 11px; letter-spacing: .16em; color: var(--muted); }
+  .foot b { color: var(--fg); font-weight: 500; font-family: ui-monospace, Menlo, monospace; }
+  .btn { border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.05); color: var(--muted); font: inherit; font-size: 11px;
+    letter-spacing: .16em; padding: 7px 16px; border-radius: 999px; cursor: pointer; backdrop-filter: blur(8px); transition: .25s; }
+  .btn:hover { color: var(--fg); border-color: rgba(255,255,255,.34); background: rgba(255,255,255,.1); }
+  @media (max-width: 520px) {
+    .hud { top: 46px; } .hud h1 { font-size: 34px; letter-spacing: .12em; } .hud p { font-size: 11px; letter-spacing: .1em; }
+    .moon { width: 62px; height: 62px; top: 6%; right: 8%; } #city { height: 20vh; }
+  }
+</style>
+</head>
+<body>
+  <div class="sky"></div><div class="stars"></div><div class="moon"></div><div class="horizon"></div>
+  <svg id="city" viewBox="0 0 1200 240" preserveAspectRatio="none" aria-hidden="true"></svg>
+  <canvas id="fx" aria-label="烟花画布"></canvas>
+  <header class="hud" id="hud">
+    <div class="eyebrow">Night Festival</div>
+    <h1>点击夜空</h1>
+    <p>任意位置绽放一束烟火 · 连续点击可叠加</p>
+  </header>
+  <footer class="foot"><span>已绽放 <b id="count">0</b> 束</span><button class="btn" id="clear">清空夜空</button></footer>
+<script>
+  (() => {
+    const $ = (id) => document.getElementById(id);
+    const cvs = $("fx"), ctx = cvs.getContext("2d", { alpha: true });
+    const MAX = innerWidth < 620 ? 1100 : 2400;
+    let W = 0, H = 0, DPR = 1, parts = [], flashes = [], shots = 0, last = performance.now();
+
+    const skyline = () => {
+      let x = -20, seed = 7, out = "";
+      const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+      while (x < 1220) {
+        const w = 34 + rnd() * 86, h = 34 + rnd() * 156;
+        out += `<rect x="${x.toFixed(0)}" y="${(240 - h).toFixed(0)}" width="${w.toFixed(0)}" height="${h.toFixed(0)}" fill="#070b12"/>`;
+        if (rnd() > .55) out += `<rect x="${(x + w * .3).toFixed(0)}" y="${(240 - h + 12).toFixed(0)}" width="3" height="4" fill="#f5c97a" opacity=".5"/>`;
+        x += w + 4 + rnd() * 10;
+      }
+      $("city").innerHTML = out;
+    };
+
+    const resize = () => {
+      DPR = Math.min(2, window.devicePixelRatio || 1);
+      W = cvs.clientWidth; H = cvs.clientHeight;
+      cvs.width = Math.round(W * DPR); cvs.height = Math.round(H * DPR);
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    };
+
+    function burst(x, y) {
+      const hue = Math.random() * 360, n = 78 + (Math.random() * 52 | 0), power = 2.6 + Math.random() * 2.7;
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + Math.random() * .06, sp = power * (.55 + Math.random() * .65);
+        parts.push({ x, y, px: x, py: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1,
+          decay: .006 + Math.random() * .012, hue: hue + (Math.random() - .5) * 46, size: 1 + Math.random() * 1.5 });
+      }
+      for (let i = 0; i < 12; i++) {
+        const a = Math.random() * Math.PI * 2, sp = power * (1.15 + Math.random() * .8);
+        parts.push({ x, y, px: x, py: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, decay: .004, hue: hue + 180, size: 1.6 });
+      }
+      flashes.push({ x, y, r: 3, life: 1, hue });
+      if (parts.length > MAX) parts.splice(0, parts.length - MAX);
+      shots += 1; $("count").textContent = shots;
+      $("hud").classList.add("gone");
+    }
+
+    function frame(now) {
+      const dt = Math.min(48, now - last) / 16.667; last = now;
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = `rgba(0,0,0,${Math.min(.4, .14 * dt)})`;
+      ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = "lighter";
+      for (let i = flashes.length - 1; i >= 0; i--) {
+        const f = flashes[i];
+        f.r += 24 * dt; f.life -= .085 * dt;
+        if (f.life <= 0) { flashes.splice(i, 1); continue; }
+        const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r);
+        g.addColorStop(0, `hsla(${f.hue},100%,96%,${f.life * .42})`);
+        g.addColorStop(.35, `hsla(${f.hue},100%,72%,${f.life * .16})`);
+        g.addColorStop(1, `hsla(${f.hue},100%,60%,0)`);
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 6.2832); ctx.fill();
+      }
+      for (let i = parts.length - 1; i >= 0; i--) {
+        const p = parts[i];
+        p.px = p.x; p.py = p.y;
+        p.vx *= Math.pow(.985, dt); p.vy = p.vy * Math.pow(.985, dt) + .052 * dt;
+        p.x += p.vx * dt; p.y += p.vy * dt;
+        p.life -= p.decay * dt;
+        if (p.life <= 0 || p.y > H + 40 || p.x < -40 || p.x > W + 40) { parts.splice(i, 1); continue; }
+        const flick = p.life > .55 || Math.random() > .18 ? 1 : .25;
+        ctx.strokeStyle = `hsla(${p.hue},100%,${58 + p.life * 30}%,${p.life * flick})`;
+        ctx.lineWidth = p.size * (.5 + p.life * .7);
+        ctx.beginPath(); ctx.moveTo(p.px, p.py); ctx.lineTo(p.x, p.y); ctx.stroke();
+      }
+      requestAnimationFrame(frame);
+    }
+
+    addEventListener("pointerdown", (e) => {
+      if (e.button !== 0 || (e.target.closest && e.target.closest("button"))) return;
+      burst(e.clientX, e.clientY);
+    });
+    $("clear").addEventListener("click", () => { parts = []; flashes = []; ctx.clearRect(0, 0, W, H); shots = 0; $("count").textContent = 0; });
+    addEventListener("resize", resize);
+    document.addEventListener("visibilitychange", () => { last = performance.now(); });
+    skyline(); resize(); requestAnimationFrame(frame);
+  })();
+</script>
+</body>
+</html>

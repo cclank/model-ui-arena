@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VoxBox · 录音机</title>
+<style>
+:root{--bg:#0b0d12;--panel:#141821;--line:#ffffff14;--ink:#f2f5fa;--dim:#7d879c;--red:#ff5a67;--accent:#69e0c8}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100svh;display:grid;place-items:center;background:radial-gradient(90vmax 70vmax at 50% -20%,#1a2130,#080a0f 70%);color:var(--ink);font-family:"SF Pro Text",-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;padding:18px;overflow-x:hidden}
+.deck{position:relative;width:min(92vw,380px);background:linear-gradient(180deg,#171c27,#10141c);border:1px solid var(--line);border-radius:26px;padding:22px 20px 18px;box-shadow:0 30px 80px -30px #000,inset 0 1px 0 #ffffff12;display:grid;gap:16px}
+.head{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:.24em;color:var(--dim)}
+#state{padding:4px 12px;border-radius:999px;border:1px solid var(--line);letter-spacing:.1em;transition:color .3s,border-color .3s}
+#state.on{color:var(--red);border-color:#ff5a6755}
+#state.pause{color:#ffc663;border-color:#ffc66355}
+#state.done{color:var(--accent);border-color:#69e0c855}
+.timer{text-align:center}
+.timer .big{font-size:clamp(44px,14vw,58px);font-weight:200;font-variant-numeric:tabular-nums;letter-spacing:.06em}
+.timer .unit{display:block;margin-top:4px;font-size:12px;color:var(--dim);letter-spacing:.18em}
+.wave{position:relative;height:96px;border-radius:14px;background:#0a0d13;border:1px solid var(--line);overflow:hidden}
+canvas{width:100%;height:100%;display:block}
+.scanline{position:absolute;top:0;bottom:0;width:2px;background:linear-gradient(180deg,transparent,var(--red),transparent);opacity:0;left:70%}
+.rec-live .scanline{opacity:.9;animation:sweep 2.2s linear infinite}
+@keyframes sweep{from{left:8%}to{left:92%}}
+.meters{display:flex;justify-content:space-between;font-size:11px;color:var(--dim);letter-spacing:.08em;font-variant-numeric:tabular-nums}
+.controls{display:flex;align-items:center;justify-content:center;gap:18px}
+button{font:inherit;color:inherit;border:none;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.rec{position:relative;width:78px;height:78px;border-radius:50%;background:radial-gradient(circle at 34% 28%,#2a3140,#171c27);border:1px solid var(--line);display:grid;place-items:center;transition:transform .15s}
+.rec:active{transform:scale(.94)}
+.rec .core{width:44px;height:44px;border-radius:50%;background:var(--red);box-shadow:0 0 22px #ff5a6766;transition:all .28s cubic-bezier(.34,1.56,.64,1)}
+.rec.paused .core{background:#ffc663;box-shadow:0 0 18px #ffc66355;border-radius:12px;width:30px;height:30px}
+.rec.recording .core{background:var(--red);border-radius:8px;width:30px;height:30px;animation:beat 1s ease-in-out infinite}
+@keyframes beat{50%{transform:scale(.82);opacity:.85}}
+.rec .ring{position:absolute;inset:-7px;border-radius:50%;border:1.5px dashed #ffffff1f}
+.rec.recording .ring{animation:spin 6s linear infinite;border-color:#ff5a6744}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ghost{padding:10px 18px;border-radius:12px;border:1px solid var(--line);color:var(--dim);font-size:13px;letter-spacing:.1em;transition:.2s}
+.ghost:hover{color:var(--ink);border-color:#ffffff33}
+.ghost:disabled{opacity:.35;cursor:not-allowed}
+.ghost.danger:hover{color:var(--red);border-color:#ff5a6766}
+.sheet{position:absolute;inset:0;border-radius:26px;background:#0d1119f2;backdrop-filter:blur(8px);display:grid;place-content:center;gap:14px;text-align:center;padding:26px;z-index:5;animation:fade .22s ease}
+.sheet[hidden]{display:none}
+@keyframes fade{from{opacity:0}}
+.sheet h3{font-size:16px;font-weight:500;letter-spacing:.08em}
+.sheet p{font-size:12.5px;color:var(--dim);line-height:1.9}
+.sheet .actions{display:flex;gap:12px;justify-content:center}
+.sheet .ok{padding:10px 20px;border-radius:12px;background:var(--red);color:#fff;font-size:13px}
+.sheet .cancel{padding:10px 20px;border-radius:12px;border:1px solid var(--line);color:var(--dim);font-size:13px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.stats div{background:#ffffff0a;border:1px solid var(--line);border-radius:12px;padding:10px}
+.stats b{display:block;font-size:18px;font-weight:500;font-variant-numeric:tabular-nums;margin-bottom:3px}
+.stats span{font-size:10.5px;color:var(--dim);letter-spacing:.14em}
+@media (max-width:400px){.deck{padding:18px 15px 15px}.ghost{padding:9px 14px}}
+</style>
+</head>
+<body>
+<main class="deck" id="deck">
+  <div class="head"><span>VOXBOX · 交付录音原型</span><span id="state">待机</span></div>
+  <div class="timer"><span class="big" id="clock">00:00</span><span class="unit" id="unit">准备就绪 · 点击圆钮开始</span></div>
+  <div class="wave"><canvas id="cv"></canvas><div class="scanline"></div></div>
+  <div class="meters"><span id="peak">峰值 -∞ dB</span><span id="rate">48 kHz · 模拟输入</span></div>
+  <div class="controls">
+    <button class="ghost" id="pauseBtn" disabled>暂停</button>
+    <button class="rec" id="rec" aria-label="开始或暂停录音"><span class="ring"></span><span class="core"></span></button>
+    <button class="ghost danger" id="stopBtn" disabled>停止</button>
+  </div>
+  <div class="sheet" id="confirmSheet" hidden>
+    <h3>确认停止本次录音？</h3>
+    <p>停止后将生成本次录音摘要，<br>未保存的波形仅保留在内存中。</p>
+    <div class="actions"><button class="cancel" id="cancelStop">继续录制</button><button class="ok" id="okStop">确认停止</button></div>
+  </div>
+  <div class="sheet" id="summary" hidden>
+    <h3>本次录音摘要</h3>
+    <p id="summaryLine">—</p>
+    <div class="stats">
+      <div><b id="sumDur">00:00</b><span>总时长</span></div>
+      <div><b id="sumPeak">-∞ dB</b><span>峰值电平</span></div>
+    </div>
+    <div class="actions"><button class="ok" id="again">重新录制</button></div>
+  </div>
+</main>
+<script>
+const $=(id)=>document.getElementById(id),pad=(n)=>String(n).padStart(2,"0");
+const cv=$("cv"),ctx=cv.getContext("2d"),rec=$("rec");
+const BARS=72,samples=new Array(BARS).fill(0);
+let state="idle",elapsed=0,last=performance.now(),acc=0,peak=0,dpr=1;
+function size(){dpr=Math.min(devicePixelRatio||1,2);cv.width=cv.clientWidth*dpr;cv.height=cv.clientHeight*dpr;}
+addEventListener("resize",size);size();
+function sample(t){const v=.16+.84*Math.abs(Math.sin(t*2.1)*Math.sin(t*.47+1.3)*(.55+.45*Math.random()));return state==="recording"?v:v*.0;}
+function draw(){const w=cv.width,h=cv.height,mid=h/2,bw=w/BARS;
+  ctx.clearRect(0,0,w,h);
+  const grad=ctx.createLinearGradient(0,0,0,h);grad.addColorStop(0,"#69e0c8");grad.addColorStop(.5,"#ff5a67");grad.addColorStop(1,"#69e0c8");
+  ctx.fillStyle=grad;
+  for(let i=0;i<BARS;i++){const a=samples[i],bh=Math.max(2,a*h*.46),x=i*bw+1.5,t=state==="paused"?.35:1;
+    ctx.globalAlpha=.35+.65*t;ctx.beginPath();
+    if(ctx.roundRect)ctx.roundRect(x,mid-bh/2,bw-3,bh,2);else ctx.rect(x,mid-bh/2,bw-3,bh);
+    ctx.fill();}
+  ctx.globalAlpha=1;ctx.strokeStyle="#ffffff14";ctx.beginPath();ctx.moveTo(0,mid);ctx.lineTo(w,mid);ctx.stroke();}
+function fmt(ms){const s=Math.floor(ms/1000);return `${pad(Math.floor(s/60))}:${pad(s%60)}`;}
+function db(p){return p<=0?"-∞":(20*Math.log10(p)).toFixed(1);}
+function render(){const st={idle:["待机",""],recording:["录音中","on"],paused:["已暂停","pause"],done:["已完成","done"]}[state];
+  $("state").textContent=st[0];$("state").className=st[1];
+  rec.classList.toggle("recording",state==="recording");rec.classList.toggle("paused",state==="paused");
+  $("deck").classList.toggle("rec-live",state==="recording");
+  $("pauseBtn").textContent=state==="paused"?"继续":"暂停";
+  $("pauseBtn").disabled=state==="idle"||state==="done";
+  $("stopBtn").disabled=state==="idle"||state==="done";
+  $("clock").textContent=fmt(elapsed);
+  $("unit").textContent={idle:"准备就绪 · 点击圆钮开始",recording:"录制中 · 再点圆钮可暂停",paused:"已暂停 · 点击继续",done:"已停止 · 摘要已生成"}[state];}
+function loop(now){const dt=now-last;last=now;
+  if(state==="recording"){elapsed+=dt;acc+=dt;
+    if(acc>90){acc=0;const v=sample(now/1000);samples.push(v);samples.shift();peak=Math.max(peak*.985,v);}}
+  $("peak").textContent=`峰值 ${db(peak)} dB`;
+  draw();$("clock").textContent=fmt(elapsed);requestAnimationFrame(loop);}
+rec.onclick=()=>{if(state==="done")return;
+  if(state==="idle"||state==="done"){state="recording";sample(0);}
+  else if(state==="recording")state="paused";else state="recording";
+  render();};
+$("pauseBtn").onclick=()=>rec.onclick();
+$("stopBtn").onclick=()=>{if(state==="recording")state="paused",render();$("confirmSheet").hidden=false;};
+$("cancelStop").onclick=()=>{$("confirmSheet").hidden=true;};
+$("okStop").onclick=()=>{const prev=state;state="done";elapsed=Math.max(elapsed,prev==="idle"?0:elapsed);
+  $("confirmSheet").hidden=true;$("sumDur").textContent=fmt(elapsed);$("sumPeak").textContent=db(peak)+" dB";
+  $("summaryLine").textContent=`本次录音共 ${fmt(elapsed)}，共 ${Math.floor(elapsed/90)} 个采样帧，状态：已保存。`;
+  $("summary").hidden=false;render();};
+$("again").onclick=()=>{$("summary").hidden=true;state="idle";elapsed=0;peak=0;samples.fill(0);render();};
+render();requestAnimationFrame(loop);
+</script>
+</body>
+</html>

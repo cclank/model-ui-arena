@@ -1,0 +1,2175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ORVANE · Calibre ORV-18000 · 机芯解剖</title>
+<style>
+:root{
+  --bg:#0b0a08; --panel:#14120f; --line:#27221a; --line2:#332c21;
+  --gold:#c9a961; --gold-b:#efdcaa; --ink:#ece4d3; --muted:#8d8270; --dim:#5f5647;
+  --ruby:#b3192f; --blue:#4272a8; --steel:#a3abb2;
+  --serif:"Didot","Bodoni MT","Times New Roman",Georgia,serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  min-height:100vh; color:var(--ink); background:#0b0a08;
+  background-image:radial-gradient(1150px 760px at 27% 4%,#26211a 0%,#14120e 44%,#0b0a08 78%);
+  background-attachment:fixed;
+  font-family:var(--sans); overflow-x:hidden;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+body::after{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:radial-gradient(900px 520px at 78% 106%,rgba(130,96,40,.07),transparent 72%),
+             linear-gradient(180deg,rgba(255,255,255,.018),transparent 36%);
+}
+.top{
+  position:relative; z-index:3; display:flex; align-items:center; gap:24px;
+  padding:15px 26px 13px; border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(16,14,11,.92),rgba(12,11,9,.55));
+}
+.brand .mark{font-family:var(--serif); font-size:23px; line-height:1; letter-spacing:.4em; color:#f2e6c9}
+.brand .sub{font-family:var(--mono); font-size:8px; letter-spacing:.3em; color:#8a7c62; margin-top:5px}
+.spec{margin-left:auto; display:flex; gap:18px; font-family:var(--mono); font-size:8.5px; letter-spacing:.17em; color:#8d8270}
+.spec b{color:#c3b393; font-weight:400}
+.statechip{
+  display:flex; align-items:center; gap:7px; margin-left:6px; padding:6px 11px;
+  border:1px solid #3a3227; border-radius:20px; font-family:var(--mono);
+  font-size:9px; letter-spacing:.16em; color:#d4c7ac; white-space:nowrap;
+}
+.statechip i{width:5px;height:5px;border-radius:50%;background:#d8b25e;box-shadow:0 0 9px #d8b25e;transition:background .25s}
+.statechip.set i{background:#4d8fd6;box-shadow:0 0 9px #4d8fd6}
+.statechip.wind i{background:#e7c477;box-shadow:0 0 12px #e7c477}
+.statechip.stop i{background:#7a5a58;box-shadow:none}
+.statechip.pause i{background:#6f7d86;box-shadow:none}
+.stage{
+  position:relative; z-index:2; display:grid;
+  grid-template-columns:minmax(0,1fr) 398px;
+  height:calc(100vh - 73px); height:calc(100dvh - 73px);
+}
+.watchcol{
+  position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:8px 20px 6px; min-width:0; min-height:0;
+}
+.watchbox{
+  position:relative; flex:1 1 auto; width:100%; min-width:0; min-height:0; overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+}
+.watchbox::before{
+  content:""; position:absolute; width:76%; aspect-ratio:1; border-radius:50%;
+  background:radial-gradient(circle,rgba(205,165,85,.12) 0%,rgba(150,115,50,.05) 46%,transparent 70%);
+  pointer-events:none;
+}
+#watch{display:block; position:relative; z-index:1; width:100%; height:100%; max-width:100%; max-height:100%; touch-action:none; cursor:default; -webkit-tap-highlight-color:transparent}
+.hint{
+  flex:none; padding:9px 4px 3px; font-family:var(--mono); font-size:8.5px;
+  letter-spacing:.13em; color:#6e6454; text-align:center;
+}
+.hint b{color:#a08e6c; font-weight:400}
+.panel{
+  min-height:0; height:100%; overflow-y:auto; overflow-x:hidden;
+  border-left:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(22,19,15,.94),rgba(13,12,10,.97));
+  scrollbar-width:thin; scrollbar-color:#393126 transparent;
+}
+.panel::-webkit-scrollbar{width:6px}
+.panel::-webkit-scrollbar-thumb{background:#332c22;border-radius:4px}
+.pblock{padding:15px 22px 16px; border-bottom:1px solid #201c16}
+.phead{
+  display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+  font-family:var(--mono); font-size:9px; letter-spacing:.2em; color:#a0917a; margin-bottom:10px;
+}
+.phead .en{color:#514738; font-size:8px; letter-spacing:.22em}
+.pt-label{font-family:var(--mono); font-size:8.5px; letter-spacing:.2em; color:#7d7160; display:flex; justify-content:space-between}
+.pt-label span{color:#4d4436}
+.pt-time{
+  font-family:var(--mono); font-size:36px; line-height:1.12; letter-spacing:.02em;
+  color:#f5edda; margin:4px 0 11px; font-variant-numeric:tabular-nums;
+  text-shadow:0 0 26px rgba(240,220,170,.12);
+}
+.pt-time.setting{color:#a9c8ea; text-shadow:0 0 26px rgba(110,165,230,.2)}
+.pt-grid{display:grid; grid-template-columns:1fr 1fr; gap:9px 14px; margin-bottom:11px}
+.pt-grid div{min-width:0}
+.pt-grid b{display:block; font-family:var(--mono); font-size:13.5px; color:#e6dac2; font-weight:400; letter-spacing:.03em; white-space:nowrap}
+.pt-grid span{display:block; font-size:8px; letter-spacing:.11em; color:#6d6252; margin-top:3px; font-family:var(--mono)}
+.pbar{position:relative; height:3px; background:#241f18; border-radius:2px; overflow:hidden}
+.pbar i{display:block; height:100%; width:86%; background:linear-gradient(90deg,#7d5e26,#e2c078); transition:width .3s linear}
+.pbar.low i{background:linear-gradient(90deg,#5c1c22,#c04b4f)}
+.seg{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:#332c22; border:1px solid #332c22; border-radius:3px; overflow:hidden; margin-bottom:9px}
+.seg button{
+  appearance:none; border:0; background:#191510; color:#9c8f79; font-family:var(--mono);
+  font-size:11px; letter-spacing:.1em; padding:10px 4px; cursor:pointer; transition:background .18s,color .18s;
+}
+.seg button:hover{color:#e7d8b8; background:#211c15}
+.seg button.on{background:#3b2f1a; color:#f6e4b6; box-shadow:inset 0 0 0 1px #6d5626}
+.btnrow{display:flex; gap:7px; margin-bottom:7px; flex-wrap:wrap}
+.btn{
+  appearance:none; flex:1 1 0; min-width:0; border:1px solid #3a3226; border-radius:3px;
+  background:linear-gradient(180deg,#211c15,#181410); color:#cfc0a6; font-family:var(--sans);
+  font-size:11px; letter-spacing:.08em; padding:10px 8px; cursor:pointer;
+  transition:border-color .18s,color .18s,background .18s,transform .08s; white-space:nowrap;
+}
+.btn:hover{border-color:#6d5626; color:#f2e2be}
+.btn:active{transform:translateY(1px)}
+.btn.gold{border-color:#6f5623; color:#ecd7a4; background:linear-gradient(180deg,#2c2417,#1c1710)}
+.btn.gold.active{background:linear-gradient(180deg,#4a3a1e,#2d2414); color:#ffeec4; box-shadow:0 0 18px rgba(210,170,90,.16) inset}
+.btn.on{border-color:#7d6028; color:#f4e3ba; background:linear-gradient(180deg,#332a19,#221c12)}
+.btn.small{font-size:10px; padding:8px 6px}
+.btn:disabled{opacity:.4; cursor:default}
+.fine{margin:7px 0 0; font-size:9.6px; line-height:1.66; color:#7b7060; letter-spacing:.02em}
+.fine b{color:#b7a482; font-weight:400}
+.mwcanvas{display:block; width:100%; height:auto; border:1px solid #231f18; border-radius:2px; background:#0e0c0a}
+.mwlegend{display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin-top:11px; font-family:var(--mono); font-size:9px; letter-spacing:.04em; color:#b4a68d}
+.mwlegend i{color:#5f5341; font-style:normal}
+.mwlegend em{color:#8d7f68; font-style:normal; font-size:8px; margin-left:2px}
+.mwlegend b{margin-left:auto; color:#e7ce93; font-weight:400; font-size:11px; letter-spacing:.1em}
+#trainTable{font-family:var(--mono)}
+.trow{display:grid; grid-template-columns:1.42fr .48fr .74fr .9fr; gap:6px; padding:3.2px 0; border-bottom:1px solid #1e1a14; font-size:10px; color:#c6b9a2}
+.trow.th{font-size:8px; letter-spacing:.1em; color:#6a5f4e; border-bottom-color:#332c21; padding-bottom:5px}
+.trow span{min-width:0; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.trow span:first-child{text-align:left; font-family:var(--sans); color:#ddcfb5; font-size:10.5px}
+.trow.driven span:first-child{color:#a89a82}
+.trow.escape span:first-child{color:#c9b48f}
+.ratios{margin-top:8px; font-family:var(--mono); font-size:8.6px; line-height:1.7; color:#8b7d68; letter-spacing:.02em}
+.ratios b{color:#d9c08a; font-weight:400}
+.ratios .ok{color:#7f9a6f}
+.meshcheck{
+  margin-top:8px; padding:6px 9px; border:1px solid #2b251b; border-radius:2px;
+  font-family:var(--mono); font-size:8.5px; line-height:1.7; color:#8e8069; background:rgba(255,235,190,.02);
+}
+.meshcheck b{color:#d6c08a; font-weight:400}
+.meshcheck .ok{color:#8fae7c}
+.mats{display:flex; flex-wrap:wrap; gap:8px 14px}
+.mats div{display:flex; align-items:center; gap:6px; font-size:10px; color:#b7a98f; letter-spacing:.03em}
+.sw{width:11px;height:11px;border-radius:50%;display:inline-block;box-shadow:inset 0 1px 1px rgba(255,255,255,.5),0 1px 2px rgba(0,0,0,.6)}
+.sw.gold{background:radial-gradient(circle at 35% 28%,#f7e6b2,#b98f3d 55%,#6a4a17)}
+.sw.rho{background:radial-gradient(circle at 35% 28%,#f1f5f8,#8f989f 55%,#41474c)}
+.sw.blue{background:radial-gradient(circle at 35% 28%,#93bde6,#2c5987 55%,#0c2038)}
+.sw.ruby{background:radial-gradient(circle at 35% 28%,#ff8b99,#b3192f 55%,#590410)}
+.foot{padding:15px 22px 26px; font-family:var(--mono); font-size:8px; line-height:2; letter-spacing:.1em; color:#5c5345}
+.foot b{color:#a08f70; font-weight:400; letter-spacing:.14em}
+.foot .line{display:flex; justify-content:space-between; gap:10px}
+@media (max-width:1020px){
+  .stage{grid-template-columns:minmax(0,1fr) 352px}
+  .spec{display:none}
+  .pblock{padding:15px 18px 16px}
+}
+@media (max-width:860px){
+  .top{padding:11px 15px 10px; gap:10px}
+  .brand .mark{font-size:17px; letter-spacing:.32em}
+  .brand .sub{font-size:6.5px; letter-spacing:.22em; margin-top:4px}
+  .statechip{margin-left:auto; padding:5px 9px; font-size:8.5px}
+  .stage{display:flex; flex-direction:column; height:auto; min-height:0}
+  .watchcol{padding:10px 8px 0; width:100%; flex:none}
+  .watchbox{flex:none; width:100%; height:auto; aspect-ratio:1/1}
+  .watchbox::before{width:88%}
+  .hint{font-size:8px; padding:8px 2px 11px; letter-spacing:.06em; line-height:1.7}
+  .panel{height:auto; overflow:visible; border-left:0; border-top:1px solid var(--line)}
+  .pblock{padding:15px 15px 16px}
+  .pt-time{font-size:31px; margin-bottom:12px}
+  .pt-grid{gap:9px 12px}
+  .btn{font-size:10.5px; padding:10px 6px}
+  .btn.small{font-size:9.5px; padding:8px 4px}
+  .trow{font-size:9.5px; gap:4px}
+  .trow span:first-child{font-size:9.5px}
+  .trow.th{font-size:7.5px}
+  .mwlegend{font-size:8.5px}
+  .mwlegend b{font-size:10px}
+  .foot{padding:14px 15px 26px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="mark">ORVANE</div>
+    <div class="sub">HORLOGERIE · ATELIER 07</div>
+  </div>
+  <div class="spec">
+    <span>CAL. <b>ORV-18000</b></span>
+    <span>N° <b>0417</b></span>
+    <span><b>15</b> RUBIS</span>
+    <span>Ø <b>36.0</b> MM</span>
+  </div>
+  <div class="statechip" id="stateChip"><i></i><span>走时</span></div>
+</header>
+
+<main class="stage">
+  <section class="watchcol">
+    <div class="watchbox" id="watchbox">
+      <canvas id="watch" width="800" height="800" aria-label="ORVANE 机芯解剖图：发条盒、中心轮、三轮、秒轮、擒纵轮、擒纵叉与摆轮"></canvas>
+    </div>
+    <div class="hint">拖动任意齿轮 · 全表联动　<b>·</b>　按住表冠上弦　<b>·</b>　轻点表冠拔出调时　<b>·</b>　放大镜贴住啮合点</div>
+  </section>
+
+  <aside class="panel">
+    <div class="pblock">
+      <div class="pt-label">本地时间 <span>LOCAL TIME</span></div>
+      <div class="pt-time" id="timeView">00:00:00</div>
+      <div class="pt-grid">
+        <div><b id="ampView">0°</b><span>摆幅 AMPLITUDE</span></div>
+        <div><b id="beatView">18000</b><span>A/h · 2.5 Hz</span></div>
+        <div><b id="resView">0h 00m</b><span>动力储备 RESERVE</span></div>
+        <div><b id="stateView">走时</b><span>状态 STATE</span></div>
+      </div>
+      <div class="pbar" id="powerBar"><i id="powerFill"></i></div>
+    </div>
+
+    <div class="pblock">
+      <div class="phead"><span>操纵</span><span class="en">CONTROL</span></div>
+      <div class="seg" id="speedSeg">
+        <button data-speed="1" class="on">1×</button>
+        <button data-speed="60">60×</button>
+        <button data-speed="3600">3600×</button>
+      </div>
+      <div class="btnrow">
+        <button id="windBtn" class="btn gold">按住上弦</button>
+        <button id="crownBtn" class="btn">拔出表冠</button>
+      </div>
+      <div class="btnrow">
+        <button id="minusBtn" class="btn small">− 1 分</button>
+        <button id="plusBtn" class="btn small">+ 1 分</button>
+        <button id="pauseBtn" class="btn small">暂停</button>
+        <button id="soundBtn" class="btn small on">声音</button>
+        <button id="lensBtn" class="btn small">放大镜</button>
+      </div>
+      <p class="fine">按住表冠（或「按住上弦」）驱动棘轮上弦，棘爪逐齿跳动。轻点表冠拔出：止秒杆压住摆轮，秒针停住；此时拖动分针、表冠上下滑动或 ±1 分均可调时，跨轮系同步转动。按回表冠恢复走时。</p>
+    </div>
+
+    <div class="pblock">
+      <div class="phead"><span>齿数表 · 传动比</span><span class="en">WHEEL TRAIN</span></div>
+      <div id="trainTable"></div>
+      <div class="ratios" id="ratiosView"></div>
+      <div class="meshcheck" id="meshCheck"></div>
+    </div>
+
+    <div class="pblock">
+      <div class="phead"><span>跨轮系 · 12 : 1</span><span class="en">MOTION WORKS</span></div>
+      <canvas id="mw" class="mwcanvas" width="330" height="205" aria-label="跨轮系：中心齿轴 10、跨轮 30、过轮齿轴 8、时轮 32"></canvas>
+      <div class="mwlegend">
+        <span>10T</span><i>→</i><span>30T</span><i>→</i><span>8T</span><i>→</i><span>32T</span>
+        <b>12 : 1</b>
+      </div>
+      <p class="fine">分针 1 圈 = 时轮 1/12 圈。跨轮 <b>20 分钟 / 圈</b>，时轮 <b>12 小时 / 圈</b>。时针角度由分针经跨轮 → 过轮 → 时轮导出，而非单独读表。</p>
+    </div>
+
+    <div class="pblock">
+      <div class="phead"><span>材质与打磨</span><span class="en">FINISHING</span></div>
+      <div class="mats">
+        <div><i class="sw gold"></i>镀金轮系</div>
+        <div><i class="sw rho"></i>镀铑夹板</div>
+        <div><i class="sw blue"></i>蓝钢指针</div>
+        <div><i class="sw ruby"></i>红宝石轴承</div>
+      </div>
+      <p class="fine">鱼鳞纹主夹板 · 日内瓦波纹夹板 · 太阳纹轮辐 · 蜗形纹棘轮；统一光源位于左上。轮系按 <b>L0 → L4 阶梯层叠</b>：每只轮都比自己的齿轴高一层，投影重叠而啮合互不穿模。</p>
+    </div>
+
+    <footer class="foot">
+      <div class="line"><b>ORVANE · CAL. ORV-18000</b><span>N° 0417</span></div>
+      <div class="line"><span>15 RUBIS · 18000 A/h · Ø 36.0 MM</span><span>FABRIQUÉ À LA MAIN</span></div>
+      <div style="margin-top:6px;color:#463f34">全部齿轮齿形、打磨纹理与声音均由代码实时生成 · 无外部资源</div>
+    </footer>
+  </aside>
+</main>
+
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   ORVANE Cal. ORV-18000 — 轮系数值（可人工验算）
+   模数 m = 0.173 mm（画面 2.75 u）；Ø 36.0 mm
+   发条盒 80 ─ 中心齿轴 16 ─ 中心轮 60 ─ 三轮齿轴 8 ─ 三轮 64
+   ─ 秒轮齿轴 8 ─ 秒轮 70 ─ 擒纵齿轴 7 ─ 擒纵轮 15
+   中心 1 r/h · 三轮 7.5 r/h · 秒轮 60 r/h(=1 r/min) · 擒纵 600 r/h(=10 r/min)
+   擒纵 15 齿 × 10 r/min × 2 = 300 拍/分 = 18000 A/h，摆轮 2.5 Hz
+   跨轮系 中心齿轴 10 → 跨轮 30 → 过轮齿轴 8 → 时轮 32 = 1 : 12
+   相位：每对啮合满足 uA + uB ≡ 0.5 (mod 1 齿距)，由 zA·revA + zB·revB = 0 恒定保持
+   ============================================================ */
+
+const TAU=Math.PI*2, D2R=Math.PI/180, R2D=180/Math.PI;
+const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
+const lerp=(a,b,t)=>a+(b-a)*t;
+const frac=(v)=>v-Math.floor(v);
+const smooth=(t)=>{t=clamp(t,0,1);return t*t*(3-2*t);};
+const polar=(r,a)=>({x:r*Math.cos(a*D2R), y:r*Math.sin(a*D2R)});
+const add=(p,q)=>({x:p.x+q.x, y:p.y+q.y});
+const dist=(p,q)=>Math.hypot(p.x-q.x, p.y-q.y);
+
+const MODULE=2.75, PLATE_R=286, FLANGE_R=322, CASE_R=346;
+const CAL_MM=36, PX2MM=CAL_MM/(2*PLATE_R);
+const BPH=18000, BEAT=3600/BPH, BAL_HZ=BPH/7200, RESERVE_H=40;
+const VIEW_HALF=392, VIEW_CY=-28;
+const LIGHT={x:-0.56, y:-0.83};
+const MONO='ui-monospace,SFMono-Regular,Menlo,Consolas,monospace';
+const SERIF='"Didot","Times New Roman",Georgia,serif';
+
+const COLORS={
+  gold:{d:'#5b4316', m:'#b58c3d', l:'#f5e2a9'},
+  champagne:{d:'#5a4a24', m:'#b8a36a', l:'#f8efcd'},
+  rose:{d:'#5a3018', m:'#bb7c53', l:'#f8d5b4'},
+  brass:{d:'#3f2b0d', m:'#8b6824', l:'#e4c277'},
+  steel:{d:'#2c3135', m:'#79828a', l:'#e9f0f5'},
+  rho:{d:'#2c3135', m:'#687077', l:'#d3dbe0'},
+  blue:{d:'#08111e', m:'#234b78', l:'#8dbbe8'},
+  ruby:{d:'#4a0610', m:'#a8122c', l:'#ff7488'},
+  caseG:{d:'#4a3711', m:'#a4813a', l:'#f7e8b6'}
+};
+
+/* ---------------- 轴位（由中心距反推，误差为 0） ---------------- */
+const ARB={
+  center:{x:0,y:0},
+  barrel:polar(132,197),
+  third:polar(93.5,95)
+};
+ARB.seconds=add(ARB.third, polar(99,38));
+ARB.escape=add(ARB.seconds, polar(105.875,-63));
+ARB.balance={x:192,y:-38};
+ARB.fork={x:lerp(ARB.escape.x,ARB.balance.x,0.42), y:lerp(ARB.escape.y,ARB.balance.y,0.42)};
+
+/* ---------------- 齿轮定义（rev = 每中心轮一圈的自转圈数，负号为反向） ---------------- */
+const GEARS=[
+  {id:'barrelWheel',  name:'发条盒',   abbr:'BAR', arb:'barrel',  z:80, rev:-0.20,  type:'barrel',  style:'brass', level:0, spokes:0},
+  {id:'centerPinion', name:'中心齿轴', abbr:'CP',  arb:'center',  z:16, rev:1.00,   type:'pinion',  style:'steel', level:0, spokes:0},
+  {id:'centerWheel',  name:'中心轮',   abbr:'CW',  arb:'center',  z:60, rev:1.00,   type:'wheel',   style:'gold',  level:1, spokes:5},
+  {id:'thirdPinion',  name:'三轮齿轴', abbr:'TP',  arb:'third',   z:8,  rev:-7.50,  type:'pinion',  style:'steel', level:1, spokes:0},
+  {id:'thirdWheel',   name:'三轮',     abbr:'TW',  arb:'third',   z:64, rev:-7.50,  type:'wheel',   style:'champagne', level:2, spokes:5},
+  {id:'secondsPinion',name:'秒轮齿轴', abbr:'SP',  arb:'seconds', z:8,  rev:60.0,   type:'pinion',  style:'steel', level:2, spokes:0},
+  {id:'secondsWheel', name:'秒轮',     abbr:'SW',  arb:'seconds', z:70, rev:60.0,   type:'wheel',   style:'rose',  level:3, spokes:6},
+  {id:'escapePinion', name:'擒纵齿轴', abbr:'EP',  arb:'escape',  z:7,  rev:-600.0, type:'pinion',  style:'steel', level:3, spokes:0},
+  {id:'escapeWheel',  name:'擒纵轮',   abbr:'EW',  arb:'escape',  z:15, rev:-600.0, type:'escape',  style:'steel', level:4, spokes:0}
+];
+const byId=(id)=>GEARS.find(g=>g.id===id);
+GEARS.forEach(g=>{ g.pos=ARB[g.arb]; g.phase=0; });
+
+const MESHES=[
+  {a:'barrelWheel',  b:'centerPinion'},
+  {a:'centerWheel',  b:'thirdPinion'},
+  {a:'thirdWheel',   b:'secondsPinion'},
+  {a:'secondsWheel', b:'escapePinion'}
+];
+
+/* 相位求解：驱动轮齿中心落于连心线时，从动轮必须让出齿槽 */
+function solvePhase(A,B){
+  const beta=Math.atan2(B.pos.y-A.pos.y, B.pos.x-A.pos.x);
+  const pB=TAU/B.z;
+  const uA=frac((beta - A.phase)*A.z/TAU);
+  let gB=beta+Math.PI - pB*(0.5-uA);
+  gB=((gB%pB)+pB)%pB;
+  B.phase=gB;
+}
+MESHES.forEach(m=>solvePhase(byId(m.a), byId(m.b)));
+
+/* 自检：中心距、相位残差 */
+const DIST_ERR=(()=>{let e=0;for(const m of MESHES){const A=byId(m.a),B=byId(m.b);e=Math.max(e,Math.abs(dist(A.pos,B.pos)-MODULE*(A.z+B.z)/2));}return e;})();
+function meshResidual(){
+  let max=0;
+  for(const m of MESHES){
+    const A=byId(m.a), B=byId(m.b);
+    const beta=Math.atan2(B.pos.y-A.pos.y, B.pos.x-A.pos.x);
+    for(const t of [0,517,3600*3.7,86400*2.1]){
+      const aA=A.rev*TAU*(t/3600)+A.phase, aB=B.rev*TAU*(t/3600)+B.phase;
+      const uA=frac((beta-aA)*A.z/TAU), uB=frac((beta+Math.PI-aB)*B.z/TAU);
+      const s=frac(uA+uB-0.5);
+      max=Math.max(max, Math.min(s,1-s));
+    }
+  }
+  return max;
+}
+const PHASE_ERR=meshResidual();
+
+/* ---------------- 跨轮系（独立小场景，同一套齿形/相位算法） ---------------- */
+const MWM=4.6, MW_D=20*MWM, MW_CX=125, MW_CY=100;
+const MWG=[
+  {id:'cannon',      z:10, rev:1,     type:'pinion', style:'blue',  level:2, spokes:0, pos:{x:0,y:0},      phase:0},
+  {id:'minuteWheel', z:30, rev:-1/3,  type:'wheel',  style:'gold',  level:1, spokes:5, pos:{x:MW_D,y:0},  phase:0},
+  {id:'minutePinion',z:8,  rev:-1/3,  type:'pinion', style:'blue',  level:2, spokes:0, pos:{x:MW_D,y:0},  phase:0},
+  {id:'hourWheel',   z:32, rev:1/12,  type:'wheel',  style:'steel', level:0, spokes:4, pos:{x:0,y:0},      phase:0}
+];
+const MWMESH=[{a:'cannon',b:'minuteWheel'},{a:'minutePinion',b:'hourWheel'}];
+MWMESH.forEach(m=>solvePhase(MWG.find(g=>g.id===m.a), MWG.find(g=>g.id===m.b)));
+
+/* ============================================================
+   几何：齿形由 z 与模数逐齿生成（梯形齿廓 + 齿根过渡）
+   ============================================================ */
+function makeGeo(g,m){
+  const z=g.z, rp=m*z/2;
+  const pin=g.type==='pinion';
+  const add=m*(pin?0.95:1.0), ded=m*(pin?1.15:1.25);
+  const ra=rp+add, rf=rp-ded;
+  g.rp=rp; g.ra=ra; g.rf=rf;
+  const p=TAU/z;
+  const outline=new Path2D();
+  const windows=[];
+  if(g.type==='escape'){
+    const eRa=rp+2.35, eRf=rp-2.1;
+    for(let k=0;k<z;k++){
+      const a=k*p;
+      const pts=[
+        [eRf, a-0.40*p], [eRa*0.84, a-0.32*p], [eRa, a+0.02*p],
+        [eRa, a+0.15*p], [eRa*0.80, a+0.23*p], [eRf, a+0.31*p]
+      ];
+      pts.forEach((q,i)=>{
+        const x=q[0]*Math.cos(q[1]), y=q[0]*Math.sin(q[1]);
+        if(k===0&&i===0) outline.moveTo(x,y); else outline.lineTo(x,y);
+      });
+      outline.arc(0,0,eRf, a+0.31*p, a+p-0.40*p, false);
+    }
+    outline.closePath();
+    for(let i=0;i<4;i++){
+      const a=i*TAU/4+0.4, r=rp*0.54;
+      const w=new Path2D();
+      w.arc(r*Math.cos(a), r*Math.sin(a), rp*0.17, 0, TAU);
+      windows.push(w);
+    }
+  }else{
+    const wR=(pin?0.27:0.246)*p;
+    const wT=(pin?0.146:0.156)*p;
+    const N=3;
+    for(let k=0;k<z;k++){
+      const a=k*p;
+      if(k===0) outline.moveTo(rf*Math.cos(a-wR), rf*Math.sin(a-wR));
+      for(let j=1;j<=N;j++){
+        const t=j/N, r=rf+(ra-rf)*t, w=wR+(wT-wR)*t;
+        outline.lineTo(r*Math.cos(a-w), r*Math.sin(a-w));
+      }
+      outline.lineTo(ra*Math.cos(a-wT*0.42), ra*Math.sin(a-wT*0.42));
+      outline.lineTo(ra*Math.cos(a+wT*0.42), ra*Math.sin(a+wT*0.42));
+      for(let j=N;j>=0;j--){
+        const t=j/N, r=rf+(ra-rf)*t, w=wR+(wT-wR)*t;
+        outline.lineTo(r*Math.cos(a+w), r*Math.sin(a+w));
+      }
+      if(k<z-1) outline.arc(0,0,rf, a+wR, a+p-wR, false);
+      else outline.arc(0,0,rf, a+wR, TAU-wR, false);
+    }
+    outline.closePath();
+    if(g.spokes>0){
+      const n=g.spokes;
+      const r0=Math.max(6.2, m*3.1), r1=rf-m*2.3;
+      for(let i=0;i<n;i++){
+        const mid=(i+0.5)*TAU/n;
+        const half=(TAU/n)*0.305;
+        const a0=mid-half, a1=mid+half;
+        const w=new Path2D();
+        w.moveTo(r1*Math.cos(a0), r1*Math.sin(a0));
+        w.arc(0,0,r1,a0,a1,false);
+        w.lineTo(r0*Math.cos(a1), r0*Math.sin(a1));
+        w.arc(0,0,r0,a1,a0,true);
+        w.closePath();
+        windows.push(w);
+      }
+    }
+  }
+  const fill=new Path2D();
+  fill.addPath(outline);
+  for(const w of windows) fill.addPath(w);
+  g.geo={outline, windows, fill};
+  g.m=m;
+}
+GEARS.forEach(g=>makeGeo(g, MODULE));
+MWG.forEach(g=>makeGeo(g, MWM));
+
+/* ============================================================
+   状态：单一走时状态 SIM.t（表内秒数），所有轮系 / 指针由此导出
+   ============================================================ */
+function nowSeconds(){
+  const d=new Date();
+  return d.getHours()*3600+d.getMinutes()*60+d.getSeconds()+d.getMilliseconds()/1000;
+}
+const SIM={
+  t:nowSeconds(),
+  power:0.86,
+  offset:0,
+  speed:1,
+  running:true,
+  winding:false,
+  windHold:false,
+  crownOut:false,
+  paused:false,
+  amp:0,
+  ampTarget:0,
+  hack:0,
+  ratchet:0,
+  crownSpin:0,
+  sound:true,
+  lens:false,
+  ratchetIdx:0,
+  lastBeatN:0,
+  stateFlash:''
+};
+SIM.amp=140*ampCurve(SIM.power);
+SIM.ampTarget=SIM.amp;
+SIM.lastBeatN=Math.floor(SIM.t/BEAT);
+
+function ampCurve(p){
+  if(p<=0.02) return 0;
+  const q=clamp((p-0.02)/0.38,0,1);
+  return Math.pow(q,0.55);
+}
+function displaySeconds(){ return SIM.t + SIM.offset; }
+function tq(){
+  const n=Math.floor(SIM.t/BEAT);
+  const el=SIM.t-n*BEAT;
+  const jump=smooth(Math.min(el/0.034,1));
+  return (n+jump)*BEAT;
+}
+function gearAngle(g){
+  return (TAU*g.rev*(tq()/3600)+g.phase)%TAU;
+}
+function mwAngle(g){
+  return (TAU*g.rev*(displaySeconds()/3600)+g.phase)%TAU;
+}
+function forkAngle(){
+  const amp=Math.max(SIM.amp,0.001);
+  const bal=Math.sin(Math.PI*SIM.t/BEAT);
+  return 6.2*D2R*Math.tanh(bal/0.26);
+}
+
+/* ============================================================
+   画布
+   ============================================================ */
+const WCV=document.getElementById('watch');
+const WCTX=WCV.getContext('2d');
+const MWCV=document.getElementById('mw');
+const MWCTX=MWCV.getContext('2d');
+let W=800,H=800,WDPR=1,SCL=1,lensR=96;
+let MWW=330,MWH=205,MWDPR=1;
+const pointer={active:false,x:0,y:0,sx:0,sy:0,touch:false};
+let perlage=null;
+
+function layout(){
+  const box=document.getElementById('watchbox');
+  const r=box.getBoundingClientRect();
+  const size=Math.max(190, Math.floor(Math.min(r.width||400, r.height||400)));
+  const dpr=Math.min(2, window.devicePixelRatio||1);
+  W=size; H=size; WDPR=dpr;
+  WCV.width=Math.round(size*dpr); WCV.height=Math.round(size*dpr);
+  WCV.style.width=size+'px'; WCV.style.height=size+'px';
+  SCL=size/(2*VIEW_HALF);
+  lensR=clamp(size*0.155,46,104);
+
+  const mw=MWCV;
+  const mr=mw.getBoundingClientRect();
+  MWW=Math.max(220, Math.floor(mr.width||330));
+  MWH=Math.round(MWW*205/330);
+  MWDPR=dpr;
+  mw.width=Math.round(MWW*dpr); mw.height=Math.round(MWH*dpr);
+  mw.style.height=MWH+'px';
+}
+
+function toScene(x,y){
+  return {x:(x-W/2)/SCL, y:(y-H/2)/SCL + VIEW_CY};
+}
+function toScreen(x,y){
+  return {x:W/2 + x*SCL, y:H/2 + (y-VIEW_CY)*SCL};
+}
+
+/* ---------------- 材质工具 ---------------- */
+function lightLocal(rot){
+  const ca=Math.cos(-rot), sa=Math.sin(-rot);
+  return {x:ca*LIGHT.x - sa*LIGHT.y, y:sa*LIGHT.x + ca*LIGHT.y};
+}
+function metalGrad(ctx,R,rot,c){
+  const l=lightLocal(rot);
+  const g=ctx.createLinearGradient(-l.x*R,-l.y*R,l.x*R,l.y*R);
+  g.addColorStop(0,c.d); g.addColorStop(0.38,c.m);
+  g.addColorStop(0.74,c.l); g.addColorStop(1,c.m);
+  return g;
+}
+function bevelGrad(ctx,R,rot){
+  const l=lightLocal(rot);
+  const g=ctx.createLinearGradient(-l.x*R,-l.y*R,l.x*R,l.y*R);
+  g.addColorStop(0,'rgba(0,0,0,.52)');
+  g.addColorStop(0.44,'rgba(0,0,0,0)');
+  g.addColorStop(0.76,'rgba(255,244,214,.28)');
+  g.addColorStop(1,'rgba(255,250,232,.72)');
+  return g;
+}
+function radialGrad(ctx,r,cx,cy,r0,r1,stops){
+  const g=ctx.createRadialGradient(cx,cy,r0,cx,cy,r1);
+  for(const s of stops) g.addColorStop(s[0],s[1]);
+  return g;
+}
+function softShadow(ctx,pos,r,dx,dy,alpha){
+  ctx.save();
+  ctx.translate(pos.x+(dx||6),pos.y+(dy||8));
+  const g=radialGrad(ctx,r,0,0,r*0.45,r*1.02,[
+    [0,'rgba(0,0,0,'+(alpha||0.5)+')'],
+    [0.72,'rgba(0,0,0,'+((alpha||0.5)*0.55)+')'],
+    [1,'rgba(0,0,0,0)']
+  ]);
+  ctx.fillStyle=g;
+  ctx.beginPath(); ctx.arc(0,0,r*1.02,0,TAU); ctx.fill();
+  ctx.restore();
+}
+function makePerlage(){
+  const s=80, cv=document.createElement('canvas');
+  cv.width=s; cv.height=s;
+  const g=cv.getContext('2d');
+  g.fillStyle='#221f19'; g.fillRect(0,0,s,s);
+  for(let yy=-20; yy<=s+20; yy+=20){
+    const rowOff=((Math.round((yy+20)/20))%2)?10:0;
+    for(let xx=-20; xx<=s+20; xx+=20){
+      const cx=xx+rowOff, cy=yy;
+      const rg=g.createRadialGradient(cx-1.5,cy-1.5,0.8,cx,cy,12);
+      rg.addColorStop(0,'rgba(100,89,70,.46)');
+      rg.addColorStop(0.5,'rgba(62,55,44,.28)');
+      rg.addColorStop(0.9,'rgba(12,11,9,.20)');
+      rg.addColorStop(1,'rgba(10,9,8,0)');
+      g.fillStyle=rg; g.beginPath(); g.arc(cx,cy,12,0,TAU); g.fill();
+      g.strokeStyle='rgba(158,143,116,.055)'; g.lineWidth=0.55;
+      g.beginPath(); g.arc(cx,cy,8,0,TAU); g.stroke();
+      g.beginPath(); g.arc(cx,cy,5,0,TAU); g.stroke();
+    }
+  }
+  return cv;
+}
+function roundRectPath(x,y,w,h,r){
+  const p=new Path2D();
+  r=Math.min(r,w/2,h/2);
+  p.moveTo(x+r,y);
+  p.lineTo(x+w-r,y); p.quadraticCurveTo(x+w,y,x+w,y+r);
+  p.lineTo(x+w,y+h-r); p.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  p.lineTo(x+r,y+h); p.quadraticCurveTo(x,y+h,x,y+h-r);
+  p.lineTo(x,y+r); p.quadraticCurveTo(x,y,x+r,y);
+  p.closePath();
+  return p;
+}
+function screw(ctx,x,y,r,blued,slotA){
+  ctx.save();
+  ctx.translate(x,y);
+  const base=blued?{d:'#08121f',m:'#24507f',l:'#9cc8ef'}:{d:'#3a3f43',m:'#949ca3',l:'#f0f4f7'};
+  const g=ctx.createRadialGradient(-r*0.35,-r*0.4,r*0.1,0,0,r);
+  g.addColorStop(0,base.l); g.addColorStop(0.6,base.m); g.addColorStop(1,base.d);
+  ctx.fillStyle=g;
+  ctx.beginPath(); ctx.arc(0,0,r,0,TAU); ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.lineWidth=0.9; ctx.stroke();
+  ctx.rotate(slotA||0.6);
+  ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.lineWidth=Math.max(1,r*0.22);
+  ctx.beginPath(); ctx.moveTo(-r*0.7,0); ctx.lineTo(r*0.7,0); ctx.stroke();
+  ctx.strokeStyle='rgba(255,250,235,.28)'; ctx.lineWidth=Math.max(0.5,r*0.09);
+  ctx.beginPath(); ctx.moveTo(-r*0.7,-r*0.1); ctx.lineTo(r*0.7,-r*0.1); ctx.stroke();
+  ctx.restore();
+}
+function jewel(ctx,x,y,r,rot){
+  ctx.save();
+  ctx.translate(x,y); ctx.rotate(rot||0);
+  // gold chaton
+  const cg=ctx.createLinearGradient(-r,-r,r,r);
+  cg.addColorStop(0,'#f2dfae'); cg.addColorStop(0.45,'#b08a3e'); cg.addColorStop(1,'#4d3711');
+  ctx.fillStyle=cg;
+  ctx.beginPath(); ctx.arc(0,0,r,0,TAU); ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.5)'; ctx.lineWidth=0.8; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,r*0.8,0,TAU);
+  ctx.fillStyle='#1a1611'; ctx.fill();
+  // ruby
+  const rg=ctx.createRadialGradient(-r*0.22,-r*0.26,r*0.06,0,0,r*0.7);
+  rg.addColorStop(0,'#ff8f9c'); rg.addColorStop(0.45,'#c61e38'); rg.addColorStop(1,'#5c0713');
+  ctx.fillStyle=rg;
+  ctx.beginPath(); ctx.arc(0,0,r*0.66,0,TAU); ctx.fill();
+  ctx.strokeStyle='rgba(255,170,180,.45)'; ctx.lineWidth=0.6; ctx.stroke();
+  ctx.beginPath(); ctx.arc(-r*0.2,-r*0.24,r*0.16,0,TAU);
+  ctx.fillStyle='rgba(255,235,235,.7)'; ctx.fill();
+  ctx.restore();
+}
+function engrave(ctx,text,x,y,rot,size,align,alpha){
+  ctx.save();
+  ctx.translate(x,y); ctx.rotate(rot||0);
+  ctx.font=(size||8)+'px '+SERIF;
+  ctx.textAlign=align||'center'; ctx.textBaseline='middle';
+  ctx.fillStyle='rgba(24,18,10,'+((alpha||0.5)*0.85)+')';
+  ctx.fillText(text,0.7,0.8);
+  ctx.fillStyle='rgba(244,230,198,'+(alpha||0.5)+')';
+  ctx.fillText(text,0,0);
+  ctx.restore();
+}
+
+/* ---------------- 齿轮绘制 ---------------- */
+function drawGear(ctx,g,angle,opts){
+  const C=COLORS[g.style]||COLORS.gold;
+  const R=g.rp;
+  ctx.save();
+  ctx.translate(g.pos.x,g.pos.y);
+  ctx.rotate(angle);
+  ctx.fillStyle=metalGrad(ctx,R,angle,C);
+  ctx.fill(g.geo.fill,'evenodd');
+  ctx.save();
+  ctx.clip(g.geo.fill,'evenodd');
+  const l=lightLocal(angle);
+  ctx.fillStyle=radialGrad(ctx,0,l.x*R*0.3,l.y*R*0.3,R*0.04,R*1.06,[
+    [0,'rgba(255,250,230,.15)'],
+    [0.55,'rgba(0,0,0,0)'],
+    [1,'rgba(0,0,0,.30)']
+  ]);
+  ctx.fillRect(-g.ra,-g.ra,g.ra*2,g.ra*2);
+  // 太阳纹
+  const n=Math.max(54,Math.min(120,g.z+40));
+  ctx.lineWidth=Math.max(0.5,R/120);
+  for(let i=0;i<n;i++){
+    const a=i*TAU/n + 0.11;
+    const rr0=g.rf*0.55, rr1=g.ra*0.985;
+    ctx.strokeStyle='rgba(255,242,208,'+(0.026+0.045*((i*37)%7)/6)+')';
+    ctx.beginPath();
+    ctx.moveTo(rr0*Math.cos(a),rr0*Math.sin(a));
+    ctx.lineTo(rr1*Math.cos(a),rr1*Math.sin(a));
+    ctx.stroke();
+  }
+  ctx.restore();
+  ctx.lineWidth=1.15;
+  ctx.strokeStyle=bevelGrad(ctx,g.ra,angle);
+  ctx.stroke(g.geo.outline);
+  for(const w of g.geo.windows){
+    ctx.lineWidth=0.9;
+    ctx.strokeStyle='rgba(12,10,7,.7)';
+    ctx.stroke(w);
+  }
+  // 轴孔 / 轮毂
+  const hubR=Math.max(4.2, Math.min(g.rp*0.16, 9.5));
+  const hg=ctx.createRadialGradient(-hubR*0.4,-hubR*0.4,0.5,0,0,hubR);
+  hg.addColorStop(0,C.l); hg.addColorStop(0.5,C.m); hg.addColorStop(1,C.d);
+  ctx.fillStyle=hg;
+  ctx.beginPath(); ctx.arc(0,0,hubR,0,TAU); ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.lineWidth=0.8; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,Math.max(1.2,hubR*0.34),0,TAU);
+  ctx.fillStyle='rgba(5,5,4,.85)'; ctx.fill();
+  ctx.restore();
+}
+
+/* ---------------- 发条盒 ---------------- */
+function drawBarrel(ctx,g,angle){
+  const C=COLORS.brass;
+  softShadow(ctx,g.pos,g.rp*0.98,7,9,0.55);
+  ctx.save();
+  ctx.translate(g.pos.x,g.pos.y);
+  ctx.rotate(angle);
+  ctx.fillStyle=metalGrad(ctx,g.rp,angle,C);
+  ctx.fill(g.geo.fill);
+  // 轮齿边缘倒角
+  ctx.save();
+  ctx.clip(g.geo.fill);
+  const l=lightLocal(angle);
+  ctx.fillStyle=radialGrad(ctx,0,l.x*g.rp*0.3,l.y*g.rp*0.3,g.rp*0.1,g.rp*1.03,[
+    [0,'rgba(255,244,214,.10)'],[0.7,'rgba(0,0,0,.08)'],[1,'rgba(0,0,0,.28)']
+  ]);
+  ctx.fillRect(-g.ra,-g.ra,g.ra*2,g.ra*2);
+  for(let i=0;i<150;i++){
+    const a=i*TAU/150;
+    ctx.strokeStyle='rgba(255,238,198,'+(0.03+0.05*((i*29)%5)/4)+')';
+    ctx.lineWidth=0.7;
+    ctx.beginPath();
+    ctx.moveTo(g.rf*0.92*Math.cos(a),g.rf*0.92*Math.sin(a));
+    ctx.lineTo(g.ra*Math.cos(a),g.ra*Math.sin(a));
+    ctx.stroke();
+  }
+  ctx.restore();
+  ctx.lineWidth=1.3; ctx.strokeStyle=bevelGrad(ctx,g.ra,angle); ctx.stroke(g.geo.outline);
+  // 内腔
+  const cav=radialGrad(ctx,96,-26,-34,18,98,[
+    [0,'#191511'],[0.72,'#0e0c09'],[0.94,'#080705'],[1,'#1d1913']
+  ]);
+  ctx.beginPath(); ctx.arc(0,0,97,0,TAU); ctx.fillStyle=cav; ctx.fill();
+  ctx.lineWidth=2.2; ctx.strokeStyle='rgba(0,0,0,.75)';
+  ctx.beginPath(); ctx.arc(0,0,97,0,TAU); ctx.stroke();
+  ctx.lineWidth=0.8; ctx.strokeStyle='rgba(240,215,160,.22)';
+  ctx.beginPath(); ctx.arc(0,0,98.6,0,TAU); ctx.stroke();
+  // 发条
+  drawMainspring(ctx,SIM.power);
+  // 发条轴
+  const ag=ctx.createRadialGradient(-4,-5,1,0,0,15);
+  ag.addColorStop(0,'#eef3f5'); ag.addColorStop(0.55,'#8d969d'); ag.addColorStop(1,'#3b4145');
+  ctx.fillStyle=ag; ctx.beginPath(); ctx.arc(0,0,15,0,TAU); ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.6)'; ctx.lineWidth=1; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,5,0,TAU); ctx.fillStyle='#14110d'; ctx.fill();
+  ctx.restore();
+}
+function drawMainspring(ctx,power){
+  const rOut=93, rIn=26+(1-power)*20, turns=8.3, N=420;
+  const p=0.78+power*0.95;
+  const pts=[];
+  for(let i=0;i<=N;i++){
+    const t=i/N;
+    const a=-0.8+TAU*turns*t;
+    const r=rIn+(rOut-rIn)*Math.pow(t,p);
+    pts.push([r*Math.cos(a),r*Math.sin(a)]);
+  }
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0],pts[0][1]);
+  for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0],pts[i][1]);
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.strokeStyle='rgba(0,0,0,.65)'; ctx.lineWidth=4.6; ctx.stroke();
+  ctx.strokeStyle='#163a5c'; ctx.lineWidth=3.1; ctx.stroke();
+  ctx.strokeStyle='#2f628f'; ctx.lineWidth=1.7; ctx.stroke();
+  ctx.strokeStyle='rgba(178,214,246,.5)'; ctx.lineWidth=0.65; ctx.stroke();
+  // 内外端钩
+  ctx.strokeStyle='#3f719d'; ctx.lineWidth=2.4;
+  ctx.beginPath();
+  const ends=[[rIn*0.55,0.9],[rOut*0.98,TAU*turns-0.8]];
+  for(const e of ends){
+    const r=e[0], a=e[1];
+    ctx.moveTo(r*Math.cos(a),r*Math.sin(a));
+    ctx.lineTo((r+5)*Math.cos(a), (r+5)*Math.sin(a));
+  }
+  ctx.stroke();
+}
+
+/* ---------------- 擒纵叉 ---------------- */
+function drawFork(ctx){
+  const p=ARB.fork;
+  const phi=Math.atan2(ARB.balance.y-p.y, ARB.balance.x-p.x);
+  const a=phi+forkAngle();
+  softShadow(ctx,{x:p.x+3,y:p.y+4},22,4,5,0.4);
+  ctx.save();
+  ctx.translate(p.x,p.y);
+  ctx.rotate(a);
+  const steel=COLORS.steel;
+  const fillPath=new Path2D();
+  // 主梁
+  fillPath.addPath(roundRectPath(-22,-4.6,80,9.2,4.6));
+  // 两枚叉瓦臂
+  const arm1=roundRectPath(-6,-11.4,33,7.0,3.5);
+  const arm2=roundRectPath(-6,4.4,33,7.0,3.5);
+  fillPath.addPath(arm1); fillPath.addPath(arm2);
+  // 叉头（两角）
+  fillPath.addPath(roundRectPath(50,-12,11,8,3.4));
+  fillPath.addPath(roundRectPath(50,4,11,8,3.4));
+  const g=ctx.createLinearGradient(-20,-20,60,20);
+  g.addColorStop(0,'#eef4f8'); g.addColorStop(0.4,'#9aa3aa'); g.addColorStop(1,'#3d4348');
+  ctx.fillStyle=g; ctx.fill(fillPath);
+  ctx.lineWidth=0.9; ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.stroke(fillPath);
+  ctx.strokeStyle='rgba(255,255,250,.35)'; ctx.lineWidth=0.6;
+  ctx.stroke(roundRectPath(-20,-4.2,76,1.2,1));
+  // 红宝石叉瓦
+  for(const s of [-1,1]){
+    ctx.save();
+    ctx.translate(-29,s*7.8);
+    ctx.rotate(s*0.42);
+    const rg=ctx.createLinearGradient(-4,0,4,0);
+    rg.addColorStop(0,'#ff8696'); rg.addColorStop(0.5,'#b71530'); rg.addColorStop(1,'#5a0612');
+    ctx.fillStyle=rg;
+    ctx.fillRect(-4.4,-3.0,8.8,6.0);
+    ctx.strokeStyle='rgba(255,190,200,.4)'; ctx.lineWidth=0.5; ctx.strokeRect(-4.4,-3.0,8.8,6.0);
+    ctx.restore();
+  }
+  // 叉轴
+  const bg=ctx.createRadialGradient(-2,-2,0.5,0,0,7);
+  bg.addColorStop(0,'#f3f7fa'); bg.addColorStop(0.55,'#8b949b'); bg.addColorStop(1,'#353b40');
+  ctx.fillStyle=bg; ctx.beginPath(); ctx.arc(0,0,7,0,TAU); ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.5)'; ctx.lineWidth=0.8; ctx.stroke();
+  ctx.strokeStyle='rgba(0,0,0,.6)'; ctx.lineWidth=1.3;
+  ctx.beginPath(); ctx.moveTo(-4,0); ctx.lineTo(4,0); ctx.stroke();
+  ctx.restore();
+  // 限位钉
+  for(const s of [-1,1]){
+    ctx.beginPath();
+    ctx.arc(p.x+Math.cos(a)+s*Math.sin(a)*-13, p.y+Math.sin(a)+s*Math.cos(a)*-13, 2.2, 0, TAU);
+    ctx.fillStyle='#b08a3e'; ctx.fill();
+  }
+}
+
+/* ---------------- 摆轮 + 游丝 ---------------- */
+function drawBalance(ctx){
+  const p=ARB.balance;
+  const bal=Math.sin(Math.PI*SIM.t/BEAT);
+  const ang=SIM.amp*D2R*bal;
+  softShadow(ctx,{x:p.x,y:p.y},84,8,11,0.52);
+  ctx.save();
+  ctx.translate(p.x,p.y);
+  ctx.rotate(ang);
+  // 摆轴 / 滚轮
+  ctx.beginPath();
+  ctx.arc(0,0,17.4,0,TAU);
+  ctx.arc(0,0,14.0,0,TAU,true);
+  ctx.fillStyle='#1b2126'; ctx.fill();
+  ctx.strokeStyle='rgba(150,172,188,.4)'; ctx.lineWidth=0.7;
+  ctx.beginPath(); ctx.arc(0,0,17.4,0,TAU); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,14.0,0,TAU);
+  ctx.strokeStyle='rgba(0,0,0,.5)'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,16.6,Math.PI*1.02,Math.PI*1.44);
+  ctx.strokeStyle='rgba(220,235,245,.35)'; ctx.lineWidth=0.8; ctx.stroke();
+  // 摆轮环
+  ctx.beginPath();
+  ctx.arc(0,0,78,0,TAU);
+  ctx.arc(0,0,64,0,TAU,true);
+  const rim=ctx.createLinearGradient(-40,-60,60,70);
+  rim.addColorStop(0,'#f9edc4'); rim.addColorStop(0.3,'#d2ad58'); rim.addColorStop(0.68,'#8c6a25'); rim.addColorStop(1,'#55400f');
+  ctx.fillStyle=rim; ctx.fill();
+  ctx.lineWidth=1; ctx.strokeStyle='rgba(0,0,0,.6)';
+  ctx.beginPath(); ctx.arc(0,0,78,0,TAU); ctx.stroke();
+  ctx.strokeStyle='rgba(255,248,220,.55)'; ctx.lineWidth=0.8;
+  ctx.beginPath(); ctx.arc(0,0,77,Math.PI*1.05,Math.PI*1.55); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,64.6,0,TAU);
+  ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=0.7; ctx.stroke();
+  // 三条辐条
+  for(let i=0;i<3;i++){
+    const a=i*TAU/3;
+    ctx.save();
+    ctx.rotate(a);
+    const arm=roundRectPath(-5.2,-62,10.4,58,4.6);
+    const ag=ctx.createLinearGradient(-5,0,5,0);
+    ag.addColorStop(0,'#f4e3b0'); ag.addColorStop(0.5,'#bb9547'); ag.addColorStop(1,'#6a4d19');
+    ctx.fillStyle=ag; ctx.fill(arm);
+    ctx.strokeStyle='rgba(0,0,0,.4)'; ctx.lineWidth=0.6; ctx.stroke(arm);
+    ctx.restore();
+  }
+  // 校时螺钉
+  for(let i=0;i<3;i++){
+    const a=i*TAU/3+0.5;
+    ctx.save();
+    ctx.rotate(a);
+    ctx.translate(71,0);
+    const sg=ctx.createLinearGradient(0,-7,0,7);
+    sg.addColorStop(0,'#fbf0c9'); sg.addColorStop(0.5,'#bf9a4c'); sg.addColorStop(1,'#5a4214');
+    ctx.fillStyle=sg;
+    ctx.fill(roundRectPath(-5.5,-7,11,14,2.4));
+    ctx.strokeStyle='rgba(0,0,0,.5)'; ctx.lineWidth=0.6;
+    ctx.stroke(roundRectPath(-5.5,-7,11,14,2.4));
+    ctx.strokeStyle='rgba(60,40,10,.4)'; ctx.lineWidth=0.7;
+    ctx.beginPath(); ctx.moveTo(-3.8,-2.4); ctx.lineTo(3.8,-2.4); ctx.stroke();
+    ctx.restore();
+  }
+  // 冲量宝石
+  const pinA=Math.atan2(ARB.fork.y-p.y, ARB.fork.x-p.x);
+  ctx.save();
+  ctx.rotate(pinA);
+  const pg=ctx.createRadialGradient(10,-2,0.5,13,0,3.4);
+  pg.addColorStop(0,'#ff9aa5'); pg.addColorStop(0.5,'#c01833'); pg.addColorStop(1,'#5c0612');
+  ctx.fillStyle=pg;
+  ctx.beginPath(); ctx.arc(13,0,3.4,0,TAU); ctx.fill();
+  ctx.strokeStyle='rgba(255,200,205,.5)'; ctx.lineWidth=0.5; ctx.stroke();
+  ctx.restore();
+  // 摆轴心
+  const hg=ctx.createRadialGradient(-2,-3,0.4,0,0,8);
+  hg.addColorStop(0,'#f4f8fb'); hg.addColorStop(0.55,'#96a0a7'); hg.addColorStop(1,'#3a4044');
+  ctx.fillStyle=hg; ctx.beginPath(); ctx.arc(0,0,8,0,TAU); ctx.fill();
+  ctx.restore();
+  // 游丝（内端随摆轮转，外端固定，圈距随摆幅收放）
+  drawHairspring(ctx,p,ang);
+}
+function drawHairspring(ctx,p,ang){
+  const r0=11,r1=55,turns=8.4, studA=212*D2R;
+  ctx.save();
+  ctx.translate(p.x,p.y);
+  const N=500;
+  const build=(shift)=>{
+    ctx.beginPath();
+    for(let i=0;i<=N;i++){
+      const t=i/N;
+      const a=ang + (studA-ang)*t + TAU*turns*t;
+      const r=r0+(r1-r0)*t + shift;
+      const x=r*Math.cos(a), y=r*Math.sin(a);
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+  };
+  build(0.9);
+  ctx.strokeStyle='rgba(0,0,0,.5)'; ctx.lineWidth=2.7; ctx.stroke();
+  build(0);
+  ctx.strokeStyle='#0d2740'; ctx.lineWidth=2.1; ctx.stroke();
+  ctx.strokeStyle='#3d74a4'; ctx.lineWidth=1.15; ctx.stroke();
+  ctx.strokeStyle='rgba(178,216,247,.55)'; ctx.lineWidth=0.5; ctx.stroke();
+  // 内桩
+  ctx.beginPath(); ctx.arc(0,0,7,0,TAU);
+  ctx.fillStyle='#c9a24f'; ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.5)'; ctx.lineWidth=0.7; ctx.stroke();
+  // 外桩
+  ctx.save();
+  ctx.rotate(studA);
+  ctx.fillStyle='#b58f42';
+  ctx.fillRect(r1-2,-4.5,7,9);
+  ctx.strokeStyle='rgba(0,0,0,.5)'; ctx.lineWidth=0.6; ctx.strokeRect(r1-2,-4.5,7,9);
+  ctx.restore();
+  ctx.restore();
+}
+
+/* ---------------- 夹板 / 摆轮夹板 ---------------- */
+function sampleCap(path, c, r, aFrom, aTo, steps){
+  steps=steps||9;
+  for(let i=1;i<=steps;i++){
+    const a=aFrom+(aTo-aFrom)*i/steps;
+    path.lineTo(c.x+r*Math.cos(a), c.y+r*Math.sin(a));
+  }
+}
+function ribbonPathVar(pts,halves){
+  const n=pts.length;
+  const L=[],R=[];
+  for(let i=0;i<n;i++){
+    const prev=pts[Math.max(0,i-1)], next=pts[Math.min(n-1,i+1)];
+    let dx=next.x-prev.x, dy=next.y-prev.y;
+    const len=Math.hypot(dx,dy)||1; dx/=len; dy/=len;
+    L.push({x:pts[i].x-dy*halves[i], y:pts[i].y+dx*halves[i]});
+    R.push({x:pts[i].x+dy*halves[i], y:pts[i].y-dx*halves[i]});
+  }
+  const p=new Path2D();
+  p.moveTo(L[0].x,L[0].y);
+  for(let i=1;i<n;i++) p.lineTo(L[i].x,L[i].y);
+  const e=pts[n-1];
+  const prev=pts[n-2];
+  const phi=Math.atan2(e.y-prev.y, e.x-prev.x);
+  sampleCap(p,e,halves[n-1],phi+Math.PI/2,phi-Math.PI/2,10);
+  for(let i=n-1;i>=0;i--) p.lineTo(R[i].x,R[i].y);
+  const s=pts[0], next0=pts[1];
+  const phi0=Math.atan2(next0.y-s.y, next0.x-s.x);
+  sampleCap(p,s,halves[0],phi0-Math.PI/2,phi0-Math.PI*1.5,10);
+  p.closePath();
+  return p;
+}
+function ribbonPath(pts,half){
+  return ribbonPathVar(pts, pts.map(()=>half));
+}
+const BRIDGES=[
+  {id:'barrel', pts:[{x:-250,y:-150},{x:-222,y:-122},{x:-192,y:-96},{x:-164,y:-70},{x:-142,y:-52},{x:ARB.barrel.x,y:ARB.barrel.y}],
+   halves:[8,8.6,8.8,8.2,7.6,7], slot:[1,4], slotHalf:2.5,
+   jewel:null, boss:13, screw:{x:-233,y:-133}, engrave:{t:'CAL. ORV-18000',x:-204,y:-108,rot:0.63,size:6.0}},
+  {id:'third', pts:[{x:-236,y:162},{x:-196,y:146},{x:-154,y:130},{x:-112,y:114},{x:-64,y:100},{x:ARB.third.x,y:ARB.third.y}],
+   halves:[8,7.8,7.2,6.9,6.8,6.8], slot:[1,4], slotHalf:2.1,
+   jewel:'third', boss:11.5, screw:{x:-219,y:155}},
+  {id:'seconds', pts:[{x:128,y:250},{x:112,y:222},{x:96,y:192},{x:84,y:172},{x:ARB.seconds.x,y:ARB.seconds.y}],
+   halves:[8,7.4,6.9,6.8,6.8], slot:[1,3], slotHalf:2.1,
+   jewel:'seconds', boss:11.5, screw:{x:121,y:236}},
+  {id:'escape', pts:[{x:244,y:150},{x:214,y:127},{x:181,y:103},{x:149,y:80},{x:ARB.escape.x,y:ARB.escape.y}],
+   halves:[8,7.6,7.1,6.9,6.8], slot:[1,3], slotHalf:2.1,
+   jewel:'escape', boss:11.5, screw:{x:232,y:140}},
+  {id:'balance', pts:[{x:196,y:-214},{x:190,y:-176},{x:184,y:-138},{x:180,y:-104},{x:182,y:-70},{x:ARB.balance.x,y:ARB.balance.y}],
+   halves:[13,12,10.6,9.6,8.8,8.2], slot:[1,4], slotHalf:3.0,
+   jewel:'balance', boss:12.5, screw:{x:191,y:-190}, screw2:{x:184,y:-150}, engrave:{t:'ORVANE',x:185,y:-123,rot:-1.535,size:7.0}}
+];
+BRIDGES.forEach(b=>{
+  b.path=ribbonPathVar(b.pts,b.halves);
+  const sp=b.pts.slice(b.slot[0],b.slot[1]+1);
+  b.slotPath=ribbonPathVar(sp, sp.map(()=>b.slotHalf));
+  b.fill=new Path2D();
+  b.fill.addPath(b.path);
+  b.fill.addPath(b.slotPath);
+});
+
+function cotes(ctx,path,cx,cy,R,ang){
+  ctx.save();
+  ctx.clip(path,'evenodd');
+  ctx.translate(cx,cy); ctx.rotate(ang);
+  for(let x=-R;x<=R;x+=11){
+    ctx.beginPath();
+    for(let y=-R;y<=R;y+=16){
+      const xx=x+Math.sin(y*0.028+x*0.01)*2.6;
+      if(y===-R) ctx.moveTo(xx,y); else ctx.lineTo(xx,y);
+    }
+    ctx.strokeStyle='rgba(255,250,236,.055)'; ctx.lineWidth=6.5; ctx.stroke();
+    ctx.strokeStyle='rgba(0,0,0,.13)'; ctx.lineWidth=3.2; ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawBridges(ctx){
+  for(const b of BRIDGES){
+    // 阴影
+    ctx.save();
+    ctx.translate(6,8);
+    ctx.fillStyle='rgba(0,0,0,.34)';
+    ctx.fill(b.fill,'evenodd');
+    ctx.restore();
+    // 板体
+    const lg=ctx.createLinearGradient(-280,-200,220,240);
+    lg.addColorStop(0,'#cdd5da'); lg.addColorStop(0.28,'#8d969d'); lg.addColorStop(0.6,'#5c646a'); lg.addColorStop(1,'#30363a');
+    ctx.fillStyle=lg;
+    ctx.fill(b.fill,'evenodd');
+    cotes(ctx,b.fill,0,0,330,0.42);
+    ctx.lineWidth=1; ctx.strokeStyle='rgba(0,0,0,.6)'; ctx.stroke(b.path);
+    ctx.lineWidth=0.55; ctx.strokeStyle='rgba(255,252,242,.32)'; ctx.stroke(b.path);
+    ctx.lineWidth=0.8; ctx.strokeStyle='rgba(0,0,0,.5)'; ctx.stroke(b.slotPath);
+    ctx.lineWidth=0.5; ctx.strokeStyle='rgba(245,248,250,.22)'; ctx.stroke(b.slotPath);
+    // 端部凸台
+    const end=b.pts[b.pts.length-1];
+    const bossG=ctx.createRadialGradient(end.x-b.boss*0.4,end.y-b.boss*0.45,b.boss*0.1,end.x,end.y,b.boss);
+    bossG.addColorStop(0,'#eef3f6'); bossG.addColorStop(0.55,'#98a1a8'); bossG.addColorStop(1,'#3f4549');
+    ctx.beginPath(); ctx.arc(end.x,end.y,b.boss,0,TAU);
+    ctx.fillStyle=bossG; ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.lineWidth=0.9; ctx.stroke();
+    ctx.beginPath(); ctx.arc(end.x,end.y,b.boss*0.78,0,TAU);
+    ctx.strokeStyle='rgba(255,255,250,.25)'; ctx.lineWidth=0.7; ctx.stroke();
+    // 宝石
+    if(b.jewel){
+      const jp = b.jewel==='balance' ? ARB.balance : ARB[b.jewel];
+      jewel(ctx,jp.x,jp.y,b.jewel==='balance'?9.4:9,0.2);
+    }
+    // 螺丝
+    if(b.screw) screw(ctx,b.screw.x,b.screw.y,b.id==='balance'?6.2:5.6,b.id==='balance',0.7);
+    if(b.screw2) screw(ctx,b.screw2.x,b.screw2.y,4.8,false,-0.4);
+    if(b.engrave) engrave(ctx,b.engrave.t,b.engrave.x,b.engrave.y,b.engrave.rot,b.engrave.size,'center',0.36);
+  }
+  // 鹅颈微调
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(232,-122);
+  ctx.bezierCurveTo(214,-110,220,-90,202,-83);
+  ctx.bezierCurveTo(188,-78,176,-73,166,-68);
+  ctx.strokeStyle='rgba(0,0,0,.5)'; ctx.lineWidth=3.6; ctx.stroke();
+  ctx.strokeStyle='#1b3f66'; ctx.lineWidth=2.2; ctx.stroke();
+  ctx.strokeStyle='rgba(160,200,235,.5)'; ctx.lineWidth=0.6; ctx.stroke();
+  ctx.restore();
+  screw(ctx,232,-122,4.8,true,1.2);
+  // 快慢针
+  ctx.save();
+  ctx.translate(166,-68); ctx.rotate(0.5);
+  ctx.fillStyle='#2c5b8a';
+  ctx.beginPath(); ctx.moveTo(-2,0); ctx.lineTo(0,-3.6); ctx.lineTo(11,0); ctx.lineTo(0,3.6); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='rgba(150,195,235,.5)'; ctx.lineWidth=0.5; ctx.stroke();
+  ctx.restore();
+  // 止秒杆
+  drawHackLever(ctx);
+  // 夹板螺丝
+  screw(ctx,-248,-142,5.6,true,0.3);
+  screw(ctx,-108,112,5.0,false,1.4);
+  screw(ctx,96,232,4.6,true,0.9);
+}
+function drawHackLever(ctx){
+  const p=ARB.balance;
+  const pivot={x:104,y:-88};
+  const dir=Math.atan2(p.y-pivot.y,p.x-pivot.x);
+  const press=SIM.hack;
+  const distB=Math.hypot(p.x-pivot.x,p.y-pivot.y);
+  const len=distB-(78+1.6-press*2.8);
+  ctx.save();
+  ctx.translate(pivot.x,pivot.y);
+  ctx.rotate(dir);
+  const lg=ctx.createLinearGradient(0,-4.5,0,7);
+  lg.addColorStop(0,'#dde5ea'); lg.addColorStop(0.55,'#8a939a'); lg.addColorStop(1,'#3d4348');
+  ctx.fillStyle=lg;
+  ctx.fill(roundRectPath(0,-4.4,len,8.8,4.2));
+  ctx.strokeStyle='rgba(0,0,0,.5)'; ctx.lineWidth=0.8;
+  ctx.stroke(roundRectPath(0,-4.4,len,8.8,4.2));
+  ctx.save();
+  ctx.translate(len-1,0);
+  ctx.rotate(Math.PI/2);
+  const rg=ctx.createLinearGradient(-4,0,4,0);
+  rg.addColorStop(0,'#ff8f9c'); rg.addColorStop(0.5,'#b3192f'); rg.addColorStop(1,'#5c0713');
+  ctx.fillStyle=rg;
+  ctx.fill(roundRectPath(-3.6,-4.2,7.2,8.4,2.2));
+  ctx.strokeStyle='rgba(255,190,200,.45)'; ctx.lineWidth=0.5; ctx.stroke();
+  ctx.restore();
+  ctx.restore();
+  // 止秒弹簧
+  const sx=pivot.x+3, sy=pivot.y+3;
+  ctx.beginPath();
+  ctx.moveTo(sx,sy);
+  ctx.bezierCurveTo(sx+14,sy+15, sx+31,sy+11, sx+35,sy-5);
+  ctx.strokeStyle='#1e456f'; ctx.lineWidth=2.0; ctx.stroke();
+  ctx.strokeStyle='rgba(130,180,225,.4)'; ctx.lineWidth=0.6; ctx.stroke();
+  screw(ctx,pivot.x,pivot.y,5.2,false,0.2);
+}
+
+/* ---------------- 棘轮 / 棘爪 ---------------- */
+function drawRatchet(ctx){
+  const p=ARB.barrel;
+  const a=SIM.ratchet;
+  softShadow(ctx,{x:p.x,y:p.y},40,5,6,0.45);
+  ctx.save();
+  ctx.translate(p.x,p.y); ctx.rotate(a);
+  const z=40, rp=38, ra=44.5, rf=33;
+  const path=new Path2D();
+  for(let k=0;k<z;k++){
+    const t=k*TAU/z;
+    const p1={x:rf*Math.cos(t),y:rf*Math.sin(t)};
+    const p2={x:ra*Math.cos(t+TAU/z*0.70),y:ra*Math.sin(t+TAU/z*0.70)};
+    const p3={x:ra*Math.cos(t+TAU/z*0.83),y:ra*Math.sin(t+TAU/z*0.83)};
+    const p4={x:rf*Math.cos(t+TAU/z*0.94),y:rf*Math.sin(t+TAU/z*0.94)};
+    if(k===0) path.moveTo(p1.x,p1.y); else path.lineTo(p1.x,p1.y);
+    path.lineTo(p2.x,p2.y); path.lineTo(p3.x,p3.y); path.lineTo(p4.x,p4.y);
+    path.arc(0,0,rf,t+TAU/z*0.94,t+TAU/z,false);
+  }
+  path.closePath();
+  const g=ctx.createLinearGradient(-34,-34,34,34);
+  g.addColorStop(0,'#e2e9ed'); g.addColorStop(0.35,'#a2abb1'); g.addColorStop(0.7,'#646b71'); g.addColorStop(1,'#34393d');
+  ctx.fillStyle=g; ctx.fill(path);
+  ctx.lineWidth=1.1; ctx.strokeStyle='rgba(0,0,0,.65)'; ctx.stroke(path);
+  // 蜗形纹
+  ctx.save(); ctx.clip(path);
+  for(let i=1;i<19;i++){
+    ctx.beginPath(); ctx.arc(0,0,i*1.95,0,TAU);
+    ctx.strokeStyle=i%2?'rgba(255,255,250,.075)':'rgba(0,0,0,.12)';
+    ctx.lineWidth=1.3; ctx.stroke();
+  }
+  const rl=ctx.createRadialGradient(-12,-14,6,0,0,44);
+  rl.addColorStop(0,'rgba(255,255,250,.13)'); rl.addColorStop(1,'rgba(0,0,0,.18)');
+  ctx.fillStyle=rl; ctx.fillRect(-46,-46,92,92);
+  ctx.restore();
+  // 中心轮毂
+  const hg=ctx.createRadialGradient(-3,-4,0.5,0,0,11);
+  hg.addColorStop(0,'#f6fafc'); hg.addColorStop(0.5,'#a1aab0'); hg.addColorStop(1,'#41474c');
+  ctx.fillStyle=hg; ctx.beginPath(); ctx.arc(0,0,11,0,TAU); ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.5)'; ctx.lineWidth=0.8; ctx.stroke();
+  ctx.restore();
+  screw(ctx,p.x,p.y,8,true,0.35);
+  // 棘爪
+  const clickPivot={x:p.x+62,y:p.y-36};
+  const toothPhase=frac(a*40/TAU);
+  const lift=Math.max(0, 1-Math.min(toothPhase,1-toothPhase)/0.16)*8*D2R;
+  const dirToB=Math.atan2(p.y-clickPivot.y,p.x-clickPivot.x);
+  ctx.save();
+  ctx.translate(clickPivot.x,clickPivot.y);
+  ctx.rotate(dirToB+lift);
+  const cg=ctx.createLinearGradient(0,-6,0,7);
+  cg.addColorStop(0,'#dbe4ea'); cg.addColorStop(0.55,'#828c93'); cg.addColorStop(1,'#2e3439');
+  ctx.fillStyle=cg;
+  ctx.fill(roundRectPath(0,-5.6,27,11.2,4.8));
+  ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.lineWidth=0.9;
+  ctx.stroke(roundRectPath(0,-5.6,27,11.2,4.8));
+  // 爪尖
+  ctx.beginPath();
+  ctx.moveTo(25,-5); ctx.lineTo(36,-1.2); ctx.lineTo(36,1.8); ctx.lineTo(25,5.4); ctx.closePath();
+  ctx.fillStyle='#aab4ba'; ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.stroke();
+  // 棘爪弹簧
+  ctx.beginPath();
+  ctx.moveTo(9,4.6); ctx.quadraticCurveTo(4,22,28,25);
+  ctx.strokeStyle='#1e456f'; ctx.lineWidth=2.2; ctx.stroke();
+  ctx.strokeStyle='rgba(130,180,225,.4)'; ctx.lineWidth=0.6; ctx.stroke();
+  ctx.restore();
+  screw(ctx,clickPivot.x,clickPivot.y,5.6,false,1.1);
+}
+
+/* ---------------- 小秒盘 ---------------- */
+function drawSubDial(ctx){
+  const p=ARB.seconds;
+  ctx.save();
+  ctx.translate(p.x,p.y);
+  // 暗色小盘
+  const g=ctx.createRadialGradient(-14,-14,10,0,0,58);
+  g.addColorStop(0,'rgba(22,25,28,.95)');
+  g.addColorStop(0.78,'rgba(13,15,17,.93)');
+  g.addColorStop(1,'rgba(38,40,40,.72)');
+  ctx.beginPath(); ctx.arc(0,0,58,0,TAU); ctx.fillStyle=g; ctx.fill();
+  ctx.lineWidth=1; ctx.strokeStyle='rgba(215,185,120,.5)'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,47,0,TAU);
+  ctx.strokeStyle='rgba(205,175,110,.35)'; ctx.lineWidth=0.7; ctx.stroke();
+  for(let i=0;i<60;i++){
+    const a=-Math.PI/2+i*TAU/60;
+    const major=(i%5===0);
+    const r1=48, r2=major?57:53.6;
+    ctx.beginPath();
+    ctx.moveTo(r1*Math.cos(a),r1*Math.sin(a));
+    ctx.lineTo(r2*Math.cos(a),r2*Math.sin(a));
+    ctx.strokeStyle=major?'rgba(245,226,182,.95)':'rgba(214,192,148,.55)';
+    ctx.lineWidth=major?1.5:0.75;
+    ctx.stroke();
+  }
+  // 宝石中心（秒轴）
+  jewel(ctx,0,0,8.4,0.3);
+  let secAng=TAU*frac(tq()/60);
+  // 秒针
+  ctx.rotate(secAng);
+  ctx.save();
+  ctx.translate(2.4,3.2);
+  ctx.fillStyle='rgba(0,0,0,.45)';
+  ctx.fill(roundRectPath(-1.1,-46,2.2,50,1));
+  ctx.beginPath(); ctx.arc(0,12,3.4,0,TAU); ctx.fill();
+  ctx.restore();
+  const bg=ctx.createLinearGradient(-3,0,3,0);
+  bg.addColorStop(0,'#7fb0e0'); bg.addColorStop(0.4,'#2c5a8c'); bg.addColorStop(1,'#0a1c30');
+  ctx.fillStyle=bg;
+  ctx.fill(roundRectPath(-1.15,-46,2.3,50,1.15));
+  ctx.fillStyle='#b3192f';
+  ctx.beginPath(); ctx.arc(0,-44,1.9,0,TAU); ctx.fill();
+  ctx.fillStyle='#1b3f63';
+  ctx.beginPath(); ctx.arc(0,12,3.3,0,TAU); ctx.fill();
+  ctx.restore();
+  // 中心盖
+  ctx.save();
+  ctx.translate(p.x,p.y);
+  const cg=ctx.createRadialGradient(-1.5,-1.6,0.3,0,0,4.6);
+  cg.addColorStop(0,'#dfe8ee'); cg.addColorStop(0.5,'#8a949b'); cg.addColorStop(1,'#343a3e');
+  ctx.fillStyle=cg; ctx.beginPath(); ctx.arc(0,0,4.6,0,TAU); ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.6)'; ctx.lineWidth=0.7; ctx.stroke();
+  ctx.restore();
+}
+
+/* ---------------- 表壳 / 法兰 / 章节环 ---------------- */
+function drawCaseRing(ctx){
+  ctx.save();
+  // 外圈
+  ctx.beginPath();
+  ctx.arc(0,0,CASE_R,0,TAU);
+  ctx.arc(0,0,FLANGE_R,0,TAU,true);
+  const g=ctx.createLinearGradient(-260,-300,280,300);
+  g.addColorStop(0,'#f7e8b8'); g.addColorStop(0.22,'#d3b36b'); g.addColorStop(0.5,'#8e6c2c');
+  g.addColorStop(0.72,'#5b4314'); g.addColorStop(1,'#3c2c0e');
+  ctx.fillStyle=g; ctx.fill();
+  // 滚花
+  for(let i=0;i<120;i++){
+    const a=i*TAU/120;
+    const r1=CASE_R-8.5, r2=CASE_R-1.2;
+    ctx.beginPath();
+    ctx.moveTo(r1*Math.cos(a),r1*Math.sin(a));
+    ctx.lineTo(r2*Math.cos(a),r2*Math.sin(a));
+    ctx.strokeStyle=i%2?'rgba(60,42,12,.35)':'rgba(255,245,215,.20)';
+    ctx.lineWidth=0.9; ctx.stroke();
+  }
+  // 内倒角
+  ctx.beginPath(); ctx.arc(0,0,CASE_R-9,0,TAU);
+  ctx.strokeStyle='rgba(255,248,225,.4)'; ctx.lineWidth=1; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,FLANGE_R+0.8,0,TAU);
+  ctx.strokeStyle='rgba(20,14,6,.7)'; ctx.lineWidth=1.4; ctx.stroke();
+  ctx.restore();
+}
+function drawPlate(ctx){
+  ctx.save();
+  ctx.beginPath(); ctx.arc(0,0,PLATE_R,0,TAU);
+  const g=ctx.createRadialGradient(-110,-130,40,0,0,PLATE_R);
+  g.addColorStop(0,'#3d382e'); g.addColorStop(0.5,'#27231c'); g.addColorStop(0.86,'#1a1712'); g.addColorStop(1,'#0f0d0a');
+  ctx.fillStyle=g; ctx.fill();
+  ctx.clip();
+  if(!perlage){
+    const cv=makePerlage();
+    perlage=ctx.createPattern(cv,'repeat');
+  }
+  if(perlage){ ctx.globalAlpha=0.48; ctx.fillStyle=perlage; ctx.fillRect(-PLATE_R,-PLATE_R,PLATE_R*2,PLATE_R*2); ctx.globalAlpha=1; }
+  // 中心附近暗角
+  ctx.fillStyle=radialGrad(ctx,PLATE_R,0,0,60,PLATE_R,[[0,'rgba(0,0,0,0)'],[0.8,'rgba(0,0,0,.08)'],[1,'rgba(0,0,0,.35)']]);
+  ctx.fillRect(-PLATE_R,-PLATE_R,PLATE_R*2,PLATE_R*2);
+  ctx.restore();
+  ctx.beginPath(); ctx.arc(0,0,PLATE_R-1,0,TAU);
+  ctx.strokeStyle='rgba(226,204,158,.18)'; ctx.lineWidth=1; ctx.stroke();
+  // 左下铭牌
+  engrave(ctx,'ORVANE',-170,186,-0.30,10.0,'center',0.50);
+  ctx.save();
+  ctx.translate(-170,198); ctx.rotate(-0.30);
+  ctx.strokeStyle='rgba(232,212,170,.26)'; ctx.lineWidth=0.6;
+  ctx.beginPath(); ctx.moveTo(-48,0); ctx.lineTo(48,0); ctx.stroke();
+  ctx.restore();
+  engrave(ctx,'CAL. ORV-18000  ·  N° 0417',-170,209,-0.30,5.6,'center',0.34);
+  // 12 点位内圈铭牌
+  engrave(ctx,'ORVANE',0,-247,0,10.5,'center',0.42);
+  ctx.save();
+  ctx.strokeStyle='rgba(232,212,170,.20)'; ctx.lineWidth=0.6;
+  ctx.beginPath(); ctx.moveTo(-54,-236); ctx.lineTo(54,-236); ctx.stroke();
+  ctx.restore();
+  engrave(ctx,'CAL. ORV-18000  ·  N° 0417  ·  15 RUBIS',0,-225,0,5.0,'center',0.28);
+}
+function drawFlange(ctx){
+  ctx.save();
+  // 法兰环
+  ctx.beginPath();
+  ctx.arc(0,0,FLANGE_R,0,TAU);
+  ctx.arc(0,0,PLATE_R,0,TAU,true);
+  const g=ctx.createRadialGradient(0,0,PLATE_R,0,0,FLANGE_R);
+  g.addColorStop(0,'#191611'); g.addColorStop(0.55,'#25211a'); g.addColorStop(1,'#100e0a');
+  ctx.fillStyle=g; ctx.fill();
+  // 同心拉丝
+  for(let i=0;i<45;i++){
+    const rr=PLATE_R+2+i*0.75;
+    ctx.beginPath(); ctx.arc(0,0,rr,0,TAU);
+    ctx.strokeStyle=i%2?'rgba(214,190,145,.035)':'rgba(0,0,0,.10)';
+    ctx.lineWidth=0.55; ctx.stroke();
+  }
+  // 双轨
+  for(const rr of [290,318]){
+    ctx.beginPath(); ctx.arc(0,0,rr,0,TAU);
+    ctx.strokeStyle='rgba(214,184,120,.62)'; ctx.lineWidth=0.8; ctx.stroke();
+  }
+  // 分钟刻度
+  for(let i=0;i<60;i++){
+    const a=-Math.PI/2+i*TAU/60;
+    const major=(i%5===0);
+    const r1=major?292:296, r2=major?312:305;
+    ctx.beginPath();
+    ctx.moveTo(r1*Math.cos(a),r1*Math.sin(a));
+    ctx.lineTo(r2*Math.cos(a),r2*Math.sin(a));
+    ctx.strokeStyle=major?'rgba(239,218,170,.92)':'rgba(190,168,124,.5)';
+    ctx.lineWidth=major?2.2:0.9;
+    ctx.stroke();
+  }
+  // 12 点三角
+  ctx.beginPath();
+  ctx.moveTo(0,-313); ctx.lineTo(-5.4,-300); ctx.lineTo(5.4,-300); ctx.closePath();
+  ctx.fillStyle='#d8b26a'; ctx.fill();
+  // 动力储备弧
+  const a0=140*D2R, a1=220*D2R;
+  ctx.beginPath(); ctx.arc(0,0,315,a0,a1,false);
+  ctx.strokeStyle='rgba(0,0,0,.5)'; ctx.lineWidth=3; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,315,a1-(a1-a0)*SIM.power,a1,false);
+  ctx.strokeStyle='rgba(224,192,124,.85)'; ctx.lineWidth=2; ctx.stroke();
+  for(let i=0;i<=4;i++){
+    const a=a0+(a1-a0)*i/4;
+    ctx.beginPath();
+    ctx.moveTo(311*Math.cos(a),311*Math.sin(a));
+    ctx.lineTo(319*Math.cos(a),319*Math.sin(a));
+    ctx.strokeStyle='rgba(196,170,120,.5)'; ctx.lineWidth=0.7; ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawCrown(ctx){
+  const out=SIM.crownOut;
+  const cy=-352-(out?8:0);
+  ctx.save();
+  // 吊环
+  ctx.beginPath(); ctx.arc(0,-390,10,0,TAU);
+  ctx.strokeStyle='#8a6a2c'; ctx.lineWidth=4.6; ctx.stroke();
+  ctx.strokeStyle='rgba(255,244,212,.55)'; ctx.lineWidth=1.2; ctx.stroke();
+  // 表冠颈
+  const ng=ctx.createLinearGradient(-16,0,16,0);
+  ng.addColorStop(0,'#f3e2b0'); ng.addColorStop(0.4,'#c6a45a'); ng.addColorStop(1,'#6d4e18');
+  ctx.fillStyle=ng;
+  ctx.fill(roundRectPath(-13,cy+15,26,18,3));
+  // 拉出时露出的柄轴
+  if(out){
+    ctx.fillStyle='#9aa3a9';
+    ctx.fillRect(-4,cy+28,8,14);
+  }
+  // 表冠
+  const cg=ctx.createLinearGradient(-23,0,23,0);
+  cg.addColorStop(0,'#f9ecc6'); cg.addColorStop(0.2,'#d9b96f'); cg.addColorStop(0.55,'#a07c33'); cg.addColorStop(1,'#5b4112');
+  ctx.fillStyle=cg;
+  ctx.fill(roundRectPath(-23,cy-14,46,28,7));
+  ctx.strokeStyle='rgba(30,20,6,.65)'; ctx.lineWidth=1; ctx.stroke(roundRectPath(-23,cy-14,46,28,7));
+  // 滚花
+  const phase=SIM.crownSpin%0.5;
+  for(let i=0;i<11;i++){
+    const x=-19+i*3.9+phase*3.9;
+    if(x>19) continue;
+    ctx.beginPath();
+    ctx.moveTo(x,cy-11);
+    ctx.lineTo(x+0.9,cy+11);
+    ctx.strokeStyle='rgba(60,40,10,.35)'; ctx.lineWidth=1.1; ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x+1.6,cy-11);
+    ctx.lineTo(x+2.4,cy+11);
+    ctx.strokeStyle='rgba(255,246,220,.3)'; ctx.lineWidth=0.8; ctx.stroke();
+  }
+  // 表冠端面
+  const eg=ctx.createRadialGradient(-5,cy-5,1,0,cy,16);
+  eg.addColorStop(0,'#fdf4d8'); eg.addColorStop(0.55,'#cbab62'); eg.addColorStop(1,'#6f511c');
+  ctx.fillStyle=eg;
+  ctx.beginPath(); ctx.ellipse(0,cy-13,15,4.2,0,0,TAU); ctx.fill();
+  ctx.strokeStyle='rgba(255,248,225,.45)'; ctx.lineWidth=0.7; ctx.stroke();
+  // 拉出提示
+  if(out){
+    ctx.beginPath();
+    ctx.arc(0,cy-24,2.2,0,TAU);
+    ctx.fillStyle='rgba(125,180,235,.9)'; ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* ---------------- 指针 ---------------- */
+function makeHand(len,width,hole,holePos,counter){
+  const p=new Path2D();
+  p.moveTo(0,counter+10);
+  p.lineTo(-width*0.42,0);
+  p.lineTo(-width*0.52,-len*0.32);
+  p.lineTo(-width*0.4,-len*0.72);
+  p.lineTo(-width*0.72,-len*0.78);
+  p.lineTo(-width*0.24,-len*0.93);
+  p.lineTo(0,-len);
+  p.lineTo(width*0.24,-len*0.93);
+  p.lineTo(width*0.72,-len*0.78);
+  p.lineTo(width*0.4,-len*0.72);
+  p.lineTo(width*0.52,-len*0.32);
+  p.lineTo(width*0.42,0);
+  p.closePath();
+  const fill=new Path2D(); fill.addPath(p);
+  if(hole){
+    const h=new Path2D();
+    h.moveTo(0,-holePos-hole); h.lineTo(hole*0.52,-holePos); h.lineTo(0,-holePos+hole); h.lineTo(-hole*0.52,-holePos); h.closePath();
+    fill.addPath(h);
+  }
+  return {outline:p, fill, counter, len, holePos, hole};
+}
+const MINUTE_HAND=makeHand(272,7.4,9,212,16);
+const HOUR_HAND=(()=>{
+  const p=new Path2D();
+  p.moveTo(0,28);
+  p.lineTo(-6.2,18);
+  p.lineTo(-5.4,-24);
+  p.lineTo(-8,-50);
+  p.lineTo(-13.5,-92);
+  p.lineTo(-10.5,-136);
+  p.lineTo(-4.5,-166);
+  p.lineTo(0,-180);
+  p.lineTo(4.5,-166);
+  p.lineTo(10.5,-136);
+  p.lineTo(13.5,-92);
+  p.lineTo(8,-50);
+  p.lineTo(5.4,-24);
+  p.lineTo(6.2,18);
+  p.closePath();
+  const h=new Path2D();
+  h.moveTo(0,-64); h.lineTo(4.2,-80); h.lineTo(3.2,-132); h.lineTo(0,-146);
+  h.lineTo(-3.2,-132); h.lineTo(-4.2,-80); h.closePath();
+  const fill=new Path2D(); fill.addPath(p); fill.addPath(h);
+  return {outline:p, fill, len:180, holePos:105, hole:8, counter:28};
+})();
+
+function drawBluedHand(ctx,hand,color,alpha){
+  const g=ctx.createLinearGradient(-6,0,6,0);
+  g.addColorStop(0,'#8ebbe6'); g.addColorStop(0.32,'#3b6c9f'); g.addColorStop(0.62,'#1b3f66'); g.addColorStop(1,'#08131f');
+  ctx.fillStyle=g;
+  ctx.fill(hand.fill,'evenodd');
+  ctx.lineWidth=0.9; ctx.strokeStyle='rgba(3,10,18,.85)'; ctx.stroke(hand.outline);
+  ctx.strokeStyle='rgba(150,196,235,.35)'; ctx.lineWidth=0.55;
+  ctx.beginPath();
+  ctx.moveTo(-1.6,-hand.len*0.9);
+  ctx.lineTo(-1.6,-hand.counter-4);
+  ctx.stroke();
+}
+function drawHands(ctx){
+  const disp=displaySeconds();
+  const mAng=TAU*frac(disp/3600);
+  const hAng=TAU*frac(disp/43200);
+  // 投影
+  ctx.save();
+  ctx.translate(4,6);
+  ctx.rotate(mAng);
+  ctx.fillStyle='rgba(0,0,0,.32)';
+  ctx.fill(MINUTE_HAND.fill,'evenodd');
+  ctx.restore();
+  ctx.save();
+  ctx.translate(4,6);
+  ctx.rotate(hAng);
+  ctx.fillStyle='rgba(0,0,0,.32)';
+  ctx.fill(HOUR_HAND.fill,'evenodd');
+  ctx.restore();
+  // 指针
+  ctx.save(); ctx.rotate(hAng); drawBluedHand(ctx,HOUR_HAND,'blue',1); ctx.restore();
+  ctx.save(); ctx.rotate(mAng); drawBluedHand(ctx,MINUTE_HAND,'blue',1); ctx.restore();
+  // 中心盖
+  const cg=ctx.createRadialGradient(-2,-2.4,0.4,0,0,12.5);
+  cg.addColorStop(0,'#f2f7fa'); cg.addColorStop(0.45,'#a7b0b6'); cg.addColorStop(1,'#3c4246');
+  ctx.fillStyle=cg;
+  ctx.beginPath(); ctx.arc(0,0,12.5,0,TAU); ctx.fill();
+  ctx.strokeStyle='rgba(255,252,240,.35)'; ctx.lineWidth=1; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,4,0,TAU);
+  ctx.fillStyle='#1b3f63'; ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.5)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(-3.2,0); ctx.lineTo(3.2,0); ctx.stroke();
+}
+
+/* ---------------- 场景 ---------------- */
+function drawScene(ctx){
+  // 环境影
+  ctx.save();
+  ctx.translate(0,26);
+  const sg=ctx.createRadialGradient(0,0,120,0,0,430);
+  sg.addColorStop(0,'rgba(0,0,0,.55)'); sg.addColorStop(0.7,'rgba(0,0,0,.22)'); sg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=sg;
+  ctx.beginPath(); ctx.arc(0,0,430,0,TAU); ctx.fill();
+  ctx.restore();
+
+  drawCaseRing(ctx);
+  drawPlate(ctx);
+
+  // 阶梯层叠 L0（发条盒/中心齿轴）→ L1（中心轮/三轮齿轴）→ L2（三轮/秒轮齿轴）
+  // → L3（秒轮/擒纵齿轴）→ L4（擒纵轮 + 擒纵叉）→ L5（摆轮）
+  for(let lvl=0;lvl<=4;lvl++){
+    const list=GEARS.filter(g=>g.level===lvl);
+    for(const g of list){
+      if(lvl>0) softShadow(ctx,g.pos,g.rp*0.99, 3.5+lvl*1.5, 5+lvl*2, 0.30+lvl*0.05);
+    }
+    for(const g of list){
+      if(g.type==='barrel') drawBarrel(ctx,g,gearAngle(g));
+      else drawGear(ctx,g,gearAngle(g));
+      if(g.id==='escapeWheel') drawFork(ctx);
+    }
+  }
+  drawBalance(ctx);
+  drawBridges(ctx);
+  drawRatchet(ctx);
+  drawSubDial(ctx);
+  drawFlange(ctx);
+  drawHands(ctx);
+  drawCrown(ctx);
+}
+
+/* ---------------- 主渲染 ---------------- */
+function render(){
+  const ctx=WCTX;
+  ctx.setTransform(WDPR,0,0,WDPR,0,0);
+  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  ctx.translate(W/2,H/2);
+  ctx.scale(SCL,SCL);
+  ctx.translate(0,-VIEW_CY);
+  drawScene(ctx);
+  ctx.restore();
+  if(SIM.lens && pointer.active) drawLens();
+}
+function sceneToScreen(x,y){
+  return {x:W/2+x*SCL, y:H/2+(y-VIEW_CY)*SCL};
+}
+function nearestMesh(){
+  let best=null,bd=1e9;
+  for(const m of MESHES){
+    const A=byId(m.a),B=byId(m.b);
+    const t=A.rp/(A.rp+B.rp);
+    const x=A.pos.x+(B.pos.x-A.pos.x)*t;
+    const y=A.pos.y+(B.pos.y-A.pos.y)*t;
+    const d=Math.hypot(x-pointer.sx,y-pointer.sy);
+    if(d<bd){ bd=d; best={m,A,B,x,y,d}; }
+  }
+  return (best && best.d<170)?best:null;
+}
+function drawLens(){
+  const ctx=WCTX;
+  const r=lensR;
+  const px=clamp(pointer.x, 0, W);
+  const py=clamp(pointer.y, 0, H);
+  let lx=px;
+  let ly=pointer.touch ? py-98 : py;
+  lx=clamp(lx,r+6,W-r-6);
+  ly=clamp(ly,r+6,H-r-6);
+  const zoom=3.0;
+  ctx.save();
+  ctx.setTransform(WDPR,0,0,WDPR,0,0);
+  ctx.beginPath(); ctx.arc(lx,ly,r,0,TAU); ctx.clip();
+  ctx.translate(lx,ly);
+  ctx.scale(zoom,zoom);
+  ctx.translate(-px,-py);
+  ctx.translate(W/2,H/2);
+  ctx.scale(SCL,SCL);
+  ctx.translate(0,-VIEW_CY);
+  drawScene(ctx);
+  ctx.restore();
+
+  // 玻璃与镜圈
+  ctx.save();
+  ctx.setTransform(WDPR,0,0,WDPR,0,0);
+  ctx.beginPath(); ctx.arc(lx,ly,r,0,TAU);
+  const gg=ctx.createRadialGradient(lx-r*0.35,ly-r*0.4,r*0.1,lx,ly,r);
+  gg.addColorStop(0,'rgba(175,205,235,.05)');
+  gg.addColorStop(0.72,'rgba(90,120,150,.04)');
+  gg.addColorStop(1,'rgba(10,14,18,.22)');
+  ctx.fillStyle=gg; ctx.fill();
+  ctx.beginPath(); ctx.arc(lx,ly,r-1.6,0,TAU);
+  const ring=ctx.createLinearGradient(lx-r,ly-r,lx+r,ly+r);
+  ring.addColorStop(0,'#f4e4b6'); ring.addColorStop(0.45,'#b28c40'); ring.addColorStop(1,'#5a4214');
+  ctx.strokeStyle=ring; ctx.lineWidth=2.6; ctx.stroke();
+  ctx.beginPath(); ctx.arc(lx,ly,r-4.2,0,TAU);
+  ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=2; ctx.stroke();
+  ctx.beginPath(); ctx.arc(lx,ly,r-8,Math.PI*1.16,Math.PI*1.45);
+  ctx.strokeStyle='rgba(255,255,255,.22)'; ctx.lineWidth=3.4; ctx.stroke();
+  // 十字取样点
+  ctx.beginPath();
+  ctx.moveTo(px-5,py); ctx.lineTo(px+5,py);
+  ctx.moveTo(px,py-5); ctx.lineTo(px,py+5);
+  ctx.strokeStyle='rgba(233,215,175,.55)'; ctx.lineWidth=0.8;
+  ctx.stroke();
+  ctx.restore();
+
+  // 放大标注
+  const near=nearestMesh();
+  const lines=[];
+  if(near){
+    const mm=dist(near.A.pos,near.B.pos)*PX2MM;
+    lines.push(near.A.z+'T  ↔  '+near.B.z+'T');
+    lines.push('a = '+mm.toFixed(2)+' mm · i = '+(near.A.z/near.B.z).toFixed(2)+' : 1');
+    const ms=sceneToScreen(near.x,near.y);
+    ctx.save();
+    ctx.setTransform(WDPR,0,0,WDPR,0,0);
+    ctx.beginPath();
+    ctx.moveTo(ms.x,ms.y);
+    ctx.lineTo(lx,ly+r*0.94);
+    ctx.strokeStyle='rgba(226,202,150,.4)'; ctx.lineWidth=0.8;
+    ctx.setLineDash([3,4]); ctx.stroke();
+    ctx.restore();
+  }else{
+    lines.push('放大 3.0×');
+    lines.push('贴住齿轮查看啮合');
+  }
+  drawLabel(lx,ly-r-46,Math.max(148,r*1.85),lines);
+}
+function drawLabel(cx,cy,w,lines){
+  const ctx=WCTX;
+  const h=13+lines.length*12;
+  let x=clamp(cx-w/2,6,W-w-6);
+  let y=clamp(cy-h,6,H-h-6);
+  if(cy-h<4) y=clamp(cy+r*1.1,6,H-h-6);
+  ctx.save();
+  ctx.setTransform(WDPR,0,0,WDPR,0,0);
+  ctx.fillStyle='rgba(10,9,7,.9)';
+  ctx.fill(roundRectPath(x,y,w,h,3));
+  ctx.strokeStyle='rgba(160,134,82,.55)'; ctx.lineWidth=0.8;
+  ctx.stroke(roundRectPath(x,y,w,h,3));
+  ctx.font='9px '+MONO;
+  ctx.textBaseline='middle';
+  for(let i=0;i<lines.length;i++){
+    ctx.fillStyle=i===0?'#e6d3a4':'#9b8d74';
+    ctx.fillText(lines[i],x+9,y+9+i*12);
+  }
+  ctx.restore();
+}
+
+/* ---------------- 跨轮系绘制 ---------------- */
+function drawMW(){
+  const ctx=MWCTX;
+  const s=MWW/330;
+  ctx.setTransform(MWDPR*s,0,0,MWDPR*s,0,0);
+  ctx.clearRect(0,0,330,205);
+  // 背景
+  const bg=ctx.createRadialGradient(90,40,20,150,100,300);
+  bg.addColorStop(0,'#1c1812'); bg.addColorStop(0.6,'#14110d'); bg.addColorStop(1,'#0b0a08');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,330,205);
+  for(let i=0;i<26;i++){
+    ctx.beginPath(); ctx.arc(125,100,18+i*2.6,0,TAU);
+    ctx.strokeStyle=i%2?'rgba(200,170,110,.025)':'rgba(0,0,0,.06)';
+    ctx.lineWidth=1.5; ctx.stroke();
+  }
+  ctx.save();
+  ctx.translate(MW_CX,MW_CY);
+  // 时轮（下）
+  const hour=MWG.find(g=>g.id==='hourWheel');
+  const mw=MWG.find(g=>g.id==='minuteWheel');
+  const cannon=MWG.find(g=>g.id==='cannon');
+  const mp=MWG.find(g=>g.id==='minutePinion');
+  softShadow(ctx,{x:0,y:0},78,4,5,0.4);
+  // 时轮放在上层以便看见 8→32 啮合
+  drawGear(ctx,mw,mwAngle(mw),{});
+  drawGear(ctx,hour,mwAngle(hour),{});
+  drawGear(ctx,cannon,mwAngle(cannon),{});
+  drawGear(ctx,mp,mwAngle(mp),{});
+  // 轴宝石
+  jewel(ctx,0,0,7,0.3);
+  jewel(ctx,MW_D,0,6,0.3);
+  // 啮合标注
+  meshTag(ctx,23,0,'10 → 30',-1);
+  meshTag(ctx,MW_D-18.4,0,'8 → 32',1);
+  ctx.restore();
+  // 方向
+  ctx.font='7.5px '+MONO;
+  ctx.fillStyle='rgba(182,165,135,.8)';
+  ctx.fillText('分针 · 中心齿轴 1 圈 / 时',8,16);
+  ctx.textAlign='right';
+  ctx.fillText('时轮 1 圈 / 12 时',322,198);
+  ctx.textAlign='left';
+}
+function meshTag(ctx,x,y,text,dir){
+  ctx.save();
+  const w=ctx.measureText?46:46;
+  ctx.fillStyle='rgba(8,7,5,.85)';
+  ctx.fill(roundRectPath(x-23,y+(dir<0?-21:11),46,10,2));
+  ctx.strokeStyle='rgba(150,125,80,.4)'; ctx.lineWidth=0.5;
+  ctx.stroke(roundRectPath(x-23,y+(dir<0?-21:11),46,10,2));
+  ctx.font='6.5px '+MONO;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillStyle='#cdb98d';
+  ctx.fillText(text,x,y+(dir<0?-16:16));
+  ctx.restore();
+}
+
+/* ---------------- 交互 ---------------- */
+let drag=null;
+let lastHud=0;
+const HUD={};
+
+function initAudio(){
+  if(AC) { if(AC.state==='suspended') AC.resume().catch(()=>{}); return; }
+  try{
+    const Ctx=window.AudioContext||window.webkitAudioContext;
+    if(!Ctx) return;
+    AC=new Ctx();
+    master=AC.createGain();
+    master.gain.value=0.5;
+    master.connect(AC.destination);
+    const len=Math.floor(AC.sampleRate*0.05);
+    noiseBuf=AC.createBuffer(1,len,AC.sampleRate);
+    const d=noiseBuf.getChannelData(0);
+    for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3);
+  }catch(e){ AC=null; }
+}
+let AC=null, master=null, noiseBuf=null;
+let lastTickAt=0;
+function sfxTick(accent){
+  if(!SIM.sound||!AC) return;
+  const t=AC.currentTime;
+  if(t-lastTickAt<0.045) return;
+  lastTickAt=t;
+  try{
+    const src=AC.createBufferSource(); src.buffer=noiseBuf;
+    const bp=AC.createBiquadFilter(); bp.type='bandpass';
+    bp.frequency.value=accent?2400:1750; bp.Q.value=7;
+    const g=AC.createGain();
+    g.gain.setValueAtTime(0.055,t);
+    g.gain.exponentialRampToValueAtTime(0.0006,t+0.035);
+    src.connect(bp); bp.connect(g); g.connect(master);
+    src.start(t); src.stop(t+0.06);
+  }catch(e){}
+}
+let lastClickAt=0;
+function sfxClick(freq){
+  if(!SIM.sound||!AC) return;
+  const t=AC.currentTime;
+  if(t-lastClickAt<0.035) return;
+  lastClickAt=t;
+  try{
+    const src=AC.createBufferSource(); src.buffer=noiseBuf;
+    const lp=AC.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=freq||900;
+    const g=AC.createGain();
+    g.gain.setValueAtTime(0.06,t);
+    g.gain.exponentialRampToValueAtTime(0.0008,t+0.05);
+    src.connect(lp); lp.connect(g); g.connect(master);
+    src.start(t); src.stop(t+0.08);
+  }catch(e){}
+}
+function sfxSet(){
+  if(!SIM.sound||!AC) return;
+  const t=AC.currentTime;
+  try{
+    const o=AC.createOscillator(); o.type='sine';
+    o.frequency.setValueAtTime(880,t);
+    o.frequency.exponentialRampToValueAtTime(560,t+0.06);
+    const g=AC.createGain();
+    g.gain.setValueAtTime(0.03,t);
+    g.gain.exponentialRampToValueAtTime(0.0005,t+0.08);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t+0.09);
+  }catch(e){}
+}
+
+function hitCrown(p){
+  const cy=-352-(SIM.crownOut?8:0);
+  return p.x>-30 && p.x<30 && p.y>cy-22 && p.y<cy+26;
+}
+function hitMinuteHand(p){
+  const d=Math.hypot(p.x,p.y);
+  if(d<26||d>282) return false;
+  const ang=Math.atan2(p.x,-p.y);
+  const disp=displaySeconds();
+  const handA=TAU*frac(disp/3600);
+  let diff=Math.atan2(Math.sin(ang-handA),Math.cos(ang-handA));
+  return Math.abs(diff)*Math.min(d,272)<24;
+}
+function hitGear(p){
+  let best=null;
+  for(const g of GEARS){
+    const d=Math.hypot(p.x-g.pos.x,p.y-g.pos.y);
+    if(d>g.ra+5) continue;
+    const lvl=g.level;
+    if(!best || lvl>best.level || (lvl===best.level && g.ra<best.ra)) best={g,level:lvl,ra:g.ra,d};
+  }
+  return best?best.g:null;
+}
+function setCrownOut(v){
+  if(SIM.crownOut===v) return;
+  if(v){
+    SIM.crownOut=true;
+    SIM.windHold=false;
+    sfxClick(1400);
+  }else{
+    // 把调时偏移并入走时状态
+    SIM.t+=SIM.offset;
+    SIM.offset=0;
+    SIM.crownOut=false;
+    SIM.lastBeatN=Math.floor(SIM.t/BEAT);
+    sfxClick(700);
+  }
+  drag=null;
+}
+function pullForSet(){
+  if(!SIM.crownOut) setCrownOut(true);
+}
+function pushCrown(){
+  if(SIM.crownOut) setCrownOut(false);
+}
+
+function onPointerDown(e){
+  initAudio();
+  if(e.pointerType) pointer.touch=(e.pointerType!=='mouse');
+  const rect=WCV.getBoundingClientRect();
+  const cx=e.clientX-rect.left, cy=e.clientY-rect.top;
+  pointer.x=cx; pointer.y=cy; pointer.active=true;
+  const sc=toScene(cx,cy);
+  pointer.sx=sc.x; pointer.sy=sc.y;
+  try{ WCV.setPointerCapture(e.pointerId); }catch(err){}
+  e.preventDefault();
+
+  if(hitCrown(sc)){
+    drag={kind:'crown',startY:sc.y,startOffset:SIM.offset,startT:performance.now(),moved:0,startCrown:SIM.crownOut};
+    if(!SIM.crownOut){ SIM.windHold=true; }
+    return;
+  }
+  if(SIM.crownOut && hitMinuteHand(sc)){
+    const disp=displaySeconds();
+    drag={kind:'minute',startA:Math.atan2(sc.x,-sc.y),startOffset:SIM.offset,lastA:Math.atan2(sc.x,-sc.y),acc:0};
+    return;
+  }
+  const g=hitGear(sc);
+  if(g){
+    const a=Math.atan2(sc.y-g.pos.y, sc.x-g.pos.x);
+    drag={kind:'gear',g,last:a,moved:0};
+    return;
+  }
+  drag={kind:'none'};
+}
+function onPointerMove(e){
+  const rect=WCV.getBoundingClientRect();
+  const cx=e.clientX-rect.left, cy=e.clientY-rect.top;
+  pointer.x=cx; pointer.y=cy; pointer.active=true;
+  if(e.pointerType) pointer.touch=(e.pointerType!=='mouse');
+  const sc=toScene(cx,cy);
+  pointer.sx=sc.x; pointer.sy=sc.y;
+  if(!drag){
+    // 光标
+    let cur='default';
+    if(hitCrown(sc)) cur= SIM.crownOut?'ns-resize':'grab';
+    else if(SIM.crownOut && hitMinuteHand(sc)) cur='grab';
+    else if(hitGear(sc)) cur='grab';
+    if(WCV.style.cursor!==cur) WCV.style.cursor=cur;
+    return;
+  }
+  if(drag.kind==='gear'){
+    const a=Math.atan2(sc.y-drag.g.pos.y, sc.x-drag.g.pos.x);
+    let d=a-drag.last;
+    d=Math.atan2(Math.sin(d),Math.cos(d));
+    drag.last=a;
+    if(drag.g.rev!==0){
+      const dt=d/(TAU*drag.g.rev)*3600;
+      SIM.t+=dt;
+      drag.moved+=Math.abs(dt);
+      SIM.lastBeatN=Math.floor(SIM.t/BEAT);
+    }
+  }else if(drag.kind==='minute'){
+    const a=Math.atan2(sc.x,-sc.y);
+    let d=a-drag.lastA;
+    d=Math.atan2(Math.sin(d),Math.cos(d));
+    drag.lastA=a;
+    drag.acc+=d;
+    const minuteDelta=Math.round(drag.acc/TAU*60);
+    SIM.offset=drag.startOffset+minuteDelta*60;
+  }else if(drag.kind==='crown'){
+    const dy=sc.y-drag.startY;
+    drag.moved=Math.max(drag.moved,Math.abs(dy));
+    if(SIM.crownOut){
+      const m=Math.round(dy/9);
+      SIM.offset=drag.startOffset+m*60;
+    }
+  }
+  e.preventDefault();
+}
+function onPointerUp(e){
+  if(drag){
+    if(drag.kind==='crown'){
+      const held=performance.now()-drag.startT;
+      if(held<280 && drag.moved<7){
+        setCrownOut(!drag.startCrown);
+      }
+      SIM.windHold=false;
+    }
+    if(drag.kind==='minute'||drag.kind==='gear') sfxSet();
+  }
+  drag=null;
+  SIM.windHold=false;
+  if(pointer.touch) pointer.active=false;
+  try{ WCV.releasePointerCapture(e.pointerId); }catch(err){}
+}
+function onPointerLeave(){
+  if(!drag){ pointer.active=false; }
+}
+
+WCV.addEventListener('pointerdown',onPointerDown,{passive:false});
+WCV.addEventListener('pointermove',onPointerMove,{passive:false});
+WCV.addEventListener('pointerup',onPointerUp);
+WCV.addEventListener('pointercancel',onPointerUp);
+WCV.addEventListener('pointerleave',onPointerLeave);
+
+/* ---------------- 控件 ---------------- */
+const $=(id)=>document.getElementById(id);
+document.querySelectorAll('#speedSeg button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    initAudio();
+    SIM.speed=Number(btn.dataset.speed);
+    document.querySelectorAll('#speedSeg button').forEach(b=>b.classList.toggle('on',b===btn));
+  });
+});
+const windBtn=$('windBtn');
+function windStart(e){
+  initAudio();
+  e.preventDefault();
+  if(SIM.crownOut) pushCrown();
+  SIM.windHold=true;
+  windBtn.classList.add('active');
+}
+function windEnd(){
+  SIM.windHold=false;
+  windBtn.classList.remove('active');
+}
+windBtn.addEventListener('pointerdown',windStart);
+windBtn.addEventListener('pointerup',windEnd);
+windBtn.addEventListener('pointerleave',windEnd);
+windBtn.addEventListener('pointercancel',windEnd);
+windBtn.addEventListener('click',(e)=>{ e.preventDefault(); });
+
+$('crownBtn').addEventListener('click',()=>{
+  initAudio();
+  setCrownOut(!SIM.crownOut);
+});
+$('minusBtn').addEventListener('click',()=>{
+  initAudio();
+  pullForSet();
+  SIM.offset-=60;
+  sfxSet();
+});
+$('plusBtn').addEventListener('click',()=>{
+  initAudio();
+  pullForSet();
+  SIM.offset+=60;
+  sfxSet();
+});
+$('pauseBtn').addEventListener('click',()=>{
+  initAudio();
+  SIM.paused=!SIM.paused;
+});
+$('soundBtn').addEventListener('click',()=>{
+  initAudio();
+  SIM.sound=!SIM.sound;
+});
+$('lensBtn').addEventListener('click',()=>{
+  initAudio();
+  SIM.lens=!SIM.lens;
+});
+document.addEventListener('keydown',(e)=>{
+  if(e.code==='Space'){ e.preventDefault(); SIM.paused=!SIM.paused; }
+});
+
+/* ---------------- HUD ---------------- */
+function fmtTime(sec){
+  let s=((sec%86400)+86400)%86400;
+  const h=Math.floor(s/3600), m=Math.floor(s/60)%60, ss=Math.floor(s)%60;
+  return (h<10?'0':'')+h+':'+(m<10?'0':'')+m+':'+(ss<10?'0':'')+ss;
+}
+function fmtReserve(p){
+  const total=p*RESERVE_H*3600;
+  const h=Math.floor(total/3600), m=Math.floor((total%3600)/60);
+  return h+'h '+(m<10?'0':'')+m+'m';
+}
+function stateInfo(){
+  if(SIM.crownOut) return {txt:'调时',cls:'set'};
+  if(SIM.paused) return {txt:'暂停',cls:'pause'};
+  if(SIM.winding) return {txt:'上弦',cls:'wind'};
+  if(!SIM.running) return {txt:'停摆',cls:'stop'};
+  return {txt:'走时',cls:'run'};
+}
+function buildTable(){
+  const rows=[
+    {name:'发条盒',z:80,rev:0.2,period:'5 h'},
+    {name:'中心齿轴',z:16,rev:1,period:'60 min',driven:true},
+    {name:'中心轮',z:60,rev:1,period:'60 min'},
+    {name:'三轮齿轴',z:8,rev:7.5,period:'8 min',driven:true},
+    {name:'三轮',z:64,rev:7.5,period:'8 min'},
+    {name:'秒轮齿轴',z:8,rev:60,period:'1 min',driven:true},
+    {name:'秒轮',z:70,rev:60,period:'60 s'},
+    {name:'擒纵齿轴',z:7,rev:600,period:'6 s',driven:true},
+    {name:'擒纵轮',z:15,rev:600,period:'6 s'},
+    {name:'摆轮',z:null,rev:null,period:'0.4 s'}
+  ];
+  let html='<div class="trow th"><span>部件</span><span>齿</span><span>r/h</span><span>周期</span></div>';
+  for(const r of rows){
+    const cls=r.driven?'trow driven':'trow';
+    html+='<div class="'+cls+'"><span>'+r.name+'</span><span>'+(r.z==null?'—':r.z)+'</span><span>'+(r.rev==null?'—':(r.rev<1?r.rev.toFixed(2):r.rev.toFixed(1)))+'</span><span>'+r.period+'</span></div>';
+  }
+  $('trainTable').innerHTML=html;
+  $('ratiosView').innerHTML=
+    '80/16 = <b>5.00</b> · 60/8 = <b>7.50</b> · 64/8 = <b>8.00</b> · 70/7 = <b>10.0</b><br>'+
+    '600 r/h × 15 齿 × 2 = <b>18000 A/h</b>　→　5 拍/秒 · 摆轮 <b>2.5 Hz</b><br>'+
+    '擒纵轮每拍前进 <b>12°</b>（半齿距）· 小秒针每拍 <b>1.2°</b>';
+  $('meshCheck').innerHTML=
+    '<span class="ok">✓</span> 中心距 4/4 精确（d = m(z₁+z₂)/2）<br>'+
+    '<span class="ok">✓</span> 啮合相位残差 <b>'+PHASE_ERR.toFixed(4)+'</b> 齿距 · 中心距误差 <b>'+(DIST_ERR*PX2MM).toFixed(4)+'</b> mm<br>'+
+    '模数 m = <b>'+(MODULE*PX2MM).toFixed(3)+'</b> mm · 齿距 πm = <b>'+(Math.PI*MODULE*PX2MM).toFixed(3)+'</b> mm';
+}
+function updateHud(){
+  const disp=displaySeconds();
+  $('timeView').textContent=fmtTime(disp);
+  $('timeView').classList.toggle('setting',SIM.crownOut);
+  $('ampView').textContent=Math.round(SIM.amp*2)+'°';
+  $('resView').textContent=fmtReserve(SIM.power);
+  const st=stateInfo();
+  $('stateView').textContent=st.txt;
+  const chip=$('stateChip');
+  chip.className='statechip '+st.cls;
+  chip.lastElementChild.textContent=st.txt;
+  const pf=$('powerFill');
+  pf.style.width=(SIM.power*100).toFixed(1)+'%';
+  $('powerBar').classList.toggle('low',SIM.power<0.16);
+  $('crownBtn').textContent=SIM.crownOut?'按回表冠':'拔出表冠';
+  $('crownBtn').classList.toggle('on',SIM.crownOut);
+  $('pauseBtn').textContent=SIM.paused?'继续':'暂停';
+  $('pauseBtn').classList.toggle('on',SIM.paused);
+  $('soundBtn').classList.toggle('on',SIM.sound);
+  $('lensBtn').classList.toggle('on',SIM.lens);
+  windBtn.classList.toggle('active',SIM.windHold&&!SIM.crownOut);
+}
+
+/* ---------------- 主循环 ---------------- */
+function update(dt){
+  // 上弦
+  SIM.winding=(SIM.windHold && !SIM.crownOut);
+  if(SIM.winding){
+    SIM.power=Math.min(1,SIM.power+dt*0.235);
+    SIM.ratchet+=dt*2.2*TAU;
+    SIM.crownSpin+=dt*5.4;
+    if(!SIM.running && SIM.power>0.03) SIM.running=true;
+    const idx=Math.floor(SIM.ratchet*40/TAU);
+    if(idx!==SIM.ratchetIdx){
+      SIM.ratchetIdx=idx;
+      sfxClick(820);
+    }
+  }
+  // 走时
+  const moving=SIM.running && !SIM.crownOut && !SIM.paused && SIM.power>0;
+  if(moving){
+    SIM.t+=dt*SIM.speed;
+    SIM.power=Math.max(0,SIM.power-dt*SIM.speed/(RESERVE_H*3600));
+    if(SIM.power<=0){ SIM.power=0; SIM.running=false; SIM.offset=SIM.offset; }
+  }
+  // 摆幅
+  let target=0;
+  if(SIM.running && !SIM.crownOut && SIM.power>0.015) target=140*ampCurve(SIM.power);
+  if(SIM.paused) target=SIM.amp;
+  SIM.amp+=(target-SIM.amp)*Math.min(1,dt*(target<SIM.amp?2.2:6.5));
+  // 止秒杆
+  const hTarget=SIM.crownOut?1:0;
+  SIM.hack+=(hTarget-SIM.hack)*Math.min(1,dt*10);
+  // 节拍声
+  const n=Math.floor(SIM.t/BEAT);
+  if(n!==SIM.lastBeatN){
+    SIM.lastBeatN=n;
+    if(SIM.speed===1 && SIM.running && !SIM.crownOut && !SIM.paused) sfxTick(n%2===0);
+  }
+}
+
+let last=0;
+let rafStarted=false;
+function frame(now){
+  if(!last) last=now;
+  let dt=(now-last)/1000; last=now;
+  dt=Math.min(dt,0.05);
+  update(dt);
+  render();
+  drawMW();
+  if(now-lastHud>88){ updateHud(); lastHud=now; }
+  requestAnimationFrame(frame);
+}
+
+/* ---------------- 启动 ---------------- */
+function boot(){
+  buildTable();
+  layout();
+  drawMW();
+  updateHud();
+  render();
+  requestAnimationFrame(frame);
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+else boot();
+window.addEventListener('resize',()=>{ layout(); render(); drawMW(); });
+if(window.ResizeObserver){
+  try{
+    const ro=new ResizeObserver(()=>{ layout(); render(); drawMW(); });
+    const wb=document.getElementById('watchbox');
+    if(wb) ro.observe(wb);
+  }catch(e){}
+}
+window.addEventListener('orientationchange',()=>{ setTimeout(()=>{ layout(); render(); drawMW(); },180); });
+window.__ORVANE__={gears:GEARS, arbors:ARB, meshes:MESHES, meshResidual, distErr:DIST_ERR, state:SIM};
+})();
+</script>
+</body>
+</html>

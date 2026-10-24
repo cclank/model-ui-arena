@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>河灯 · 点击烟花</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#070814;color:#f6f1ff;font:15px/1.4 "Iowan Old Style",Palatino,Georgia,serif}
+canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.hud{position:fixed;left:0;right:0;top:0;padding:18px 16px;pointer-events:none;text-align:center}
+h1{font-weight:500;letter-spacing:.4em;font-size:14px;margin:0}
+p{margin:6px 0 0;color:#b7a9d4;font-size:13px}
+.stat{position:fixed;left:12px;bottom:12px;font:12px ui-monospace,Menlo,monospace;color:#c9b7ee;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud"><h1>河灯</h1><p id="hint">点任何地方，放一朵烟花</p></div>
+<div class="stat" id="stat"></div>
+<script>
+const c=document.getElementById("c"), x=c.getContext("2d");
+const palettes=[["#fff4d2","#ffb347","#ff5a36"],["#e7fbff","#7ad7ff","#4060ff"],["#ffe0f4","#ff6bb5","#fff"],["#f3ffe0","#c6f25a","#fff1a8"],["#efe7ff","#c9a6ff","#ffffff"]];
+let w=0,h=0,dpr=1,parts=[],clicks=0;
+function resize(){dpr=Math.min(devicePixelRatio||1,2);w=innerWidth;h=innerHeight;c.width=w*dpr;c.height=h*dpr;x.setTransform(dpr,0,0,dpr,0,0)}
+addEventListener("resize",resize);resize();
+function burst(px,py){
+  clicks++;
+  document.getElementById("hint").textContent="连续点也不会停";
+  const colors=palettes[clicks%palettes.length];
+  const n=70+Math.floor(Math.random()*50);
+  const power=2.2+Math.random()*3.4;
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2, s=Math.pow(Math.random(),.55)*power;
+    parts.push({x:px,y:py,vx:Math.cos(a)*s,vy:Math.sin(a)*s-0.4,life:46+Math.random()*28,age:0,color:colors[i%colors.length],r:1+Math.random()*1.6,spark:Math.random()<.18});
+  }
+  if(parts.length>1800) parts.splice(0,parts.length-1800);
+}
+c.addEventListener("pointerdown",e=>{burst(e.clientX,e.clientY)});
+function tick(){
+  x.fillStyle="rgba(7,8,20,.22)";
+  x.fillRect(0,0,w,h);
+  x.globalCompositeOperation="lighter";
+  for(let i=parts.length-1;i>=0;i--){
+    const p=parts[i];
+    p.age++; p.vy+=0.018; p.vx*=0.989; p.vy*=0.989; p.x+=p.vx; p.y+=p.vy;
+    const t=1-p.age/p.life;
+    if(t<=0){parts.splice(i,1);continue}
+    x.beginPath();
+    x.fillStyle=p.color;
+    x.globalAlpha=Math.max(0,t);
+    x.arc(p.x,p.y,p.r*t+0.3,0,Math.PI*2);
+    x.fill();
+    if(p.spark&&p.age%2===0){
+      x.globalAlpha=t*0.5;
+      x.fillRect(p.x-p.vx*2,p.y-p.vy*2,1.2,1.2);
+    }
+  }
+  x.globalAlpha=1; x.globalCompositeOperation="source-over";
+  document.getElementById("stat").textContent=`粒子 ${parts.length} · 烟花 ${clicks}`;
+  requestAnimationFrame(tick);
+}
+for(let i=0;i<40;i++){
+  x.fillStyle=`rgba(255,255,255,${Math.random()*.7})`;
+  x.fillRect(Math.random()*innerWidth,Math.random()*innerHeight,1.2,1.2);
+}
+tick();
+</script>
+</body>
+</html>

@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HELION X7 · 单反相机拟物复刻</title>
+<style>
+:root{--bg0:#eceef2;--bg1:#c5c9d1;--ink:#22242a;--dim:#6d727c;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg0:#25272e;--bg1:#0e0f13;--ink:#e8eaf0;--dim:#8b909c}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;display:grid;justify-items:center;align-content:start;gap:20px;padding:26px 16px 40px;background:radial-gradient(120vmax 80vmax at 50% -20%,var(--bg0),var(--bg1) 72%);color:var(--ink);font-family:"SF Pro Text",-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.wrap{width:min(96vw,1180px);display:grid;gap:18px;align-content:start}
+.stage{position:relative;border-radius:22px;overflow:hidden;background:
+  radial-gradient(88% 66% at 32% 6%,#fdfdfe,#dcdfe5 44%,#bcc1ca 76%,#a9aeb9 100%);
+  box-shadow:0 40px 90px -50px #10131a,inset 0 0 0 1px #ffffff70}
+@media (prefers-color-scheme:dark){.stage{background:radial-gradient(88% 66% at 32% 6%,#3b3f49,#242730 44%,#15171c 76%,#0d0f13 100%);box-shadow:0 40px 90px -50px #000,inset 0 0 0 1px #ffffff14}}
+.stage svg{display:block;width:100%;height:auto}
+.notes{display:grid;gap:7px;padding:0 6px}
+.notes h1{font-size:clamp(15px,2.4vw,20px);letter-spacing:.1em;font-weight:600}
+.notes h1 b{color:#c8202a;font-weight:600}
+.notes p{font-size:clamp(11px,1.6vw,12.5px);line-height:1.85;color:var(--dim);letter-spacing:.03em}
+.notes kbd{font:inherit;font-size:.92em;padding:1px 7px;border:1px solid color-mix(in oklab,var(--dim) 45%,transparent);border-radius:6px;color:var(--ink)}
+.tip{display:flex;flex-wrap:wrap;gap:8px}
+.tip span{font-size:11px;letter-spacing:.14em;padding:5px 12px;border-radius:999px;border:1px solid color-mix(in oklab,var(--dim) 34%,transparent);color:var(--dim)}
+#sheen{animation:sheen 9s ease-in-out infinite}
+@keyframes sheen{0%,100%{transform:translate(0,0);opacity:.9}50%{transform:translate(7px,5px);opacity:1}}
+#sheen2{animation:sheen2 13s ease-in-out infinite}
+@keyframes sheen2{0%,100%{transform:translate(0,0);opacity:.75}50%{transform:translate(-5px,4px);opacity:.95}}
+#dialFace{transform-origin:0 0;transition:transform .45s cubic-bezier(.34,1.3,.5,1)}
+#shutterBtn{transition:transform .12s ease-out}
+#shutterBtn.pressed{transform:translate(0,3px)}
+@media (prefers-reduced-motion:reduce){#sheen,#sheen2{animation:none}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <figure class="stage">
+    <!-- =====================================================================
+         HELION X7 单反相机 · 3/4 侧前方视角 · 100% 内联 SVG 手工绘制
+         投影：整机置于一个统一斜投影矩阵内 —— 前脸水平边随 yaw 倾斜 7.7°、
+               垂直边保持竖直、所有正圆（镜片/镜环/转盘）自动成为正确的椭圆；
+               立体厚度由沿同一深度向量的挤出体块构成（机体/军舰头/热靴/转盘）。
+         材质：磨砂塑料机身 / 金属银色顶盖与镜环 / 玻璃前组，三层质感分层；
+               光源统一在左上方，落影与卡口遮蔽在右下方。
+         ===================================================================== -->
+    <svg viewBox="0 0 1240 900" xmlns="http://www.w3.org/2000/svg" role="img"
+         aria-label="HELION X7 单反相机 3/4 视角手绘渲染：银色顶盖、黑色磨砂机身、红圈 50mm 1.4 镜头">
+      <defs>
+        <radialGradient id="floorShade" cx=".5" cy=".15" r=".95">
+          <stop offset="0" stop-color="#ffffff" stop-opacity=".55"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+        </radialGradient>
+        <!-- 机身：磨砂塑料 -->
+        <linearGradient id="bodyFront" x1="0" y1="0" x2=".22" y2="1">
+          <stop offset="0" stop-color="#373a42"/><stop offset=".3" stop-color="#2b2e35"/>
+          <stop offset=".66" stop-color="#21242a"/><stop offset="1" stop-color="#16191e"/>
+        </linearGradient>
+        <linearGradient id="bodySide" x1="0" y1="0" x2="1" y2=".4">
+          <stop offset="0" stop-color="#1a1d22"/><stop offset=".5" stop-color="#121418"/><stop offset="1" stop-color="#0a0c0f"/>
+        </linearGradient>
+        <linearGradient id="bodyTop" x1="0" y1="0" x2=".35" y2="1">
+          <stop offset="0" stop-color="#3d414a"/><stop offset=".5" stop-color="#2e3239"/><stop offset="1" stop-color="#202329"/>
+        </linearGradient>
+        <!-- 银色顶盖：金属 -->
+        <linearGradient id="silverTop" x1="0" y1="0" x2=".1" y2="1">
+          <stop offset="0" stop-color="#f6f7f9"/><stop offset=".16" stop-color="#e2e5ea"/>
+          <stop offset=".48" stop-color="#bcc1ca"/><stop offset=".76" stop-color="#949aa4"/><stop offset="1" stop-color="#7b818b"/>
+        </linearGradient>
+        <linearGradient id="silverTopFace" x1="0" y1="0" x2=".7" y2="1">
+          <stop offset="0" stop-color="#eff1f4"/><stop offset=".36" stop-color="#d3d7dd"/><stop offset="1" stop-color="#9aa0aa"/>
+        </linearGradient>
+        <linearGradient id="metalRing" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#7e838d"/><stop offset=".2" stop-color="#cdd2da"/>
+          <stop offset=".45" stop-color="#5b606a"/><stop offset=".72" stop-color="#a9aeb7"/><stop offset="1" stop-color="#4a4e56"/>
+        </linearGradient>
+        <linearGradient id="chrome" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#f3f5f8"/><stop offset=".34" stop-color="#9ba2ac"/>
+          <stop offset=".6" stop-color="#e7eaef"/><stop offset="1" stop-color="#6e747e"/>
+        </linearGradient>
+        <!-- 镜筒 -->
+        <linearGradient id="barrelBase" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#3b3f46"/><stop offset=".45" stop-color="#272a30"/><stop offset="1" stop-color="#14161a"/>
+        </linearGradient>
+        <linearGradient id="barrelSide" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#272a30"/><stop offset=".55" stop-color="#15171b"/><stop offset="1" stop-color="#090a0d"/>
+        </linearGradient>
+        <linearGradient id="knurlG" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#4b5058"/><stop offset=".5" stop-color="#2c3036"/><stop offset="1" stop-color="#191c20"/>
+        </linearGradient>
+        <linearGradient id="focusG" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#34383e"/><stop offset=".5" stop-color="#1f2227"/><stop offset="1" stop-color="#0f1216"/>
+        </linearGradient>
+        <!-- 玻璃 -->
+        <radialGradient id="glass" cx=".36" cy=".32" r=".84">
+          <stop offset="0" stop-color="#1e3139"/><stop offset=".36" stop-color="#0f1d25"/>
+          <stop offset=".72" stop-color="#071219"/><stop offset="1" stop-color="#03080d"/>
+        </radialGradient>
+        <radialGradient id="glassCoat" cx=".5" cy=".5" r=".5">
+          <stop offset=".55" stop-color="#2ee0c0" stop-opacity="0"/>
+          <stop offset=".82" stop-color="#2ee0c0" stop-opacity=".12"/>
+          <stop offset="1" stop-color="#7d3ce0" stop-opacity=".19"/>
+        </radialGradient>
+        <radialGradient id="lcdG" cx=".5" cy=".28" r=".92">
+          <stop offset="0" stop-color="#28331f"/><stop offset="1" stop-color="#101610"/>
+        </radialGradient>
+        <filter id="softS" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="17"/></filter>
+        <filter id="softM" x="-40%" y="-80%" width="180%" height="260%"><feGaussianBlur stdDeviation="7"/></filter>
+        <filter id="softL" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="4"/></filter>
+        <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" result="n"/>
+          <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  .6 .6 .6 0 0"/>
+          <feComposite operator="in" in2="SourceGraphic"/></filter>
+        <clipPath id="bodyClip"><rect x="170" y="330" width="700" height="372" rx="30"/></clipPath>
+        <clipPath id="lensClip"><circle cx="512" cy="520" r="100"/></clipPath>
+        <clipPath id="gripClip"><path d="M176 404 Q180 388 210 390 L262 394 Q300 400 313 432 Q333 490 327 560 Q319 640 294 676 Q276 702 248 702 L208 698 Q176 692 176 660 Z"/></clipPath>
+      </defs>
+
+      <!-- ============ 背景光台 ============ -->
+      <rect width="1240" height="900" fill="url(#floorShade)"/>
+
+      <!-- ============ 相机本体：统一斜投影矩阵 ============ -->
+      <g transform="matrix(0.953 0.128 0 1.019 61 -121)">
+        <!-- 台面落影（沿深度向量挤出后自然成为贴地的斜椭圆） -->
+        <ellipse cx="586" cy="728" rx="412" ry="32" fill="#565b64" opacity=".34" filter="url(#softS)"/>
+        <ellipse cx="566" cy="720" rx="318" ry="19" fill="#2c3037" opacity=".52" filter="url(#softM)"/>
+        <path d="M186 710 Q420 736 856 712 L852 700 Q560 722 186 696 Z" fill="#14161a" opacity=".4" filter="url(#softL)"/>
+
+        <!-- 机体顶面 / 右侧面（前脸覆盖接缝） -->
+        <path d="M200 330 L840 330 L968 268 L328 268 Z" fill="url(#silverTopFace)"/>
+        <path d="M870 330 L998 268 Q1004 268 1004 275 L1004 634 Q1004 642 998 645 L878 697 Q870 701 870 692 Z" fill="url(#bodySide)"/>
+        <g stroke="#000" opacity=".5" fill="none">
+          <path d="M886 470 L1000 412" stroke-width="1.6"/>
+          <path d="M890 520 L1002 462" stroke-width="1.2" opacity=".7"/>
+        </g>
+        <path d="M962 442 l16 -8 l0 30 l-16 8 Z" fill="#33373e"/>
+        <path d="M962 442 l16 -8 l0 5 l-16 8 Z" fill="#4b5058"/>
+        <text x="906" y="600" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="#5b6169" transform="rotate(-27 906 600)" letter-spacing="2">MADE IN SVG</text>
+
+        <!-- 军舰头（五棱镜凸起） -->
+        <path d="M614 240 L700 198 L734 288 L648 330 Z" fill="url(#bodySide)"/>
+        <path d="M486 240 L614 240 L700 198 L572 198 Z" fill="url(#bodyTop)"/>
+        <path d="M452 330 L486 240 Q490 232 500 232 L600 232 Q610 232 614 240 L648 330 Z" fill="url(#bodyFront)"/>
+        <path d="M486 240 Q490 232 500 232 L600 232 Q610 232 614 240" fill="none" stroke="#50555e" stroke-width="2.2"/>
+        <g transform="translate(550 292)">
+          <text text-anchor="middle" font-family="Georgia,serif" font-size="21" letter-spacing="3.4" fill="#eceef2" opacity=".94">HELION</text>
+          <path d="M-34 5 L34 5" stroke="#8c929c" stroke-width="1" opacity=".7"/>
+          <text y="19" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="8" letter-spacing="3.6" fill="#8c929c">DIGITAL</text>
+        </g>
+        <!-- 热靴 -->
+        <g>
+          <path d="M500 232 L600 232 L686 190 L586 190 Z" fill="#2b2f35"/>
+          <path d="M500 232 L600 232 L686 190 L586 190 Z" fill="none" stroke="#13161a" stroke-width="1.4"/>
+          <path d="M512 226 L588 226 L666 187 L590 187 Z" fill="#1a1d22"/>
+          <path d="M518 223 L544 223 L620 185 L594 185 Z" fill="#c8cdd5"/>
+          <path d="M528 220 L552 220 L628 183 L604 183 Z" fill="#8f959f" opacity=".8"/>
+          <path d="M556 219 L580 219 L656 182 L632 182 Z" fill="#c8cdd5"/>
+          <circle cx="556" cy="204" r="4.4" fill="#101317"/>
+        </g>
+
+        <!-- 前脸 -->
+        <rect x="170" y="330" width="700" height="372" rx="30" fill="url(#bodyFront)"/>
+        <g clip-path="url(#bodyClip)">
+          <rect x="170" y="330" width="700" height="56" fill="url(#silverTop)"/>
+          <rect x="170" y="330" width="700" height="4" fill="#ffffff" opacity=".7"/>
+          <rect x="170" y="381" width="700" height="3" fill="#0b0d10" opacity=".5"/>
+          <rect x="170" y="376" width="700" height="6" fill="#ffffff" opacity=".12"/>
+          <rect x="170" y="386" width="700" height="316" fill="#ffffff" filter="url(#grain)" opacity=".05"/>
+        </g>
+        <!-- 自创品牌 / 型号（无任何真实厂商标识） -->
+        <text x="214" y="369" font-family="Georgia,serif" font-size="25" letter-spacing="4.6" fill="#4a4f56">HELION</text>
+        <text x="214" y="368" font-family="Georgia,serif" font-size="25" letter-spacing="4.6" fill="#ffffff" opacity=".38">HELION</text>
+        <path d="M176 330 L194 330 L186 386 L176 386 Z" fill="#c8202a" clip-path="url(#bodyClip)"/>
+        <g transform="translate(800 368)">
+          <text text-anchor="middle" font-family="Georgia,serif" font-size="26" letter-spacing="1" fill="#3e434a">X7</text>
+          <rect x="-28" y="7" width="56" height="2.2" fill="#c8202a" opacity=".9"/>
+        </g>
+        <!-- 对焦辅助灯 / 自拍指示灯 -->
+        <circle cx="392" cy="410" r="13" fill="#14171b"/><circle cx="392" cy="410" r="9" fill="#3a1416"/>
+        <circle cx="392" cy="410" r="4.2" fill="#e2544f" opacity=".85"/>
+        <circle cx="826" cy="410" r="8" fill="#14171b"/><circle cx="826" cy="410" r="4.4" fill="#5d2a22"/>
+
+        <!-- 手柄握把（防滑纹理） -->
+        <path d="M176 404 Q180 388 210 390 L262 394 Q300 400 313 432 Q333 490 327 560 Q319 640 294 676 Q276 702 248 702 L208 698 Q176 692 176 660 Z" fill="url(#bodyFront)"/>
+        <path d="M176 404 Q180 388 210 390 L262 394 Q300 400 313 432 Q333 490 327 560 Q319 640 294 676 Q276 702 248 702 L208 698 Q176 692 176 660 Z" fill="none" stroke="#0b0d10" stroke-width="1.6" opacity=".75"/>
+        <g clip-path="url(#gripClip)">
+          <g id="gripRibs"></g>
+          <path d="M311 428 Q331 488 325 558 Q317 638 292 674" fill="none" stroke="#6f757f" stroke-width="2.2" opacity=".3"/>
+          <path d="M181 400 Q186 386 210 388" fill="none" stroke="#ffffff" stroke-width="1.6" opacity=".14"/>
+        </g>
+
+        <!-- 模式转盘（可点击） -->
+        <g id="dialGroup" style="cursor:pointer">
+          <ellipse cx="742" cy="313" rx="56" ry="23" fill="#101317"/>
+          <ellipse cx="742" cy="305" rx="56" ry="23" fill="url(#barrelBase)"/>
+          <g id="dialTicks"></g>
+          <ellipse cx="742" cy="305" rx="46" ry="18.4" fill="#23272d"/>
+          <ellipse cx="742" cy="304" rx="45" ry="18" fill="url(#chrome)"/>
+          <ellipse cx="742" cy="304" rx="45" ry="18" fill="none" stroke="#0d0f12" stroke-width="1.2" opacity=".5"/>
+          <ellipse cx="742" cy="302.5" rx="33" ry="13" fill="#b9bec7" opacity=".5"/>
+          <g id="dialFace"></g>
+          <path id="dialMark" d="M742 277 l-6 10 l12 0 Z" fill="#c8202a"/>
+        </g>
+        <!-- 快门钮 + 电源开关 -->
+        <g id="shutterGroup" style="cursor:pointer">
+          <ellipse cx="862" cy="306" rx="40" ry="15.6" fill="#13161a"/>
+          <ellipse cx="862" cy="301" rx="40" ry="15.6" fill="url(#barrelBase)"/>
+          <ellipse cx="862" cy="301" rx="30" ry="11.8" fill="#20242a"/>
+          <path d="M832 298 Q846 288 862 288 Q878 288 892 298" fill="none" stroke="#c8cdd5" stroke-width="3" opacity=".65"/>
+          <g id="shutterBtn" style="cursor:pointer">
+            <ellipse cx="862" cy="298" rx="26" ry="10.4" fill="url(#chrome)"/>
+            <ellipse cx="862" cy="296" rx="17" ry="6.6" fill="none" stroke="#7f858f" stroke-width="1.4"/>
+            <ellipse cx="862" cy="295" rx="9" ry="3.4" fill="none" stroke="#7f858f" stroke-width="1.2"/>
+            <ellipse cx="855" cy="293" rx="7" ry="2.6" fill="#ffffff" opacity=".55"/>
+          </g>
+          <path d="M898 289 A42 17 0 0 1 898 313" fill="none" stroke="#3f444c" stroke-width="4.6" stroke-linecap="round"/>
+          <path d="M898 290 A42 17 0 0 1 898 299" fill="none" stroke="#8b9199" stroke-width="2.2" stroke-linecap="round" opacity=".7"/>
+        </g>
+        <!-- 顶盖 LCD 与铭牌 -->
+        <g transform="translate(392 300) rotate(-26)">
+          <rect x="-42" y="-14" width="84" height="28" rx="5" fill="url(#lcdG)"/>
+          <rect x="-38" y="-10" width="76" height="20" rx="3" fill="#2b3a26" opacity=".45"/>
+          <text id="lcdMain" x="-32" y="4" font-family="ui-monospace,Menlo,monospace" font-size="14" fill="#d3ecba" letter-spacing="1">M</text>
+          <text id="lcdSub" x="4" y="4" font-family="ui-monospace,Menlo,monospace" font-size="11" fill="#a3c288">1/500</text>
+        </g>
+
+        <!-- ============ 镜头 ============ -->
+        <g id="lens">
+          <circle cx="512" cy="520" r="212" fill="#0b0d10" opacity=".5" filter="url(#softM)"/>
+          <circle cx="540" cy="507" r="203" fill="url(#barrelSide)"/>
+          <circle cx="540" cy="507" r="203" fill="none" stroke="#05060a" stroke-width="2" opacity=".8"/>
+          <circle cx="512" cy="520" r="204" fill="#13161a"/>
+          <circle cx="512" cy="520" r="199" fill="none" stroke="url(#metalRing)" stroke-width="15"/>
+          <circle cx="512" cy="520" r="191" fill="none" stroke="#0a0c0f" stroke-width="2"/>
+          <circle cx="512" cy="520" r="188" fill="url(#knurlG)"/>
+          <g id="zoomRibs"></g>
+          <circle cx="512" cy="520" r="188" fill="none" stroke="#0a0c0f" stroke-width="1.6"/>
+          <circle cx="512" cy="520" r="168" fill="none" stroke="#0a0c0f" stroke-width="1.8"/>
+          <circle cx="512" cy="520" r="166" fill="url(#focusG)"/>
+          <g id="focusRibs"></g>
+          <g id="distTicks"></g>
+          <g id="distNums"></g>
+          <circle cx="512" cy="520" r="136" fill="none" stroke="#0a0c0f" stroke-width="1.6"/>
+          <circle cx="512" cy="520" r="131" fill="none" stroke="#c8202a" stroke-width="7.5"/>
+          <circle cx="512" cy="520" r="134.4" fill="none" stroke="#7c1016" stroke-width="1.2" opacity=".8"/>
+          <circle cx="512" cy="520" r="126" fill="url(#barrelBase)"/>
+          <circle cx="512" cy="520" r="124" fill="#1c1f24"/>
+          <circle cx="512" cy="520" r="108" fill="none" stroke="#0a0c0f" stroke-width="2.4"/>
+          <g id="threads"></g>
+          <circle cx="512" cy="520" r="102" fill="none" stroke="#41464e" stroke-width="1.4"/>
+          <circle cx="512" cy="520" r="100" fill="url(#glass)"/>
+          <circle cx="512" cy="520" r="100" fill="url(#glassCoat)"/>
+          <g clip-path="url(#lensClip)">
+            <circle cx="512" cy="520" r="83" fill="none" stroke="#ffffff" stroke-width="1.1" opacity=".07"/>
+            <circle cx="512" cy="520" r="64" fill="none" stroke="#ffffff" stroke-width="1.3" opacity=".09"/>
+            <circle cx="512" cy="520" r="45" fill="none" stroke="#ffffff" stroke-width="1.1" opacity=".06"/>
+            <circle cx="512" cy="520" r="26" fill="none" stroke="#89e6d6" stroke-width="1" opacity=".07"/>
+            <ellipse cx="460" cy="470" rx="66" ry="27" fill="#37d8c0" opacity=".10" filter="url(#softM)" transform="rotate(-38 460 470)"/>
+            <ellipse cx="570" cy="568" rx="58" ry="23" fill="#b06ae0" opacity=".10" filter="url(#softM)" transform="rotate(-38 570 568)"/>
+          </g>
+          <g id="sheen" clip-path="url(#lensClip)">
+            <ellipse cx="466" cy="464" rx="52" ry="14" fill="#ffffff" opacity=".5" filter="url(#softL)" transform="rotate(-42 466 464)"/>
+            <ellipse cx="458" cy="456" rx="27" ry="6.5" fill="#ffffff" opacity=".75" filter="url(#softL)" transform="rotate(-42 458 456)"/>
+          </g>
+          <g id="sheen2" clip-path="url(#lensClip)">
+            <ellipse cx="578" cy="586" rx="40" ry="9" fill="#cfe4ff" opacity=".38" filter="url(#softL)" transform="rotate(-38 578 586)"/>
+          </g>
+          <circle cx="512" cy="520" r="100" fill="none" stroke="#000" stroke-width="7" opacity=".5" filter="url(#softL)"/>
+          <circle cx="512" cy="520" r="97" fill="none" stroke="#0a0c0f" stroke-width="2.6"/>
+          <path d="M392 386 A172 172 0 0 1 512 348" fill="none" stroke="#ffffff" stroke-width="6" opacity=".5" stroke-linecap="round"/>
+          <path d="M352 470 A162 162 0 0 1 380 404" fill="none" stroke="#ffffff" stroke-width="4" opacity=".3" stroke-linecap="round"/>
+          <path d="M676 664 A178 178 0 0 1 622 690" fill="none" stroke="#ffffff" stroke-width="3" opacity=".15" stroke-linecap="round"/>
+          <g fill="#9aa1ab" font-family="ui-monospace,Menlo,monospace" opacity=".92">
+            <path id="textArcTop" d="M437 430 A117 117 0 0 1 587 430" fill="none"/>
+            <text font-size="9.5" letter-spacing="1.1" text-anchor="middle"><textPath href="#textArcTop" startOffset="50%">HELION  50mm  1:1.4</textPath></text>
+            <path id="textArcBot" d="M437 610 A117 117 0 0 0 587 610" fill="none"/>
+            <text font-size="8.5" letter-spacing="1.4" text-anchor="middle"><textPath href="#textArcBot" startOffset="50%">Ø72 · OPTICAL STABILIZER</textPath></text>
+          </g>
+          <!-- 卡口释放钮 -->
+          <circle cx="330" cy="650" r="14" fill="#111418"/><circle cx="330" cy="650" r="11" fill="url(#chrome)" opacity=".55"/>
+          <circle cx="327" cy="646" r="4" fill="#ffffff" opacity=".3"/>
+          <!-- AF/MF 切换拨杆 -->
+          <g transform="translate(712 646)">
+            <rect x="-26" y="-11" width="52" height="22" rx="4" fill="#111418"/>
+            <rect x="-23" y="-8" width="46" height="16" rx="3" fill="#1e2227"/>
+            <rect x="-20" y="-7" width="20" height="14" rx="3" fill="#c9ced7"/>
+            <text x="9" y="3.6" font-family="ui-monospace,Menlo,monospace" font-size="8.5" fill="#7d838d">AF·MF</text>
+          </g>
+        </g>
+
+        <!-- 挂带环 -->
+        <g fill="url(#metalRing)" stroke="#0a0c0f" stroke-width="1.2">
+          <path d="M170 370 q-17 -3 -19 11 q-2 14 14 16 l9 0 Z"/>
+          <path d="M870 370 q17 -3 19 11 q2 14 -14 16 l-9 0 Z"/>
+        </g>
+
+        <!-- 前脸收尾阴影与螺钉 -->
+        <g fill="none" stroke="#000" opacity=".32">
+          <path d="M176 386 L864 386" stroke-width="1"/><path d="M186 694 L860 694" stroke-width="1.2"/>
+        </g>
+        <g id="screws"></g>
+      </g>
+    </svg>
+  </figure>
+
+  <section class="notes">
+    <h1>HELION X7 · 50mm f/1.4 套机 — 100% 内联 SVG 手绘，<b>零位图</b></h1>
+    <p>结构：3/4 侧前方视角，整机套用同一斜投影矩阵 —— 前脸水平边倾斜 7.7°、竖直边保持竖直、深度沿同一向量挤出；军舰头、热靴、模式转盘、快门钮与手柄同法构成。</p>
+    <p>透视：正圆经该矩阵自然成为正确椭圆（镜片 / 镜环 / 转盘 / 快门），长轴近竖直、短轴随视角收窄约 14%，与机身侧面的透视方向一致。</p>
+    <p>材质：磨砂塑料机身（feTurbulence 微颗粒 + 低反差渐变）、银色金属顶盖与镜环（多段高光 + 左上方主光弧）、玻璃前组（同心镜组暗环 + 镀膜青紫反光 + 流动高光）；落影与卡口遮蔽提供接触感。</p>
+    <p>交互：<kbd>点击模式转盘</kbd>逐档旋转并同步顶盖 LCD，<kbd>点击快门钮</kbd>模拟下压，镜片高光缓慢流动 —— 均不破坏静态首帧。品牌「HELION X7」为自创标识，不含任何真实厂商 logo。</p>
+    <div class="tip"><span>纯 SVG · 无位图</span><span>无 emoji</span><span>单文件零依赖</span><span>390px 比例不变形</span></div>
+  </section>
+</main>
+<script>
+"use strict";
+const $=(id)=>document.getElementById(id),NS="http://www.w3.org/2000/svg";
+const el=(n,a)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+const CX=512,CY=520,D2R=Math.PI/180;
+
+/* 手柄防滑纵纹：柔和的橡皮质感暗槽 + 受光侧微亮边 */
+(function(){const g=$("gripRibs");
+ for(let i=0;i<13;i++){const x=198+i*9.6;
+  g.append(el("line",{x1:x,y1:408,x2:x+3,y2:704,stroke:"#17191d","stroke-width":3.2,"stroke-linecap":"round",opacity:.5}));
+  g.append(el("line",{x1:x+2.6,y1:408,x2:x+5.6,y2:704,stroke:"#4e545e","stroke-width":1.2,"stroke-linecap":"round",opacity:.22}));}})();
+
+/* 变焦环细齿纹（120 齿，左上方受光侧更亮） */
+(function(){const g=$("zoomRibs");
+ for(let i=0;i<120;i++){const a=i/120*360,b=(a-135)*D2R,s=Math.sin(b)*.5+.5;
+  const x1=CX+Math.cos(a*D2R)*172,y1=CY+Math.sin(a*D2R)*172,x2=CX+Math.cos(a*D2R)*186,y2=CY+Math.sin(a*D2R)*186;
+  g.append(el("line",{x1:x1.toFixed(1),y1:y1.toFixed(1),x2:x2.toFixed(1),y2:y2.toFixed(1),
+   stroke:`rgba(198,206,216,${(.07+s*.24).toFixed(2)})`,"stroke-width":1.5}));}})();
+
+/* 对焦环细肋（180 条） */
+(function(){const g=$("focusRibs");
+ for(let i=0;i<180;i++){const a=i/180*360,b=(a-135)*D2R,s=Math.sin(b)*.5+.5;
+  const x1=CX+Math.cos(a*D2R)*140,y1=CY+Math.sin(a*D2R)*140,x2=CX+Math.cos(a*D2R)*164,y2=CY+Math.sin(a*D2R)*164;
+  g.append(el("line",{x1:x1.toFixed(1),y1:y1.toFixed(1),x2:x2.toFixed(1),y2:y2.toFixed(1),
+   stroke:`rgba(178,186,196,${(.05+s*.15).toFixed(2)})`,"stroke-width":.9}));}})();
+
+/* 对焦距离刻度 + 数字（0.3m ~ ∞，刻度随环面转角自然旋转） */
+(function(){const gt=$("distTicks"),gn=$("distNums");
+ const D=[["∞",-135],["5",-158],["2",-172],["1.2",-186],["0.8",-198],["0.5",-208],["0.3",-216]];
+ for(let i=0;i<48;i++){const a=-250+i*4.6,b=(a-135)*D2R,s=Math.sin(b)*.5+.5,major=i%6===0;
+  const l1=major?144:150;
+  const x1=CX+Math.cos(a*D2R)*l1,y1=CY+Math.sin(a*D2R)*l1,x2=CX+Math.cos(a*D2R)*158,y2=CY+Math.sin(a*D2R)*158;
+  gt.append(el("line",{x1:x1.toFixed(1),y1:y1.toFixed(1),x2:x2.toFixed(1),y2:y2.toFixed(1),
+   stroke:`rgba(230,234,240,${(.26+s*.42).toFixed(2)})`,"stroke-width":major?1.9:.9}));}
+ D.forEach(([t,a])=>{const b=(a-135)*D2R,s=Math.sin(b)*.5+.5;
+  const x=CX+Math.cos(a*D2R)*168,y=CY+Math.sin(a*D2R)*168;
+  const tx=el("text",{x:x.toFixed(1),y:y.toFixed(1),fill:`rgba(228,233,240,${(.42+s*.46).toFixed(2)})`,
+   "font-family":"ui-monospace,Menlo,monospace","font-size":10.5,"text-anchor":"middle","dominant-baseline":"middle"});
+  tx.textContent=t;gn.append(tx);});})();
+
+/* 滤镜螺纹短刻线 */
+(function(){const g=$("threads");
+ for(let i=0;i<150;i++){const a=i/150*360*D2R;
+  const x1=CX+Math.cos(a)*103.1,y1=CY+Math.sin(a)*103.1,x2=CX+Math.cos(a)*106.9,y2=CY+Math.sin(a)*106.9;
+  g.append(el("line",{x1:x1.toFixed(1),y1:y1.toFixed(1),x2:x2.toFixed(1),y2:y2.toFixed(1),stroke:"#5b616b","stroke-width":1,opacity:.34}));}})();
+
+/* 模式转盘：滚花边缘 + 面盘刻字（刻字在椭圆平面内旋转，红色指针固定在机身上） */
+const MODES=["AUTO","P","A","S","M"],GLYPH=["A","P","A","S","M"],MANG=[-18,-54,-90,-126,-162];
+let modeIdx=4;
+(function(){const gt=$("dialTicks");
+ for(let i=0;i<44;i++){const a=(-180+i*360/44)*D2R;
+  const x1=742+Math.cos(a)*50,y1=305+Math.sin(a)*20.4,x2=742+Math.cos(a)*55,y2=305+Math.sin(a)*22.4;
+  gt.append(el("line",{x1:x1.toFixed(1),y1:y1.toFixed(1),x2:x2.toFixed(1),y2:y2.toFixed(1),stroke:"#c2c7cf","stroke-width":1.3,opacity:.4}));}
+ const f=$("dialFace");
+ GLYPH.forEach((t,i)=>{const a=MANG[i]*D2R;
+  const px=(742+Math.cos(a)*32.4).toFixed(1),py=(304+Math.sin(a)*13).toFixed(1);
+  /* 径向排布：字向朝外，被选中转到顶端时正好直立（同真实转盘）；绿 A 代表自动档 */
+  const tx=el("text",{x:px,y:py,fill:i?"#2a2e34":"#2c7a4b",
+   "font-family":"ui-monospace,Menlo,monospace","font-size":11.5,"text-anchor":"middle","dominant-baseline":"middle",
+   transform:`translate(${px} ${py}) scale(1,.4) rotate(${MANG[i]+90}) scale(1,2.5) translate(${-px} ${-py})`});
+  tx.textContent=t;f.append(tx);
+  f.append(el("circle",{cx:(742+Math.cos(a)*40.5).toFixed(1),cy:(304+Math.sin(a)*16.2).toFixed(1),r:1.5,fill:"#3a3f46"}));});})();
+const SPEED=["-","1/60","1/125","1/250","1/500"];
+function applyMode(){const d=-90-MANG[modeIdx];
+ $("dialFace").style.transform=`translate(742px,304px) scale(1,.4) rotate(${d}deg) scale(1,2.5) translate(-742px,-304px)`;
+ $("lcdMain").textContent=MODES[modeIdx];$("lcdSub").textContent=SPEED[modeIdx];}
+$("dialGroup").addEventListener("click",()=>{modeIdx=(modeIdx+1)%MODES.length;applyMode();});
+applyMode();
+
+/* 快门钮：下压动画 + LCD 记录提示 */
+$("shutterGroup").addEventListener("click",()=>{
+ const b=$("shutterBtn");b.classList.add("pressed");setTimeout(()=>b.classList.remove("pressed"),140);
+ $("lcdSub").textContent="REC";setTimeout(()=>{$("lcdSub").textContent=SPEED[modeIdx];},700);});
+
+/* 卡口螺钉 */
+(function(){const g=$("screws");
+ [[404,424],[620,424],[404,624],[620,624]].forEach(([x,y])=>{
+  g.append(el("circle",{cx:x,cy:y,r:3.6,fill:"#0e1114"}));
+  g.append(el("circle",{cx:x-.8,cy:y-.8,r:3.1,fill:"#4d525b"}));
+  g.append(el("line",{x1:x-2.2,y1:y-.6,x2:x+2.2,y2:y+.6,stroke:"#0b0d10","stroke-width":1.1}));});})();
+</script>
+</body>
+</html>

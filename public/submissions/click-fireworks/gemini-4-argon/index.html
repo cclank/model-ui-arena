@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Starlight Festival Fireworks</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body {
+    width: 100vw; height: 100vh; overflow: hidden;
+    background: #040711; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #f8fafc; cursor: crosshair;
+  }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .hud {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    width: calc(100% - 28px); max-width: 390px;
+    background: rgba(10, 16, 32, 0.72); border: 1px solid rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(12px); border-radius: 99px; padding: 9px 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; pointer-events: none; z-index: 10;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+  }
+  .hud-title { font-weight: 700; letter-spacing: 0.05em; color: #fde047; }
+  .hud-stats { color: #cbd5e1; font-variant-numeric: tabular-nums; }
+  .hint {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    font-size: 12px; color: rgba(255,255,255,0.65); background: rgba(0,0,0,0.4);
+    padding: 6px 14px; border-radius: 99px; pointer-events: none; z-index: 10;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+<div class="hud">
+  <span class="hud-title">HANABI // 夜空礼花</span>
+  <span class="hud-stats" id="stats">连发: 0 · 粒子: 0</span>
+</div>
+<div class="hint">点击或连击任意夜空位置燃放礼花</div>
+<script>
+const cvs = document.getElementById('stage');
+const ctx = cvs.getContext('2d');
+let W = window.innerWidth, H = window.innerHeight;
+function resize() { W = cvs.width = window.innerWidth; H = cvs.height = window.innerHeight; }
+window.addEventListener('resize', resize); resize();
+
+const stars = Array.from({ length: 65 }, () => ({
+  x: Math.random(), y: Math.random() * 0.72, r: Math.random() * 1.4 + 0.4, p: Math.random() * 6
+}));
+const rockets = [], sparks = [], rings = [];
+let burstCount = 0;
+const MAX_SPARKS = 900;
+
+function spawnBurst(x, y, hueBase) {
+  burstCount++;
+  const hue = hueBase ?? Math.floor(Math.random() * 360);
+  rings.push({ x, y, r: 4, maxR: 75 + Math.random() * 45, alpha: 0.85, hue });
+  const count = 68 + Math.floor(Math.random() * 34);
+  for (let i = 0; i < count; i++) {
+    if (sparks.length >= MAX_SPARKS) sparks.shift();
+    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.15;
+    const speed = 1.8 + Math.random() * 5.8;
+    const h = (hue + (Math.random() < 0.3 ? 45 : 0) + (Math.random() - 0.5) * 24 + 360) % 360;
+    sparks.push({
+      x, y, px: x, py: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      alpha: 1,
+      decay: 0.011 + Math.random() * 0.012,
+      hue: h,
+      size: 1.6 + Math.random() * 1.6,
+      glitter: Math.random() < 0.35
+    });
+  }
+}
+
+function launchTo(tx, ty) {
+  const sx = W * (0.25 + Math.random() * 0.5);
+  const sy = H;
+  const hue = Math.floor(Math.random() * 360);
+  spawnBurst(tx, ty, hue);
+  rockets.push({
+    x: sx, y: sy, tx, ty,
+    vx: (tx - sx) / 22,
+    vy: (ty - sy) / 22,
+    ticks: 22, hue
+  });
+}
+
+window.addEventListener('pointerdown', e => {
+  launchTo(e.clientX, e.clientY);
+});
+
+// 开场自动绽放三朵礼花，确保首屏有绚丽烟花效果
+spawnBurst(W * 0.5, H * 0.34, 38);
+spawnBurst(W * 0.28, H * 0.42, 320);
+spawnBurst(W * 0.72, H * 0.38, 195);
+
+let autoTimer = 0;
+function animate() {
+  autoTimer++;
+  if (autoTimer % 95 === 0 && sparks.length < 180) {
+    spawnBurst(W * (0.2 + Math.random() * 0.6), H * (0.22 + Math.random() * 0.35));
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = 'rgba(4, 7, 17, 0.22)';
+  ctx.fillRect(0, 0, W, H);
+
+  stars.forEach(s => {
+    const a = 0.35 + 0.45 * Math.sin(autoTimer * 0.04 + s.p);
+    ctx.fillStyle = `rgba(226, 232, 240, ${a})`;
+    ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2); ctx.fill();
+  });
+
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = rockets.length - 1; i >= 0; i--) {
+    const r = rockets[i];
+    const ox = r.x, oy = r.y;
+    r.x += r.vx; r.y += r.vy; r.ticks--;
+    ctx.strokeStyle = `hsla(${r.hue}, 100%, 75%, 0.85)`;
+    ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(r.x, r.y); ctx.stroke();
+    if (r.ticks <= 0) {
+      spawnBurst(r.tx, r.ty, (r.hue + 40) % 360);
+      rockets.splice(i, 1);
+    }
+  }
+
+  for (let i = rings.length - 1; i >= 0; i--) {
+    const rg = rings[i];
+    rg.r += (rg.maxR - rg.r) * 0.16;
+    rg.alpha -= 0.035;
+    if (rg.alpha <= 0) { rings.splice(i, 1); continue; }
+    ctx.strokeStyle = `hsla(${rg.hue}, 100%, 72%, ${rg.alpha})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(rg.x, rg.y, rg.r, 0, Math.PI * 2); ctx.stroke();
+  }
+
+  for (let i = sparks.length - 1; i >= 0; i--) {
+    const p = sparks[i];
+    p.px = p.x; p.py = p.y;
+    p.vx *= 0.965; p.vy = p.vy * 0.965 + 0.065;
+    p.x += p.vx; p.y += p.vy;
+    p.alpha -= p.decay;
+    if (p.alpha <= 0) { sparks.splice(i, 1); continue; }
+    const lum = p.glitter && (autoTimer + i) % 3 === 0 ? 92 : 65;
+    ctx.strokeStyle = `hsla(${p.hue}, 100%, ${lum}%, ${p.alpha})`;
+    ctx.lineWidth = p.size;
+    ctx.beginPath(); ctx.moveTo(p.px, p.py); ctx.lineTo(p.x, p.y); ctx.stroke();
+  }
+
+  document.getElementById('stats').textContent = `礼花: ${burstCount} · 粒子: ${sparks.length}`;
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>

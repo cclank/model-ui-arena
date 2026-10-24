@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atmosphere Weather Card</title>
+<style>
+  :root {
+    --bg1: #0c192c; --bg2: #1e3c58; --card: rgba(16, 28, 46, 0.78);
+    --border: rgba(255,255,255,0.15); --text: #f8fafc; --sub: #cbd5e1; --accent: #38bdf8;
+  }
+  body[data-weather="sunny"] { --bg1: #0c4a6e; --bg2: #f59e0b; --accent: #fde047; }
+  body[data-weather="rainy"] { --bg1: #091326; --bg2: #1e293b; --accent: #38bdf8; }
+  body[data-weather="snowy"] { --bg1: #1e1b4b; --bg2: #312e81; --accent: #c7d2fe; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(145deg, var(--bg1), var(--bg2));
+    color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding: 14px; transition: background 0.6s ease;
+  }
+  .weather-card {
+    position: relative; width: 100%; max-width: 390px; border-radius: 28px;
+    background: var(--card); border: 1px solid var(--border);
+    backdrop-filter: blur(18px); overflow: hidden; padding: 20px 18px;
+    box-shadow: 0 24px 54px rgba(0,0,0,0.45);
+  }
+  canvas#skyCanvas {
+    position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;
+  }
+  .content { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 16px; transition: opacity 0.25s, transform 0.25s; }
+  .content.switching { opacity: 0.25; transform: translateY(4px); }
+  .top-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .city-tabs { display: flex; gap: 6px; background: rgba(0,0,0,0.28); padding: 4px; border-radius: 99px; }
+  .city-btn {
+    border: none; background: transparent; color: var(--sub); font-size: 12px;
+    padding: 6px 11px; border-radius: 99px; cursor: pointer; font-weight: 600; transition: 0.2s;
+  }
+  .city-btn.active { background: rgba(255,255,255,0.2); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+  .unit-btn {
+    border: 1px solid var(--border); background: rgba(255,255,255,0.1); color: #fff;
+    border-radius: 99px; padding: 5px 10px; font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+  .hero { display: flex; justify-content: space-between; align-items: flex-end; padding: 6px 2px; }
+  .temp-big { font-size: 62px; font-weight: 800; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .cond-text { font-size: 16px; font-weight: 600; margin-top: 6px; color: var(--accent); }
+  .time-badge { font-size: 11px; color: var(--sub); margin-top: 2px; }
+  .metrics {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    background: rgba(0,0,0,0.24); border-radius: 18px; padding: 11px 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .m-item { text-align: center; }
+  .m-label { font-size: 11px; color: var(--sub); }
+  .m-val { font-size: 14px; font-weight: 700; margin-top: 3px; }
+  .forecast-box {
+    background: rgba(0,0,0,0.24); border-radius: 20px; padding: 13px 12px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .f-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--sub); margin-bottom: 10px; }
+  .f-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; text-align: center; }
+  .f-day { font-size: 12px; font-weight: 600; }
+  .f-desc { font-size: 11px; color: var(--accent); margin: 3px 0; }
+  .f-temps { font-size: 11px; color: var(--sub); font-variant-numeric: tabular-nums; }
+  svg.trend-svg { width: 100%; height: 54px; margin: 6px 0 2px; overflow: visible; }
+</style>
+</head>
+<body data-weather="sunny">
+<div class="weather-card">
+  <canvas id="skyCanvas"></canvas>
+  <div class="content" id="cardContent">
+    <div class="top-row">
+      <div class="city-tabs" id="cityTabs">
+        <button class="city-btn active" data-city="0" type="button">台北</button>
+        <button class="city-btn" data-city="1" type="button">东京</button>
+        <button class="city-btn" data-city="2" type="button">雷克雅未克</button>
+      </div>
+      <button class="unit-btn" id="unitBtn" type="button">°C</button>
+    </div>
+    <div class="hero">
+      <div>
+        <div class="temp-big" id="mainTemp">28°</div>
+        <div class="cond-text" id="mainCond">晴朗微风 · 暖阳高照</div>
+        <div class="time-badge" id="dayNightInfo">日间模式 · UV 指数 6</div>
+      </div>
+      <svg id="heroIcon" width="68" height="68" viewBox="0 0 68 68"></svg>
+    </div>
+    <div class="metrics">
+      <div class="m-item"><div class="m-label">风速</div><div class="m-val" id="mWind">12 km/h</div></div>
+      <div class="m-item"><div class="m-label">相对湿度</div><div class="m-val" id="mHum">58%</div></div>
+      <div class="m-item"><div class="m-label">体感温度</div><div class="m-val" id="mFeels">29°</div></div>
+    </div>
+    <div class="forecast-box">
+      <div class="f-title">未来 5 天趋势预报</div>
+      <div class="f-grid" id="fTop"></div>
+      <svg class="trend-svg" id="trendSvg" viewBox="0 0 320 54"></svg>
+      <div class="f-grid" id="fBot"></div>
+    </div>
+  </div>
+</div>
+<script>
+const CITIES = [
+  { name: '台北', type: 'sunny', temp: 28, feels: 30, wind: '14 km/h', hum: '62%', cond: '晴朗微风 · 暖阳',
+    days: [['周三','晴',29,22],['周四','晴云',30,23],['周五','小雨',26,21],['周六','多云',27,22],['周日','晴',29,23]] },
+  { name: '东京', type: 'rainy', temp: 17, feels: 15, wind: '26 km/h', hum: '88%', cond: '阵雨连绵 · 湿润',
+    days: [['周三','中雨',18,12],['周四','阵雨',17,11],['周五','多云',20,13],['周六','晴',22,14],['周日','晴云',21,14]] },
+  { name: '雷克雅未克', type: 'snowy', temp: -2, feels: -6, wind: '31 km/h', hum: '81%', cond: '飘雪微寒 · 极地气流',
+    days: [['周三','小雪',-1,-6],['周四','大雪',-3,-8],['周五','阴',0,-4],['周六','小雪',-2,-7],['周日','晴冷',1,-5]] }
+];
+let curCity = 0, useF = false, dispTemp = 28, animTemp = 28;
+const fmt = c => useF ? Math.round(c * 9 / 5 + 32) : c;
+const cvs = document.getElementById('skyCanvas'), ctx = cvs.getContext('2d');
+let W = 390, H = 480;
+function resize() { W = cvs.width = cvs.offsetWidth || 390; H = cvs.height = cvs.offsetHeight || 480; }
+window.addEventListener('resize', resize); resize();
+const parts = Array.from({ length: 58 }, () => ({
+  x: Math.random() * 400, y: Math.random() * 500, s: Math.random() * 2 + 1, v: Math.random() * 2.5 + 1.5, a: Math.random()
+}));
+function drawIcon(type) {
+  const svg = document.getElementById('heroIcon');
+  if (type === 'sunny') {
+    svg.innerHTML = `<circle cx="34" cy="34" r="16" fill="#fde047"/><circle cx="34" cy="34" r="24" fill="rgba(253,224,71,0.22)"/>`;
+  } else if (type === 'rainy') {
+    svg.innerHTML = `<path d="M18 38a12 12 0 0122-5 10 10 0 0110 10c0 6-5 9-10 9H20a9 9 0 01-2-14z" fill="#94a3b8"/>
+      <line x1="24" y1="46" x2="20" y2="58" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="34" y1="46" x2="30" y2="58" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="44" y1="46" x2="40" y2="58" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round"/>`;
+  } else {
+    svg.innerHTML = `<path d="M18 36a12 12 0 0122-5 10 10 0 0110 10c0 6-5 9-10 9H20a9 9 0 01-2-14z" fill="#cbd5e1"/>
+      <circle cx="24" cy="52" r="3" fill="#e0e7ff"/><circle cx="35" cy="55" r="3" fill="#e0e7ff"/><circle cx="45" cy="51" r="3" fill="#e0e7ff"/>`;
+  }
+}
+function renderCity() {
+  const c = CITIES[curCity];
+  document.body.setAttribute('data-weather', c.type);
+  const hr = new Date().getHours();
+  const isDay = hr >= 6 && hr < 18;
+  document.getElementById('dayNightInfo').textContent = `${isDay ? '日间模式' : '夜间模式'} · 当地实时气象`;
+  document.getElementById('mainCond').textContent = c.cond;
+  document.getElementById('mWind').textContent = c.wind;
+  document.getElementById('mHum').textContent = c.hum;
+  document.getElementById('mFeels').textContent = `${fmt(c.feels)}°`;
+  drawIcon(c.type);
+  const target = fmt(c.temp);
+  const start = dispTemp, t0 = performance.now();
+  function countStep(now) {
+    const p = Math.min(1, (now - t0) / 320);
+    dispTemp = Math.round(start + (target - start) * p);
+    document.getElementById('mainTemp').textContent = `${dispTemp}°`;
+    if (p < 1) requestAnimationFrame(countStep);
+  }
+  requestAnimationFrame(countStep);
+  const fTop = document.getElementById('fTop'), fBot = document.getElementById('fBot');
+  fTop.innerHTML = c.days.map(d => `<div><div class="f-day">${d[0]}</div><div class="f-desc">${d[1]}</div></div>`).join('');
+  fBot.innerHTML = c.days.map(d => `<div class="f-temps">${fmt(d[2])}° / ${fmt(d[3])}°</div>`).join('');
+  const highs = c.days.map(d => fmt(d[2])), lows = c.days.map(d => fmt(d[3]));
+  const minT = Math.min(...lows) - 2, maxT = Math.max(...highs) + 2, span = Math.max(1, maxT - minT);
+  const ptsH = highs.map((v, i) => [32 + i * 64, 44 - ((v - minT) / span) * 34]);
+  const ptsL = lows.map((v, i) => [32 + i * 64, 48 - ((v - minT) / span) * 34]);
+  const polyH = ptsH.map(p => p.join(',')).join(' '), polyL = ptsL.map(p => p.join(',')).join(' ');
+  document.getElementById('trendSvg').innerHTML = `
+    <polyline fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" points="${polyH}"/>
+    <polyline fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-dasharray="3 3" points="${polyL}"/>
+    ${ptsH.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#fff" stroke="var(--accent)" stroke-width="2"/>`).join('')}`;
+}
+document.getElementById('cityTabs').addEventListener('click', e => {
+  const btn = e.target.closest('.city-btn');
+  if (!btn) return;
+  document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const box = document.getElementById('cardContent');
+  box.classList.add('switching');
+  setTimeout(() => { curCity = Number(btn.dataset.city); renderCity(); box.classList.remove('switching'); }, 180);
+});
+document.getElementById('unitBtn').addEventListener('click', e => {
+  useF = !useF; e.currentTarget.textContent = useF ? '°F' : '°C'; renderCity();
+});
+let tick = 0;
+function loop() {
+  tick += 0.02; ctx.clearRect(0, 0, W, H);
+  const type = CITIES[curCity].type;
+  if (type === 'sunny') {
+    const g = ctx.createRadialGradient(W * 0.82, 65, 8, W * 0.82, 65, 160 + Math.sin(tick) * 15);
+    g.addColorStop(0, 'rgba(253,224,71,0.38)'); g.addColorStop(1, 'rgba(253,224,71,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    parts.forEach((p, i) => {
+      if (i > 22) return;
+      p.y -= 0.35; if (p.y < 0) p.y = H;
+      ctx.fillStyle = `rgba(254,240,138,${0.18 + 0.15 * Math.sin(tick + i)})`;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.s * 1.4, 0, Math.PI * 2); ctx.fill();
+    });
+  } else if (type === 'rainy') {
+    ctx.strokeStyle = 'rgba(125,211,252,0.45)'; ctx.lineWidth = 1.4;
+    parts.forEach(p => {
+      p.y += p.v * 3.2; p.x -= 0.8;
+      if (p.y > H) { p.y = -12; p.x = Math.random() * W; }
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - 3, p.y + 12); ctx.stroke();
+    });
+  } else {
+    ctx.fillStyle = 'rgba(224,231,255,0.75)';
+    parts.forEach((p, i) => {
+      p.y += p.v * 0.65; p.x += Math.sin(tick + i) * 0.45;
+      if (p.y > H) { p.y = -8; p.x = Math.random() * W; }
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.s * 1.2, 0, Math.PI * 2); ctx.fill();
+    });
+  }
+  requestAnimationFrame(loop);
+}
+renderCity(); requestAnimationFrame(loop);
+</script>
+</body>
+</html>

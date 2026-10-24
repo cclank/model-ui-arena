@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="HEwj1AHT1DCmSA5YZHcbvt">
+<head data-page-node-id="gnPcVvcO6eZFodchkZcG1B">
+<meta charset="utf-8" data-page-node-id="mH6DTbTeZf59D3klomQBSK">
+<meta name="viewport" content="width=device-width,initial-scale=1" data-page-node-id="fXwIMGkk8UEROiJFmAwsNI">
+<title>天气卡片</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;display:grid;place-items:center;font-family:-apple-system,"PingFang SC",sans-serif;background:#0b1020;color:#eef2ff;padding:16px}
+.card{position:relative;width:100%;max-width:400px;border-radius:28px;overflow:hidden;padding:24px 20px 20px;background:linear-gradient(165deg,#1b2b5e,#0d1330);box-shadow:0 30px 70px rgba(0,0,0,.55);transition:background 1s}
+.sky{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.fx{transition:opacity .8s;position:absolute;inset:0}
+.sun{position:absolute;top:-40px;right:-40px;width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,#ffe9a8,#ffb14d 60%,transparent 70%);animation:glow 4s ease-in-out infinite}
+@keyframes glow{50%{transform:scale(1.08);opacity:.85}}
+.ray{position:absolute;top:30px;right:34px;width:110px;height:110px;border-radius:50%;border:2px dashed rgba(255,225,150,.5);animation:spin 14s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.rain i{position:absolute;top:-14px;width:2px;height:14px;background:linear-gradient(transparent,#9ecbff);animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(460px)}}
+.snow i{position:absolute;top:-10px;width:6px;height:6px;border-radius:50%;background:#fff;opacity:.9;animation:drop linear infinite}
+@keyframes drop{to{transform:translateY(440px) translateX(18px)}}
+.head{position:relative;display:flex;justify-content:space-between;align-items:flex-start;z-index:2}
+.city{display:flex;gap:6px}
+.chip{border:0;background:rgba(255,255,255,.12);color:#cdd7ff;border-radius:999px;padding:7px 13px;font-size:13px;cursor:pointer;transition:.25s;backdrop-filter:blur(6px)}
+.chip.on{background:#5b8cff;color:#fff;box-shadow:0 4px 14px rgba(91,140,255,.5)}
+.unit{background:rgba(255,255,255,.12);border:0;color:#cdd7ff;border-radius:999px;padding:7px 11px;font-size:13px;cursor:pointer}
+.now{position:relative;z-index:2;margin:18px 0 4px;display:flex;align-items:flex-end;gap:14px;transition:opacity .4s,transform .4s}
+.now.fade{opacity:0;transform:translateY(10px)}
+.temp{font-size:76px;font-weight:150;line-height:1;letter-spacing:-2px;text-shadow:0 6px 24px rgba(0,0,0,.35)}
+.desc{font-size:17px;font-weight:600;margin-bottom:8px}
+.sub{font-size:12px;color:#a9b6e8;margin-top:3px}
+.stats{position:relative;z-index:2;display:flex;gap:10px;margin:16px 0 6px}
+.stat{flex:1;background:rgba(255,255,255,.09);border-radius:14px;padding:10px;text-align:center;backdrop-filter:blur(6px)}
+.stat b{display:block;font-size:17px}
+.stat span{font-size:11px;color:#a9b6e8}
+.five{position:relative;z-index:2;display:flex;gap:6px;margin-top:14px}
+.day{flex:1;text-align:center;background:rgba(255,255,255,.07);border-radius:14px;padding:9px 2px;font-size:11px;color:#c3cdf5}
+.day b{display:block;font-size:15px;color:#fff;margin-top:3px}
+.day em{font-style:normal;color:#ffd166}
+.day i{font-style:normal;color:#8fb0ff}
+.chart{position:relative;z-index:2;margin-top:10px;background:rgba(255,255,255,.06);border-radius:14px;padding:8px 6px}
+@media(max-width:390px){.temp{font-size:64px}.card{padding:20px 14px 16px}.day{font-size:10px}}
+</style>
+</head>
+<body data-page-node-id="LL7JG23NRoCfLK49DMcLUD">
+<div class="card" id="card" data-page-node-id="j3vtPeNHreCc57ixZy0H2s">
+  <div class="sky" data-page-node-id="7krs76Z5flH6ks66hzPak8">
+    <div class="fx sun-fx" id="fxSun" data-page-node-id="Rs0HxysGahoE14ESQ47kzT"><div class="sun" data-page-node-id="14BHNhHeInl05BvH2sDxdO"></div><div class="ray" data-page-node-id="PKtQ8cVExwbLyeidrO64jW"></div></div>
+    <div class="fx rain" id="fxRain" data-page-node-id="yoQwqChqeutPFdJ7zjvooQ"></div>
+    <div class="fx snow" id="fxSnow" data-page-node-id="156OAfZqkbKhbvEDbUo1s0"></div>
+  </div>
+  <div class="head" data-page-node-id="PACFYYCFjJEd4sTD2zqqaC">
+    <div class="city" id="cities" data-page-node-id="lj8dE35O8cxAwUF3luLh1h"></div>
+    <button class="unit" id="unit" data-page-node-id="9uNHgsgP0yIRUVAO9SMpaD">°C</button>
+  </div>
+  <div class="now" id="now" data-page-node-id="Yhhc2K5QfEmyB2E0duyu2O">
+    <div class="temp" id="temp" data-page-node-id="5IKxQnUy4d1lOc1C9JiRge">--°</div>
+    <div data-page-node-id="lDSmcKG56PFrrAh8r6ByE7"><div class="desc" id="desc" data-page-node-id="x9zursA6PGwu0sy5BwFLZ0">—</div><div class="sub" id="sub" data-page-node-id="cEHYjGHX9zRUVveJTrnHeO">—</div></div>
+  </div>
+  <div class="stats" data-page-node-id="5GhkUSUJeRcZL7TMzr6fX4">
+    <div class="stat" data-page-node-id="1k3vhzVa75vBiQAxjcw2Zx"><b id="wind" data-page-node-id="maeRc9BE3VQogjMKaOLum8">--</b><span data-page-node-id="SnHw4rhdUQGhqyfkx9iomx">风速 km/h</span></div>
+    <div class="stat" data-page-node-id="SXG5FyP3Kia3Y4oTYfnIrz"><b id="hum" data-page-node-id="b2wV0oTzxyEHN0Lhqt2JDr">--</b><span data-page-node-id="RszBK4GDfJkHriumdeo2NP">湿度 %</span></div>
+    <div class="stat" data-page-node-id="M80LYntolWe1OURvwgj059"><b id="feel" data-page-node-id="WJhyRxSewg6ySs65pDEQiG">--</b><span data-page-node-id="zu75UH1ymiVMUkTXCAbnOd">体感 °</span></div>
+  </div>
+  <div class="five" id="five" data-page-node-id="kSsP0NF4nsHQCPY1LjPP2o"></div>
+  <div class="chart" data-page-node-id="eh2Zt23QkArba5DOMavdow"><svg id="line" viewBox="0 0 340 74" width="100%" height="74" preserveAspectRatio="none" data-page-node-id="QWF2yDk6NCNqvOA7OYb7bQ"></svg></div>
+</div>
+<script>
+const DATA=[
+ {name:"北京",t:26,d:"晴",icon:"sun",w:12,h:38,feels:27,fx:[26,24,25,23,22,20,21,19,20,18],lo:18,hi:28},
+ {name:"伦敦",t:14,d:"中雨",icon:"rain",w:26,h:82,feels:11,fx:[14,13,12,12,11,13,12,11,12,10],lo:9,hi:15},
+ {name:"赫尔辛基",t:-3,d:"小雪",icon:"snow",w:18,h:74,feels:-7,fx:[-3,-4,-5,-4,-6,-5,-7,-6,-4,-3],lo:-8,hi:-1}];
+let cur=0,isF=false;
+const $=id=>document.getElementById(id);
+function mkRain(){const f=$("fxRain");f.innerHTML="";for(let i=0;i<46;i++){const d=document.createElement("i");
+  d.style.left=Math.random()*100+"%";d.style.animationDuration=.7+Math.random()*.7+"s";d.style.animationDelay=-Math.random()*2+"s";f.appendChild(d);}}
+function mkSnow(){const f=$("fxSnow");f.innerHTML="";for(let i=0;i<40;i++){const d=document.createElement("i");
+  d.style.left=Math.random()*100+"%";d.style.animationDuration=3+Math.random()*4+"s";d.style.animationDelay=-Math.random()*5+"s";f.appendChild(d);}}
+mkRain();mkSnow();
+function conv(c){return isF?Math.round(c*9/5+32):Math.round(c);}
+function drawChart(c){const L=c.fx.map(conv),mn=Math.min(...L),mx=Math.max(...L),sp=mx-mn||1,
+  pts=(arr)=>arr.map((v,i)=>`${10+i*36},${64-(v-mn)/sp*44}`).join(" ");
+  $("line").innerHTML=`<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#ffd166" stop-opacity=".45"/><stop offset="1" stop-color="#ffd166" stop-opacity="0"/></linearGradient></defs>
+  <polygon points="10,70 ${pts(L)} 334,70" fill="url(#g)"/>
+  <polyline points="${pts(L)}" fill="none" stroke="#ffd166" stroke-width="2.5" stroke-linejoin="round"/>`+
+  L.map((v,i)=>`<circle cx="${10+i*36}" cy="${64-(v-mn)/sp*44}" r="3" fill="#fff"/>
+  <text x="${10+i*36}" y="${58-(v-mn)/sp*44}" font-size="9" fill="#cdd7ff" text-anchor="middle">${v}°</text>`).join("");}
+function animTemp(to){const from=parseInt($("temp").textContent)||to;let i=0;
+  clearInterval(animTemp.t);animTemp.t=setInterval(()=>{i++;
+    $("temp").textContent=conv(Math.round(from+(to-from)*i/16))+"°";if(i>=16)clearInterval(animTemp.t);},28);}
+function render(first){const c=DATA[cur];
+  $("fxSun").style.opacity=c.icon==="sun"?1:0;
+  $("fxRain").style.opacity=c.icon==="rain"?1:0;
+  $("fxSnow").style.opacity=c.icon==="snow"?1:0;
+  $("desc").textContent=c.d;$("wind").textContent=c.w;$("hum").textContent=c.h;$("feel").textContent=conv(c.feels);
+  $("sub").textContent=`${c.name} · 体感舒适度 ${(100-c.h/2)|0}`;
+  animTemp(c.t);drawChart(c);
+  const days=["今天","周三","周四","周五","周六"],w=["晴","多云","小雨","阴","晴"];
+  $("five").innerHTML=days.map((d,i)=>`<div class="day">${d}<b>${conv(c.fx[i*2])}°</b>
+    <em>${conv(c.fx[i*2])}°</em>/<i>${conv(c.lo+i)}°</i></div>`).join("");
+  const night=!(new Date().getHours()>=6&&new Date().getHours()<18);
+  $("card").style.background=night
+    ?"linear-gradient(165deg,#0d1740,#05070f)":c.icon==="sun"?"linear-gradient(165deg,#2a4fb8,#122056)"
+    :c.icon==="rain"?"linear-gradient(165deg,#25304f,#0c1122)":"linear-gradient(165deg,#3a4468,#141a30)";
+}
+DATA.forEach((c,i)=>{const b=document.createElement("button");b.className="chip"+(i?"":" on");b.textContent=c.name;
+  b.onclick=()=>{cur=i;[...document.querySelectorAll(".chip")].forEach((x,j)=>x.classList.toggle("on",j===i));
+    const n=$("now");n.classList.add("fade");setTimeout(()=>{render();n.classList.remove("fade");},260);};
+  $("cities").appendChild(b);});
+$("unit").onclick=()=>{isF=!isF;$("unit").textContent=isF?"°F":"°C";render();};
+render(true);
+</script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+{
+  "criticalPhotonOrbit": 1.5,
+  "analyticCriticalImpact": 2.598076211353316,
+  "cases": [
+    {
+      "impact": 2.55,
+      "maxSteps": 260,
+      "outcome": "captured",
+      "steps": 181,
+      "closest": 0.9996607004680959,
+      "maxEnergyError": 0.0000013026204033206312,
+      "maxAngularError": 5.14975422305497e-8
+    },
+    {
+      "impact": 2.65,
+      "maxSteps": 260,
+      "outcome": "escaped",
+      "steps": 206,
+      "closest": 1.7016798065176004,
+      "maxEnergyError": 0.000001205972469109362,
+      "maxAngularError": 9.513093912616455e-8
+    },
+    {
+      "impact": 4,
+      "maxSteps": 260,
+      "outcome": "escaped",
+      "steps": 83,
+      "closest": 3.3504804377807775,
+      "maxEnergyError": 5.4964533280355e-7,
+      "maxAngularError": 5.353660021967244e-7
+    },
+    {
+      "impact": 8,
+      "maxSteps": 260,
+      "outcome": "escaped",
+      "steps": 65,
+      "closest": 7.445474929854495,
+      "maxEnergyError": 9.978336523719378e-8,
+      "maxAngularError": 1.2397154236509778e-7
+    },
+    {
+      "impact": 2.55,
+      "maxSteps": 480,
+      "outcome": "captured",
+      "steps": 189,
+      "closest": 0.9957110881010459,
+      "maxEnergyError": 3.525764669110032e-7,
+      "maxAngularError": 1.3905334217412246e-8
+    },
+    {
+      "impact": 2.65,
+      "maxSteps": 480,
+      "outcome": "escaped",
+      "steps": 221,
+      "closest": 1.7016588385748102,
+      "maxEnergyError": 3.242907840039777e-7,
+      "maxAngularError": 2.5918674761982174e-8
+    },
+    {
+      "impact": 4,
+      "maxSteps": 480,
+      "outcome": "escaped",
+      "steps": 104,
+      "closest": 3.350407245268253,
+      "maxEnergyError": 1.538973795067733e-7,
+      "maxAngularError": 1.0352496815357881e-7
+    },
+    {
+      "impact": 8,
+      "maxSteps": 480,
+      "outcome": "escaped",
+      "steps": 78,
+      "closest": 7.445653301251854,
+      "maxEnergyError": 2.4678597498883903e-8,
+      "maxAngularError": 2.3962741124705644e-8
+    }
+  ]
+}

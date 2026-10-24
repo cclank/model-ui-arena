@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>报告卡样稿（示意数据 v0.2）</title>
+<style>
+:root{
+  --page:#05080d; --bg:#0a0f16; --s1:#101824; --s2:#162133; --line:#223049;
+  --tx:#e8eef6; --mu:#8a99ae; --dim:#5d6b80;
+  --teal:#4fd1c5; --blue:#6ea8ff; --amber:#f6c453; --green:#5ad19a; --red:#ff7b7b;
+  --sans:-apple-system,BlinkMacSystemFont,"PingFang TC","PingFang SC","Noto Sans TC","Noto Sans SC","Segoe UI",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0}
+body{background:var(--page);color:var(--tx);font-family:var(--sans);padding:32px 16px 64px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px;margin:0 auto}
+.intro h1{font-size:22px;font-weight:700;letter-spacing:.01em}
+.intro p{color:var(--mu);font-size:14px;line-height:1.7;margin-top:8px;max-width:760px}
+.intro b{color:var(--amber);font-weight:600}
+h2.sec{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--mu);margin:40px 0 14px;font-weight:600}
+.stage{position:relative}
+.stage > .card{transform-origin:top left}
+.actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.actions button{font:inherit;font-size:14px;color:var(--tx);background:var(--s1);border:1px solid var(--line);border-radius:10px;padding:10px 16px;cursor:not-allowed;opacity:.8}
+.actions span{font-size:12px;color:var(--dim);align-self:center}
+
+/* ---------- card shell ---------- */
+.card{position:relative;overflow:hidden;background:
+  radial-gradient(900px 500px at 100% -10%,rgba(79,209,197,.10),transparent 60%),
+  radial-gradient(700px 500px at -10% 110%,rgba(110,168,255,.08),transparent 60%),var(--bg);
+  border:1px solid var(--line);border-radius:28px;font-size:22px;line-height:1.4}
+.card.portrait{width:1080px;height:1440px;padding:42px 56px 38px;display:flex;flex-direction:column;gap:18px}
+.card.wide{width:1200px;height:675px;padding:40px 52px 36px;display:flex;flex-direction:column;gap:14px}
+.wm{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:5}
+.wm div{transform:rotate(-24deg);text-align:center;font-weight:800;color:rgba(246,196,83,.075);line-height:1}
+.wm div b{display:block;font-size:170px;letter-spacing:.06em}
+.wm div i{display:block;font-style:normal;font-size:54px;letter-spacing:.3em;margin-top:10px}
+
+.top{display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px;font-size:16px;letter-spacing:.22em;color:var(--mu);font-weight:600}
+.brand svg{width:30px;height:30px}
+.tag{display:flex;gap:10px;align-items:center;font-size:18px;color:var(--mu)}
+.pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:6px 16px;font-size:18px;font-weight:600;border:1px solid}
+.pill.ok{color:var(--green);border-color:rgba(90,209,154,.45);background:rgba(90,209,154,.1)}
+.pill.mock{color:var(--amber);border-color:rgba(246,196,83,.5);background:rgba(246,196,83,.1)}
+.pill.day{color:var(--teal);border-color:rgba(79,209,197,.45);background:rgba(79,209,197,.08)}
+
+.title{display:flex;align-items:flex-end;justify-content:space-between;gap:24px}
+.title h1{font-size:72px;line-height:1;font-weight:800;letter-spacing:-.025em}
+.title p{color:var(--mu);font-size:21px;margin-top:10px}
+.title .badges{display:flex;flex-direction:column;gap:10px;align-items:flex-end;padding-bottom:6px}
+
+.verdict{border-left:5px solid var(--teal);background:linear-gradient(90deg,rgba(79,209,197,.09),transparent 80%);padding:16px 26px;border-radius:0 16px 16px 0}
+.verdict p{font-size:31px;line-height:1.36;font-weight:600;letter-spacing:-.005em}
+.verdict em{font-style:normal;color:var(--teal);font-weight:800}
+.chips{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.chip{font-size:18px;color:var(--tx);background:var(--s2);border:1px solid var(--line);border-radius:10px;padding:5px 12px}
+.chip b{color:var(--teal);font-weight:700}
+
+.mid{display:grid;grid-template-columns:400px 1fr;gap:18px}
+.panel{background:var(--s1);border:1px solid var(--line);border-radius:20px;padding:16px 24px}
+.ph{font-size:16px;letter-spacing:.16em;color:var(--mu);font-weight:600;display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.ph small{letter-spacing:0;font-size:15px;color:var(--dim);font-weight:400}
+.radar svg{display:block;width:100%;height:auto}
+.kv{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,1fr);gap:12px}
+.cell{background:var(--s1);border:1px solid var(--line);border-radius:18px;padding:12px 18px;display:flex;flex-direction:column;justify-content:space-between}
+.cell .l{font-size:17px;color:var(--mu)}
+.cell .v{font-size:44px;font-weight:800;letter-spacing:-.02em;line-height:1.05;font-variant-numeric:tabular-nums}
+.cell .v u{text-decoration:none;font-size:23px;font-weight:600;color:var(--mu);margin-left:6px;letter-spacing:0}
+.cell .s{font-size:16px;color:var(--dim);display:flex;justify-content:space-between;gap:8px}
+.up{color:var(--green)} .dn{color:var(--red)}
+.c-teal{color:var(--teal)} .c-blue{color:var(--blue)} .c-amber{color:var(--amber)}
+
+.bars{display:grid;grid-template-columns:1fr 1fr;gap:11px 40px}
+.bar{display:grid;grid-template-columns:92px 1fr 46px;gap:14px;align-items:center;font-size:20px}
+.bar .nm{color:var(--tx)}
+.bar .tr{position:relative;height:22px;background:var(--s2);border-radius:11px}
+.bar .ok{position:absolute;top:0;bottom:0;left:75%;right:0;background:rgba(79,209,197,.14);border-radius:0 11px 11px 0}
+.bar .tk{position:absolute;top:5px;bottom:5px;width:1px;background:var(--line)}
+.bar .dot{position:absolute;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:var(--teal);border:2px solid var(--bg);box-shadow:0 0 0 1px rgba(79,209,197,.5)}
+.bar .mean{position:absolute;top:-5px;bottom:-5px;width:3px;margin-left:-1.5px;background:var(--tx);border-radius:2px;opacity:.9}
+.bar .pc{font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+.bar .n{display:none}
+.scale{display:grid;grid-template-columns:176px 1fr 64px 150px;gap:16px;font-size:14px;color:var(--dim);margin-bottom:-2px}
+.scale div{position:relative;height:16px}
+.scale div span{position:absolute;transform:translateX(-50%)}
+
+.delta{display:flex;align-items:center;gap:20px;background:var(--s1);border:1px solid var(--line);border-radius:18px;padding:11px 24px;font-size:20px}
+.delta .lab{color:var(--mu);white-space:nowrap}
+.delta .lab b{color:var(--tx)}
+.delta .it{display:flex;gap:8px;align-items:baseline;white-space:nowrap}
+.delta .it span{color:var(--dim);font-size:17px}
+.delta .it strong{font-weight:800;font-variant-numeric:tabular-nums}
+.delta .sp{flex:1}
+
+.evid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.shot{position:relative;aspect-ratio:16/6.4;border-radius:14px;border:1px solid var(--line);overflow:hidden;
+  background:repeating-linear-gradient(135deg,#131c2b 0 14px,#101826 14px 28px)}
+.shot .cap{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;padding:8px 14px;font-size:16px;background:linear-gradient(transparent,rgba(5,8,13,.9));color:var(--tx)}
+.shot .cap i{font-style:normal;color:var(--mu);font-family:var(--mono);font-size:15px}
+.shot .ph2{position:absolute;inset:0;display:grid;place-items:center;color:var(--dim);font-size:18px;letter-spacing:.2em}
+
+.foot{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;border-top:1px solid var(--line);padding-top:12px}
+.meta{font-family:var(--mono);font-size:16px;line-height:1.7;color:var(--mu)}
+.meta b{color:var(--tx);font-weight:600}
+.qr{width:80px;height:80px;border:2px dashed var(--dim);border-radius:10px;display:grid;place-items:center;color:var(--dim);font-size:14px;text-align:center;line-height:1.3;flex:none}
+
+/* ---------- compare card ---------- */
+.card.cmp{width:1200px;height:1320px;padding:36px 52px 30px;display:flex;flex-direction:column;gap:14px}
+.cmp .title h1{font-size:50px}
+.cmp .title p{font-size:19px;margin-top:6px}
+.cmp-mid{display:grid;grid-template-columns:420px 1fr;gap:18px}
+table.mt{width:100%;border-collapse:collapse;font-size:20px}
+table.mt th{font-weight:700;font-size:17px;text-align:right;padding:2px 6px 10px;color:var(--tx);white-space:nowrap}
+table.mt th:first-child{text-align:left;color:var(--mu);font-weight:500}
+table.mt .sw{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+table.mt td{padding:7px 6px;text-align:right;border-top:1px solid var(--line);font-variant-numeric:tabular-nums;font-weight:600}
+table.mt td:first-child{text-align:left;color:var(--mu);font-weight:400;font-size:18px}
+table.mt td.best{color:var(--teal);background:rgba(79,209,197,.11);font-weight:800}
+.heat{display:grid;grid-template-columns:190px repeat(4,1fr);gap:8px;align-items:stretch}
+.heat .hd{font-size:17px;font-weight:700;display:flex;align-items:center;gap:7px;justify-content:center;padding-bottom:4px}
+.heat .hd i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.heat .rl{font-size:18px;display:flex;align-items:center}
+.heat .c{border-radius:10px;padding:2px 12px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line)}
+.heat .c.best{outline:2px solid var(--teal);outline-offset:-2px}
+.heat .c b{font-size:21px;font-weight:800;font-variant-numeric:tabular-nums}
+.heat .ds{display:flex;gap:4px}
+.heat .ds i{width:9px;height:9px;border-radius:50%;background:var(--teal)}
+.heat .ds i.no{background:transparent;border:2px solid var(--dim)}
+.heat .sum{border-top:1px solid var(--line);padding-top:8px;margin-top:2px}
+.heat .sum.rl{color:var(--mu);font-size:19px}
+.heat .sum.v{display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;border-top:1px solid var(--line);padding-top:8px;margin-top:2px}
+.heat .sum.v small{font-size:15px;color:var(--dim);font-weight:500;margin-left:6px}
+
+/* ---------- wide card (pareto) ---------- */
+.wide .title h1{font-size:46px}
+.wide .title p{font-size:20px;margin-top:6px}
+.wide svg.plot{display:block;width:100%;flex:1;min-height:0}
+.wide .foot{padding-top:12px}
+.wide .meta{font-size:15px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="intro">
+    <h1>报告卡样稿 · Report Card Mockup</h1>
+    <p>对应 <code>docs/eval-hub-design.md</code> §7（v0.2：数据来自 agent 会话日志与隐藏评分器，不涉及 API）。下面两张卡<b>全部使用虚构的模型名和示意数据</b>，卡上带水印，仅用于确认版面、信息层级和分享形态。真实卡片由 <code>reports/&lt;model&gt;/&lt;battery&gt;-&lt;date&gt;.json</code> 渲染。</p>
+  </div>
+
+  <h2 class="sec">A · 模型报告卡 1080×1440（3:4，竖版）</h2>
+  <div class="stage" id="stageA">
+    <section class="card portrait" id="cardA">
+      <div class="wm"><div><b>示意数据</b><i>MOCK DATA</i></div></div>
+
+      <div class="top">
+        <div class="brand">
+          <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="8" stroke="#4fd1c5" stroke-width="2"/><path d="M9 22v-6M16 22V10M23 22v-9" stroke="#4fd1c5" stroke-width="3" stroke-linecap="round"/></svg>
+          MODEL EVAL HUB
+        </div>
+        <div class="tag"><span class="pill day">Day-0 报告</span><span>2026-10-06</span></div>
+      </div>
+
+      <div class="title">
+        <div>
+          <h1>Model-X 1.0</h1>
+          <p>Example Labs · 经 Harness-A 2.1 运行 · 推理强度 high · 2026-10-04 发布</p>
+        </div>
+        <div class="badges">
+          <span class="pill ok">✓ 实测 · 会话日志</span>
+          <span class="pill mock">示意数据 · 非真实结果</span>
+        </div>
+      </div>
+
+      <div class="verdict">
+        <p>10 个维度、30 次运行达标 <em>26</em> 次，平均 <em>14 分钟</em>、<em>31 万 token</em> 完成一题；<span style="white-space:nowrap">自报与实测一致 <em>92%</em>。</span></p>
+        <div class="chips">
+          <span class="chip">最强维度 <b>数学与推理 4.0</b></span>
+          <span class="chip">最弱维度 <b>视频 2.3</b></span>
+          <span class="chip">失败主因：<b>收工前没验证 40%</b></span>
+        </div>
+      </div>
+
+      <div class="mid">
+        <div class="panel radar">
+          <div class="ph">十维概览<small>相对同 harness 19 个模型的分位</small></div>
+          <svg id="radar" viewBox="0 6 400 354" role="img" aria-label="五维雷达图"></svg>
+        </div>
+        <div class="kv">
+          <div class="cell"><div class="l">完成耗时 · p50</div><div class="v c-blue">14.2<u>min</u></div><div class="s"><span>p10–p90 6–31 min</span><span class="up">−3.1 min</span></div></div>
+          <div class="cell"><div class="l">有效生成速度 · p50</div><div class="v c-blue">38<u>tok/s</u></div><div class="s"><span>近似值，含首 token</span><span class="up">+24%</span></div></div>
+          <div class="cell"><div class="l">每任务 token</div><div class="v">310<u>K</u></div><div class="s"><span>输出 41K · 缓存读 62%</span><span class="up">−22%</span></div></div>
+          <div class="cell"><div class="l">每通过一题成本</div><div class="v c-amber">$0.84</div><div class="s"><span>按公开价估算</span><span class="up">−31%</span></div></div>
+          <div class="cell"><div class="l">自验证覆盖</div><div class="v c-teal">86<u>%</u></div><div class="s"><span>收工前跑过验证</span><span class="up">+14 pt</span></div></div>
+          <div class="cell"><div class="l">自报 = 实测</div><div class="v c-teal">92<u>%</u></div><div class="s"><span>n = 30 次运行</span><span class="up">+6 pt</span></div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ph">维度完成 · core-v1 · 每题重复 3 次<small>点 = 每次运行的阶梯，竖线 = 均值，阴影 = 达标（≥ 3 级）</small></div>
+        <div class="bars" id="bars"></div>
+      </div>
+
+      <div class="delta">
+        <div class="lab">较上一代 <b>Model-X 0.9</b></div>
+        <div class="sp"></div>
+        <div class="it"><span>达标率</span><strong class="up">+13 pt</strong></div>
+        <div class="it"><span>耗时</span><strong class="up">−3.1 min</strong></div>
+        <div class="it"><span>token</span><strong class="up">−22%</strong></div>
+        <div class="it"><span>成本</span><strong class="up">−31%</strong></div>
+      </div>
+
+      <div class="evid">
+        <div class="shot"><div class="ph2">结果件占位 · 对照卡</div><div class="cap"><span>可靠 · 自报 vs 实测</span><i>一致 7/8</i></div></div>
+        <div class="shot"><div class="ph2">结果件占位 · 对账表</div><div class="cap"><span>办公 · 十二个月的表</span><i>差异全中</i></div></div>
+        <div class="shot"><div class="ph2">结果件占位 · 前后对比</div><div class="cap"><span>前端 · 移动端 bug</span><i>修复 3/4</i></div></div>
+      </div>
+
+      <div class="foot">
+        <div class="meta">
+          方法 <b>core-v1</b> · battery <b>2026.10</b> · 重复 ×3 · <b>Harness-A 2.1</b> · 赛季 <b>S4</b><br>
+          报告 <b>rpt-2026-10-06-modelx-1.0</b> · 数据 <b>会话日志</b> · 核对 <b>hub.example/r/7fK2</b>
+        </div>
+        <div class="qr">二维码<br>占位</div>
+      </div>
+    </section>
+  </div>
+  <div class="actions">
+    <button disabled>保存为图片</button><button disabled>复制链接</button><button disabled>复制配文（中 / EN）</button><button disabled>下载证据包 .zip</button>
+    <span>样稿中按钮不可用；真实页面里“保存为图片”在浏览器端生成 PNG，“复制配文”只复制、不发送。</span>
+  </div>
+
+  <h2 class="sec">B · 模型对比卡 1200×1320</h2>
+  <div class="stage" id="stageB">
+    <section class="card cmp" id="cardB">
+      <div class="wm"><div><b style="font-size:150px">示意数据</b><i style="font-size:48px">MOCK DATA</i></div></div>
+      <div class="top">
+        <div class="brand">
+          <svg viewBox="0 0 32 32" fill="none" aria-hidden="true" style="width:28px;height:28px"><rect x="2" y="2" width="28" height="28" rx="8" stroke="#4fd1c5" stroke-width="2"/><path d="M9 22v-6M16 22V10M23 22v-9" stroke="#4fd1c5" stroke-width="3" stroke-linecap="round"/></svg>
+          MODEL EVAL HUB
+        </div>
+        <div class="tag"><span class="pill ok" style="font-size:16px;padding:4px 14px">✓ 实测 · 会话日志</span><span class="pill mock" style="font-size:16px;padding:4px 14px">示意数据</span><span style="font-size:17px">2026-10-06</span></div>
+      </div>
+      <div class="title">
+        <div>
+          <h1>4 个模型同台</h1>
+          <p>同一 harness（Harness-A 2.1）· 赛季 S4 · core-v1 · 每题重复 ×3 · 青色高亮为该行最优</p>
+        </div>
+      </div>
+      <div class="cmp-mid">
+        <div class="panel radar">
+          <div class="ph">十维概览<small>相对同 harness 19 个模型的分位</small></div>
+          <svg id="radarB" viewBox="0 6 400 354" role="img" aria-label="五维雷达对比"></svg>
+        </div>
+        <div class="panel" style="padding:14px 22px">
+          <div class="ph">运行画像<small>↑ 越高越好 · ↓ 越低越好</small></div>
+          <table class="mt" id="mt"></table>
+        </div>
+      </div>
+      <div class="panel" style="padding:14px 22px 14px">
+        <div class="ph">维度阶梯 · 每格 = 3 次运行的均值<small>实心点 = 达标（≥ 3 级），空心点 = 未达标</small></div>
+        <div class="heat" id="heat"></div>
+      </div>
+      <div class="foot">
+        <div class="meta">方法 <b>core-v1</b> · battery <b>2026.10</b> · 重复 ×3 · <b>Harness-A 2.1</b> · 赛季 <b>S4</b><br>
+          报告 <b>rpt-2026-10-06-compare-4</b> · 数据 <b>会话日志</b> · 核对 <b>hub.example/r/c4x9</b><br>
+          有效生成速度为近似值，仅同 harness 内可比；成本按公开价估算</div>
+      </div>
+    </section>
+  </div>
+
+  <h2 class="sec">C · 性价比前沿图 1200×675（16:9）</h2>
+  <div class="stage" id="stageC">
+    <section class="card wide" id="cardC">
+      <div class="wm"><div><b style="font-size:130px">示意数据</b><i style="font-size:42px">MOCK DATA</i></div></div>
+      <div class="top">
+        <div class="brand">
+          <svg viewBox="0 0 32 32" fill="none" aria-hidden="true" style="width:26px;height:26px"><rect x="2" y="2" width="28" height="28" rx="8" stroke="#4fd1c5" stroke-width="2"/><path d="M9 22v-6M16 22V10M23 22v-9" stroke="#4fd1c5" stroke-width="3" stroke-linecap="round"/></svg>
+          MODEL EVAL HUB
+        </div>
+        <div class="tag"><span class="pill mock" style="font-size:16px;padding:4px 14px">示意数据 · 非真实结果</span><span style="font-size:16px">2026-10-06</span></div>
+      </div>
+      <div class="title">
+        <div>
+          <h1>性价比前沿</h1>
+          <p>核心套件达标率 vs 每通过一题成本（对数轴）。虚线是帕累托前沿：没有更便宜且更准的模型。</p>
+        </div>
+      </div>
+      <svg class="plot" id="pareto" viewBox="0 0 1096 380" preserveAspectRatio="xMidYMid meet" role="img" aria-label="性价比散点图"></svg>
+      <div class="foot">
+        <div class="meta">方法 <b>core-v1</b> · 每题重复 ×3 · 成本 = 会话 token × 公开价估算（生效日 2026-10-01）· 同一 harness 内可比 · n=1,140 次运行<br>报告 <b>rpt-2026-10-06-frontier</b> · 核对 <b>hub.example/r/frontier</b></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+// ---- shared radar ----
+window.drawRadar=function(svg,axes,series){
+  var NS='http://www.w3.org/2000/svg',cx=200,cy=186,R=110,LR=138,n=axes.length;
+  function pt(i,v,r){var a=-Math.PI/2+i*2*Math.PI/n;var rr=(r||R)*v/100;return [cx+rr*Math.cos(a),cy+rr*Math.sin(a)];}
+  function el(t,a,txt){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;svg.appendChild(e);return e;}
+  [25,50,75,100].forEach(function(r){el('polygon',{points:axes.map(function(_,i){return pt(i,r).join(',')}).join(' '),fill:'none',stroke:'#223049','stroke-width':r===100?1.6:1});});
+  axes.forEach(function(_,i){var p=pt(i,100);el('line',{x1:cx,y1:cy,x2:p[0],y2:p[1],stroke:'#223049','stroke-width':1});});
+  series.forEach(function(s){
+    el('polygon',{points:s.v.map(function(v,i){return pt(i,v).join(',')}).join(' '),fill:s.fill||'none',stroke:s.c,'stroke-width':s.w||2.2,'stroke-linejoin':'round','stroke-dasharray':s.dash||''});
+  });
+  series.forEach(function(s){if(s.dot)s.v.forEach(function(v,i){var p=pt(i,v);el('circle',{cx:p[0],cy:p[1],r:s.dot,fill:s.c});});});
+  axes.forEach(function(nm,i){var p=pt(i,100,LR);el('text',{x:p[0],y:p[1],'text-anchor':'middle','dominant-baseline':'middle',fill:'#e8eef6','font-size':17,'font-weight':600},nm);});
+};
+(function(){
+  var svg=document.getElementById('radar');
+  var axes=['前端','后端','工程','可靠','多模态','文案','办公','数学','创意','视频'];
+  drawRadar(svg,axes,[
+    {v:[55,70,58,48,60,80,66,84,60,30],c:'#8a99ae',w:2,dash:'6 5'},
+    {v:[62,80,70,60,74,88,76,92,68,40],c:'#4fd1c5',w:3,fill:'rgba(79,209,197,.22)',dot:5}
+  ]);
+  var NS='http://www.w3.org/2000/svg';
+  function el(t,a,txt){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;svg.appendChild(e);return e;}
+  el('line',{x1:62,y1:354,x2:92,y2:354,stroke:'#4fd1c5','stroke-width':3});
+  el('text',{x:100,y:355,fill:'#8a99ae','font-size':15,'dominant-baseline':'middle'},'Model-X 1.0');
+  el('line',{x1:218,y1:354,x2:248,y2:354,stroke:'#8a99ae','stroke-width':2,'stroke-dasharray':'6 5'});
+  el('text',{x:256,y:355,fill:'#8a99ae','font-size':15,'dominant-baseline':'middle'},'上一代 0.9');
+})();
+
+// ---- dimension bars (dot strip) ----
+(function(){
+  var rows=[['前端',[3,3,2]],['后端',[4,3,4]],['工程',[3,3,3]],['可靠',[2,3,3]],['多模态',[3,4,3]],
+            ['文案',[4,4,3]],['办公',[3,3,4]],['数学',[4,4,4]],['创意',[3,3,3]],['视频',[2,2,3]]];
+  document.getElementById('bars').innerHTML=rows.map(function(r){
+    var m=r[1].reduce(function(a,b){return a+b;},0)/r[1].length;
+    var ticks=[0,25,50,75,100].map(function(x){return '<i class="tk" style="left:'+x+'%"></i>';}).join('');
+    var cnt={},idx={};r[1].forEach(function(t){cnt[t]=(cnt[t]||0)+1;});
+    var dots=r[1].map(function(t){var k=idx[t]||0;idx[t]=k+1;var off=(k-(cnt[t]-1)/2)*15;return '<span class="dot" style="left:calc('+(t*25)+'% + '+off+'px)"></span>';}).join('');
+    return '<div class="bar"><span class="nm">'+r[0]+'</span><div class="tr"><div class="ok"></div>'+ticks+dots+
+      '<div class="mean" style="left:'+(m*25)+'%"></div></div><span class="pc">'+m.toFixed(1)+'</span></div>';
+  }).join('');
+})();
+
+// ---- pareto ----
+(function(){
+  var svg=document.getElementById('pareto'),NS='http://www.w3.org/2000/svg';
+  var W=1096,H=380,L=64,Rm=24,T=10,B=54;
+  var xmin=0.08,xmax=14,ymin=45,ymax=105;
+  function X(c){return L+(Math.log10(c)-Math.log10(xmin))/(Math.log10(xmax)-Math.log10(xmin))*(W-L-Rm);}
+  function Y(p){return T+(1-(p-ymin)/(ymax-ymin))*(H-T-B);}
+  function el(n,a,t){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);if(t!=null)e.textContent=t;svg.appendChild(e);return e;}
+  var pts=[
+    ['Borea-S',0.12,53,'f',0,26,'middle'],['Dune Flash',0.30,67,'f',-12,-12,'end'],['Model-X 1.0',0.84,87,'x',0,-30,'middle'],
+    ['Alpha Pro',2.41,93,'f',-12,-14,'end'],['Zeta Max',7.8,100,'f',-12,22,'end'],
+    ['Alpha Mini',0.55,60,'d',12,6,'start'],['Cinder 3',1.10,67,'d',12,20,'start'],['Model-X 0.9',1.22,73,'d',12,6,'start'],
+    ['Borea-L',1.45,80,'d',12,6,'start'],['Dune Max',5.2,87,'d',0,26,'middle']
+  ];
+  // grid
+  [60,70,80,90,100].forEach(function(p){
+    el('line',{x1:L,x2:W-Rm,y1:Y(p),y2:Y(p),stroke:'#1b283b','stroke-width':1});
+    el('text',{x:L-12,y:Y(p),'text-anchor':'end','dominant-baseline':'middle',fill:'#8a99ae','font-size':15},p+'%');
+  });
+  [0.1,0.3,1,3,10].forEach(function(c){
+    el('line',{x1:X(c),x2:X(c),y1:T,y2:H-B,stroke:'#1b283b','stroke-width':1});
+    el('text',{x:X(c),y:H-B+24,'text-anchor':'middle',fill:'#8a99ae','font-size':15},'$'+c);
+  });
+  el('text',{x:(L+W-Rm)/2,y:H-8,'text-anchor':'middle',fill:'#5d6b80','font-size':15},'每通过一题成本（美元，对数轴）→  越靠左越便宜');
+  var yl=el('text',{x:0,y:0,'text-anchor':'middle',fill:'#5d6b80','font-size':15,transform:'translate(14,'+((T+H-B)/2)+') rotate(-90)'},'核心套件达标率 →');
+  // frontier
+  var fr=pts.filter(function(p){return p[3]==='f'||p[3]==='x';}).sort(function(a,b){return a[1]-b[1];});
+  el('polyline',{points:fr.map(function(p){return X(p[1])+','+Y(p[2]);}).join(' '),fill:'none',stroke:'#4fd1c5','stroke-width':2.5,'stroke-dasharray':'8 6',opacity:.9});
+  // points
+  pts.forEach(function(p){
+    var x=X(p[1]),y=Y(p[2]),hl=p[3]==='x',fo=p[3]!=='d';
+    if(hl){el('circle',{cx:x,cy:y,r:17,fill:'rgba(79,209,197,.18)',stroke:'#4fd1c5','stroke-width':2});}
+    el('circle',{cx:x,cy:y,r:hl?8:6.5,fill:hl?'#4fd1c5':(fo?'#6ea8ff':'#3a4a63')});
+    el('text',{x:x+p[4],y:y+p[5],'text-anchor':p[6],fill:hl?'#e8eef6':(fo?'#c9d4e3':'#8a99ae'),'font-size':hl?19:15,'font-weight':hl?800:500},p[0]);
+  });
+  // legend
+  el('circle',{cx:L+14,cy:T+20,r:6,fill:'#6ea8ff'});el('text',{x:L+28,y:T+21,fill:'#8a99ae','font-size':15,'dominant-baseline':'middle'},'前沿上的模型');
+  el('circle',{cx:L+168,cy:T+20,r:6,fill:'#3a4a63'});el('text',{x:L+182,y:T+21,fill:'#8a99ae','font-size':15,'dominant-baseline':'middle'},'被支配（有更便宜且更准的）');
+})();
+
+// ---- compare card (B) ----
+(function(){
+  var dims=['前端','后端','工程','可靠','多模态','文案','办公','数学与推理','创意','视频'];
+  var short=['前端','后端','工程','可靠','多模态','文案','办公','数学','创意','视频'];
+  var M=[
+    {n:'Model-X 1.0',c:'#4fd1c5',radar:[62,80,70,60,74,88,76,92,68,40],m:[null,14.2,310,0.84,38,86,92],
+     t:[[3,3,2],[4,3,4],[3,3,3],[2,3,3],[3,4,3],[4,4,3],[3,3,4],[4,4,4],[3,3,3],[2,2,3]]},
+    {n:'Alpha Pro',c:'#6ea8ff',radar:[85,95,88,90,72,95,90,96,92,60],m:[null,22.5,520,2.41,29,94,96],
+     t:[[4,3,3],[4,4,4],[4,3,3],[4,4,3],[3,3,2],[4,4,4],[4,3,4],[4,4,4],[3,4,4],[3,2,3]]},
+    {n:'Borea-L',c:'#f6c453',radar:[70,80,62,82,66,84,64,88,76,36],m:[null,18.0,410,1.45,33,90,93],
+     t:[[3,3,2],[3,4,3],[3,2,3],[3,3,3],[2,3,3],[4,3,3],[3,3,2],[4,3,4],[3,3,3],[2,2,3]]},
+    {n:'Cinder 3',c:'#ff8fb1',radar:[58,64,52,44,56,72,48,80,70,20],m:[null,11.4,270,1.10,52,61,78],
+     t:[[3,3,2],[3,3,2],[3,3,2],[2,3,3],[3,3,2],[3,3,3],[3,2,2],[4,3,3],[3,3,3],[2,2,2]]}
+  ];
+  var TOTAL=dims.length*3;
+  M.forEach(function(x){x.ok=x.t.reduce(function(a,r){return a+r.filter(function(v){return v>=3;}).length;},0);x.m[0]=Math.round(x.ok/TOTAL*100);});
+
+  // radar overlay
+  var svg=document.getElementById('radarB');
+  drawRadar(svg,short,M.slice().reverse().map(function(x,k){
+    var first=(x===M[0]);
+    return {v:x.radar,c:x.c,w:first?3.5:2.2,fill:first?'rgba(79,209,197,.20)':'none',dot:first?4.5:3};
+  }));
+
+  // metrics table
+  var rows=[['达标率','%',1],['完成耗时 p50','min',-1],['每任务 token','K',-1],['每通过一题成本','$',-1],['有效生成速度','tok/s',1],['自验证覆盖','%',1],['自报 = 实测','%',1]];
+  var h='<tr><th></th>'+M.map(function(x){return '<th><span class="sw" style="background:'+x.c+'"></span>'+x.n.replace(' 1.0','')+'</th>';}).join('')+'</tr>';
+  rows.forEach(function(r,j){
+    var vals=M.map(function(x){return x.m[j];});
+    var best=r[2]>0?Math.max.apply(null,vals):Math.min.apply(null,vals);
+    h+='<tr><td>'+r[0]+(r[2]>0?' ↑':' ↓')+'<span style="color:var(--dim);font-size:14px"> '+r[1]+'</span></td>'+
+      vals.map(function(v){var txt=(j===3)?'$'+v.toFixed(2):(j===1?v.toFixed(1):String(v));return '<td'+(v===best?' class="best"':'')+'>'+txt+'</td>';}).join('')+'</tr>';
+  });
+  document.getElementById('mt').innerHTML=h;
+
+  // heat grid by dimension
+  var g='<div></div>'+M.map(function(x){return '<div class="hd"><i style="background:'+x.c+'"></i>'+x.n.replace(' 1.0','')+'</div>';}).join('');
+  dims.forEach(function(dn,di){
+    var means=M.map(function(x){var r=x.t[di];return r.reduce(function(a,b){return a+b;},0)/r.length;});
+    var mx=Math.max.apply(null,means);
+    g+='<div class="rl">'+dn+'</div>'+M.map(function(x,mi){
+      var r=x.t[di],m=means[mi];
+      var bg='rgba(79,209,197,'+(0.04+0.17*m/4).toFixed(3)+')';
+      return '<div class="c'+(m===mx?' best':'')+'" style="background:'+bg+'"><b>'+m.toFixed(1)+'</b><span class="ds">'+r.map(function(v){return '<i class="'+(v>=3?'':'no')+'"></i>';}).join('')+'</span></div>';
+    }).join('');
+  });
+  g+='<div class="sum rl">达标 / '+TOTAL+'</div>'+M.map(function(x){return '<div class="sum v">'+x.ok+'<small>/ '+TOTAL+'</small></div>';}).join('');
+  document.getElementById('heat').innerHTML=g;
+})();
+
+// ---- scale cards to viewport ----
+function fit(){
+  ['stageA','stageB','stageC'].forEach(function(id){
+    var st=document.getElementById(id),card=st.firstElementChild;
+    var w=card.offsetWidth,h=card.offsetHeight;
+    var s=Math.min(1,st.parentElement.clientWidth/w);
+    card.style.transform='scale('+s+')';
+    st.style.width=(w*s)+'px';st.style.height=(h*s)+'px';
+  });
+}
+addEventListener('resize',fit);fit();
+</script>
+</body>
+</html>

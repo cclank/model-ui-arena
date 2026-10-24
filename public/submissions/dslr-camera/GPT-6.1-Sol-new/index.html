@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AUREL S1 / A study in light</title>
+<!-- 设计说明：3/4 侧前视角的虚构单反，以石墨机身、阳极金属和镀膜玻璃分层。
+机身厚度、军舰头、转盘、握把、热靴与镜筒均由原生 SVG 手绘。
+镜头的反光轻微流动；转盘可点击，快门可触发合成机械声。 -->
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;padding:22px;background:#171b1d;color:#d9dcda;font-family:Arial,"PingFang SC",sans-serif}.exhibit{width:min(1100px,100%);background:radial-gradient(ellipse at 46% 33%,#34393a,#202526 60%,#1b2021);border:1px solid #414749;box-shadow:0 30px 100px #0004;overflow:hidden}header{padding:30px 38px;display:flex;align-items:center;justify-content:space-between}.brand{font-size:13px;letter-spacing:6px}.brand span{font-size:8px;color:#718081;letter-spacing:3px;display:block;margin-top:10px}.edition{font:9px monospace;letter-spacing:2px;color:#7e8887}.camera{display:block;width:100%;height:auto}.footer{padding:5px 38px 32px;display:flex;justify-content:space-between;align-items:center;gap:20px}.footer h1{font:italic 36px Georgia,serif;margin:0;color:#d1d4cb;font-weight:400;letter-spacing:-1px}.footer p{font-size:9px;color:#7f8a85;letter-spacing:2px;margin:12px 0 0}.specs{display:flex;gap:24px}.specs strong{font:17px monospace;font-weight:400;display:block}.specs span{font-size:7px;color:#697b78;letter-spacing:2px;display:block;margin-top:7px}.actions{display:flex;gap:8px;padding:18px 38px;border-top:1px solid #40474850;align-items:center;justify-content:space-between;font:9px monospace;color:#657570;letter-spacing:1px}.actions button{padding:9px 16px;border:1px solid #64736a;color:#a7b6a8;background:#2f3933;cursor:pointer;font:9px monospace;letter-spacing:2px}.mode-click{cursor:pointer;outline:none}.mode-click:focus-visible{filter:drop-shadow(0 0 7px #b4c6a2)}.glass-shimmer{animation:reflection 8s ease-in-out infinite alternate;transform-origin:390px 425px}.flash{position:fixed;inset:0;background:#f8fff3;pointer-events:none;opacity:0}.flash.shoot{animation:flash .3s ease-out}@keyframes reflection{to{transform:translate(6px,4px);opacity:.22}}@keyframes flash{0%{opacity:.35}100%{opacity:0}}
+@media(max-width:550px){body{padding:12px}header{padding:24px}.edition{font-size:7px;letter-spacing:1px}.brand{font-size:11px}.footer{padding:10px 24px 23px;align-items:flex-start}.footer h1{font-size:27px}.footer p{font-size:8px;letter-spacing:1px}.specs{gap:13px}.specs strong{font-size:14px}.specs span{font-size:6px;letter-spacing:1px}.specs div:last-child{display:none}.actions{padding:16px 24px;font-size:8px;letter-spacing:0}.camera{margin:10px 0}}
+@media(prefers-reduced-motion:reduce){.glass-shimmer{animation:none}}
+</style></head><body><main class="exhibit"><header><div class="brand">AUREL<span>OPTICAL INSTRUMENTS</span></div><div class="edition">STUDY NO. 01 / GRAPHITE</div></header><svg class="camera" viewBox="0 0 1000 640" role="img" aria-labelledby="title description"><title id="title">AUREL S1 手绘单反相机</title><desc id="description">三分之四视角，深色磨砂机身、可见右侧厚度、带纹理的握把、顶部军舰头与模式转盘，以及多层带同心镀膜反光的椭圆镜头。</desc>
+<defs>
+<linearGradient id="body" x1=".2" y1="0" x2=".75" y2="1"><stop stop-color="#5c6361"/><stop offset=".12" stop-color="#343c3b"/><stop offset=".48" stop-color="#252c2c"/><stop offset="1" stop-color="#121719"/></linearGradient>
+<linearGradient id="top" x2=".5" y2="1"><stop stop-color="#6a706c"/><stop offset=".22" stop-color="#424946"/><stop offset="1" stop-color="#292f2d"/></linearGradient>
+<linearGradient id="side" x2="1" y2=".7"><stop stop-color="#293333"/><stop offset=".5" stop-color="#191f20"/><stop offset="1" stop-color="#0c1214"/></linearGradient>
+<linearGradient id="rubber" x2=".8" y2=".4"><stop stop-color="#3b4240"/><stop offset=".4" stop-color="#242b29"/><stop offset="1" stop-color="#111817"/></linearGradient>
+<linearGradient id="barrel" x1=".1" y1="0" x2=".9" y2="1"><stop stop-color="#636f6d"/><stop offset=".08" stop-color="#b5bdb2"/><stop offset=".17" stop-color="#3d4948"/><stop offset=".34" stop-color="#212d2b"/><stop offset=".72" stop-color="#0a1315"/><stop offset=".92" stop-color="#263430"/><stop offset="1" stop-color="#101b1c"/></linearGradient>
+<linearGradient id="rim" x2="1" y2=".8"><stop stop-color="#929c91"/><stop offset=".19" stop-color="#414c47"/><stop offset=".42" stop-color="#172221"/><stop offset=".67" stop-color="#0a1414"/><stop offset=".9" stop-color="#566659"/><stop offset="1" stop-color="#a7b59c"/></linearGradient>
+<linearGradient id="silver" x1=".2" y1="0" x2=".8" y2="1"><stop stop-color="#c1c4ad"/><stop offset=".13" stop-color="#e0e1cb"/><stop offset=".24" stop-color="#7b8575"/><stop offset=".5" stop-color="#26332b"/><stop offset=".84" stop-color="#788775"/><stop offset="1" stop-color="#324c41"/></linearGradient>
+<radialGradient id="glass" cx=".38" cy=".35"><stop stop-color="#213b42"/><stop offset=".35" stop-color="#101f2e"/><stop offset=".55" stop-color="#132424"/><stop offset=".79" stop-color="#131a2a"/><stop offset=".93" stop-color="#3c354b"/><stop offset="1" stop-color="#050c12"/></radialGradient>
+<radialGradient id="inner-glass" cx=".35" cy=".25"><stop stop-color="#436359"/><stop offset=".18" stop-color="#274748"/><stop offset=".4" stop-color="#182c3a"/><stop offset=".7" stop-color="#0b1420"/><stop offset="1" stop-color="#1b1c24"/></radialGradient>
+<linearGradient id="reflection" x2=".7" y2="1"><stop stop-color="#acb4d4" stop-opacity=".75"/><stop offset=".7" stop-color="#718c9c" stop-opacity=".08"/><stop offset="1" stop-color="#718c9c" stop-opacity="0"/></linearGradient>
+<pattern id="grip" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M1 1h1m1 2h1" stroke="#768074" opacity=".35" stroke-width="1"/><path d="M0 4h2" stroke="#070e0d" stroke-width="1.2"/></pattern>
+<pattern id="matte" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx=".8" cy=".8" r=".35" fill="#acb4a0" opacity=".2"/><circle cx="3" cy="2" r=".35" fill="#000" opacity=".3"/></pattern>
+<filter id="shadow"><feGaussianBlur stdDeviation="13"/></filter><filter id="fine"><feGaussianBlur stdDeviation=".55"/></filter>
+<clipPath id="front-glass"><ellipse cx="0" cy="0" rx="99" ry="117"/></clipPath>
+</defs>
+<ellipse cx="522" cy="535" rx="287" ry="34" fill="#080e0e" opacity=".8" filter="url(#shadow)"/><ellipse cx="458" cy="542" rx="207" ry="9" fill="#070b0c" opacity=".65"/>
+<g id="camera-body">
+<path d="M306 228L408 193 661 173 772 219 784 430 674 470 311 478Z" fill="#090f0f" stroke="#0c1212" stroke-width="3"/>
+<path d="M306 228L408 193 661 173 772 219 677 256Z" fill="url(#top)" stroke="#56605a" stroke-width="1"/>
+<path d="M658 180L765 222Q778 232 781 254L784 428Q785 439 770 445L674 472 671 242Z" fill="url(#side)" stroke="#36443e" stroke-width="1"/>
+<path d="M321 226L646 202Q667 204 675 231L681 444Q681 464 660 467L328 484Q308 481 308 459L305 252Q305 231 321 226Z" fill="url(#body)" stroke="#4f5850" stroke-width="1.5"/>
+<path d="M321 226L646 202Q667 204 675 231L681 444Q681 464 660 467L328 484Q308 481 308 459L305 252Q305 231 321 226Z" fill="url(#matte)"/>
+<path d="M323 232L630 211M313 256L315 400" fill="none" stroke="#6f776a" stroke-width="1.5" opacity=".55"/>
+<path d="M673 270L762 245V404L689 432Z" fill="#111b1b" stroke="#3c4942"/><path d="M706 288L749 276V308L707 322Z" fill="#151f1e" stroke="#455045" stroke-width="1"/><path d="M719 336L751 324V382L719 393Z" fill="#111a18" stroke="#37453b" stroke-width="1"/><path d="M729 350l13-4m-13 16 13-4m-13 16 13-4" stroke="#617262" stroke-width="1.5"/>
+<path d="M664 223Q687 214 711 233L742 260Q756 272 757 300L764 427Q763 450 741 456L677 473Q663 476 661 452L650 271Q648 238 664 223Z" fill="url(#rubber)" stroke="#0c1513" stroke-width="4"/>
+<path d="M664 223Q687 214 711 233L742 260Q756 272 757 300L764 427Q763 450 741 456L677 473Q663 476 661 452L650 271Q648 238 664 223Z" fill="url(#grip)" stroke="#485448" stroke-width="1"/>
+<path d="M672 239Q688 227 708 242L730 260Q741 272 742 300L748 430" fill="none" stroke="#6b7667" stroke-width="1.5" opacity=".5"/>
+<path d="M639 226L670 207 718 214 739 235 704 254 662 247Z" fill="url(#top)" stroke="#6f7567" stroke-width="1"/>
+<ellipse cx="698" cy="229" rx="21" ry="12" transform="rotate(14 698 229)" fill="#1c2521" stroke="#9ca48e" stroke-width="1.2"/><ellipse cx="698" cy="226" rx="15" ry="8" transform="rotate(14 698 226)" fill="#66715f" stroke="#b3b99c" stroke-width="1"/>
+<path d="M665 214L679 217" stroke="#c6c9ac" stroke-width="1.5"/><text x="652" y="287" fill="#a3ad99" font-size="12" font-family="monospace" transform="rotate(-2 652 287)">S1</text>
+</g>
+<g id="pentaprism">
+<path d="M452 212L461 165 497 130 565 122 623 163 634 204Z" fill="#141f1c" stroke="#657060" stroke-width="1"/>
+<path d="M497 130L543 149 530 201 452 212 461 165Z" fill="url(#body)"/>
+<path d="M497 130L565 122 614 157 543 149Z" fill="url(#top)" stroke="#73786a" stroke-width="1"/>
+<path d="M543 149L614 157 631 206 530 218Z" fill="url(#body)" stroke="#414e41" stroke-width="1"/>
+<path d="M497 137L464 169M546 157L536 192" stroke="#929783" opacity=".35" fill="none"/>
+<path d="M539 192L618 181 620 195 536 207Z" fill="#17221e" stroke="#626c5b" stroke-width=".8"/><path d="M543 192L613 183" stroke="#929b80" opacity=".4"/>
+<g id="hotshoe"><path d="M526 128L567 124 584 135 542 140Z" fill="#171e1a" stroke="#8f947f" stroke-width="1"/><path d="M528 126L540 125 552 136 541 138ZM557 123L568 122 583 135 573 136Z" fill="url(#silver)"/><path d="M544 129L559 127 569 133 554 136Z" fill="#111913"/><circle cx="556" cy="131" r="1.5" fill="#bcab71"/></g>
+<text x="548" y="178" fill="#d8dcc7" font-size="12" font-family="Arial" font-weight="600" letter-spacing="3" transform="rotate(-4 548 178)">AUREL</text>
+</g>
+<g class="mode-click" id="mode" role="button" tabindex="0" aria-label="旋转模式转盘">
+<path d="M342 186V205Q383 226 426 200V184Z" fill="#1d2822" stroke="#667261" stroke-width="1"/><path d="M347 190v14m6-12v14m6-12v14m6-12v14m6-12v14m6-12v14m6-12v14m6-12v14m6-12v14m6-12v14m6-12v14m6-14v12m6-14v11" stroke="#65755f" stroke-width="1.2"/>
+<ellipse cx="384" cy="185" rx="43" ry="17" fill="url(#rim)" stroke="#8e9780" stroke-width="1"/><ellipse cx="384" cy="184" rx="35" ry="12" fill="#2b352d" stroke="#5e6e59"/><g id="dial-marks"></g><ellipse cx="384" cy="183" rx="14" ry="5" fill="#354035" stroke="#808a71" stroke-width=".6"/><path d="M385 164l-3-4h6Z" fill="#d3b277"/>
+</g>
+<g id="details"><path d="M321 247l-12 6-4 14 8 10 14-6 4-14Z" fill="#14221b" stroke="#7d8a74" stroke-width="1.5"/><path d="M315 260l8-3" stroke="#a8b295" stroke-width="3"/><path d="M768 244l8-3 5 13-9 4Z" fill="#111b15" stroke="#73816b" stroke-width="1.5"/>
+<circle cx="643" cy="317" r="8" fill="#101a17" stroke="#505f4a"/><circle cx="643" cy="317" r="4" fill="#263b30"/><text x="330" y="286" fill="#b4bea6" font-size="10" font-family="monospace" letter-spacing="2" transform="rotate(-3 330 286)">24.6</text><path d="M333 305l35-2" stroke="#88967d" stroke-width="1"/>
+<g fill="#23382b" stroke="#7b8a71" stroke-width=".8"><circle cx="330" cy="456" r="3"/><circle cx="662" cy="448" r="3"/><circle cx="762" cy="429" r="3"/></g><path d="M328 456h4M660 448h4M760 429h4" stroke="#111b12" stroke-width="1"/>
+</g>
+<g id="lens">
+<ellipse cx="530" cy="356" rx="117" ry="131" transform="rotate(-17 530 356)" fill="#0e1815" stroke="#82907a" stroke-width="5"/>
+<ellipse cx="523" cy="363" rx="113" ry="129" transform="rotate(-17 523 363)" fill="url(#rim)" stroke="#111d17" stroke-width="3"/>
+<path d="M487 237Q536 248 568 290L577 388Q568 459 521 490L405 556 287 350Z" fill="url(#barrel)" stroke="#19251e" stroke-width="1.5"/>
+<ellipse cx="491" cy="380" rx="122" ry="140" transform="rotate(-17 491 380)" fill="url(#barrel)" stroke="#697562" stroke-width="2"/>
+<g id="zoom-ridges"></g>
+<ellipse cx="459" cy="397" rx="128" ry="147" transform="rotate(-17 459 397)" fill="url(#rim)" stroke="#0d1a14" stroke-width="3"/>
+<path d="M402 252Q458 254 488 282L493 289Q452 266 403 264" fill="#9d4940" opacity=".75"/><ellipse cx="448" cy="407" rx="131" ry="150" transform="rotate(-17 448 407)" fill="url(#barrel)" stroke="#85423c" stroke-width="2.5"/>
+<g id="focus-ridges"></g>
+<g transform="translate(397 433) rotate(-17)">
+<ellipse rx="146" ry="165" fill="url(#rim)" stroke="#121d19" stroke-width="3"/><ellipse rx="139" ry="158" fill="#17251f" stroke="url(#silver)" stroke-width="2"/><ellipse rx="133" ry="151" fill="url(#barrel)" stroke="#3b4f3e" stroke-width="1"/><ellipse rx="120" ry="138" fill="#0b1515" stroke="#76826e" stroke-width=".9"/>
+<path id="lens-text-arc" d="M-109 0A109 126 0 0 1 109 0" fill="none"/><text fill="#9daa8c" font-family="monospace" font-size="8.5" letter-spacing="2"><textPath href="#lens-text-arc" startOffset="16%">AUREL OPTICS · 24–70mm · 1:2.8</textPath></text>
+<path d="M-97 93Q0 175 99 90" stroke="#b6b89a" stroke-width=".7" opacity=".5" fill="none"/>
+<ellipse rx="107" ry="126" fill="#020b10" stroke="#435d4e" stroke-width="2"/><ellipse rx="99" ry="117" fill="url(#glass)" stroke="#3f4352" stroke-width="1.4"/>
+<ellipse rx="84" ry="102" fill="none" stroke="#745467" stroke-width="1" opacity=".45"/><ellipse rx="72" ry="88" fill="url(#inner-glass)" stroke="#35554e" stroke-width="1"/><ellipse rx="52" ry="68" fill="#0b1620" stroke="#254142" stroke-width="1"/>
+<path d="M-18-43L19-42 40-19 36 17 15 42-20 39-42 13-39-20Z" fill="#040a10" stroke="#37464a" stroke-width="1"/><path d="M-18-43L-4-17 19-42M40-19L12 4 36 17M15 42L-7 18-20 39M-42 13L-16 0-39-20" fill="none" stroke="#25333a" stroke-width="1.2"/>
+<g clip-path="url(#front-glass)" class="glass-shimmer"><path d="M-104-45Q-73-120-5-116L57-93-38-55Z" fill="url(#reflection)"/><path d="M-73-66Q-60-99-18-102L4-93-59-62Z" fill="#a2bdc3" opacity=".23"/><ellipse cx="45" cy="70" rx="40" ry="22" fill="#798f63" opacity=".08"/><path d="M-89 38Q-98 10-81-23" stroke="#a4b9af" stroke-width="3" opacity=".2" fill="none"/><ellipse cx="-23" cy="-43" rx="9" ry="6" fill="#a9d0d6" opacity=".1"/></g>
+<g fill="#536651"><circle cx="-131" cy="0" r="2"/><circle cx="129" cy="6" r="2"/><circle cx="0" cy="-149" r="2"/><circle cx="0" cy="147" r="2"/></g>
+</g>
+<path d="M523 291l24-8 2 22-22 8Z" fill="#0b1712" stroke="#6d7d60" stroke-width="1"/><text x="528" y="300" fill="#d5d6b1" font-size="7" transform="rotate(-18 528 300)">∞  3  1</text><path d="M527 309l20-6" stroke="#658657" stroke-width="1"/>
+</g>
+<g id="callouts" fill="#6e7c71" font-size="8" font-family="monospace" letter-spacing="2"><path d="M810 337h58m-17 0v45" stroke="#5d7066" fill="none" stroke-width=".7"/><text x="869" y="400" text-anchor="end">MACHINED BY LIGHT</text><path d="M241 343H142v48" stroke="#5d7066" fill="none" stroke-width=".7"/><text x="141" y="407">24–70 / f2.8</text></g>
+</svg><footer class="footer"><div><h1>A study in light.</h1><p>形、光、材质。每一处，都由线条开始。</p></div><div class="specs"><div><strong>S1</strong><span>GRAPHITE BODY</span></div><div><strong>24.6</strong><span>MEGAPIXELS</span></div><div><strong>ƒ/2.8</strong><span>OPTICAL STUDY</span></div></div></footer><div class="actions"><span id="mode-label">MODE / A · 点击顶部转盘切换</span><button id="shutter">RELEASE SHUTTER</button></div></main><div class="flash" id="flash"></div>
+<script>
+const NS='http://www.w3.org/2000/svg',$=s=>document.querySelector(s);
+function line(parent,x1,y1,x2,y2,color,width){let l=document.createElementNS(NS,'line');for(let [k,v]of Object.entries({x1,y1,x2,y2,stroke:color,'stroke-width':width}))l.setAttribute(k,v);parent.append(l)}
+// Ribbing follows the same projected cylinder axis as the hand-drawn lens.
+for(let i=0;i<33;i++){let a=-2.75+i*.087,c=Math.cos(a),s=Math.sin(a);line($('#zoom-ridges'),491+122*c*.956-140*s*-.292,380+122*c*-.292+140*s*.956,459+128*c*.956-147*s*-.292,397+128*c*-.292+147*s*.956,i%2?'#1b2a22':'#809079',i%2?2.2:1.2)}
+for(let i=0;i<46;i++){let a=-2.7+i*.063,c=Math.cos(a),s=Math.sin(a);line($('#focus-ridges'),446+131*c*.956+150*s*.292,407-131*c*.292+150*s*.956,407+141*c*.956+160*s*.292,427-141*c*.292+160*s*.956,i%2?'#15231b':'#647962',i%2?2:1)}
+const modes=['A','M','S','P','B','C'];let mode=0;function dial(){let g=$('#dial-marks');g.innerHTML='';modes.forEach((m,i)=>{let a=(i-mode)/6*Math.PI*2-Math.PI/2,x=384+27*Math.cos(a),y=184+9*Math.sin(a),t=document.createElementNS(NS,'text');t.setAttribute('x',x);t.setAttribute('y',y+2);t.setAttribute('text-anchor','middle');t.setAttribute('fill',i===mode?'#e8cc94':'#9fac91');t.setAttribute('font-size','6');t.textContent=m;g.append(t)});$('#mode-label').textContent=`MODE / ${modes[mode]} · 点击顶部转盘切换`}
+function next(){mode=(mode+1)%modes.length;dial()}$('#mode').onclick=next;$('#mode').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();next()}};dial();
+let audio;$('#shutter').onclick=()=>{$('#flash').classList.remove('shoot');void $('#flash').offsetWidth;$('#flash').classList.add('shoot');try{audio??=new (window.AudioContext||window.webkitAudioContext)();audio.resume();let t=audio.currentTime;[0,.075].forEach((delay,i)=>{let o=audio.createOscillator(),g=audio.createGain();o.type='triangle';o.frequency.setValueAtTime(i?220:110,t+delay);g.gain.setValueAtTime(.08,t+delay);g.gain.exponentialRampToValueAtTime(.0001,t+delay+.045);o.connect(g);g.connect(audio.destination);o.start(t+delay);o.stop(t+delay+.05)})}catch{}};
+</script></body></html>

@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Opus-5.5 · 施瓦西黑洞</title>
+<!-- 设计说明：
+1. 每个像素在片元着色器里用 RK4 积分光子测地线（几何单位 r_s = 1，守恒角动量形式 a = −1.5·h²·x/r⁵），步长与半径成正比；阴影、光子环和吸积盘的上下次级像都直接从积分里长出来。
+2. 吸积盘内缘取 ISCO = 3 r_s：多普勒因子 δ 与引力红移 √(1−r_s/r) 相乘得到 g，亮度按 δ³·√(1−r_s/r)³ 放大、颜色取温度 g·T(r) 的黑体色（T ∝ r^(−3/4)），条纹按开普勒角速度差速旋转。
+3. 后期是独立的 HDR 管线：半浮点场景 → 高亮提取 → 三级下采样 + 可分离高斯 bloom → ACES 色调映射；不支持浮点缓冲时自动切到 8 位 Reinhard 编码。
+4. 界面走“天文台仪表”风格：遥测面板实时给出 √(1−r_s/r) 与 β = √(r_s/2r)；拖拽带惯性、滚轮和双指缩放，四档画质，掉帧自动降档，WebGL 不可用、着色器失败、上下文丢失都有对应的提示界面。 -->
+<!--
+  ============================== 技术注释 ==============================
+  【积分方案】片元着色器 SCENE_FS · main() 里的积分循环 + rk4()：
+    - 坐标：施瓦西坐标下的“欧氏化”位置 x（|x| = 施瓦西径向坐标 r），几何单位 G = c = 1，r_s = 1（M = 0.5）。
+    - 方程：d²x/dλ² = −1.5 · h² · x / r⁵，h = |x × dx/dλ| 守恒。它给出的轨道满足 u'' + u = 3M·u²（u = 1/r），
+      即施瓦西零测地线的 Binet 方程，所以轨道形状是精确的。
+    - 积分器：经典四阶 Runge–Kutta（rk4()）。
+    - 步长策略：dλ = K · r / |v|，也就是空间步长约等于 K·r（K 由画质档决定，0.045 ~ 0.12）。
+      远处大步前进，靠近光子球（r = 1.5）时自动加密，每步扫过的角度约为 K 弧度。
+    - 终止：r < 1.0005 判定落入视界（纯黑）；r > r_escape 且向外运动判定逃逸，用最终方向采样程序星空；
+      步数用尽（只发生在临界曲线附近）按被捕获处理。
+    - 盘面：每步检查 y 是否变号，线性插值出穿越点；允许多次穿越，于是次级像、高阶像（光子环）自然出现。
+    - 相机：把静止观测者本地标架中的像素方向换成坐标方向（径向分量乘 √(1−r_s/r)），
+      冲击参数 b = r₀·sinα / √(1−r_s/r₀)，因此阴影大小与观测者距离严格一致。
+  【多普勒与红移】SCENE_FS · shadeDisk()：
+    - 引力红移：lapse = √(1 − r_s/r)（静止观测者 → 无穷远）。
+    - 盘物质按开普勒轨道运动：静止观测者测得速度 β = √(M/(r − 2M))，γ = 1/√(1−β²)。
+    - 光子相对盘速度方向的夹角：cosθ = b_y·√(1−r_s/r)/r，b_y 为光子角动量沿盘轴分量（沿测地线守恒）。
+    - δ = 1 / (γ(1 − β cosθ))；总频移 g = δ · lapse（可以验证它等于 √(1−3M/r)/(1 − Ω·b_y)）。
+    - 观测强度 I_obs = δ³ · lapse³ · I_em；颜色取 g·T_em 的黑体色度，T_em ∝ r^(−3/4)(1 − √(r_in/r))^(1/4)。
+  【后期管线】JS · renderFrame()：
+    Pass 1 sceneFS    → sceneRT（RGBA16F，按画质缩放分辨率）
+    Pass 2 brightFS   → bloom[0]（1/2 分辨率，带软膝的高亮提取）
+    Pass 3 blurFS ×2  → bloom[0]（水平 + 垂直 9-tap 高斯，线性采样 5 次）
+    Pass 4 copyFS + blurFS ×2 → bloom[1]（1/4），bloom[2]（1/8）
+    Pass 5 compositeFS → 画布：场景 + 三级 bloom → 曝光 → ACES（Hill 拟合）→ sRGB → 暗角与抖动
+  【降级】没有 EXT_color_buffer_float 或 FBO 不完整时，所有中间缓冲改用 RGBA8，写入 c/(1+c)，读取时再解码。
+  【自测】URL 带 ?simulate=no-webgl / ?simulate=shader-error 可直接查看两种错误界面；控制台执行
+          loseContextForTest() 可模拟上下文丢失与恢复。
+  ====================================================================
+-->
+<style>
+:root{--bg:#030305;--ink:#ece6da;--dim:#8d8678;--faint:#5b574f;--amber:#f2b65e;--amber2:#ffda9a;--cyan:#86d7ff;--panel:rgba(14,13,12,.58);--line:rgba(242,182,94,.16);--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;--sans:-apple-system,"SF Pro Text","PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+canvas.drag{cursor:grabbing}
+.panel{position:fixed;background:var(--panel);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2);box-shadow:0 20px 50px -20px rgba(0,0,0,.8)}
+.title{position:fixed;top:22px;left:24px;pointer-events:none;text-shadow:0 2px 20px #000}
+.title .en{font:600 11px/1 var(--mono);letter-spacing:.42em;color:var(--amber)}
+.title h1{font-size:26px;font-weight:600;letter-spacing:.12em;margin:10px 0 6px}
+.title p{font-size:12px;color:var(--dim);letter-spacing:.08em}
+.tele{top:20px;right:20px;width:292px;padding:16px 18px 14px}
+.cap{display:flex;justify-content:space-between;align-items:center;font:600 10px/1 var(--mono);letter-spacing:.3em;color:var(--amber);margin-bottom:12px}
+.cap i{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px var(--amber);animation:blink 2s infinite}
+@keyframes blink{50%{opacity:.25}}
+.hero{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.hero div{border:1px solid var(--line);border-radius:10px;padding:10px 10px 9px;background:rgba(242,182,94,.035)}
+.hero label{display:block;font-size:10.5px;color:var(--dim);letter-spacing:.04em;margin-bottom:6px;white-space:nowrap}
+.hero b{display:block;font:500 22px/1 var(--mono);color:var(--amber2);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.hero small{display:block;font:10px/1.3 var(--mono);color:var(--faint);margin-top:6px}
+.rows{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:11.5px}
+.rows dt{color:var(--dim)}.rows dd{text-align:right;font:12px var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+.ctrl{left:20px;bottom:20px;width:292px;padding:16px 18px 16px}
+.field{margin:0 0 14px}
+.field .lab{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-bottom:8px}
+.field .lab output{font:12px var(--mono);color:var(--amber2)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:18px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:2px;border-radius:2px;background:linear-gradient(90deg,var(--amber) var(--p,50%),rgba(255,255,255,.12) var(--p,50%))}
+input[type=range]::-moz-range-track{height:2px;border-radius:2px;background:rgba(255,255,255,.12)}
+input[type=range]::-moz-range-progress{height:2px;background:var(--amber)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;margin-top:-6px;border-radius:50%;background:#15120e;border:2px solid var(--amber2);box-shadow:0 0 0 4px rgba(242,182,94,.12),0 0 14px rgba(242,182,94,.5)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#15120e;border:2px solid var(--amber2)}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{font:12px var(--sans);color:var(--dim);background:none;border:0;padding:7px 0;cursor:pointer;transition:all .2s}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{color:#1a1206;background:linear-gradient(180deg,var(--amber2),var(--amber));font-weight:600}
+.toggles{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.chip{font:12px var(--sans);color:var(--dim);border:1px solid var(--line);border-radius:99px;padding:6px 11px;background:none;cursor:pointer;display:flex;align-items:center;gap:7px}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--faint)}
+.chip.on{color:var(--ink)}.chip.on::before{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.hint{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);font-size:12px;color:var(--dim);letter-spacing:.1em;white-space:nowrap;pointer-events:none;text-shadow:0 1px 10px #000}
+.toast{position:fixed;left:50%;top:22px;transform:translate(-50%,-12px);opacity:0;padding:9px 16px;border-radius:99px;font-size:12.5px;color:var(--ink);background:rgba(28,22,14,.82);border:1px solid rgba(242,182,94,.4);transition:all .35s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.fold{display:none}
+.err{position:fixed;inset:0;display:none;place-items:center;padding:24px;background:radial-gradient(60% 50% at 50% 40%,#16110a,#030305);z-index:10}
+.err.show{display:grid}
+.err .card{max-width:520px;width:100%;padding:28px 28px 24px;border-radius:18px;border:1px solid rgba(242,182,94,.3);background:rgba(20,16,11,.7)}
+.err .ring{width:54px;height:54px;border-radius:50%;border:2px solid var(--amber);box-shadow:0 0 30px rgba(242,182,94,.35),inset 0 0 18px rgba(242,182,94,.25);display:grid;place-items:center;margin-bottom:18px;background:#000}
+.err .ring::after{content:"";width:20px;height:20px;border-radius:50%;background:#000;box-shadow:0 0 0 2px rgba(255,218,154,.6)}
+.err .code{font:600 10.5px var(--mono);letter-spacing:.3em;color:var(--amber)}
+.err h2{font-size:21px;font-weight:600;margin:10px 0 10px}
+.err p{font-size:13.5px;line-height:1.75;color:#c9c1b3}
+.err pre{margin-top:14px;max-height:180px;overflow:auto;padding:12px;border-radius:10px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.06);font:11px/1.55 var(--mono);color:#e7a98f;white-space:pre-wrap}
+.err .acts{display:flex;gap:10px;margin-top:18px}
+.err button{font:600 13px var(--sans);padding:10px 18px;border-radius:10px;border:1px solid var(--amber);background:rgba(242,182,94,.12);color:var(--amber2);cursor:pointer}
+@media (max-width:760px){
+  .title{top:14px;left:16px}.title h1{font-size:19px;margin:7px 0 4px}.title p{display:none}
+  .tele{top:auto;bottom:calc(env(safe-area-inset-bottom) + 12px);right:12px;left:12px;width:auto;padding:12px 14px 10px}
+  .tele .rows{display:none}.hero{margin-bottom:0;gap:8px}.hero b{font-size:18px}.cap{margin-bottom:9px}
+  .ctrl{left:12px;right:12px;width:auto;bottom:auto;top:62px;padding:12px 14px;display:none}
+  .ctrl.open{display:block}
+  .fold{display:block;position:fixed;top:14px;right:12px;font:12px var(--sans);color:var(--amber2);background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:7px 13px;backdrop-filter:blur(10px)}
+  .hint{display:none}
+}
+</style>
+</head>
+<body>
+<canvas id="gl" aria-label="施瓦西黑洞实时渲染"></canvas>
+
+<div class="title">
+  <div class="en">SCHWARZSCHILD · r<sub>s</sub> = 1</div>
+  <h1>施瓦西黑洞</h1>
+  <p>片元着色器 RK4 零测地线积分 · 相对论吸积盘 · HDR</p>
+</div>
+
+<section class="panel tele" aria-label="遥测">
+  <div class="cap"><span>TELEMETRY · 遥测</span><i></i></div>
+  <div class="hero">
+    <div><label>时间膨胀 √(1−r<sub>s</sub>/r)</label><b id="tDil">0.00000</b><small>本地 1 s = 远处 <span id="tDilInv">1.000</span> s</small></div>
+    <div><label>圆轨道速度 β=√(r<sub>s</sub>/2r)</label><b id="tBeta">0.00000</b><small>单位 c · 本地圆轨道</small></div>
+  </div>
+  <dl class="rows">
+    <dt>相机距离 r</dt><dd id="tR">—</dd>
+    <dt>阴影角半径</dt><dd id="tShadow">—</dd>
+    <dt>光子球 / ISCO</dt><dd>1.5 r<sub>s</sub> / 3.0 r<sub>s</sub></dd>
+    <dt>帧率 · 画质</dt><dd id="tFps">—</dd>
+    <dt>渲染分辨率</dt><dd id="tRes">—</dd>
+    <dt>积分</dt><dd id="tInt">—</dd>
+    <dt>帧缓冲</dt><dd id="tBuf">—</dd>
+  </dl>
+</section>
+
+<button class="fold" id="fold">参数</button>
+<section class="panel ctrl" id="ctrl" aria-label="参数">
+  <div class="cap"><span>CONTROLS · 参数</span></div>
+  <div class="field"><div class="lab"><span>吸积率 · 盘亮度</span><output id="oAcc">1.00 Ṁ</output></div><input type="range" id="sAcc" min="0.2" max="3" step="0.01" value="1"></div>
+  <div class="field"><div class="lab"><span>曝光</span><output id="oExp">+0.0 EV</output></div><input type="range" id="sExp" min="-2.5" max="2.5" step="0.1" value="0"></div>
+  <div class="field"><div class="lab"><span>Bloom 强度</span><output id="oBloom">0.85</output></div><input type="range" id="sBloom" min="0" max="2" step="0.05" value="0.85"></div>
+  <div class="field" style="margin-bottom:0"><div class="lab"><span>画质档位</span><output id="oQ">高</output></div><div class="seg" id="seg"></div></div>
+  <div class="toggles"><button class="chip on" id="cRel">相对论频移</button><button class="chip on" id="cAuto">自动环绕</button><button class="chip on" id="cAdapt">自动降档</button></div>
+</section>
+
+<div class="hint">拖拽旋转 · 滚轮 / 双指缩放 · 双击复位</div>
+<div class="toast" id="toast"></div>
+
+<div class="err" id="err" role="alertdialog" aria-live="assertive">
+  <div class="card">
+    <div class="ring"></div>
+    <div class="code" id="errCode">ERROR</div>
+    <h2 id="errTitle">出错了</h2>
+    <p id="errMsg"></p>
+    <pre id="errLog" hidden></pre>
+    <div class="acts"><button id="errBtn">重试</button></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+// =====================================================================
+//  着色器源码
+// =====================================================================
+const VS = `#version 300 es
+void main() {
+  vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2));
+  gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
+}`;
+
+// ---- Pass 1：测地线积分 + 吸积盘 + 星空 ----
+const SCENE_FS = `#version 300 es
+precision highp float;
+precision highp int;
+out vec4 fragColor;
+
+uniform vec2  uRes;
+uniform vec3  uCamPos;      // 相机位置（r_s = 1 的几何单位）
+uniform mat3  uCamBasis;    // 列向量：right, up, back
+uniform float uTanHalf;     // 短边方向半视场角的正切
+uniform float uTime;
+uniform int   uMaxSteps;
+uniform float uStepK;       // 步长系数 K：dλ = K·r/|v|
+uniform float uEscape;
+uniform float uAccretion;   // 吸积率（亮度增益）
+uniform float uTmax;        // 盘最高温度（K）
+uniform float uRel;         // 1 = 开启多普勒 + 引力红移
+uniform float uPixAng;      // 单像素张角（弧度），用于星点抗锯齿
+uniform float uEncode;      // 1 = 8 位降级模式，写入 c/(1+c)
+
+const float R_IN  = 3.0;    // ISCO = 3 r_s
+const float R_OUT = 14.0;
+const float PI = 3.14159265;
+
+// ---------- 噪声 ----------
+float hash13(vec3 p3) {
+  p3 = fract(p3 * 0.1031);
+  p3 += dot(p3, p3.zyx + 31.32);
+  return fract((p3.x + p3.y) * p3.z);
+}
+float vnoise(vec3 p) {
+  vec3 i = floor(p), f = fract(p);
+  vec3 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(hash13(i), hash13(i + vec3(1, 0, 0)), u.x),
+                 mix(hash13(i + vec3(0, 1, 0)), hash13(i + vec3(1, 1, 0)), u.x), u.y),
+             mix(mix(hash13(i + vec3(0, 0, 1)), hash13(i + vec3(1, 0, 1)), u.x),
+                 mix(hash13(i + vec3(0, 1, 1)), hash13(i + vec3(1, 1, 1)), u.x), u.y), u.z);
+}
+float fbm(vec3 p) {
+  float s = 0.0, a = 0.5;
+  for (int i = 0; i < 4; i++) { s += a * vnoise(p); p = p * 2.07 + vec3(1.7, 9.2, 3.1); a *= 0.5; }
+  return s;
+}
+
+// ---------- 黑体色（Tanner Helland 拟合 → 线性 sRGB，亮度归一，只保留色度）----------
+vec3 blackbody(float T) {
+  float t = clamp(T, 1000.0, 40000.0) / 100.0;
+  float r = t <= 66.0 ? 255.0 : 329.698727446 * pow(t - 60.0, -0.1332047592);
+  float g = t <= 66.0 ? 99.4708025861 * log(t) - 161.1195681661 : 288.1221695283 * pow(t - 60.0, -0.0755148492);
+  float b = t >= 66.0 ? 255.0 : (t <= 19.0 ? 0.0 : 138.5177312231 * log(t - 10.0) - 305.0447927307);
+  vec3 c = pow(clamp(vec3(r, g, b) / 255.0, 0.0, 1.0), vec3(2.2));
+  return c / max(dot(c, vec3(0.2126, 0.7152, 0.0722)), 1e-3);
+}
+
+// ---------- 测地线方程：d²x/dλ² = −1.5·h²·x/r⁵ ----------
+vec3 accel(vec3 x, float h2) {
+  float r2 = dot(x, x);
+  return -1.5 * h2 * x / (r2 * r2 * sqrt(r2));
+}
+void rk4(inout vec3 x, inout vec3 v, float dl, float h2) {
+  vec3 k1x = v,                   k1v = accel(x, h2);
+  vec3 k2x = v + 0.5 * dl * k1v,  k2v = accel(x + 0.5 * dl * k1x, h2);
+  vec3 k3x = v + 0.5 * dl * k2v,  k3v = accel(x + 0.5 * dl * k2x, h2);
+  vec3 k4x = v + dl * k3v,        k4v = accel(x + dl * k3x, h2);
+  x += dl / 6.0 * (k1x + 2.0 * k2x + 2.0 * k3x + k4x);
+  v += dl / 6.0 * (k1v + 2.0 * k2v + 2.0 * k3v + k4v);
+}
+
+// ---------- 吸积盘纹理：对数极坐标噪声 + 差速旋转（两层交替重置，避免无限缠绕）----------
+float streaks(float r, float phi) {
+  float lr = log(r);
+  vec3 q = vec3(cos(phi) * 1.9, sin(phi) * 1.9, lr * 8.0);     // 对数极坐标：沿方位角拉长的湍流
+  float base = fbm(q);
+  float ridge = 1.0 - abs(2.0 * fbm(q * vec3(2.8, 2.8, 4.2) + 7.3) - 1.0);   // 脊状噪声 → 细丝
+  ridge = ridge * ridge * ridge;
+  float lanes = smoothstep(0.35, 0.75, fbm(vec3(q.xy * 0.6, lr * 22.0) + 3.1)); // 稀疏的暗尘带
+  return clamp(0.2 + 1.05 * base * base + 0.75 * ridge * base - 0.35 * lanes * (1.0 - base), 0.0, 1.3);
+}
+float diskPattern(float r, float phi, float omega) {
+  const float P = 26.0;                          // 每层剪切累积的周期（秒）
+  float t = uTime * 1.15;
+  float t1 = mod(t, P), t2 = mod(t + 0.5 * P, P);
+  float w1 = 1.0 - abs(2.0 * t1 / P - 1.0);      // 三角权重，两层之和恒为 1
+  // 物质绕 +y 轴旋转，在 atan(z,x) 方位角下 dφ/dt = −Ω，所以花纹坐标用 φ + Ω·t
+  float n1 = streaks(r, phi + omega * t1 * 6.0);
+  float n2 = streaks(r, phi + omega * t2 * 6.0 + 2.1);
+  return mix(n2, n1, w1);
+}
+
+// ---------- 盘面着色：多普勒 + 引力红移 + 黑体 ----------
+vec4 shadeDisk(vec3 p, float r, float by) {
+  // 引力红移因子（静止观测者 → 无穷远）
+  float lapse = sqrt(1.0 - 1.0 / r);
+  // 开普勒圆轨道：静止观测者测得速度 β = √(M/(r−2M))，M = 0.5
+  float beta  = sqrt(0.5 / (r - 1.0));
+  float gam   = inversesqrt(1.0 - beta * beta);
+  // 光子方向与盘物质速度夹角（静止标架）：cosθ = b_y·√(1−r_s/r)/r
+  float cosT  = clamp(by * lapse / r, -1.0, 1.0);
+  // 多普勒因子 δ，总频移 g = δ·lapse
+  float delta = 1.0 / (gam * (1.0 - beta * cosT));
+  float g     = mix(1.0, delta * lapse, uRel);
+  float beam  = mix(1.0, delta * delta * delta * lapse * lapse * lapse, uRel);  // I ∝ δ³·(√(1−r_s/r))³
+
+  // 薄盘辐射：F ∝ r⁻³(1 − √(r_in/r))，峰值约在 r ≈ 4.08，这里归一到 1
+  float F  = pow(r, -3.0) * max(1.0 - sqrt(R_IN / r), 0.0) / 0.0020977;
+  float Tem = uTmax * pow(max(F, 1e-6), 0.25) * pow(uAccretion, 0.25);   // T ∝ r^(−3/4)(1−√(r_in/r))^(1/4)
+  vec3 chroma = blackbody(Tem * g);
+
+  float omega = sqrt(0.5 / (r * r * r));          // Ω = √(M/r³)
+  float phi = atan(p.z, p.x);
+  float n = diskPattern(r, phi, omega);
+
+  float inner = smoothstep(R_IN, R_IN + 0.25, r);
+  float outer = 1.0 - smoothstep(R_OUT - 5.0, R_OUT, r);
+  float dens  = clamp((0.25 + 1.15 * n) * inner * outer, 0.0, 1.0);
+  float alpha = clamp(dens * (1.15 - 0.045 * r), 0.0, 1.0);
+  float I = uAccretion * (0.05 + F) * beam * (0.2 + 1.25 * n * n) * 1.35;
+  return vec4(chroma * I, alpha);
+}
+
+// ---------- 程序星空（最终方向采样，引力透镜自然产生）----------
+float starLayer(vec3 d, float scale, float density, out vec3 tint) {
+  vec3 p = d * scale;
+  vec3 cell = floor(p);
+  float h = hash13(cell);
+  tint = vec3(0.0);
+  if (h > density) return 0.0;
+  vec3 sp = cell + 0.25 + 0.5 * vec3(hash13(cell + 1.3), hash13(cell + 2.9), hash13(cell + 4.1));
+  vec3 sd = normalize(sp);
+  float ang = length(d - sd) * scale;
+  float w = max(0.04, uPixAng * scale * 1.1);
+  float mag = pow(hash13(cell + 7.7), 7.0) * 0.9 + 0.04;
+  tint = blackbody(3000.0 + 9000.0 * hash13(cell + 9.1));
+  return mag * exp(-ang * ang / (w * w)) * (0.04 / w) * (0.04 / w) * 3.2;       // 星点宽度随像素张角放大时保持总通量
+}
+vec3 sky(vec3 d, float minR) {
+  vec3 bandN = normalize(vec3(0.35, 1.0, -0.22));
+  float lat = dot(d, bandN);
+  float band = exp(-lat * lat * 14.0);
+  float neb = fbm(d * 3.2 + 5.0);
+  float dust = smoothstep(0.45, 0.8, fbm(d * 7.0 + 2.0));
+  vec3 col = vec3(0.004, 0.005, 0.011);
+  col += band * (0.018 + 0.05 * neb) * mix(vec3(0.55, 0.62, 1.0), vec3(1.0, 0.78, 0.55), neb) * (1.0 - 0.7 * dust * band);
+  float fade = smoothstep(1.55, 2.4, minR);       // 光子环附近映射极度拉伸，压低星点避免闪烁噪点
+  vec3 t1, t2;
+  float s1 = starLayer(d, 90.0, 0.10, t1);
+  float s2 = starLayer(d, 34.0, 0.09, t2);
+  col += fade * (s1 * t1 * 0.6 + s2 * t2 * 1.4);
+  return col;
+}
+
+void main() {
+  vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / (0.5 * min(uRes.x, uRes.y));
+  vec3 d  = normalize(uCamBasis * vec3(uv * uTanHalf, -1.0));   // 静止观测者本地方向
+
+  vec3 x = uCamPos;
+  float r0 = length(x);
+  vec3 rhat = x / r0;
+  float lapse0 = sqrt(1.0 - 1.0 / r0);
+  // 本地标架 → 坐标方向：径向分量乘 √(1−r_s/r₀)
+  vec3 v = normalize(d - (1.0 - lapse0) * dot(d, rhat) * rhat);
+  // 物理光子的冲击参数与沿盘轴的角动量分量（反向追踪，所以取负号）
+  float cosA = dot(d, rhat);
+  float b = r0 * sqrt(max(0.0, 1.0 - cosA * cosA)) / lapse0;
+  vec3 Lh = cross(x, v);
+  float Ll = length(Lh);
+  float by = Ll > 1e-6 ? -b * Lh.y / Ll : 0.0;
+  float h2 = Ll * Ll;
+
+  vec3 col = vec3(0.0);
+  float acc = 0.0, minR = r0;
+  bool captured = false;
+  for (int i = 0; i < 1200; i++) {
+    if (i >= uMaxSteps) { captured = true; break; }
+    float r = length(x);
+    minR = min(minR, r);
+    if (r < 1.0005) { captured = true; break; }
+    if (r > uEscape && dot(x, v) > 0.0) break;
+    float dl = uStepK * r / length(v);
+    vec3 xp = x;
+    rk4(x, v, dl, h2);
+    if (xp.y * x.y < 0.0) {                                   // 穿过赤道面
+      vec3 p = mix(xp, x, xp.y / (xp.y - x.y));
+      float rc = length(p.xz);
+      if (rc > R_IN && rc < R_OUT) {
+        vec4 s = shadeDisk(p, rc, by);
+        col += (1.0 - acc) * s.rgb * s.a;
+        acc += (1.0 - acc) * s.a;
+        if (acc > 0.995) break;
+      }
+    }
+  }
+  vec3 bg = captured ? vec3(0.0) : sky(normalize(v), minR);
+  vec3 hdr = col + (1.0 - acc) * bg;
+  hdr = max(hdr, vec3(0.0));
+  fragColor = vec4(uEncode > 0.5 ? hdr / (1.0 + hdr) : hdr, 1.0);
+}`;
+
+// ---- Pass 2：高亮提取（软膝阈值），同时 2×2 盒式下采样 ----
+const BRIGHT_FS = `#version 300 es
+precision highp float;
+out vec4 fragColor;
+uniform sampler2D uTex;
+uniform vec2 uTexel;       // 源纹理像素尺寸
+uniform vec2 uRes;         // 输出尺寸
+uniform float uThreshold;
+uniform float uDecode, uEncode;
+vec3 dec(vec3 c) { return uDecode > 0.5 ? c / max(1.0 - c, 1e-3) : c; }
+void main() {
+  vec2 uv = gl_FragCoord.xy / uRes;
+  vec3 c = 0.25 * (dec(texture(uTex, uv + uTexel * vec2(-0.5, -0.5)).rgb) + dec(texture(uTex, uv + uTexel * vec2(0.5, -0.5)).rgb)
+                 + dec(texture(uTex, uv + uTexel * vec2(-0.5, 0.5)).rgb) + dec(texture(uTex, uv + uTexel * vec2(0.5, 0.5)).rgb));
+  float l = max(c.r, max(c.g, c.b));
+  float knee = uThreshold * 0.6;
+  float soft = clamp(l - uThreshold + knee, 0.0, 2.0 * knee);
+  soft = soft * soft / (4.0 * knee + 1e-4);
+  c *= max(soft, l - uThreshold) / max(l, 1e-4);
+  fragColor = vec4(uEncode > 0.5 ? c / (1.0 + c) : c, 1.0);
+}`;
+
+// ---- Pass 3/4：可分离 9-tap 高斯（利用线性过滤只采样 5 次）----
+const BLUR_FS = `#version 300 es
+precision highp float;
+out vec4 fragColor;
+uniform sampler2D uTex;
+uniform vec2 uDir;         // (1/w, 0) 或 (0, 1/h)
+uniform vec2 uRes;
+uniform float uDecode, uEncode;
+vec3 dec(vec3 c) { return uDecode > 0.5 ? c / max(1.0 - c, 1e-3) : c; }
+void main() {
+  vec2 uv = gl_FragCoord.xy / uRes;
+  vec3 c = dec(texture(uTex, uv).rgb) * 0.2270270270;
+  c += dec(texture(uTex, uv + uDir * 1.3846153846).rgb) * 0.3162162162;
+  c += dec(texture(uTex, uv - uDir * 1.3846153846).rgb) * 0.3162162162;
+  c += dec(texture(uTex, uv + uDir * 3.2307692308).rgb) * 0.0702702703;
+  c += dec(texture(uTex, uv - uDir * 3.2307692308).rgb) * 0.0702702703;
+  fragColor = vec4(uEncode > 0.5 ? c / (1.0 + c) : c, 1.0);
+}`;
+
+// ---- 下采样拷贝（线性过滤 = 2×2 盒式）----
+const COPY_FS = `#version 300 es
+precision highp float;
+out vec4 fragColor;
+uniform sampler2D uTex;
+uniform vec2 uRes;
+void main() { fragColor = texture(uTex, gl_FragCoord.xy / uRes); }`;
+
+// ---- Pass 5：合成 + 曝光 + ACES + sRGB + 暗角 + 抖动 ----
+const COMPOSITE_FS = `#version 300 es
+precision highp float;
+out vec4 fragColor;
+uniform sampler2D uScene, uB0, uB1, uB2;
+uniform vec2 uRes;
+uniform float uExposure, uBloom, uDecode, uTime;
+vec3 dec(vec3 c) { return uDecode > 0.5 ? c / max(1.0 - c, 1e-3) : c; }
+// ACES：Stephen Hill 的 RRT+ODT 拟合
+const mat3 ACES_IN  = mat3(0.59719, 0.07600, 0.02840, 0.35458, 0.90834, 0.13383, 0.04823, 0.01566, 0.83777);
+const mat3 ACES_OUT = mat3(1.60475, -0.10208, -0.00327, -0.53108, 1.10813, -0.07276, -0.07367, -0.00605, 1.07602);
+vec3 aces(vec3 c) {
+  c = ACES_IN * c;
+  vec3 a = c * (c + 0.0245786) - 0.000090537;
+  vec3 b = c * (0.983729 * c + 0.4329510) + 0.238081;
+  return clamp(ACES_OUT * (a / b), 0.0, 1.0);
+}
+vec3 srgb(vec3 c) { return mix(12.92 * c, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
+float h12(vec2 p) { vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+void main() {
+  vec2 uv = gl_FragCoord.xy / uRes;
+  vec3 c = dec(texture(uScene, uv).rgb);
+  vec3 bl = dec(texture(uB0, uv).rgb) * 0.45 + dec(texture(uB1, uv).rgb) * 0.5 + dec(texture(uB2, uv).rgb) * 0.55;
+  c = (c + bl * uBloom) * exp2(uExposure) * 1.25;
+  c = srgb(aces(c));
+  vec2 q = uv - 0.5;
+  c *= 1.0 - 0.55 * dot(q, q) * 1.6;                          // 暗角
+  c += (h12(gl_FragCoord.xy + fract(uTime) * 61.0) - 0.5) / 255.0; // 抖动去色带
+  fragColor = vec4(c, 1.0);
+}`;
+
+// =====================================================================
+//  状态与工具
+// =====================================================================
+const $ = (id) => document.getElementById(id);
+const canvas = $("gl");
+const QUALITY = [
+  { name: "极致", scale: 1.0, steps: 620, k: 0.045 },
+  { name: "高", scale: 0.78, steps: 440, k: 0.06 },
+  { name: "中", scale: 0.58, steps: 300, k: 0.085 },
+  { name: "低", scale: 0.42, steps: 190, k: 0.12 }
+];
+const isMobile = matchMedia("(max-width:760px), (pointer:coarse)").matches;
+const params = { acc: 1, exp: 0, bloom: 0.85, q: isMobile ? 2 : 1, rel: true, auto: true, adapt: true };
+const view = { yaw: 0.42, pitch: 0.128, dist: 17, tDist: 17, vYaw: 0, vPitch: 0, lastInput: -1e9 };
+const DIST_MIN = 2.6, DIST_MAX = 60;
+let gl = null, loseExt = null, progs = null, targets = null, hdr = true, running = false, rafId = 0;
+let t0 = performance.now(), lastT = t0, fpsEMA = 60, lowTime = 0, warmUntil = 0;
+
+function toast(msg, ms = 3200) {
+  const t = $("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast.id); toast.id = setTimeout(() => t.classList.remove("show"), ms);
+}
+function showError(code, title, msg, log, btnText, onBtn) {
+  $("errCode").textContent = code; $("errTitle").textContent = title; $("errMsg").textContent = msg;
+  const pre = $("errLog"); pre.hidden = !log; pre.textContent = log || "";
+  $("errBtn").textContent = btnText || "重试";
+  $("errBtn").onclick = onBtn || (() => location.reload());
+  $("err").classList.add("show");
+}
+function hideError() { $("err").classList.remove("show"); }
+
+// =====================================================================
+//  WebGL 初始化
+// =====================================================================
+function compile(type, src, label) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS) && !gl.isContextLost()) {
+    const log = gl.getShaderInfoLog(s) || "(无日志)";
+    throw Object.assign(new Error(`${label} 编译失败`), { log });
+  }
+  return s;
+}
+function program(fsSrc, label) {
+  const p = gl.createProgram();
+  gl.attachShader(p, compile(gl.VERTEX_SHADER, VS, "顶点着色器"));
+  gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fsSrc, label));
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS) && !gl.isContextLost()) throw Object.assign(new Error(`${label} 链接失败`), { log: gl.getProgramInfoLog(p) });
+  const uni = {}, n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i < n; i++) { const info = gl.getActiveUniform(p, i); uni[info.name] = gl.getUniformLocation(p, info.name); }
+  return { p, uni };
+}
+function makeTarget(w, h, float) {
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  if (float) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, w, h, 0, gl.RGBA, gl.HALF_FLOAT, null);
+  else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  const fb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  return { tex, fb, w, h, ok };
+}
+function freeTargets() {
+  if (!targets || !gl) return;
+  for (const t of [targets.scene, ...targets.bloomA, ...targets.bloomB]) { gl.deleteTexture(t.tex); gl.deleteFramebuffer(t.fb); }
+  targets = null;
+}
+function canvasSize() {
+  const dpr = Math.min(devicePixelRatio || 1, 1.75);
+  return [Math.max(2, Math.round(canvas.clientWidth * dpr)), Math.max(2, Math.round(canvas.clientHeight * dpr))];
+}
+function buildTargets() {
+  freeTargets();
+  const [cw, ch] = canvasSize();
+  canvas.width = cw; canvas.height = ch;
+  const q = QUALITY[params.q];
+  const sw = Math.max(2, Math.round(cw * q.scale)), sh = Math.max(2, Math.round(ch * q.scale));
+  const mk = (w, h) => makeTarget(Math.max(1, w), Math.max(1, h), hdr);
+  let scene = mk(sw, sh);
+  if (hdr && !scene.ok) { // 浮点 FBO 不完整：降级为 8 位编码
+    hdr = false; gl.deleteTexture(scene.tex); gl.deleteFramebuffer(scene.fb); scene = mk(sw, sh);
+    toast("浮点帧缓冲不可用，已切换到 8 位 HDR 编码模式");
+  }
+  const bloomA = [], bloomB = [];
+  for (let i = 0; i < 3; i++) { const f = 2 << i; bloomA.push(mk(Math.ceil(sw / f), Math.ceil(sh / f))); bloomB.push(mk(Math.ceil(sw / f), Math.ceil(sh / f))); }
+  targets = { scene, bloomA, bloomB };
+  $("tRes").textContent = `${sw} × ${sh}`;
+  $("tBuf").textContent = hdr ? "RGBA16F · HDR" : "RGBA8 · 编码降级";
+  $("tInt").textContent = `RK4 · ≤${q.steps} 步 · K=${q.k}`;
+}
+function initGL() {
+  const sim = new URLSearchParams(location.search).get("simulate");
+  gl = sim === "no-webgl" ? null : canvas.getContext("webgl2", { antialias: false, alpha: false, depth: false, stencil: false, powerPreference: "high-performance", preserveDrawingBuffer: false });
+  if (!gl) {
+    showError("WEBGL2 UNAVAILABLE", "当前浏览器无法创建 WebGL2 上下文",
+      "这个渲染器需要 WebGL2（片元着色器里的循环积分与半浮点帧缓冲）。请换用新版 Chrome / Edge / Firefox / Safari，或在浏览器设置里打开硬件加速后再试。",
+      navigator.userAgent, "重新检测");
+    return false;
+  }
+  loseExt = loseExt || gl.getExtension("WEBGL_lose_context"); // 丢失后 getExtension 会返回 null，所以提前缓存
+  hdr = !!gl.getExtension("EXT_color_buffer_float");
+  try {
+    const sceneSrc = sim === "shader-error" ? SCENE_FS.replace("void main() {\n  vec2 uv", "void main() {\n  vec2 uv = 1.0;\n  vec2 uv") : SCENE_FS;
+    progs = {
+      scene: program(sceneSrc, "测地线着色器 sceneFS"),
+      bright: program(BRIGHT_FS, "高亮提取 brightFS"),
+      blur: program(BLUR_FS, "高斯模糊 blurFS"),
+      copy: program(COPY_FS, "下采样 copyFS"),
+      comp: program(COMPOSITE_FS, "合成 compositeFS")
+    };
+  } catch (e) {
+    showError("SHADER COMPILE FAILED", "着色器编译失败", `${e.message}。已停止渲染以免出现白屏；日志如下，可以换一个浏览器或降低画质重试。`, e.log, "重新加载");
+    return false;
+  }
+  buildTargets();
+  if (!hdr) toast("设备不支持浮点渲染目标，已自动降级为 8 位 HDR 编码");
+  return true;
+}
+
+// =====================================================================
+//  相机与渲染
+// =====================================================================
+function camera() {
+  const cp = Math.cos(view.pitch), sp = Math.sin(view.pitch);
+  const pos = [view.dist * cp * Math.sin(view.yaw), view.dist * sp, view.dist * cp * Math.cos(view.yaw)];
+  const f = pos.map((v) => -v / view.dist);
+  let r = [-f[2], 0, f[0]];                        // right = forward × worldUp
+  const rl = Math.hypot(r[0], r[2]) || 1; r = [r[0] / rl, 0, r[2] / rl];
+  const u = [r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]];
+  return { pos, basis: new Float32Array([...r, ...u, -f[0], -f[1], -f[2]]) };
+}
+function pass(prog, target, setup) {
+  gl.useProgram(prog.p);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, target ? target.fb : null);
+  gl.viewport(0, 0, target ? target.w : canvas.width, target ? target.h : canvas.height);
+  setup(prog.uni);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+function bindTex(unit, tex, loc) { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(loc, unit); }
+const FOV_SHORT = 58 * Math.PI / 180;
+function renderFrame(time) {
+  const q = QUALITY[params.q], cam = camera(), S = targets.scene, enc = hdr ? 0 : 1;
+  // Pass 1：测地线场景
+  pass(progs.scene, S, (u) => {
+    gl.uniform2f(u.uRes, S.w, S.h);
+    gl.uniform3fv(u.uCamPos, cam.pos);
+    gl.uniformMatrix3fv(u.uCamBasis, false, cam.basis);
+    gl.uniform1f(u.uTanHalf, Math.tan(FOV_SHORT / 2));
+    gl.uniform1f(u.uTime, time);
+    gl.uniform1i(u.uMaxSteps, q.steps);
+    gl.uniform1f(u.uStepK, q.k);
+    gl.uniform1f(u.uEscape, Math.max(40, view.dist * 1.6));
+    gl.uniform1f(u.uAccretion, params.acc);
+    gl.uniform1f(u.uTmax, 5600);
+    gl.uniform1f(u.uRel, params.rel ? 1 : 0);
+    gl.uniform1f(u.uPixAng, (2 * Math.tan(FOV_SHORT / 2)) / Math.min(S.w, S.h));
+    gl.uniform1f(u.uEncode, enc);
+  });
+  // Pass 2：高亮提取 → bloomA[0]
+  const A = targets.bloomA, B = targets.bloomB;
+  pass(progs.bright, A[0], (u) => {
+    bindTex(0, S.tex, u.uTex);
+    gl.uniform2f(u.uTexel, 1 / S.w, 1 / S.h); gl.uniform2f(u.uRes, A[0].w, A[0].h);
+    gl.uniform1f(u.uThreshold, 1.05); gl.uniform1f(u.uDecode, enc); gl.uniform1f(u.uEncode, enc);
+  });
+  // Pass 3/4：三级高斯金字塔
+  for (let i = 0; i < 3; i++) {
+    if (i > 0) pass(progs.copy, A[i], (u) => { bindTex(0, A[i - 1].tex, u.uTex); gl.uniform2f(u.uRes, A[i].w, A[i].h); });
+    pass(progs.blur, B[i], (u) => { bindTex(0, A[i].tex, u.uTex); gl.uniform2f(u.uDir, 1 / A[i].w, 0); gl.uniform2f(u.uRes, B[i].w, B[i].h); gl.uniform1f(u.uDecode, enc); gl.uniform1f(u.uEncode, enc); });
+    pass(progs.blur, A[i], (u) => { bindTex(0, B[i].tex, u.uTex); gl.uniform2f(u.uDir, 0, 1 / B[i].h); gl.uniform2f(u.uRes, A[i].w, A[i].h); gl.uniform1f(u.uDecode, enc); gl.uniform1f(u.uEncode, enc); });
+  }
+  // Pass 5：合成 + ACES → 画布
+  pass(progs.comp, null, (u) => {
+    bindTex(0, S.tex, u.uScene); bindTex(1, A[0].tex, u.uB0); bindTex(2, A[1].tex, u.uB1); bindTex(3, A[2].tex, u.uB2);
+    gl.uniform2f(u.uRes, canvas.width, canvas.height);
+    gl.uniform1f(u.uExposure, params.exp); gl.uniform1f(u.uBloom, params.bloom);
+    gl.uniform1f(u.uDecode, enc); gl.uniform1f(u.uTime, time);
+  });
+}
+
+// =====================================================================
+//  遥测：两个会被人工验算的量
+// =====================================================================
+function telemetry() {
+  const r = view.dist;
+  const dil = Math.sqrt(1 - 1 / r);                // 引力时间膨胀因子 √(1 − r_s/r)
+  const beta = Math.sqrt(1 / (2 * r));             // 当地圆轨道速度 β = √(r_s / 2r)
+  const sinSh = Math.min(1, (3 * Math.sqrt(3) / 2) * Math.sqrt(1 - 1 / r) / r); // 静止观测者看到的阴影角半径
+  $("tDil").textContent = dil.toFixed(5);
+  $("tDilInv").textContent = (1 / dil).toFixed(4);
+  $("tBeta").textContent = beta.toFixed(5);
+  $("tR").textContent = `${r.toFixed(3)} r_s`;
+  $("tShadow").textContent = `${(Math.asin(sinSh) * 180 / Math.PI).toFixed(2)}°`;
+  $("tFps").textContent = `${Math.round(fpsEMA)} fps · ${QUALITY[params.q].name}`;
+}
+
+// =====================================================================
+//  主循环 + 自适应画质
+// =====================================================================
+function setQuality(i, reason) {
+  params.q = Math.max(0, Math.min(QUALITY.length - 1, i));
+  [...$("seg").children].forEach((b, k) => b.classList.toggle("on", k === params.q));
+  $("oQ").textContent = QUALITY[params.q].name;
+  if (gl && !gl.isContextLost()) buildTargets();
+  warmUntil = performance.now() + 2500; lowTime = 0; fpsEMA = 45;
+  if (reason) toast(reason);
+}
+function loop(now) {
+  if (!running) return;
+  rafId = requestAnimationFrame(loop);
+  const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
+  fpsEMA += (1 / Math.max(dt, 1e-3) - fpsEMA) * 0.08;
+  // 自动降档：预热后帧率持续低于 24 超过 2.5 秒
+  if (params.adapt && now > warmUntil && params.q < QUALITY.length - 1) {
+    lowTime = fpsEMA < 24 ? lowTime + dt : Math.max(0, lowTime - dt * 2);
+    if (lowTime > 2.5) setQuality(params.q + 1, `帧率持续偏低（${Math.round(fpsEMA)} fps），已自动降至「${QUALITY[params.q + 1].name}」画质`);
+  }
+  // 惯性、缩放缓动、自动环绕
+  if (!drag.active) {
+    view.yaw += view.vYaw * dt; view.pitch += view.vPitch * dt;
+    const k = Math.exp(-dt * 3.2); view.vYaw *= k; view.vPitch *= k;
+    if (params.auto && now - view.lastInput > 4000) view.yaw += dt * 0.035;
+  }
+  view.pitch = Math.max(-1.45, Math.min(1.45, view.pitch));
+  view.tDist = Math.max(DIST_MIN, Math.min(DIST_MAX, view.tDist));
+  view.dist += (view.tDist - view.dist) * (1 - Math.exp(-dt * 7));
+  renderFrame((now - t0) / 1000);
+  telemetry();
+}
+function start() { if (running) return; running = true; lastT = performance.now(); warmUntil = lastT + 3000; rafId = requestAnimationFrame(loop); }
+function stop() { running = false; cancelAnimationFrame(rafId); }
+
+// =====================================================================
+//  交互：拖拽（惯性）、滚轮、双指捏合、双击复位
+// =====================================================================
+const pointers = new Map(), drag = { active: false, pinch: 0 };
+canvas.addEventListener("pointerdown", (e) => {
+  canvas.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, t: performance.now() });
+  drag.active = true; canvas.classList.add("drag"); view.vYaw = view.vPitch = 0; view.lastInput = performance.now();
+  if (pointers.size === 2) { const [a, b] = [...pointers.values()]; drag.pinch = Math.hypot(a.x - b.x, a.y - b.y); }
+});
+canvas.addEventListener("pointermove", (e) => {
+  const p = pointers.get(e.pointerId);
+  if (!p) return;
+  const now = performance.now(), dx = e.clientX - p.x, dy = e.clientY - p.y, dt = Math.max(1, now - p.t) / 1000;
+  view.lastInput = now;
+  if (pointers.size === 1) {
+    const s = 0.0055 * Math.min(1.4, Math.max(0.5, view.dist / 17));
+    view.yaw -= dx * s; view.pitch += dy * s;
+    view.vYaw = view.vYaw * 0.6 + (-dx * s / dt) * 0.4; view.vPitch = view.vPitch * 0.6 + (dy * s / dt) * 0.4;
+  }
+  p.x = e.clientX; p.y = e.clientY; p.t = now;
+  if (pointers.size === 2) {
+    const [a, b] = [...pointers.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (drag.pinch > 0) view.tDist *= drag.pinch / d;
+    drag.pinch = d;
+  }
+});
+const endPointer = (e) => {
+  pointers.delete(e.pointerId);
+  if (pointers.size < 2) drag.pinch = 0;
+  if (pointers.size === 0) { drag.active = false; canvas.classList.remove("drag"); }
+};
+canvas.addEventListener("pointerup", endPointer);
+canvas.addEventListener("pointercancel", endPointer);
+canvas.addEventListener("wheel", (e) => { e.preventDefault(); view.tDist *= Math.exp(e.deltaY * 0.0011); view.lastInput = performance.now(); }, { passive: false });
+canvas.addEventListener("dblclick", () => { Object.assign(view, { yaw: 0.42, pitch: 0.128, tDist: 17, vYaw: 0, vPitch: 0 }); });
+
+// =====================================================================
+//  控件
+// =====================================================================
+function bindRange(id, out, fmt, key) {
+  const el = $(id), paint = () => el.style.setProperty("--p", ((el.value - el.min) / (el.max - el.min)) * 100 + "%");
+  el.addEventListener("input", () => { params[key] = +el.value; $(out).textContent = fmt(+el.value); paint(); });
+  paint();
+}
+bindRange("sAcc", "oAcc", (v) => `${v.toFixed(2)} Ṁ`, "acc");
+bindRange("sExp", "oExp", (v) => `${v >= 0 ? "+" : ""}${v.toFixed(1)} EV`, "exp");
+bindRange("sBloom", "oBloom", (v) => v.toFixed(2), "bloom");
+QUALITY.forEach((q, i) => {
+  const b = document.createElement("button");
+  b.textContent = q.name; b.onclick = () => setQuality(i);
+  $("seg").appendChild(b);
+});
+[["cRel", "rel"], ["cAuto", "auto"], ["cAdapt", "adapt"]].forEach(([id, key]) => {
+  $(id).onclick = () => { params[key] = !params[key]; $(id).classList.toggle("on", params[key]); };
+});
+$("fold").onclick = () => $("ctrl").classList.toggle("open");
+
+// =====================================================================
+//  上下文丢失 / 恢复
+// =====================================================================
+canvas.addEventListener("webglcontextlost", (e) => {
+  e.preventDefault(); stop(); targets = null;
+  showError("CONTEXT LOST", "GPU 上下文丢失", "显卡驱动重置或页面占用了过多显存，渲染已暂停。通常浏览器会自动恢复；也可以手动尝试恢复。", "", "尝试恢复", () => {
+    if (loseExt) loseExt.restoreContext(); else location.reload();
+  });
+});
+canvas.addEventListener("webglcontextrestored", () => {
+  hideError();
+  if (initGL()) { start(); toast("GPU 上下文已恢复"); }
+});
+window.loseContextForTest = () => { if (loseExt) loseExt.loseContext(); return !!loseExt; };
+
+addEventListener("resize", () => { if (gl && !gl.isContextLost() && progs) buildTargets(); });
+setQuality(params.q);
+if (initGL()) start();
+</script>
+</body>
+</html>

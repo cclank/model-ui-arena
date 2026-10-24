@@ -10,15 +10,14 @@ const modelOrderFile = path.join(projectRoot, "lib", "model-order-data.json");
 const lineLimit = 220;
 const unlimitedLineThemes = new Set([
   "cheetah-trophy-run",
+  "pelican-bicycle",
   "dslr-camera",
   "schwarzschild-black-hole",
-  "pelican-bicycle",
   "kintsugi",
   "watch-movement"
 ]);
 const themeOrder = [
   "clock",
-  "recorder",
   "weather-card",
   "stock-panel",
   "click-fireworks",
@@ -32,6 +31,8 @@ const themeOrder = [
   "watch-movement",
   "carwash-decision"
 ];
+// 已退役主题：不进 manifest（Cloudflare 线上以 manifest 为数据源），历史提交目录保留
+const retiredThemes = new Set(["recorder", "lunar-calendar", "sun-moon", "shadow-puppet", "ink-landscape"]);
 const themeRank = new Map(themeOrder.map((theme, index) => [theme, index]));
 const carwashQuestion =
   "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？";
@@ -138,7 +139,7 @@ async function generateManifest() {
     }
 
     const themeId = themeDir.name;
-    if (!themeRank.has(themeId)) {
+    if (!themeRank.has(themeId) || retiredThemes.has(themeId)) {
       continue;
     }
 

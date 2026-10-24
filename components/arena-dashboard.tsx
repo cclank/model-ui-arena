@@ -18,6 +18,8 @@ type ThemeMeta = {
   id: string;
   label: string;
   objective: string;
+  focus?: string[];
+  focusNote?: string;
 };
 
 type Submission = {
@@ -56,6 +58,11 @@ const UNLIMITED_LINE_THEMES = new Set([
   "schwarzschild-black-hole"
 ]);
 const BITMAP_AUDIT_THEMES = new Set(["cheetah-trophy-run", "dslr-camera"]);
+// 按桌面视口设计的题目（施瓦西黑洞的面板会随视口变窄而堆叠）：卡片缩略图按同一视口渲染，
+// 否则会被当作窄屏布局整页缩小，与其他模型的展示不一致。
+const THEME_PREVIEW_VIEWPORT: Record<string, { width: number; height: number }> = {
+  "schwarzschild-black-hole": { width: 1280, height: 800 }
+};
 const MIN_CARD_WIDTH = 288;
 const GRID_GAP = 16;
 const MAX_PANES_PER_ROW = 6;
@@ -674,6 +681,13 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
           <div>
             <h2>{activeThemeMeta.label}</h2>
             <p>{activeThemeMeta.objective}</p>
+            {activeThemeMeta.focus?.length ? (
+              <div className="theme-focus">
+                <span className="theme-focus-kicker">主要考察</span>
+                <div className="theme-focus-words">{activeThemeMeta.focus.join(" · ")}</div>
+                {activeThemeMeta.focusNote ? <p className="theme-focus-note">{activeThemeMeta.focusNote}</p> : null}
+              </div>
+            ) : null}
           </div>
           <div className="theme-head-right">
             <span className="theme-count">
@@ -773,6 +787,8 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
                 src={item.publicPath}
                 title={`${item.theme}-${item.model}`}
                 loading="lazy"
+                viewportWidth={THEME_PREVIEW_VIEWPORT[item.theme]?.width}
+                viewportHeight={THEME_PREVIEW_VIEWPORT[item.theme]?.height}
               />
             ) : (
               <div className="qa-preview">

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>井 · 粒子引力场</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#07080d;color:#efe7d6;font:14px/1.4 "Avenir Next","PingFang SC",sans-serif}
+canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none}
+.hud{position:fixed;left:12px;top:12px;right:12px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;pointer-events:none}
+.panel{background:#0e1018cc;border:1px solid #2a271f;border-radius:14px;padding:10px 12px;pointer-events:auto;backdrop-filter:blur(8px)}
+.kicker{font:10px ui-monospace,Menlo,monospace;letter-spacing:.2em;color:#e2b15a}
+h1{font-size:18px;font-weight:500;margin:2px 0 6px}
+#stat{font:12px ui-monospace,Menlo,monospace;color:#d9d0c0;white-space:pre}
+.tools{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+button{font:inherit;background:#161820;color:#efe7d6;border:1px solid #3a3428;border-radius:999px;padding:7px 10px;cursor:pointer}
+button[aria-pressed="true"]{background:#e2b15a;color:#1a140c;border-color:#e2b15a}
+button:focus-visible{outline:2px solid #e2b15a;outline-offset:2px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud">
+  <div class="panel"><div class="kicker">GRAVITY WELL</div><h1>井</h1><div id="stat"></div></div>
+  <div class="panel tools">
+    <button type="button" id="attract" aria-pressed="true">吸引</button>
+    <button type="button" id="repel" aria-pressed="false">排斥</button>
+    <button type="button" id="pause" aria-pressed="false">暂停</button>
+  </div>
+</div>
+<script>
+const c=document.getElementById("c"), g=c.getContext("2d");
+let w=0,h=0,parts=[],mode="attract",paused=false,pointer=null,fps=60,frames=0,last=performance.now(),energy=0;
+const N=()=>innerWidth<520?110:200;
+function resize(){w=innerWidth;h=innerHeight;c.width=w;c.height=h}
+function seed(){
+  parts=[];
+  const n=N();
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2, r=40+Math.random()*Math.min(w,h)*0.34;
+    const x=Math.cos(a)*r, y=Math.sin(a)*r*0.72;
+    const sp=Math.sqrt(4200/Math.max(30,Math.hypot(x,y)));
+    parts.push({x,y,vx:-Math.sin(a)*sp*(0.85+Math.random()*0.3),vy:Math.cos(a)*sp*0.72,life:1});
+  }
+}
+addEventListener("resize",()=>{resize();seed()});
+resize();seed();
+function setMode(next){mode=next;document.getElementById("attract").setAttribute("aria-pressed",String(next==="attract"));document.getElementById("repel").setAttribute("aria-pressed",String(next==="repel"))}
+document.getElementById("attract").onclick=()=>setMode("attract");
+document.getElementById("repel").onclick=()=>setMode("repel");
+document.getElementById("pause").onclick=()=>{paused=!paused;document.getElementById("pause").setAttribute("aria-pressed",String(paused))};
+function shock(px,py){for(const p of parts){const dx=p.x-px,dy=p.y-py,d=Math.hypot(dx,dy)+12;const f=220/d;p.vx+=dx/d*f;p.vy+=dy/d*f}}
+c.addEventListener("pointerdown",e=>{pointer={x:e.clientX-w/2,y:e.clientY-h/2};shock(pointer.x,pointer.y);c.setPointerCapture(e.pointerId)});
+c.addEventListener("pointermove",e=>{if(e.buttons||e.pointerType==="touch") pointer={x:e.clientX-w/2,y:e.clientY-h/2}});
+c.addEventListener("pointerup",()=>{pointer=null});
+function step(){
+  const cx=0,cy=0;
+  let e=0;
+  for(const p of parts){
+    let ax=-p.x, ay=-p.y;
+    const r2=ax*ax+ay*ay+80;
+    const r=Math.sqrt(r2);
+    const gacc=4200/(r2*r);
+    ax*=gacc; ay*=gacc;
+    if(pointer){
+      let mx=pointer.x-p.x, my=pointer.y-p.y;
+      const md=Math.hypot(mx,my)+30;
+      const sign=mode==="repel"?-1:1;
+      const f=sign*9000/(md*md);
+      ax+=mx/md*f; ay+=my/md*f;
+    }
+    p.vx=(p.vx+ax)*0.995; p.vy=(p.vy+ay)*0.995;
+    p.x+=p.vx; p.y+=p.vy;
+    e+=Math.hypot(p.vx,p.vy);
+  }
+  energy=e/parts.length;
+}
+function frame(t){
+  frames++;
+  if(t-last>500){fps=frames*1000/(t-last);frames=0;last=t}
+  if(!paused) step();
+  g.fillStyle="rgba(7,8,13,.28)";
+  g.fillRect(0,0,w,h);
+  const cx=w/2,cy=h/2;
+  const core=g.createRadialGradient(cx,cy,4,cx,cy,70);
+  core.addColorStop(0,"#fff4d2"); core.addColorStop(.25,"#e2b15acc"); core.addColorStop(1,"#e2b15a00");
+  g.fillStyle=core; g.beginPath(); g.arc(cx,cy,70,0,Math.PI*2); g.fill();
+  for(const p of parts){
+    const s=Math.min(3.2,0.6+Math.hypot(p.vx,p.vy)*0.18);
+    g.fillStyle=`rgba(255,236,205,${0.35+Math.min(.6,s/4)})`;
+    g.fillRect(cx+p.x,cy+p.y,s,s);
+  }
+  document.getElementById("stat").textContent=`粒子 ${parts.length}\n能量 ${energy.toFixed(2)}\nFPS ${fps.toFixed(0)}\n模式 ${paused?"暂停":mode==="attract"?"吸引":"排斥"}`;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

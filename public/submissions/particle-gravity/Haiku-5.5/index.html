@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>粒子引力场</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; overflow: hidden; background: #03050d; color: #e2ecff;
+    font: 13px/1.4 system-ui, -apple-system, "PingFang SC", "Noto Sans SC", sans-serif;
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  .vig { position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, .6) 100%); }
+  .hud { position: fixed; left: 16px; right: 16px; display: flex; justify-content: space-between;
+    align-items: flex-start; gap: 10px; pointer-events: none; }
+  .top { top: 16px; }
+  .foot { left: 50%; right: auto; bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    width: min(calc(100vw - 32px), 460px); transform: translateX(-50%);
+    flex-direction: column; align-items: stretch; gap: 8px; }
+  .panel { padding: 10px 14px; border: 1px solid rgba(150, 185, 255, .16); border-radius: 12px;
+    background: rgba(10, 16, 34, .6); }
+  h1 { font-size: 15px; font-weight: 650; letter-spacing: .08em; }
+  .muted { color: #7f8fb3; font-size: 11px; letter-spacing: .06em; }
+  .legend { display: flex; align-items: center; gap: 6px; }
+  .ramp { width: 72px; height: 6px; border-radius: 3px;
+    background: linear-gradient(90deg, rgb(60, 110, 255), rgb(170, 100, 255) 40%, rgb(255, 170, 90) 75%, rgb(255, 248, 230)); }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; }
+  .stats b { display: block; font-size: 15px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .stats span { color: #7f8fb3; font-size: 11px; }
+  .bar { height: 3px; margin-top: 8px; border-radius: 2px; background: rgba(255, 255, 255, .08); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #3c6eff, #aa64ff, #ffaa5a); }
+  .hint { color: #7f8fb3; font-size: 11px; text-align: center; }
+  @media (max-width: 480px) { .stats b { font-size: 14px; } }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="vig"></div>
+<header class="hud top">
+  <div class="panel"><h1>粒子引力场</h1><div class="muted">GRAVITY FIELD</div></div>
+  <div class="panel legend muted">慢<i class="ramp"></i>快</div>
+</header>
+<footer class="hud foot">
+  <div class="panel">
+    <div class="stats">
+      <div><b id="n">0</b><span>粒子</span></div>
+      <div><b id="e">0%</b><span>能量</span></div>
+      <div><b id="f">--</b><span>FPS</span></div>
+      <div><b id="m">引力井</b><span>模式</span></div>
+    </div>
+    <div class="bar"><i id="eb"></i></div>
+  </div>
+  <div class="hint">移动：引力牵引 · 点击：冲击波 · 按住：排斥场</div>
+</footer>
+<script>
+const cv = document.getElementById('c'), ctx = cv.getContext('2d', { alpha: false });
+const $ = id => document.getElementById(id);
+const BG = '#03050d', TAU = Math.PI * 2, MAXP = 900, MINP = 260;
+const P = [], shocks = [], SPR = [];
+const ptr = { x: 0, y: 0, on: false, down: false, moved: -9, hv: 0, pv: 0 };
+let W = 0, H = 0, minD = 1, cx = 0, cy = 0, GM = 1, SOFT = 1, HS = 1, PS = 1, coreR = 10;
+let cap = MAXP, floorN = MINP, N = 0, clock = 0, shockT = 0, fpsN = 0, fpsT = 0, fps = 60;
+let ft = 16, hudT = 0, E = 0, last = 0;
+
+// Glow sprites, one per heat bucket: slow = blue, fast = hot amber-white.
+const STOPS = [[0, [60, 110, 255]], [0.4, [170, 100, 255]], [0.75, [255, 170, 90]], [1, [255, 248, 230]]];
+function pal(t) {
+  for (let i = 1; i < STOPS.length; i++) {
+    const [t0, c0] = STOPS[i - 1], [t1, c1] = STOPS[i];
+    if (t <= t1) { const u = (t - t0) / (t1 - t0); return c0.map((v, j) => Math.round(v + (c1[j] - v) * u)); }
+  }
+  return STOPS[STOPS.length - 1][1];
+}
+for (let k = 0; k < 16; k++) {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const g = c.getContext('2d'), [r, gg, b] = pal(k / 15), grd = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grd.addColorStop(0, `rgba(${r},${gg},${b},1)`);
+  grd.addColorStop(0.22, `rgba(${r},${gg},${b},.6)`);
+  grd.addColorStop(1, `rgba(${r},${gg},${b},0)`);
+  g.fillStyle = grd; g.fillRect(0, 0, 64, 64); SPR.push(c);
+}
+
+function respawn(p, first) {
+  let tries = 0;
+  do { p.x = Math.random() * W; p.y = Math.random() * H; }
+  while (Math.hypot(p.x - cx, p.y - cy) < coreR * 3 && ++tries < 8);
+  const dx = p.x - cx, dy = p.y - cy, r = Math.hypot(dx, dy) + 1e-3;
+  const v = Math.min(320, Math.sqrt(GM / r)) * (0.7 + 0.4 * Math.random()) * (Math.random() < 0.95 ? 1 : -1);
+  p.vx = -dy / r * v; p.vy = dx / r * v;          // tangential start: orbit, not infall
+  p.z = Math.random() ** 1.4;                     // depth layer: 0 far .. 1 near
+  p.life = 14 + Math.random() * 16;               // lifetime in seconds
+  p.age = first ? Math.random() * p.life : 0;     // new particles fade in from age 0
+}
+
+function resize() {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  W = innerWidth; H = innerHeight;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  minD = Math.min(W, H); cx = W / 2; cy = H / 2;
+  GM = 9 * minD * minD;                           // central well strength, scaled to the viewport
+  SOFT = (0.02 * minD) ** 2; HS = (0.09 * minD) ** 2; PS = (0.075 * minD) ** 2;
+  coreR = Math.min(16, Math.max(8, minD * 0.025));
+  cap = Math.min(MAXP, Math.max(MINP, Math.round(W * H / 700)));
+  floorN = Math.round(cap * 0.4);
+  N = N ? Math.min(N, cap) : cap;
+  while (P.length < cap) { const p = { x: 0, y: 0, vx: 0, vy: 0, z: 0, life: 1, age: 0 }; respawn(p, true); P.push(p); }
+  ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H);
+}
+
+function setPtr(e) { ptr.x = e.clientX; ptr.y = e.clientY; ptr.on = true; if (!ptr.down) ptr.moved = clock; }
+addEventListener('pointermove', setPtr, { passive: true });
+addEventListener('pointerdown', e => {
+  setPtr(e); ptr.down = true; shockT = 0.8;
+  shocks.push({ x: e.clientX, y: e.clientY, t: 0 }); if (shocks.length > 4) shocks.shift();
+}, { passive: true });
+addEventListener('pointerup', e => { ptr.down = false; if (e.pointerType !== 'mouse') ptr.on = false; });
+addEventListener('pointercancel', () => { ptr.down = false; ptr.on = false; });
+addEventListener('pointerout', e => { if (!e.relatedTarget) { ptr.down = false; ptr.on = false; } });
+addEventListener('resize', resize);
+
+function frame(now) {
+  const gap = now - last; last = now;
+  const raw = Math.max(1, Math.min(50, gap));
+  const dt = raw / 1000; clock += dt;
+  ft += (raw - ft) * 0.05;                                   // smoothed frame time (ms)
+  if (ft > 22) N = Math.max(floorN, N - 3);                  // slow: shed particles gradually
+  else if (ft < 15) N = Math.min(cap, N + 1);                // smooth again: restore them
+  fpsN++; fpsT += Math.max(0, Math.min(gap, 1000)) / 1000;  // real elapsed time, so slow frames read slow
+  if (fpsT >= 0.5) { fps = fpsN / fpsT; fpsN = 0; fpsT = 0; }
+  ptr.hv += ((ptr.on && !ptr.down && clock - ptr.moved < 1.1 ? 1 : 0) - ptr.hv) * Math.min(1, dt * 5);
+  ptr.pv += ((ptr.on && ptr.down ? 1 : 0) - ptr.pv) * Math.min(1, dt * 8);
+  shockT = Math.max(0, shockT - dt);
+  for (let i = shocks.length - 1; i >= 0; i--) { shocks[i].t += dt; if (shocks[i].t > 1.6) shocks.splice(i, 1); }
+
+  // Trails: fade the previous frame toward the background, then draw field lines and the well glow.
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = 'rgba(3, 5, 13, .15)'; ctx.fillRect(0, 0, W, H);
+  ctx.setLineDash([2, 10]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(120, 150, 255, .08)';
+  for (const m of [3, 5, 8]) { ctx.beginPath(); ctx.arc(cx, cy, coreR * m, 0, TAU); ctx.stroke(); }
+  ctx.setLineDash([]);
+  const gl = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR * 7);
+  gl.addColorStop(0, 'rgba(150, 190, 255, .45)'); gl.addColorStop(0.2, 'rgba(80, 110, 255, .16)'); gl.addColorStop(1, 'rgba(30, 40, 120, 0)');
+  ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(cx, cy, coreR * 7, 0, TAU); ctx.fill();
+
+  // Particles: softened inverse-square well + temporary attractor + repulsion field + shock rings.
+  ctx.globalCompositeOperation = 'lighter';
+  const damp = Math.exp(-0.02 * dt), spd = minD * 1.3, band = minD * 0.12, vRef = 11 * Math.sqrt(minD);
+  const sz = Math.max(0.6, Math.min(1, minD / 600)), gain = Math.min(1.8, Math.sqrt(900 / Math.max(N, 1)));  // smaller sprites on narrow screens; brighter with fewer particles
+  const hG = GM * 1.4 * ptr.hv, pG = GM * ptr.pv;
+  let sumV = 0;
+  for (let i = 0; i < N; i++) {
+    const p = P[i];
+    let dx = cx - p.x, dy = cy - p.y, q = dx * dx + dy * dy + SOFT, k = GM / (q * Math.sqrt(q));
+    let ax = dx * k, ay = dy * k;
+    if (hG > 1e-3) {
+      dx = ptr.x - p.x; dy = ptr.y - p.y; q = dx * dx + dy * dy + HS; k = hG / (q * Math.sqrt(q));
+      ax += dx * k; ay += dy * k;
+    }
+    if (pG > 1e-3) {
+      dx = p.x - ptr.x; dy = p.y - ptr.y; q = dx * dx + dy * dy + PS; k = pG / (q * Math.sqrt(q));
+      ax += dx * k; ay += dy * k;
+    }
+    for (const s of shocks) {
+      dx = p.x - s.x; dy = p.y - s.y;
+      const d = Math.sqrt(dx * dx + dy * dy) + 1e-3, w = 1 - Math.abs(d - s.t * spd) / band;
+      if (w > 0) { const f = 2.6 * minD * w * (1 - s.t / 1.6) / d; ax += dx * f; ay += dy * f; }
+    }
+    p.vx = (p.vx + ax * dt) * damp; p.vy = (p.vy + ay * dt) * damp;
+    p.x += p.vx * dt; p.y += p.vy * dt; p.age += dt;
+    if (p.age > p.life || Math.hypot(p.x - cx, p.y - cy) < coreR || p.x < -40 || p.x > W + 40 || p.y < -40 || p.y > H + 40) respawn(p, false);
+    const sp = Math.hypot(p.vx, p.vy), t = Math.min(1, sp / vRef);
+    const lf = Math.max(0, Math.min(1, p.age / 0.9, (p.life - p.age) / 1.2));
+    const S = (5 + 10 * p.z) * (0.6 + 0.8 * t) * sz;
+    sumV += sp;
+    ctx.globalAlpha = (0.18 + 0.82 * p.z) * (0.35 + 0.65 * t) * lf * 0.26 * gain;
+    ctx.drawImage(SPR[Math.round(t * 15)], p.x - S, p.y - S, 2 * S, 2 * S);
+  }
+  ctx.globalAlpha = 1;
+  E = Math.min(1, sumV / Math.max(1, N) / vRef);
+
+  // Overlays: shock rings, pointer force rings, event horizon with photon ring.
+  ctx.globalCompositeOperation = 'source-over';
+  for (const s of shocks) {
+    const a = 1 - s.t / 1.6;
+    ctx.strokeStyle = `rgba(160, 235, 255, ${0.55 * a})`; ctx.lineWidth = 1 + 3 * a;
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.t * spd, 0, TAU); ctx.stroke();
+  }
+  if (ptr.hv > 0.02) {
+    ctx.strokeStyle = `rgba(120, 230, 255, ${0.3 * ptr.hv})`; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(ptr.x, ptr.y, Math.sqrt(HS), 0, TAU); ctx.stroke();
+  }
+  if (ptr.pv > 0.02) {
+    ctx.strokeStyle = `rgba(255, 140, 200, ${0.5 * ptr.pv})`; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(ptr.x, ptr.y, Math.sqrt(PS), 0, TAU); ctx.stroke();
+  }
+  ctx.fillStyle = BG; ctx.beginPath(); ctx.arc(cx, cy, coreR, 0, TAU); ctx.fill();
+  ctx.strokeStyle = `rgba(255, 225, 170, ${0.75 + 0.2 * Math.sin(clock * 2.2)})`; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cx, cy, coreR * 1.2, 0, TAU); ctx.stroke();
+
+  // HUD readout, refreshed five times a second.
+  hudT -= dt;
+  if (hudT <= 0) {
+    hudT = 0.2;
+    const pct = Math.round(E * 100);
+    const mode = shockT > 0 ? '冲击' : ptr.pv > 0.3 ? '排斥' : ptr.hv > 0.3 ? '牵引' : '引力井';
+    $('n').textContent = N; $('e').textContent = pct + '%'; $('f').textContent = Math.round(fps);
+    $('m').textContent = mode; $('eb').style.width = pct + '%';
+  }
+  requestAnimationFrame(frame);
+}
+resize(); last = performance.now(); requestAnimationFrame(frame);
+</script>
+</body>
+</html>

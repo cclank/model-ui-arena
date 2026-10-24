@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chronos Orbital Horology</title>
+<style>
+  :root {
+    --bg: #07090e; --card: #0e131d; --ring: #1d2638; --text: #f0f4f8;
+    --sub: #7a8ba6; --accent: #f59e0b; --sec: #ef4444; --glow: rgba(245,158,11,0.22);
+  }
+  body.theme-day {
+    --bg: #eef2f6; --card: #ffffff; --ring: #d5dfec; --text: #0f172a;
+    --sub: #64748b; --accent: #0284c7; --sec: #e11d48; --glow: rgba(2,132,199,0.16);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 50% 25%, var(--glow), var(--bg) 70%);
+    color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 16px; transition: background 0.5s, color 0.4s;
+  }
+  .watch-shell {
+    width: 100%; max-width: 390px; background: var(--card);
+    border: 1px solid var(--ring); border-radius: 32px; padding: 24px 20px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+  }
+  .top-bar {
+    width: 100%; display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sub);
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px;
+    border-radius: 99px; background: rgba(128,128,128,0.1); cursor: pointer;
+    border: 1px solid var(--ring); color: var(--text); font-weight: 600; font-size: 11px;
+  }
+  .pulse-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+    box-shadow: 0 0 8px var(--accent); animation: pulse 1.5s infinite ease-in-out;
+  }
+  @keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.45; } }
+  .dial-wrap {
+    position: relative; width: min(290px, 78vw); height: min(290px, 78vw);
+    display: flex; align-items: center; justify-content: center;
+  }
+  svg.dial { width: 100%; height: 100%; overflow: visible; }
+  .tick { stroke: var(--sub); stroke-linecap: round; opacity: 0.4; transition: opacity 0.25s, stroke 0.25s; }
+  .tick.major { stroke: var(--text); opacity: 0.85; stroke-width: 2.2; }
+  .tick.active-sec { stroke: var(--accent); opacity: 1; filter: drop-shadow(0 0 4px var(--accent)); }
+  .hand-h { stroke: var(--text); stroke-width: 5.5; stroke-linecap: round; }
+  .hand-m { stroke: var(--text); stroke-width: 3.6; stroke-linecap: round; }
+  .hand-s { stroke: var(--sec); stroke-width: 1.8; stroke-linecap: round; }
+  .sub-readout {
+    position: absolute; bottom: 23%; text-align: center; pointer-events: none;
+  }
+  .digital-main {
+    font-variant-numeric: tabular-nums; font-family: "SF Mono", "JetBrains Mono", monospace;
+    font-size: 34px; font-weight: 700; letter-spacing: 0.04em;
+    display: flex; align-items: baseline; justify-content: center; gap: 4px;
+  }
+  .digital-ms { font-size: 14px; color: var(--accent); font-weight: 600; width: 28px; text-align: left; }
+  .meta-row {
+    width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    padding-top: 12px; border-top: 1px solid var(--ring); text-align: center;
+  }
+  .meta-cell { background: rgba(128,128,128,0.05); padding: 9px 6px; border-radius: 14px; }
+  .meta-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--sub); }
+  .meta-val { font-size: 13px; font-weight: 600; margin-top: 3px; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="watch-shell">
+  <div class="top-bar">
+    <span>CHRONO // ORBITAL</span>
+    <button class="badge" id="modeBtn" type="button">
+      <span class="pulse-dot"></span>
+      <span id="periodText">NIGHT</span>
+    </button>
+  </div>
+  <div class="dial-wrap">
+    <svg class="dial" viewBox="-150 -150 300 300">
+      <defs>
+        <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="3" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <circle r="142" fill="none" stroke="var(--ring)" stroke-width="1.5"/>
+      <circle r="134" fill="none" stroke="var(--ring)" stroke-width="1" stroke-dasharray="2 6"/>
+      <circle id="secArc" r="138" fill="none" stroke="var(--accent)" stroke-width="2.5"
+              stroke-linecap="round" transform="rotate(-90)" stroke-dasharray="0 999" filter="url(#glow)"/>
+      <g id="ticks"></g>
+      <g id="numerals" fill="var(--sub)" font-size="11" font-weight="600" text-anchor="middle" dominant-baseline="central"></g>
+      <g id="hands">
+        <line id="hHand" class="hand-h" x1="0" y1="14" x2="0" y2="-70"/>
+        <line id="mHand" class="hand-m" x1="0" y1="18" x2="0" y2="-102"/>
+        <g id="sGroup">
+          <line class="hand-s" x1="0" y1="26" x2="0" y2="-118"/>
+          <circle cx="0" cy="-94" r="3.2" fill="var(--sec)"/>
+        </g>
+        <circle r="6" fill="var(--card)" stroke="var(--text)" stroke-width="2.5"/>
+        <circle r="2.2" fill="var(--sec)"/>
+      </g>
+    </svg>
+    <div class="sub-readout">
+      <div style="font-size:10px;letter-spacing:0.2em;color:var(--sub);" id="ampm">LOCAL TIME</div>
+    </div>
+  </div>
+  <div class="digital-main">
+    <span id="dTime">00:00:00</span>
+    <span class="digital-ms" id="dMs">.00</span>
+  </div>
+  <div class="meta-row">
+    <div class="meta-cell">
+      <div class="meta-label">DATE</div>
+      <div class="meta-val" id="dDate">-- ---</div>
+    </div>
+    <div class="meta-cell">
+      <div class="meta-label">WEEKDAY</div>
+      <div class="meta-val" id="dDay">---</div>
+    </div>
+    <div class="meta-cell">
+      <div class="meta-label">SOLAR PHASE</div>
+      <div class="meta-val" id="dPhase">---</div>
+    </div>
+  </div>
+</div>
+<script>
+  const ticksG = document.getElementById('ticks');
+  const numG = document.getElementById('numerals');
+  const tickEls = [];
+  for (let i = 0; i < 60; i++) {
+    const a = (i * 6 - 90) * Math.PI / 180;
+    const isMajor = i % 5 === 0;
+    const r1 = isMajor ? 116 : 122, r2 = 128;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', (Math.cos(a) * r1).toFixed(2));
+    line.setAttribute('y1', (Math.sin(a) * r1).toFixed(2));
+    line.setAttribute('x2', (Math.cos(a) * r2).toFixed(2));
+    line.setAttribute('y2', (Math.sin(a) * r2).toFixed(2));
+    line.setAttribute('class', isMajor ? 'tick major' : 'tick');
+    ticksG.appendChild(line);
+    tickEls.push(line);
+    if (i % 15 === 0) {
+      const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      txt.setAttribute('x', (Math.cos(a) * 100).toFixed(2));
+      txt.setAttribute('y', (Math.sin(a) * 100).toFixed(2));
+      txt.textContent = i === 0 ? '12' : (i / 5).toString();
+      numG.appendChild(txt);
+    }
+  }
+  let manualOverride = null;
+  const pad = n => String(n).padStart(2, '0');
+  const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const circum = 2 * Math.PI * 138;
+  document.getElementById('modeBtn').addEventListener('click', () => {
+    const currentlyDay = document.body.classList.contains('theme-day');
+    manualOverride = !currentlyDay;
+    applyTheme(manualOverride);
+  });
+  function applyTheme(isDay) {
+    document.body.classList.toggle('theme-day', isDay);
+    document.getElementById('periodText').textContent = isDay ? 'DAYLIGHT' : 'NIGHT OPS';
+  }
+  function update() {
+    const now = new Date();
+    const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds(), ms = now.getMilliseconds();
+    const isDay = manualOverride !== null ? manualOverride : (h >= 6 && h < 18);
+    applyTheme(isDay);
+    const sContinuous = s + ms / 1000;
+    const mContinuous = m + sContinuous / 60;
+    const hContinuous = (h % 12) + mContinuous / 60;
+    document.getElementById('hHand').setAttribute('transform', `rotate(${(hContinuous * 30).toFixed(2)})`);
+    document.getElementById('mHand').setAttribute('transform', `rotate(${(mContinuous * 6).toFixed(2)})`);
+    document.getElementById('sGroup').setAttribute('transform', `rotate(${(sContinuous * 6).toFixed(2)})`);
+    const arcLen = (sContinuous / 60) * circum;
+    document.getElementById('secArc').setAttribute('stroke-dasharray', `${arcLen.toFixed(1)} ${circum.toFixed(1)}`);
+    tickEls.forEach((el, idx) => el.classList.toggle('active-sec', idx === s));
+    document.getElementById('dTime').textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+    document.getElementById('dMs').textContent = `.${pad(Math.floor(ms / 10))}`;
+    document.getElementById('dDate').textContent = `${months[now.getMonth()]} ${pad(now.getDate())}`;
+    document.getElementById('dDay').textContent = days[now.getDay()];
+    document.getElementById('dPhase').textContent = h >= 6 && h < 18 ? '06:00-18:00' : '18:00-06:00';
+    document.getElementById('ampm').textContent = h >= 12 ? 'PM // MERIDIAN' : 'AM // MERIDIAN';
+    requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+</script>
+</body>
+</html>

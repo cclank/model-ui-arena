@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Morrow M1 — Made to see more</title>
+<!-- 原创 MORROW 单反相机，以三分之四侧前视角组织机身、镜筒与投影。
+     用手绘 SVG 形状、微纹理、分层渐变区分磨砂外壳、切削金属和镀膜玻璃。
+     可转动模式盘与按下快门；全部图形原生绘制，无任何贴图或外部素材。 -->
+<style>
+*{box-sizing:border-box}body{margin:0;background:#e8e6df;color:#393d39;font-family:Arial,Helvetica,sans-serif;min-height:100svh;display:grid;place-items:center}.studio{width:min(100%,960px);position:relative;padding:30px 37px 25px;isolation:isolate}.studio:before{content:'';position:absolute;inset:10% 3% 14%;background:radial-gradient(ellipse,#fff9 0,transparent 70%);z-index:-1}header,footer{display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{font-size:14px;letter-spacing:5px;font-weight:800}.edition{font:8px monospace;letter-spacing:2px;color:#878c80}.intro{margin-top:31px;display:flex;justify-content:space-between;align-items:end;gap:20px}.kicker{font:8px monospace;letter-spacing:2px;color:#878c80}h1{font:normal 42px/1.05 Georgia,serif;letter-spacing:-1.6px;margin:8px 0 0}.spec{font:9px monospace;line-height:1.9;color:#868d80;text-align:right}.camera{display:block;width:100%;height:auto;margin-top:-35px;margin-bottom:-19px;overflow:visible}.camera [role=button]{cursor:pointer;outline:none}.camera [role=button]:focus-visible{filter:drop-shadow(0 0 5px #dc995a)}.lens-shine{animation:breathe 8s ease-in-out infinite}.flash{position:absolute;inset:0;background:#fffef7;opacity:0;pointer-events:none;z-index:5}.flash.fire{animation:flash .45s ease-out}.controls{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #bfc4b6;padding-top:20px;gap:12px}.caption{font:9px monospace;color:#8a907f;letter-spacing:1px}.caption strong{display:block;font:15px Arial;color:#464f41;letter-spacing:0;margin-bottom:6px}button{border:1px solid #aeb7a4;background:#f3f1e9;color:#4e5a46;border-radius:30px;padding:12px 17px;font:9px monospace;cursor:pointer;letter-spacing:1px}button:hover{background:#d9ded1}button:focus-visible{outline:2px solid #c37848;outline-offset:4px}footer{margin-top:25px;font:8px monospace;letter-spacing:1px;color:#89917f}.counter{font:9px monospace;color:#b17347}.mode-indicator{color:#bf6f3d}.status{font:9px monospace;color:#9a795d;margin:13px 0 0;min-height:12px;text-align:right}@keyframes breathe{50%{opacity:.5}}@keyframes flash{0%{opacity:.8}100%{opacity:0}}@media(max-width:500px){.studio{padding:25px 23px}.intro{margin-top:29px;gap:12px}h1{font-size:31px}.spec{font-size:7px}.camera{width:calc(100% + 32px);margin-left:-16px;margin-top:8px;margin-bottom:11px}.brand{font-size:12px;letter-spacing:4px}.edition{font-size:7px;letter-spacing:1px}.caption{font-size:7px;letter-spacing:.5px}.caption strong{font-size:12px}button{font-size:8px;padding:11px 13px}footer{font-size:6px;letter-spacing:.6px}.status{font-size:8px}.controls{padding-top:16px}}@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+<main class="studio"><header><span class="brand">MORROW</span><span class="edition">OPTICAL INSTRUMENTS / NO. 001</span></header><div class="intro"><div><div class="kicker">THE M1 · FULL FRAME DSLR</div><h1>Made to<br>see more.</h1></div><div class="spec">24–70 MM / F2.8<br>CRAFTED IN LIGHT & SHADOW<br><span class="mode-indicator" id="mode-text">MODE M · MANUAL</span></div></div>
+<svg class="camera" viewBox="150 125 620 480" role="group" aria-labelledby="camera-title camera-desc">
+<title id="camera-title">Morrow M1 three-quarter-view DSLR camera, entirely hand drawn</title><desc id="camera-desc">An original charcoal camera with a textured grip, pentaprism housing, hot shoe, mode dial, shutter, ribbed metal zoom and focus rings, amber trim, and elliptical blue-green optical glass. Click the mode dial to change mode or the shutter button to simulate a photograph.</desc>
+<defs>
+<linearGradient id="body-face" x1=".2" y1="0" x2=".7" y2="1"><stop stop-color="#555953"/><stop offset=".18" stop-color="#292e2b"/><stop offset=".68" stop-color="#1a201e"/><stop offset="1" stop-color="#353a33"/></linearGradient>
+<linearGradient id="side"><stop stop-color="#30362f"/><stop offset=".6" stop-color="#161c18"/><stop offset="1" stop-color="#333a31"/></linearGradient>
+<linearGradient id="top" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#777b70"/><stop offset=".35" stop-color="#4c534a"/><stop offset="1" stop-color="#272e28"/></linearGradient>
+<linearGradient id="grip" x1="0" y1="0" x2="1" y2=".2"><stop stop-color="#111815"/><stop offset=".4" stop-color="#3c4237"/><stop offset=".72" stop-color="#30382e"/><stop offset="1" stop-color="#141c16"/></linearGradient>
+<linearGradient id="barrel" x1=".1" y1=".2" x2="1" y2=".9"><stop stop-color="#697065"/><stop offset=".13" stop-color="#272f29"/><stop offset=".35" stop-color="#070e0e"/><stop offset=".65" stop-color="#323b31"/><stop offset="1" stop-color="#111814"/></linearGradient>
+<linearGradient id="cut-metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#c1c4b3"/><stop offset=".13" stop-color="#363f36"/><stop offset=".35" stop-color="#8f9986"/><stop offset=".47" stop-color="#1a231d"/><stop offset=".68" stop-color="#5a6757"/><stop offset=".89" stop-color="#1c2720"/><stop offset="1" stop-color="#87967e"/></linearGradient>
+<linearGradient id="amber-ring"><stop stop-color="#b08c53"/><stop offset=".27" stop-color="#ffca76"/><stop offset=".5" stop-color="#b96d32"/><stop offset=".8" stop-color="#51311c"/><stop offset="1" stop-color="#d4a465"/></linearGradient>
+<radialGradient id="glass" cx=".38" cy=".31" r=".8"><stop stop-color="#457f89"/><stop offset=".25" stop-color="#234750"/><stop offset=".48" stop-color="#142f3a"/><stop offset=".7" stop-color="#102325"/><stop offset=".86" stop-color="#153939"/><stop offset="1" stop-color="#467676"/></radialGradient>
+<radialGradient id="inner-glass" cx=".62" cy=".67"><stop stop-color="#163b34"/><stop offset=".32" stop-color="#0c201c"/><stop offset=".69" stop-color="#11201f"/><stop offset=".86" stop-color="#285855"/><stop offset="1" stop-color="#617581"/></radialGradient>
+<linearGradient id="coating" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#bdd9cf" stop-opacity=".75"/><stop offset=".35" stop-color="#9acbc9" stop-opacity=".25"/><stop offset=".6" stop-color="#8789c4" stop-opacity=".12"/><stop offset="1" stop-color="#818cd1" stop-opacity="0"/></linearGradient>
+<radialGradient id="floor-shadow"><stop stop-color="#283225" stop-opacity=".42"/><stop offset=".5" stop-color="#354131" stop-opacity=".23"/><stop offset="1" stop-color="#354131" stop-opacity="0"/></radialGradient>
+<pattern id="leather-grain" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M1 1h1m1 3h1" stroke="#89907b" stroke-width=".7" opacity=".2"/><path d="M1 2h1m1 3h1" stroke="#080f0b" stroke-width="1" opacity=".8"/></pattern>
+<pattern id="body-grain" width="3" height="3" patternUnits="userSpaceOnUse"><circle cx=".7" cy=".7" r=".35" fill="#bdc2a8" opacity=".19"/><circle cx="2.2" cy="2.4" r=".45" fill="#040b08" opacity=".4"/></pattern>
+<filter id="soft-shadow" x="-.3" y="-.5" width="1.6" height="2"><feGaussianBlur stdDeviation="7"/></filter>
+<path id="camera-face" d="M237 275Q231 254 252 242L391 228L423 185Q432 174 449 173L494 171Q508 171 517 186L543 216L631 209Q659 211 666 246L693 434Q696 465 666 483L306 530Q275 533 257 505Z"/>
+<path id="grip-shape" d="M586 240Q605 217 635 225Q655 231 660 256L685 427Q691 454 666 470L614 481Q598 483 590 459L570 293Q567 261 586 240Z"/>
+<path id="rim-label-top" d="M-112 0A112 112 0 0 1 112 0"/><path id="rim-label-bottom" d="M-112 0A112 112 0 0 0 112 0"/>
+</defs>
+<ellipse cx="457" cy="553" rx="306" ry="63" fill="url(#floor-shadow)"/>
+<ellipse cx="432" cy="563" rx="194" ry="14" fill="#35442d" opacity=".17" filter="url(#soft-shadow)"/>
+<g id="camera-chassis">
+<path d="M625 208L699 237Q713 243 716 269L739 426Q742 449 721 460L673 485L654 456Z" fill="url(#side)" stroke="#242e25" stroke-width="2"/>
+<path d="M699 246L715 269L735 423Q738 443 719 452L687 470" fill="none" stroke="#5a6555" stroke-width="1.5"/>
+<path d="M708 289l13 119-25 12-15-119Z" fill="#1b241e" stroke="#454e3f"/><path d="M702 311l6 63" stroke="#0d1510" stroke-width="3"/><path d="M706 313l5 56" stroke="#616c54" stroke-opacity=".3"/>
+<path d="M252 242L310 211L404 205L425 163L472 151L510 158L548 195L630 184L699 237L635 253Z" fill="url(#top)" stroke="#4b5445" stroke-width="1.5"/>
+<path d="M260 241L317 218L405 212M548 202l78-10 51 35" fill="none" stroke="#8c9380" stroke-opacity=".48"/>
+<use href="#camera-face" fill="url(#body-face)" stroke="#151d17" stroke-width="2.5"/><use href="#camera-face" fill="url(#body-grain)"/>
+<path d="M247 257L392 240L427 190Q433 184 449 183L491 180Q503 180 511 194L537 230L626 221" fill="none" stroke="#89917d" stroke-opacity=".6" stroke-width="1.5"/>
+<path d="M269 487Q273 517 305 517L594 480" fill="none" stroke="#56624e" stroke-width="1.5"/>
+<path d="M278 286L293 425L292 487L326 502L363 493L344 272Z" fill="#1a241d"/><path d="M278 286L293 425L292 487L326 502L363 493L344 272Z" fill="url(#leather-grain)"/>
+<use href="#grip-shape" fill="url(#grip)" stroke="#0b140e" stroke-width="2"/><use href="#grip-shape" fill="url(#leather-grain)"/>
+<path d="M601 241Q629 228 638 252L662 427Q667 451 649 465" fill="none" stroke="#7c846a" stroke-width="2" stroke-opacity=".3"/>
+<path d="M578 288l8 111" fill="none" stroke="#0b120c" stroke-width="4"/>
+<g id="pentaprism"><path d="M404 231L429 185Q432 177 449 176L491 173Q505 174 514 189L540 226L529 272L413 280Z" fill="url(#body-face)"/><path d="M428 184L444 164L487 156L508 184L491 176L446 180Z" fill="#6d7465"/><path d="M403 232L416 239L433 198L448 185" fill="none" stroke="#99a18a" stroke-opacity=".48"/><path d="M415 245L527 235" stroke="#131c15" stroke-width="2"/><text x="430" y="230" transform="rotate(-5 430 230)" fill="#e3e6d4" font-family="Arial" font-size="17" font-weight="800" letter-spacing="2">MORROW</text><path d="M464 256l10-1" stroke="#999d82" stroke-width="1"/></g>
+<g id="hot-shoe"><path d="M443 166l-2-12 33-10 28 3 6 16-36 9Z" fill="#161e18"/><path d="M444 154l3 11 26-7 30-4-3-6-28 2Z" fill="url(#cut-metal)" stroke="#b3b8a3" stroke-width=".6"/><path d="M451 156l20-6 22 1-22 8Z" fill="#161e18"/><path d="M453 157l19-5 17 1" stroke="#8a927f" stroke-width="1"/><circle cx="477" cy="156" r="1.6" fill="#c9b66d"/></g>
+<g id="mode-dial" role="button" tabindex="0" aria-label="Rotate mode dial">
+<ellipse cx="328" cy="232" rx="49" ry="19" fill="#0b130e"/>
+<path d="M279 214v17c1 13 92 18 98-4v-14Z" fill="#2e382d" stroke="#102018"/>
+<g id="dial-knurl"></g><ellipse cx="328" cy="213" rx="49" ry="17" fill="url(#cut-metal)" stroke="#747f68"/>
+<ellipse cx="328" cy="211" rx="44" ry="14" fill="#202c22" stroke="#859076" stroke-width=".7"/><g id="mode-ticks"></g><ellipse cx="328" cy="211" rx="19" ry="6.7" fill="#354131" stroke="#6a765e"/><text id="dial-letter" x="328" y="214" fill="#e6e2bc" font-family="Arial" font-size="9" text-anchor="middle">M</text><path d="M379 211l6-5-1 9Z" fill="#e2a86c"/>
+</g>
+<g id="shutter" role="button" tabindex="0" aria-label="Press shutter button"><path d="M614 220l15-12 23 2 17 12-8 17-34 6-15-11Z" fill="#2b3429" stroke="#707a63" stroke-width="1.2"/><ellipse cx="639" cy="220" rx="21" ry="10" fill="#121d14"/><ellipse cx="639" cy="217" rx="17" ry="8" fill="url(#cut-metal)" stroke="#929a7f"/><ellipse cx="639" cy="215" rx="13" ry="5.5" fill="#303e30"/><path d="M630 213q10-4 17 0" stroke="#a3ac8b" stroke-width=".8" fill="none"/></g>
+<g id="top-display"><path d="M548 214l39-3 17 16-43 5Z" fill="#18251c" stroke="#6c7b64" stroke-width="1"/><text x="559" y="224" transform="rotate(-5 559 224) skewX(22)" fill="#9bac87" font-family="monospace" font-size="8">125 F2.8</text></g>
+<path d="M649 281c13-13 28-13 30-1l2 17c-4 11-15 10-22 4" fill="none" stroke="#121c14" stroke-width="7"/><path d="M650 279c11-10 23-8 24 2l1 15c-4 7-10 5-13 3" fill="none" stroke="url(#cut-metal)" stroke-width="4"/>
+<path d="M251 276c-16-4-21 2-17 15l8 17 17-8" fill="none" stroke="#202b20" stroke-width="7"/><path d="M253 278c-15-2-16 2-13 11l7 13 8-4" fill="none" stroke="#818b71" stroke-width="2"/>
+<text x="568" y="274" fill="#bec8af" font-family="Arial" font-size="16" font-weight="600" transform="rotate(-6 568 274)">M1</text>
+<circle cx="566" cy="327" r="12" fill="#101b13" stroke="#6b775e"/><circle cx="564" cy="325" r="8" fill="#364331" stroke="#141e16"/><path d="M564 320v5l3 1" stroke="#74816c" fill="none"/>
+<g fill="#0b160f" stroke="#758267" stroke-width=".8"><circle cx="285" cy="267" r="4"/><circle cx="653" cy="449" r="4"/><circle cx="281" cy="488" r="4"/></g><path d="m282 267 5-1m363 184 5-2m-376 40 5-1" stroke="#7b826a" stroke-width=".7"/>
+<path d="M550 456l10 1 5-12" stroke="#282e1b" stroke-width="7"/><path d="M550 453l9 1 3-10" stroke="#b6b396" stroke-width="1.5"/>
+</g>
+<g id="lens-assembly">
+<ellipse cx="474" cy="355" rx="124" ry="128" transform="rotate(16 474 355)" fill="#080f0c" stroke="#101911" stroke-width="8"/>
+<ellipse cx="471" cy="355" rx="120" ry="127" transform="rotate(16 471 355)" fill="url(#cut-metal)" stroke="#b7bba0" stroke-width="1.2"/>
+<path d="M447 234C515 218 578 269 594 338C609 406 581 464 528 481L435 542C494 518 525 459 509 389C496 322 439 275 379 282Z" fill="url(#barrel)" stroke="#18251a" stroke-width="2"/>
+<g id="zoom-ribs"></g>
+<ellipse cx="446" cy="378" rx="119" ry="129" transform="rotate(16 446 378)" fill="url(#barrel)" stroke="#626e58" stroke-width="2"/>
+<ellipse cx="438" cy="385" rx="121" ry="131" transform="rotate(16 438 385)" fill="url(#barrel)" stroke="#0d1810" stroke-width="5"/>
+<path d="M466 258c45 10 78 45 88 90l-19 14c-14-48-46-82-85-89Z" fill="#29372b" stroke="#4d5e45" stroke-width="1"/>
+<text x="466" y="281" fill="#c5c6a4" font-family="Arial" font-size="8" transform="rotate(34 466 281)">24   35   50   70</text>
+<path d="M476 290l-9 10m28 5-8 9m26 10-7 8" stroke="#9ba889" stroke-width="1"/>
+<path d="M535 339l6 28-17 17-9-29Z" fill="#12201a" stroke="#6d7f65" stroke-width="1"/>
+<text x="521" y="363" fill="#95aa8a" font-family="monospace" font-size="6" transform="rotate(69 521 363)">0.38 ∞</text>
+<ellipse cx="422" cy="399" rx="123" ry="132" transform="rotate(16 422 399)" fill="url(#barrel)" stroke="#0c1710" stroke-width="8"/>
+<g id="focus-ribs"></g>
+<ellipse cx="407" cy="413" rx="121" ry="133" transform="rotate(16 407 413)" fill="#141f17" stroke="url(#amber-ring)" stroke-width="5"/>
+<ellipse cx="403" cy="419" rx="122" ry="134" transform="rotate(16 403 419)" fill="url(#cut-metal)" stroke="#c4c3a3" stroke-width=".6"/>
+<g id="front-optics" transform="translate(399 423) rotate(16) scale(.9 1)">
+<circle r="135" fill="url(#cut-metal)"/><circle r="132" fill="#151f19" stroke="#5c6b55" stroke-width="1.4"/><circle r="128" fill="#1a281f" stroke="#07110d" stroke-width="4"/>
+<g id="front-thread"></g>
+<circle r="122" fill="#152119" stroke="#69765e" stroke-width=".8"/><circle r="105" fill="#080f0e" stroke="#50614e" stroke-width="1.4"/>
+<text fill="#b8c4a6" font-family="Arial" font-size="7.1" letter-spacing="2.1"><textPath href="#rim-label-top" startOffset="50%" text-anchor="middle">MORROW OPTICS · 24–70mm 1:2.8</textPath></text>
+<text fill="#89967b" font-family="Arial" font-size="7" letter-spacing="2"><textPath href="#rim-label-bottom" startOffset="50%" text-anchor="middle">ASPHERICAL · Ø77 · MADE FOR M1</textPath></text>
+<circle r="101" fill="url(#glass)" stroke="#6a8a7e" stroke-width="1.1"/><circle r="95" fill="none" stroke="#426966" stroke-width="1"/><circle r="88" fill="none" stroke="#709283" stroke-opacity=".25" stroke-width="2"/><circle r="77" fill="none" stroke="#839a9c" stroke-opacity=".38" stroke-width="1"/>
+<circle cx="5" cy="6" r="69" fill="url(#inner-glass)" stroke="#526b68" stroke-width=".8"/>
+<circle cx="5" cy="6" r="55" fill="#0a1c18" stroke="#5c7768" stroke-opacity=".7"/>
+<g id="aperture" transform="translate(5 6)" fill="#182b22" stroke="#617060" stroke-opacity=".28" stroke-width=".7"><path d="M-25-37 7-47 37-25 46 7 25 37-7 46-37 25-46-7Z"/><path d="M-25-37 1-20 37-25M37-25 20-1 25 37M25 37 1 20-37 25M-37 25-20 0-25-37" fill="none"/><path d="M0-22 17-14 23 5 10 21-11 21-24 3-16-15Z" fill="#06130f" stroke="#3b5545"/></g>
+<path class="lens-shine" d="M-83-57C-64-87-21-103 17-93L39-65C-3-76-44-62-67-35Z" fill="url(#coating)"/>
+<path d="M-77-39c20-19 54-32 89-22" stroke="#d5ebe0" stroke-width="2" opacity=".36" fill="none"/>
+<ellipse class="lens-shine" cx="-26" cy="-35" rx="17" ry="10" fill="#c5e0d5" opacity=".11" transform="rotate(-26)"/>
+<path d="M51 73C72 54 81 26 78 1" fill="none" stroke="#64a494" stroke-width="9" opacity=".12"/>
+<path d="M-95-30c-9 34 0 67 22 90" stroke="#97b49b" stroke-opacity=".3" stroke-width="1" fill="none"/>
+<circle cx="46" cy="46" r="12" fill="#5ca184" opacity=".08"/><circle cx="46" cy="46" r="7" fill="#aec9a5" opacity=".05"/>
+<path d="M-41-126a133 133 0 0 1 89 3" fill="none" stroke="#d4d2b8" stroke-opacity=".65" stroke-width="1.4"/>
+</g>
+</g>
+</svg>
+<section class="controls"><div class="caption"><strong>A different kind of focus.</strong>24–70 MM F/2.8 · ZERO ASSETS, ALL CRAFT.</div><button id="capture">Release shutter</button></section><p class="status" id="status" role="status">Try the mode dial. Find your perspective.</p><footer><span>MORROW M1 / THE OPTICAL COLLECTION</span><span class="counter" id="counter">FRAME 0000</span></footer><div class="flash" id="flash"></div></main>
+<script>
+const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';function line(parent,x1,y1,x2,y2,color,width=.7){const p=document.createElementNS(NS,'path');p.setAttribute('d',`M${x1} ${y1}L${x2} ${y2}`);p.setAttribute('stroke',color);p.setAttribute('stroke-width',width);parent.append(p)}
+for(let i=0;i<25;i++){const x=282+i*3.7,y=233+Math.sqrt(Math.max(0,1-((x-328)/47)**2))*12;line($('dial-knurl'),x,216,x,y,i%2?'#151f17':'#697560',1)}
+for(let i=0;i<24;i++){const a=i/24*Math.PI*2;line($('mode-ticks'),328+Math.cos(a)*34,211+Math.sin(a)*10.5,328+Math.cos(a)*40,211+Math.sin(a)*12.5,i%6?'#87957d':'#e0d9aa',i%6?.6:1.3)}
+function ellipsePoint(cx,cy,rx,ry,a){const x=Math.cos(a)*rx,y=Math.sin(a)*ry,t=16*Math.PI/180;return[cx+x*Math.cos(t)-y*Math.sin(t),cy+x*Math.sin(t)+y*Math.cos(t)]}
+for(let i=0;i<81;i++){const a=-Math.PI*.84+i/80*Math.PI*1.47,p=ellipsePoint(477,351,119,128,a),q=ellipsePoint(448,376,119,128,a);line($('zoom-ribs'),...p,...q,i%2?'#0a160f':'#80896f',i%2?1.8:.7)}
+for(let i=0;i<110;i++){const a=-Math.PI*.87+i/109*Math.PI*1.55,p=ellipsePoint(430,392,123,133,a),q=ellipsePoint(411,411,123,133,a);line($('focus-ribs'),...p,...q,i%2?'#070f0b':'#627158',i%2?1.4:.65)}
+for(let i=0;i<144;i++){const a=i/144*Math.PI*2;line($('front-thread'),Math.cos(a)*124,Math.sin(a)*124,Math.cos(a)*126.5,Math.sin(a)*126.5,i%3?'#6c7b5e':'#141d13',.5)}
+let mode=0,frames=0;const modes=['M','A','S','P'],names=['MANUAL','APERTURE PRIORITY','SHUTTER PRIORITY','PROGRAM'];function changeMode(){mode=(mode+1)%4;$('dial-letter').textContent=modes[mode];$('mode-text').textContent='MODE '+modes[mode]+' · '+names[mode];$('status').textContent='Mode '+modes[mode]+' selected. Ready for your next frame.'}
+function capture(){frames++;$('counter').textContent='FRAME '+String(frames).padStart(4,'0');$('status').textContent='Frame '+String(frames).padStart(4,'0')+' captured · simulated shutter.';$('flash').classList.remove('fire');void $('flash').offsetWidth;$('flash').classList.add('fire')}
+$('mode-dial').onclick=changeMode;$('shutter').onclick=$('capture').onclick=capture;for(const [id,fn] of [['mode-dial',changeMode],['shutter',capture]])$(id).onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fn()}};
+</script></html>

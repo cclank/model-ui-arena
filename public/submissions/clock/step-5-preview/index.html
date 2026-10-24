@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>拾光 · 时钟</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg1: #22304a; --bg2: #0a0e18; --fg: #eef2fa; --dim: #93a0b8;
+    --accent: #f2b04e; --glow: rgba(242,176,78,.35); --tick: rgba(238,242,250,.85);
+  }
+  body.day {
+    --bg1: #a9cbec; --bg2: #e9f2fb; --fg: #1c2a3d; --dim: #5b6c84;
+    --accent: #d97b1e; --glow: rgba(217,123,30,.28); --tick: rgba(28,42,61,.8);
+  }
+  body {
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 26px; padding: 24px; overflow: hidden;
+    font-family: "Avenir Next", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: radial-gradient(120% 90% at 50% 10%, var(--bg1), var(--bg2));
+    color: var(--fg); transition: background 1.4s ease, color 1.4s ease;
+  }
+  .halo {
+    position: absolute; width: 62vmin; height: 62vmin; border-radius: 50%;
+    background: radial-gradient(circle, var(--glow), transparent 65%);
+    filter: blur(6px); animation: breathe 4s ease-in-out infinite; pointer-events: none;
+  }
+  @keyframes breathe { 0%,100% { transform: scale(1); opacity: .55; } 50% { transform: scale(1.12); opacity: .95; } }
+  .stage { position: relative; display: grid; place-items: center; }
+  svg.dial { width: min(74vw, 46vmin, 400px); height: auto; display: block; overflow: visible; }
+  .hand { transform-origin: 100px 100px; }
+  #hHour { filter: drop-shadow(0 0 4px var(--glow)); }
+  #hMin { filter: drop-shadow(0 0 3px var(--glow)); }
+  #hSec { transition: none; }
+  .tickline { stroke: var(--tick); }
+  .num { fill: var(--fg); font-size: 13px; font-weight: 600; text-anchor: middle; font-family: inherit; }
+  .cap { fill: var(--accent); }
+  .digital { text-align: center; position: relative; }
+  .time {
+    font-size: clamp(34px, 8vmin, 56px); font-weight: 200; letter-spacing: .06em;
+    font-variant-numeric: tabular-nums; display: flex; align-items: baseline; justify-content: center; gap: 4px;
+  }
+  .colon { animation: blink 1s steps(1) infinite; color: var(--accent); }
+  @keyframes blink { 50% { opacity: .15; } }
+  .sec { font-size: .42em; color: var(--accent); font-weight: 500; margin-left: 6px; }
+  .meta { margin-top: 10px; color: var(--dim); font-size: 14px; letter-spacing: .12em; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .phase { border: 1px solid var(--glow); color: var(--accent); border-radius: 999px; padding: 2px 12px; font-size: 12px; letter-spacing: .2em; }
+  @media (max-width: 390px) { .halo { width: 84vmin; height: 84vmin; } body { gap: 18px; } }
+</style>
+</head>
+<body>
+<div class="halo"></div>
+<div class="stage">
+  <svg class="dial" viewBox="0 0 200 200" aria-label="模拟时钟">
+    <defs>
+      <radialGradient id="face" cx="38%" cy="32%" r="80%">
+        <stop offset="0%" stop-color="rgba(255,255,255,.16)"/>
+        <stop offset="60%" stop-color="rgba(255,255,255,.04)"/>
+        <stop offset="100%" stop-color="rgba(0,0,0,.18)"/>
+      </radialGradient>
+    </defs>
+    <circle cx="100" cy="100" r="92" fill="url(#face)" stroke="var(--glow)" stroke-width="1.5"/>
+    <circle cx="100" cy="100" r="83" fill="none" stroke="var(--tick)" stroke-width=".6" opacity=".5"/>
+    <g id="ticks"></g>
+    <g id="nums"></g>
+    <line id="hHour" class="hand" x1="100" y1="100" x2="100" y2="52" stroke="var(--fg)" stroke-width="4.5" stroke-linecap="round"/>
+    <line id="hMin" class="hand" x1="100" y1="100" x2="100" y2="30" stroke="var(--fg)" stroke-width="2.8" stroke-linecap="round"/>
+    <line id="hSec" class="hand" x1="100" y1="112" x2="100" y2="24" stroke="var(--accent)" stroke-width="1.2" stroke-linecap="round"/>
+    <circle class="cap" cx="100" cy="100" r="4"/>
+  </svg>
+</div>
+<div class="digital">
+  <div class="time"><span id="hm">00:00</span><span class="colon">:</span><span id="hh">00</span><span class="sec" id="ms">.000</span></div>
+  <div class="meta"><span id="date">—</span><span id="week">—</span><span class="phase" id="phase">—</span></div>
+</div>
+<script>
+  const ticks = document.getElementById('ticks'), nums = document.getElementById('nums');
+  for (let i = 0; i < 60; i++) {
+    const major = i % 5 === 0, a = i * 6 * Math.PI / 180, r1 = major ? 70 : 76, r2 = 80;
+    const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    l.setAttribute('x1', 100 + Math.sin(a) * r1); l.setAttribute('y1', 100 - Math.cos(a) * r1);
+    l.setAttribute('x2', 100 + Math.sin(a) * r2); l.setAttribute('y2', 100 - Math.cos(a) * r2);
+    l.setAttribute('class', 'tickline');
+    l.setAttribute('stroke-width', major ? 2.4 : .9);
+    l.setAttribute('opacity', major ? 1 : .45);
+    l.style.animation = `breathe 4s ease-in-out ${-i / 15}s infinite`;
+    ticks.appendChild(l);
+    if (major) {
+      const n = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      const ra = (i === 0 ? 12 : i / 5), ar = 58;
+      n.setAttribute('x', 100 + Math.sin(a) * ar); n.setAttribute('y', 100 - Math.cos(a) * ar + 4);
+      n.setAttribute('class', 'num'); n.textContent = ra;
+      nums.appendChild(n);
+    }
+  }
+  const $ = id => document.getElementById(id);
+  const weeks = ['日', '一', '二', '三', '四', '五', '六'];
+  const pad = n => String(n).padStart(2, '0');
+  function frame() {
+    const d = new Date(), ms = d.getMilliseconds(), s = d.getSeconds() + ms / 1000;
+    const m = d.getMinutes() + s / 60, h = (d.getHours() % 12) + m / 60;
+    $('hSec').style.transform = `rotate(${s * 6}deg)`;
+    $('hMin').style.transform = `rotate(${m * 6}deg)`;
+    $('hHour').style.transform = `rotate(${h * 30}deg)`;
+    $('hm').textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    $('hh').textContent = pad(d.getSeconds());
+    $('ms').textContent = '.' + String(ms).padStart(3, '0');
+    $('date').textContent = `${d.getFullYear()} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日`;
+    $('week').textContent = '周' + weeks[d.getDay()];
+    const day = d.getHours() >= 6 && d.getHours() < 18;
+    document.body.classList.toggle('day', day);
+    $('phase').textContent = day ? '白 天' : '夜 晚';
+    requestAnimationFrame(frame);
+  }
+  frame();
+</script>
+</body>
+</html>

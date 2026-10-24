@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Skyline · 天气卡片</title>
+<style>
+:root{--ink:#f5f8ff;--dim:#ffffffb8;--line:#ffffff2e;--card:#0e1526e0;--accent:#ffd76e}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100svh;display:grid;place-items:center;background:#0a0f1c;color:var(--ink);font-family:"SF Pro Text",-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;padding:16px;overflow-x:hidden}
+.app{position:relative;width:min(92vw,392px);border-radius:26px;overflow:hidden;border:1px solid #ffffff26;box-shadow:0 34px 90px -34px #000;isolation:isolate}
+.scene{position:absolute;inset:0;z-index:0}
+.sky{position:absolute;inset:0;opacity:0;transition:opacity .95s ease}
+.sky.sun{background:linear-gradient(180deg,#5fa2f0,#a8cdf6 55%,#ffe6c2)}
+.sky.rain{background:linear-gradient(180deg,#333f57,#5c6d8c 65%,#8b9cb6)}
+.sky.snow{background:linear-gradient(180deg,#4c5c78,#8496b1 70%,#dde7f4)}
+.sky.on{opacity:1}
+.night{position:absolute;inset:0;background:linear-gradient(180deg,#070c1fe8,#141d3ce8);opacity:0;transition:opacity .95s}
+body.dark .night{opacity:.88}
+.fx{position:absolute;inset:0;opacity:0;transition:opacity .7s;pointer-events:none}
+.fx.on{opacity:1}
+.glow{position:absolute;right:10%;top:8%;width:130px;height:130px;border-radius:50%;background:radial-gradient(circle,#fffbe8,#ffd76e 42%,transparent 72%);filter:blur(1px);animation:breathe 5s ease-in-out infinite alternate}
+body.dark .glow{background:radial-gradient(circle,#f4f7ff,#c9d6ff 40%,transparent 72%)}
+@keyframes breathe{to{transform:scale(1.18)}}
+.mote{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff9;animation:rise linear infinite}
+@keyframes rise{from{transform:translateY(24px)}to{transform:translateY(-140px);opacity:0}}
+.drop{position:absolute;top:-24px;width:2px;height:17px;border-radius:2px;background:linear-gradient(#fff0,#a9d2ffd9);animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(430px)}}
+.flake{position:absolute;top:-14px;width:5px;height:5px;border-radius:50%;background:#fff;opacity:.9;animation:snowf linear infinite}
+@keyframes snowf{to{transform:translate(-16px,430px) rotate(300deg);opacity:.25}}
+.inner{position:relative;z-index:1;padding:16px 16px 18px;background:linear-gradient(180deg,#0b1222cc,#0b1222e6);backdrop-filter:blur(2px)}
+.top{display:flex;align-items:center;gap:8px}
+.cities{display:flex;gap:7px;flex:1;overflow-x:auto;scrollbar-width:none}
+.cities::-webkit-scrollbar{display:none}
+.city{padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:#ffffff14;color:var(--dim);font-size:12px;cursor:pointer;white-space:nowrap;transition:.25s}
+.city.on{background:#ffffffea;color:#18233c;border-color:transparent;font-weight:600}
+.unitbtn{width:42px;height:30px;border-radius:10px;border:1px solid var(--line);background:#ffffff14;color:var(--ink);font-size:12px;cursor:pointer}
+.now{display:flex;align-items:flex-end;justify-content:space-between;margin:14px 2px 4px;transition:opacity .28s,transform .28s}
+.temp{font-size:64px;font-weight:200;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.temp sup{font-size:18px;font-weight:400;color:var(--dim);margin-left:2px}
+.meta{text-align:right;font-size:12.5px;color:var(--dim);line-height:1.75}
+.meta b{display:block;font-size:17px;color:var(--ink);font-weight:600;letter-spacing:.06em}
+.forecast{transition:opacity .28s,transform .28s}
+#chart{width:100%;height:44px;margin-top:6px}
+.days{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin-top:2px}
+.day{display:grid;justify-items:center;gap:3px;padding:7px 2px 5px;border-radius:12px;background:#ffffff0f;border:1px solid #ffffff12}
+.day em{font-style:normal;font-size:10.5px;color:var(--dim)}
+.day svg{width:20px;height:20px}
+.day b{font-size:12px;font-variant-numeric:tabular-nums}
+.day span{font-size:10.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+.swap .now,.swap .forecast{opacity:0;transform:translateY(8px)}
+.foot{display:flex;justify-content:space-between;margin-top:10px;font-size:10.5px;color:var(--dim);letter-spacing:.08em}
+@media (max-width:400px){.temp{font-size:56px}.inner{padding:14px 13px 15px}}
+</style>
+</head>
+<body>
+<main class="app" id="app">
+  <div class="scene" id="scene">
+    <div class="sky sun" data-sky="sun"></div><div class="sky rain" data-sky="rain"></div><div class="sky snow" data-sky="snow"></div>
+    <div class="night"></div>
+    <div class="fx" data-fx="sun"><i class="glow"></i></div>
+    <div class="fx" data-fx="rain" id="rainLayer"></div>
+    <div class="fx" data-fx="snow" id="snowLayer"></div>
+  </div>
+  <div class="inner">
+    <div class="top"><div class="cities" id="cities"></div><button class="unitbtn" id="unit">°C</button></div>
+    <section class="now">
+      <div class="temp"><span id="t">--</span><sup id="deg">°C</sup></div>
+      <div class="meta"><b id="d">—</b><span id="w">风 —</span><br><span id="h">湿度 —</span></div>
+    </section>
+    <section class="forecast">
+      <svg id="chart" viewBox="0 0 100 36" preserveAspectRatio="none" aria-hidden="true">
+        <polyline id="loLine" fill="none" stroke="#ffffff55" stroke-width="1" stroke-dasharray="2 2" vector-effect="non-scaling-stroke"/>
+        <polyline id="hiLine" fill="none" stroke="#ffd76e" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
+      </svg>
+      <div class="days" id="days"></div>
+    </section>
+    <div class="foot"><span id="place">北京 · 数据为本地模拟</span><span id="clock">—</span></div>
+  </div>
+</main>
+<script>
+const $=(id)=>document.getElementById(id),DAYS=5;
+const CITIES=[
+ {name:"北京",type:"sun",t:32,d:"晴",w:"西北风 2 级",h:38,hi:[33,34,31,30,32],lo:[24,25,23,22,24],ic:["sun","sun","rain","sun","sun"]},
+ {name:"上海",type:"rain",t:27,d:"中雨",w:"东南风 3 级",h:82,hi:[28,29,27,30,31],lo:[25,25,24,26,26],ic:["rain","rain","rain","sun","sun"]},
+ {name:"哈尔滨",type:"snow",t:-6,d:"小雪",w:"北风 4 级",h:74,hi:[-4,-5,-7,-3,-2],lo:[-13,-14,-15,-11,-10],ic:["snow","snow","snow","sun","snow"]},
+ {name:"三亚",type:"sun",t:31,d:"少云",w:"海风 3 级",h:68,hi:[32,33,33,32,31],lo:[26,27,27,26,26],ic:["sun","sun","sun","rain","sun"]}
+];
+let cur=0,unit="C",lastTemp=0;
+const toUnit=(v)=>unit==="C"?v:Math.round(v*9/5+32);
+function iconSvg(k){const s='<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round">';
+  const sun='<circle cx="12" cy="12" r="4.6" fill="#ffd76e"/><g stroke="#ffd76e" stroke-width="1.6"><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/></g>';
+  const rain='<path d="M7 15a4 4 0 1 1 .7-7.94A5 5 0 0 1 17.5 8.5 3.6 3.6 0 0 1 17 15z" fill="#cfe0f5"/><g stroke="#8fc1ff" stroke-width="1.7"><path d="M9 17.4l-1 2.6M12.5 17.4l-1 2.6M16 17.4l-1 2.6"/></g>';
+  const snow='<path d="M7 15a4 4 0 1 1 .7-7.94A5 5 0 0 1 17.5 8.5 3.6 3.6 0 0 1 17 15z" fill="#e8eefc"/><g fill="#bfd3f2"><circle cx="9" cy="18.4" r="1.1"/><circle cx="12.5" cy="19.5" r="1.1"/><circle cx="16" cy="18.4" r="1.1"/></g>';
+  return s+(k==="sun"?sun:k==="rain"?rain:snow)+"</svg>";}
+const scene=$("scene");
+(function build(){const rl=$("rainLayer"),sl=$("snowLayer"),fl=$("scene").querySelector("[data-fx=sun]");
+  for(let i=0;i<34;i++){const d=document.createElement("i");d.className="drop";d.style.left=(i*3.1%100)+"%";d.style.animationDuration=(0.7+Math.random()*0.5)+"s";d.style.animationDelay=(-Math.random()*2)+"s";d.style.opacity=.35+Math.random()*.5;rl.append(d);}
+  for(let i=0;i<26;i++){const f=document.createElement("i");f.className="flake";f.style.left=(i*3.9%100)+"%";f.style.animationDuration=(5+Math.random()*6)+"s";f.style.animationDelay=(-Math.random()*8)+"s";sl.append(f);}
+  for(let i=0;i<14;i++){const m=document.createElement("i");m.className="mote";m.style.left=(8+Math.random()*84)+"%";m.style.bottom="8%";m.style.animationDuration=(3.5+Math.random()*3)+"s";m.style.animationDelay=(-Math.random()*5)+"s";fl.append(m);}})();
+function countUp(el,from,to){const t0=performance.now();const step=(t)=>{const k=Math.min(1,(t-t0)/600),e=1-Math.pow(1-k,3);el.textContent=toUnit(Math.round(from+(to-from)*e));if(k<1)requestAnimationFrame(step);};requestAnimationFrame(step);}
+function render(idx,animate){const c=CITIES[idx],from=lastTemp;cur=idx;lastTemp=c.t;
+  scene.querySelectorAll(".sky").forEach((s)=>s.classList.toggle("on",s.dataset.sky===c.type));
+  scene.querySelectorAll(".fx").forEach((f)=>f.classList.toggle("on",f.dataset.fx===c.type||(c.type==="sun"&&f.dataset.fx==="sun")));
+  $("d").textContent=c.d;$("w").textContent="风 "+c.w;$("h").textContent="湿度 "+c.h+"%";$("place").textContent=c.name+" · 数据为本地模拟";
+  if(animate){countUp($("t"),from,c.t);}else{$("t").textContent=toUnit(c.t);}
+  const base=Date.now(),wk=["周日","周一","周二","周三","周四","周五","周六"],days=$("days");days.innerHTML="";
+  c.hi.forEach((hi,i)=>{const dt=new Date(base+i*864e5),el=document.createElement("div");el.className="day";
+    el.innerHTML=`<em>${i===0?"今天":wk[dt.getDay()]}</em>${iconSvg(c.ic[i])}<b>${toUnit(hi)}°</b><span>${toUnit(c.lo[i])}°</span>`;days.append(el);});
+  const all=c.hi.concat(c.lo),mn=Math.min(...all)-2,mx=Math.max(...all)+2,map=(v)=>32-((v-mn)/(mx-mn))*26;
+  const px=(v)=>c.hi.map((_,i)=>`${6+i*22},${map(v[i]).toFixed(1)}`).join(" ");
+  $("hiLine").setAttribute("points",px(c.hi));$("loLine").setAttribute("points",px(c.lo));}
+function select(i){const app=$("app");app.classList.add("swap");setTimeout(()=>{render(i,true);app.classList.remove("swap");
+  document.querySelectorAll(".city").forEach((b,k)=>b.classList.toggle("on",k===i));},170);}
+(function init(){const box=$("cities");CITIES.forEach((c,i)=>{const b=document.createElement("button");b.className="city";b.textContent=c.name;b.onclick=()=>select(i);box.append(b);});
+  $("unit").onclick=()=>{unit=unit==="C"?"F":"C";$("unit").textContent="°"+unit;$("deg").textContent="°"+unit;render(cur,false);};
+  const h=new Date().getHours();document.body.classList.toggle("dark",h<6||h>=18);
+  $("clock").textContent=new Date().toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"});
+  render(0,false);document.querySelector(".city").classList.add("on");})();
+</script>
+</body>
+</html>

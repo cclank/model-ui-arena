@@ -1,125 +1,127 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Precision Chronometer - gemini-3.8-flash</title>
-<style>
-  :root {
-    --bg-day: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
-    --accent: #38bdf8; --accent-glow: rgba(56, 189, 248, 0.35);
-    --gold: #f59e0b; --text: #f8fafc;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: #020617; color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
-    min-height: 100vh; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; padding: 16px; overflow: hidden;
-  }
-  .clock-wrapper {
-    position: relative; width: 100%; max-width: 360px;
-    background: var(--bg-day); border-radius: 36px;
-    padding: 28px 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.08); text-align: center;
-  }
-  .header-badge {
-    display: inline-flex; align-items: center; gap: 6px; font-size: 11px;
-    font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase;
-    color: var(--accent); background: rgba(56,189,248,0.1);
-    padding: 4px 12px; border-radius: 999px; margin-bottom: 20px;
-  }
-  .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 1.5s infinite; }
-  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(0.8); } }
-  .dial-plate {
-    width: 260px; height: 260px; margin: 0 auto 24px; position: relative;
-    border-radius: 50%; background: #090d16;
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 0 0 2px rgba(255,255,255,0.05);
-  }
-  .tick {
-    position: absolute; left: 50%; top: 50%; width: 2px; height: 10px;
-    background: rgba(255,255,255,0.2); transform-origin: 50% 120px;
-    margin-left: -1px; margin-top: -120px;
-  }
-  .tick.hour { width: 3px; height: 14px; background: rgba(255,255,255,0.75); }
-  .hand {
-    position: absolute; left: 50%; bottom: 50%; transform-origin: 50% 100%;
-    border-radius: 4px; transition: transform 0.05s cubic-bezier(0.4, 2.08, 0.55, 0.44);
-  }
-  .hand.hour { width: 6px; height: 68px; margin-left: -3px; background: #e2e8f0; z-index: 2; }
-  .hand.minute { width: 4px; height: 96px; margin-left: -2px; background: #94a3b8; z-index: 3; }
-  .hand.second {
-    width: 2px; height: 116px; margin-left: -1px; background: #ef4444; z-index: 4;
-    transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  }
-  .hand.second::after {
-    content: ''; position: absolute; top: -14px; left: -3px;
-    width: 8px; height: 8px; border-radius: 50%; background: #ef4444;
-  }
-  .center-pivot {
-    position: absolute; left: 50%; top: 50%; width: 14px; height: 14px;
-    margin: -7px 0 0 -7px; border-radius: 50%; background: #ef4444;
-    box-shadow: 0 0 6px rgba(239,68,68,0.8); z-index: 5;
-  }
-  .digital-readout {
-    font-variant-numeric: tabular-nums; font-family: monospace;
-    font-size: 32px; font-weight: 700; letter-spacing: 0.05em;
-    color: #ffffff; text-shadow: 0 0 16px var(--accent-glow); margin-bottom: 6px;
-  }
-  .date-readout { font-size: 13px; color: #94a3b8; letter-spacing: 0.05em; font-weight: 500; }
-  .timezone-tag { font-size: 11px; color: #64748b; margin-top: 4px; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Precision Chronometer - Gemini 3.8 Flash</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: #090d16; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #e2e8f0; transition: background 0.5s ease;
+    }
+    body.light { background: #eef2f6; color: #1e293b; }
+    .clock-card {
+      width: 350px; padding: 28px 24px; border-radius: 28px;
+      background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6); backdrop-filter: blur(16px);
+      display: flex; flex-direction: column; align-items: center; gap: 20px;
+      transition: all 0.4s ease;
+    }
+    body.light .clock-card {
+      background: rgba(255, 255, 255, 0.85); border-color: rgba(0, 0, 0, 0.06);
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.12);
+    }
+    .dial-wrap {
+      position: relative; width: 220px; height: 220px; border-radius: 50%;
+      background: radial-gradient(circle at center, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.95));
+      border: 4px solid rgba(56, 189, 248, 0.25); box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 30px rgba(56, 189, 248, 0.12);
+    }
+    body.light .dial-wrap {
+      background: radial-gradient(circle at center, #ffffff, #f1f5f9);
+      border-color: rgba(14, 165, 233, 0.35); box-shadow: inset 0 0 15px rgba(0,0,0,0.05), 0 10px 25px rgba(14, 165, 233, 0.15);
+    }
+    .tick {
+      position: absolute; width: 2px; height: 8px; background: rgba(226, 232, 240, 0.35);
+      top: 6px; left: 50%; transform-origin: 50% 104px; margin-left: -1px;
+    }
+    .tick.major { height: 12px; width: 3px; background: #38bdf8; margin-left: -1.5px; border-radius: 2px; }
+    body.light .tick { background: rgba(30, 41, 59, 0.25); }
+    body.light .tick.major { background: #0284c7; }
+    .hand {
+      position: absolute; bottom: 50%; left: 50%; transform-origin: 50% 100%;
+      border-radius: 4px; pointer-events: none;
+    }
+    .hand-hour { width: 5px; height: 56px; margin-left: -2.5px; background: #f8fafc; z-index: 2; }
+    body.light .hand-hour { background: #0f172a; }
+    .hand-min { width: 3.5px; height: 82px; margin-left: -1.75px; background: #94a3b8; z-index: 3; }
+    body.light .hand-min { background: #334155; }
+    .hand-sec {
+      width: 1.5px; height: 95px; margin-left: -0.75px; background: #f43f5e;
+      z-index: 4; box-shadow: 0 0 8px rgba(244, 63, 94, 0.6);
+    }
+    .pin {
+      position: absolute; top: 50%; left: 50%; width: 10px; height: 10px;
+      margin: -5px 0 0 -5px; border-radius: 50%; background: #f43f5e; z-index: 5;
+      box-shadow: 0 0 8px rgba(244, 63, 94, 0.8);
+    }
+    .info-pane { text-align: center; display: flex; flex-direction: column; gap: 4px; }
+    .digital-time {
+      font-size: 2.2rem; font-weight: 700; letter-spacing: 2px;
+      font-variant-numeric: tabular-nums; color: #38bdf8;
+    }
+    body.light .digital-time { color: #0284c7; }
+    .date-str { font-size: 0.85rem; color: #94a3b8; font-weight: 500; }
+    body.light .date-str { color: #64748b; }
+    .controls { display: flex; gap: 10px; margin-top: 4px; }
+    .btn {
+      padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.05); color: inherit; font-size: 0.8rem;
+      cursor: pointer; transition: all 0.2s ease;
+    }
+    .btn:hover { background: rgba(56, 189, 248, 0.15); border-color: #38bdf8; }
+  </style>
 </head>
 <body>
-<div class="clock-wrapper">
-  <div class="header-badge"><span class="pulse-dot"></span><span id="period">CHRONO ACTIVE</span></div>
-  <div class="dial-plate" id="dial">
-    <div class="hand hour" id="hourHand"></div>
-    <div class="hand minute" id="minHand"></div>
-    <div class="hand second" id="secHand"></div>
-    <div class="center-pivot"></div>
+  <div class="clock-card">
+    <div class="dial-wrap" id="dial">
+      <div class="pin"></div>
+      <div class="hand hand-hour" id="hHand"></div>
+      <div class="hand hand-min" id="mHand"></div>
+      <div class="hand hand-sec" id="sHand"></div>
+    </div>
+    <div class="info-pane">
+      <div class="digital-time" id="digital">00:00:00</div>
+      <div class="date-str" id="dateText">2026年9月20日 星期日</div>
+    </div>
+    <div class="controls">
+      <button class="btn" id="themeBtn" onclick="toggleTheme()">切换光效 (昼/夜)</button>
+    </div>
   </div>
-  <div class="digital-readout" id="digital">00:00:00</div>
-  <div class="date-readout" id="dateText">2025年01月01日 星期三</div>
-  <div class="timezone-tag" id="tzText">LOCAL CHRONOMETER • 60 FPS</div>
-</div>
-<script>
-  const dial = document.getElementById('dial');
-  for (let i = 0; i < 60; i++) {
-    const tick = document.createElement('div');
-    tick.className = 'tick' + (i % 5 === 0 ? ' hour' : '');
-    tick.style.transform = `rotate(${i * 6}deg)`;
-    dial.appendChild(tick);
-  }
-  const hHand = document.getElementById('hourHand'), mHand = document.getElementById('minHand');
-  const sHand = document.getElementById('secHand'), dig = document.getElementById('digital');
-  const dText = document.getElementById('dateText'), period = document.getElementById('period');
-
-  function update() {
-    const now = new Date();
-    const ms = now.getMilliseconds();
-    const s = now.getSeconds();
-    const m = now.getMinutes();
-    const h = now.getHours();
-
-    const secDeg = (s + ms / 1000) * 6;
-    const minDeg = m * 6 + s * 0.1;
-    const hrDeg = (h % 12) * 30 + m * 0.5;
-
-    sHand.style.transform = `rotate(${secDeg}deg)`;
-    mHand.style.transform = `rotate(${minDeg}deg)`;
-    hHand.style.transform = `rotate(${hrDeg}deg)`;
-
-    const pad = n => String(n).padStart(2, '0');
-    dig.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
-
-    const days = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
-    dText.textContent = `${now.getFullYear()}年${pad(now.getMonth()+1)}月${pad(now.getDate())}日 ${days[now.getDay()]}`;
-    period.textContent = h >= 6 && h < 18 ? '☀️ DAYTIME MODE' : '🌙 NIGHTTIME MODE';
-
-    requestAnimationFrame(update);
-  }
-  requestAnimationFrame(update);
-</script>
+  <script>
+    const dial = document.getElementById('dial');
+    for (let i = 0; i < 60; i++) {
+      if (i % 5 === 0) {
+        const tick = document.createElement('div');
+        tick.className = 'tick' + (i % 15 === 0 ? ' major' : '');
+        tick.style.transform = `rotate(${i * 6}deg)`;
+        dial.appendChild(tick);
+      }
+    }
+    const hHand = document.getElementById('hHand');
+    const mHand = document.getElementById('mHand');
+    const sHand = document.getElementById('sHand');
+    const digital = document.getElementById('digital');
+    const dateText = document.getElementById('dateText');
+    function updateClock() {
+      const now = new Date();
+      const ms = now.getMilliseconds();
+      const s = now.getSeconds() + ms / 1000;
+      const m = now.getMinutes() + s / 60;
+      const h = (now.getHours() % 12) + m / 60;
+      sHand.style.transform = `rotate(${s * 6}deg)`;
+      mHand.style.transform = `rotate(${m * 6}deg)`;
+      hHand.style.transform = `rotate(${h * 30}deg)`;
+      const pad = n => String(Math.floor(n)).padStart(2, '0');
+      digital.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+      dateText.textContent = now.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+      requestAnimationFrame(updateClock);
+    }
+    requestAnimationFrame(updateClock);
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+    }
+  </script>
 </body>
 </html>

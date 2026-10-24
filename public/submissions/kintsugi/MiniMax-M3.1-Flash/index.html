@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>金缮 · 可碎可缮的青瓷碗</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:#100d0a;color:#e8ddc9;overflow:hidden;touch-action:none;
+font:400 14px/1.5 ui-sans-serif,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+-webkit-user-select:none;user-select:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+.panel{position:fixed;z-index:5;left:50%;bottom:18px;translate:-50% 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+justify-content:center;padding:9px 13px;border-radius:14px;background:rgba(22,16,10,.62);
+border:1px solid rgba(220,190,140,.2);backdrop-filter:blur(10px);max-width:calc(100% - 24px)}
+.btn{border:1px solid rgba(226,192,132,.36);background:rgba(240,210,150,.07);color:#e9d6ae;border-radius:9px;
+padding:8px 15px;font:inherit;font-size:12px;letter-spacing:.14em;cursor:pointer;transition:.22s;white-space:nowrap}
+.btn:hover{background:rgba(240,210,150,.18)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.gold{border-color:rgba(240,196,104,.55);color:#ffd98a}
+.hud{position:fixed;z-index:5;left:14px;top:14px;padding:11px 14px;border-radius:13px;
+background:rgba(22,16,10,.55);border:1px solid rgba(220,190,140,.18);backdrop-filter:blur(10px);
+font-size:11px;color:#a99a80;letter-spacing:.06em}
+.hud .r{display:flex;gap:13px;margin-bottom:4px}
+.hud .r:last-child{margin-bottom:0}
+.hud b{color:#f0dfbb;font-weight:600;font-variant-numeric:tabular-nums}
+.title{position:fixed;z-index:5;right:14px;top:14px;text-align:right;font-size:10px;letter-spacing:.2em;color:#8e8069;line-height:1.9}
+.title b{color:#d8bb7c;letter-spacing:.32em;font-size:11.5px}
+#tip{position:fixed;z-index:5;left:50%;top:50%;translate:-50% -50%;text-align:center;pointer-events:none;
+transition:opacity .6s}
+#tip.gone{opacity:0}
+#tip h1{font-size:22px;font-weight:300;letter-spacing:.5em;color:#e4c98f;
+text-shadow:0 0 22px rgba(220,170,80,.35)}
+#tip p{margin-top:10px;font-size:11.5px;letter-spacing:.24em;color:#9b8a6d}
+#tip .note{margin-top:14px;font-size:11px;letter-spacing:.16em;color:#6f6353;font-style:italic}
+@media (max-width:520px){
+  .hud{left:8px;top:8px;padding:8px 10px;font-size:10px}
+  .hud .r{gap:9px}
+  .title{display:none}
+  .panel{bottom:10px;padding:8px 10px;gap:6px}
+  .btn{padding:7px 11px;font-size:11px}
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud">
+  <div class="r"><span>碎片 <b id="s1">0</b></span><span>裂缝 <b id="s2">0</b></span><span>修复 <b id="s3">0</b></span></div>
+  <div class="r"><span>状态 <b id="s4">完整</b></span><span>金缮 <b id="s5">0</b></span></div>
+</div>
+<div class="title"><b>金 缮</b><br>程序化断裂 · 刚体坠落 · 液态金修复</div>
+<div id="tip"><h1>金 缮</h1><p>点击碗身任意处 · 使其碎裂</p><p class="note">破镜难圆，故以金续之。</p></div>
+<div class="panel">
+  <button class="btn gold" id="repair">修 复</button>
+  <button class="btn" id="reset">重 新 来 过</button>
+  <button class="btn" id="sound">音 效：开</button>
+</div>
+<script>
+"use strict";
+/* ==========================================================================
+   金缮 —— 运行时程序化断裂 + 二维刚体 + 路径生长式金线修复
+   --------------------------------------------------------------------------
+   断裂算法：以「采样点 + 最近站点」方式实现真正的 Voronoi 分割
+     1) 在碗体轮廓内部（含轮廓上的稠密采样点）撒下若干采样点；
+     2) 随机生成 K 个 Voronoi 站点，靠近点击点的区域站点更密（裂纹更细碎）；
+     3) 每个采样点归属最近站点 → 得到 Voronoi 单元；
+     4) 对每个单元取其采样点的凸包作为碎片多边形（Voronoi 单元本身是凸的，
+        故凸包即单元）。相邻单元共用同一批边界采样点，因此拼回去严丝合缝，
+        且每片形状互不相同；
+     5) 单元内部公共边即为「裂缝」，用碗轮廓的距离判定区分内部裂缝与外轮廓。
+   每次点击都会重新生成站点与采样扰动，故裂纹路径绝不重复。
+   ========================================================================== */
+
+const cvs = document.getElementById("c");
+const ctx = cvs.getContext("2d");
+const $ = (id) => document.getElementById(id);
+
+let W = 0, H = 0, DPR = 1;
+
+/* ---------------------------- 碗体几何 ---------------------------- */
+const BOWL = { W: 152, Hh: 124, Fw: 46, rimRy: 27, footH: 15 };
+let originX = 0, originY = 0, tableY = 0;
+
+function cubic(p0, p1, p2, p3, t) {
+  const u = 1 - t;
+  return u*u*u*p0 + 3*u*u*t*p1 + 3*u*t*t*p2 + t*t*t*p3;
+}
+function bowlOutline(n) {
+  const pts = [];
+  const { W: w, Hh: h, Fw: fw, rimRy: ry } = BOWL;
+  // 口沿后半圈（左 → 右，经上方）
+  for (let i = 0; i <= n; i++) {
+    const a = Math.PI - (i / n) * Math.PI;
+    pts.push([Math.cos(a) * w, -Math.sin(a) * ry]);
+  }
+  // 右侧外壁
+  for (let i = 1; i <= n; i++) {
+    const t = i / n;
+    pts.push([
+      cubic(fw, w * 0.56, w * 0.97, w, t),
+      cubic(h - BOWL.footH, h * 0.87, h * 0.46, 0, t)
+    ]);
+  }
+  // 圈足底
+  for (let i = 1; i <= n; i++) {
+    const t = i / n;
+    pts.push([
+      cubic(fw, fw * 0.55, -fw * 0.55, -fw, t),
+      cubic(h - BOWL.footH, h, h, h - BOWL.footH, t)
+    ]);
+  }
+  // 左侧外壁
+  for (let i = 1; i <= n; i++) {
+    const t = i / n;
+    pts.push([
+      cubic(-fw, -w * 0.97, -w * 0.56, -w, t),
+      cubic(h - BOWL.footH, h * 0.46, 0, 0, t)
+    ]);
+  }
+  return pts; // 闭合轮廓（局部坐标，原点在口沿中心）
+}
+const OUTLINE = bowlOutline(64);
+const OUTLINE_DENSE = bowlOutline(220);
+
+function pointInPoly(px, py, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+    if ((yi > py) !== (yj > py) && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+function distToOutline(px, py) {
+  let best = Infinity;
+  for (const p of OUTLINE_DENSE) {
+    const d = (p[0] - px) ** 2 + (p[1] - py) ** 2;
+    if (d < best) best = d;
+  }
+  return Math.sqrt(best);
+}
+
+/* 凸包（Andrew monotone chain） */
+function convexHull(pts) {
+  if (pts.length < 3) return pts.slice();
+  const p = pts.slice().sort((a, b) => (a[0] - b[0]) || (a[1] - b[1]));
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lower = [];
+  for (const q of p) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], q) <= 0) lower.pop();
+    lower.push(q);
+  }
+  const upper = [];
+  for (let i = p.length - 1; i >= 0; i--) {
+    const q = p[i];
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], q) <= 0) upper.pop();
+    upper.push(q);
+  }
+  lower.pop(); upper.pop();
+  return lower.concat(upper);
+}
+
+/* ---------------------------- 断裂 ---------------------------- */
+let shards = [];
+let cracks = [];        // {pts:[...], born:0}  金线沿此路径生长
+let oldCracks = [];     // 历次金缮留下的裂缝（再次碎裂时叠加）
+let phase = "intact";   // intact | falling | resting | flying | gilding | done
+let phaseT = 0;
+let repairCount = 0;
+let goldProgress = 0;
+let pendingCracks = [];
+let shardSeed = 1;
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function fracture(cx, cy) {
+  const rnd = mulberry32((shardSeed = (shardSeed * 7919 + 104729) >>> 0));
+  const local = [cx - originX, cy - originY];
+
+  // 采样点：内部网格 + 轮廓上的稠密点
+  const samples = [];
+  const step = 7;
+  for (let y = -BOWL.rimRy - 6; y <= BOWL.Hh + 4; y += step) {
+    for (let x = -BOWL.W - 4; x <= BOWL.W + 4; x += step) {
+      const jitter = () => (rnd() - 0.5) * step * 0.55;
+      const px = x + jitter(), py = y + jitter();
+      if (pointInPoly(px, py, OUTLINE)) samples.push([px, py]);
+    }
+  }
+  for (const p of OUTLINE_DENSE) {
+    samples.push([p[0] + (rnd() - 0.5) * 1.2, p[1] + (rnd() - 0.5) * 1.2]);
+  }
+  if (samples.length < 40) return;
+
+  // 站点：数量 15–60；靠点击点更密
+  const K = 15 + Math.floor(rnd() * 45);
+  const sites = [];
+  for (let i = 0; i < K; i++) {
+    let best = null, bestScore = -Infinity;
+    for (let tries = 0; tries < 26; tries++) {
+      const p = samples[Math.floor(rnd() * samples.length)];
+      // 评分：靠近点击点 + 远离已有站点（保证铺开）
+      const dc = Math.hypot(p[0] - local[0], p[1] - local[1]);
+      let nearest = Infinity;
+      for (const s of sites) nearest = Math.min(nearest, Math.hypot(s[0] - p[0], s[1] - p[1]));
+      const score = (1 / (1 + dc * 0.06)) * 1.0 + Math.min(nearest, 60) * 0.012;
+      if (score > bestScore) { bestScore = score; best = p; }
+    }
+    sites.push([best[0], best[1]]);
+  }
+
+  // 归属 + 凸包
+  const cells = sites.map(() => []);
+  for (const s of samples) {
+    let bi = 0, bd = Infinity;
+    for (let i = 0; i < sites.length; i++) {
+      const d = (sites[i][0] - s[0]) ** 2 + (sites[i][1] - s[1]) ** 2;
+      if (d < bd) { bd = d; bi = i; }
+    }
+    cells[bi].push(s);
+  }
+
+  shards = [];
+  const newCracks = [];
+  for (let i = 0; i < sites.length; i++) {
+    if (cells[i].length < 3) continue;
+    const hull = convexHull(cells[i]);
+    if (hull.length < 3) continue;
+    let cx = 0, cy = 0;
+    for (const p of hull) { cx += p[0]; cy += p[1]; }
+    cx /= hull.length; cy /= hull.length;
+    const localVerts = hull.map((p) => [p[0] - cx, p[1] - cy]);
+    const wx = originX + cx, wy = originY + cy;
+    const dc = Math.hypot(cx - local[0], cy - local[1]);
+    shards.push({
+      verts: localVerts,
+      x: wx, y: wy, ox: wx, oy: wy,        // 当前位置 / 归位目标
+      a: 0, oa: 0,                          // 角度 / 目标角度
+      vx: 0, vy: 0, va: 0,
+      r: Math.max(...hull.map((p) => Math.hypot(p[0] - cx, p[1] - cy))),
+      born: 0
+    });
+    // 内部公共边 → 裂缝
+    for (let k = 0; k < hull.length; k++) {
+      const a = hull[k], b = hull[(k + 1) % hull.length];
+      const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+      if (distToOutline(mx, my) > 3.2) {
+        newCracks.push({ a: [a[0] + originX, a[1] + originY], b: [b[0] + originX, b[1] + originY] });
+      }
+    }
+  }
+
+  // 合并重复/过短裂缝
+  const seen = new Set();
+  pendingCracks = newCracks.filter((c) => {
+    const key = c.a.map((v) => Math.round(v)).join(",") + "|" + c.b.map((v) => Math.round(v)).join(",");
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return Math.hypot(c.b[0] - c.a[0], c.b[1] - c.a[1]) > 5;
+  });
+
+  // 碎片初始动量：沿远离点击点的方向炸开
+  for (const s of shards) {
+    const dx = s.ox - cx, dy = s.oy - cy;
+    const d = Math.hypot(dx, dy) || 1;
+    const kick = 1.4 + 3.4 * Math.exp(-d / 70);
+    s.vx = (dx / d) * kick + (rnd() - 0.5) * 1.6;
+    s.vy = (dy / d) * kick * 0.5 - rnd() * 1.4;
+    s.va = (rnd() - 0.5) * 7.5;
+    s.born = 0;
+  }
+
+  phase = "falling";
+  phaseT = 0;
+  goldProgress = 0;
+  $("tip").classList.add("gone");
+  playShatter();
+  updateHud();
+}
+
+/* ---------------------------- 刚体物理 ---------------------------- */
+const GRAV = 1500;
+const REST = 0.26;
+const FRIC = 0.58;
+
+function stepShards(dt) {
+  for (const s of shards) {
+    s.vy += GRAV * dt;
+    s.x += s.vx * dt; s.y += s.vy * dt;
+    s.a += s.va * dt;
+    s.vx *= 0.998; s.va *= 0.995;
+    s.born += dt;
+
+    // 与案几碰撞：逐顶点求解
+    const cs = Math.cos(s.a), sn = Math.sin(s.a);
+    let deepest = 0, hitVX = 0;
+    for (const v of s.verts) {
+      const wx = s.x + v[0] * cs - v[1] * sn;
+      const wy = s.y + v[0] * sn + v[1] * cs;
+      const pen = wy - tableY;
+      if (pen > deepest) { deepest = pen; hitVX = v[0]; }
+    }
+    if (deepest > 0) {
+      // 位置修正
+      s.y -= deepest;
+      // 速度：法向反弹 + 切向摩擦
+      if (s.vy > 0) {
+        const impact = -s.vy * REST;
+        s.vy = impact;
+        s.vx *= 1 - FRIC * 0.5;
+        s.va *= 1 - FRIC * 0.18;
+        s.va += (s.vx * 0.0016 + hitVX * 0.0009);
+        s.va *= 0.6;
+        if (Math.abs(impact) > 90) playTick(Math.min(1, Math.abs(impact) / 700));
+      }
+      // 角速度阻尼（防止永动）
+      s.va *= 0.86;
+      s.vx *= 0.92;
+      // 静止判定
+      if (Math.abs(s.vy) < 26 && Math.abs(s.vx) < 14 && Math.abs(s.va) < 0.7) {
+        s.vy = 0; s.vx *= 0.7; s.va *= 0.6;
+      }
+    }
+    // 碎片间简易分离（重心圆近似），避免明显重叠
+    for (const o of shards) {
+      if (o === s) continue;
+      const dx = o.x - s.x, dy = o.y - s.y;
+      const d = Math.hypot(dx, dy);
+      const minD = (s.r + o.r) * 0.30;
+      if (d > 1e-3 && d < minD) {
+        const push = (minD - d) * 0.14;
+        const ux = dx / d, uy = dy / d;
+        s.x -= ux * push; s.y -= uy * push;
+        o.x += ux * push; o.y += uy * push;
+      }
+    }
+  }
+}
+
+function allSettled() {
+  for (const s of shards) {
+    if (Math.abs(s.vy) > 30 || Math.abs(s.vx) > 18 || Math.abs(s.va) > 0.9) return false;
+  }
+  return true;
+}
+
+/* ---------------------------- 修复 ---------------------------- */
+function startRepair() {
+  if (phase !== "resting" && phase !== "falling") return;
+  phase = "flying";
+  phaseT = 0;
+  $("repair").disabled = true;
+}
+
+function tweenBack(dt) {
+  phaseT += dt;
+  const T = 1.15;
+  const p = Math.min(1, phaseT / T);
+  const e = 1 - Math.pow(1 - p, 3);
+  for (const s of shards) {
+    s.x = s.ox + (s.x - s.ox) * (1 - e);
+    s.y = s.oy + (s.y - s.oy) * (1 - e);
+    s.a = s.oa + (s.a - s.oa) * (1 - e);
+  }
+  if (p >= 1) {
+    for (const s of shards) { s.x = s.ox; s.y = s.oy; s.a = s.oa; s.vx = s.vy = s.va = 0; }
+    phase = "gilding";
+    phaseT = 0;
+    goldProgress = 0;
+    cracks = pendingCracks.slice();
+    repairCount++;
+    $("s3").textContent = repairCount;
+  }
+}
+
+/* ---------------------------- 绘制 ---------------------------- */
+function bowlGradient(ctx2, ox, oy) {
+  const g = ctx2.createLinearGradient(ox - BOWL.W, oy - 40, ox + BOWL.W, oy + BOWL.Hh);
+  g.addColorStop(0, "#3f6b62");
+  g.addColorStop(0.22, "#6fae9d");
+  g.addColorStop(0.46, "#9fd4c2");
+  g.addColorStop(0.72, "#5d9b8b");
+  g.addColorStop(1, "#2c4d47");
+  return g;
+}
+function traceOutline(pts, ox, oy) {
+  ctx.beginPath();
+  ctx.moveTo(ox + pts[0][0], oy + pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(ox + pts[i][0], oy + pts[i][1]);
+  ctx.closePath();
+}
+function tracePoly(vs, ox, oy, a) {
+  const cs = Math.cos(a), sn = Math.sin(a);
+  ctx.beginPath();
+  for (let i = 0; i < vs.length; i++) {
+    const x = ox + vs[i][0] * cs - vs[i][1] * sn;
+    const y = oy + vs[i][0] * sn + vs[i][1] * cs;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
+function drawGoldPath(c, progress, alpha) {
+  const [ax, ay] = c.a, [bx, by] = c.b;
+  const len = Math.hypot(bx - ax, by - ay);
+  const t = Math.max(0, Math.min(1, progress)) * len;
+  const ux = (bx - ax) / len, uy = (by - ay) / len;
+  const ex = ax + ux * t, ey = ay + uy * t;
+  ctx.save();
+  ctx.lineCap = "round";
+  // 底：暗色裂缝
+  ctx.strokeStyle = "rgba(18,12,6,.85)";
+  ctx.lineWidth = 3.4; ctx.globalAlpha = alpha;
+  ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ex, ey); ctx.stroke();
+  // 金：外晕
+  ctx.shadowColor = "rgba(255,196,92,.9)";
+  ctx.shadowBlur = 12;
+  const g = ctx.createLinearGradient(ax, ay, bx, by);
+  g.addColorStop(0, "#8a5c12"); g.addColorStop(0.3, "#ffe6a0");
+  g.addColorStop(0.55, "#e5a92b"); g.addColorStop(0.8, "#fff3c8"); g.addColorStop(1, "#a06f16");
+  ctx.strokeStyle = g; ctx.lineWidth = 2.1;
+  ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ex, ey); ctx.stroke();
+  // 金：细高光
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = "rgba(255,248,220,.8)"; ctx.lineWidth = 0.7;
+  ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ex, ey); ctx.stroke();
+  ctx.restore();
+}
+
+function draw() {
+  const t = performance.now() / 1000;
+  // 背景
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, "#14100b"); bg.addColorStop(0.55, "#1d1710"); bg.addColorStop(1, "#0d0a07");
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  const spot = ctx.createRadialGradient(W * 0.5, H * 0.34, 20, W * 0.5, H * 0.34, Math.max(W, H) * 0.62);
+  spot.addColorStop(0, "rgba(255,214,140,.13)"); spot.addColorStop(1, "rgba(255,214,140,0)");
+  ctx.fillStyle = spot; ctx.fillRect(0, 0, W, H);
+
+  // 案几
+  const tg = ctx.createLinearGradient(0, tableY - 14, 0, H);
+  tg.addColorStop(0, "#4a2f1c"); tg.addColorStop(0.1, "#38220f"); tg.addColorStop(1, "#160d06");
+  ctx.fillStyle = tg; ctx.fillRect(0, tableY, W, H - tableY);
+  ctx.strokeStyle = "rgba(240,200,140,.32)"; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(0, tableY); ctx.lineTo(W, tableY); ctx.stroke();
+  // 案几木纹
+  ctx.strokeStyle = "rgba(0,0,0,.18)"; ctx.lineWidth = 1;
+  for (let i = 0; i < 7; i++) {
+    const y = tableY + 22 + i * 26;
+    ctx.beginPath();
+    for (let x = 0; x <= W; x += 28) ctx.lineTo(x, y + Math.sin(x * 0.012 + i) * 2.4);
+    ctx.stroke();
+  }
+
+  // 碗的投影
+  ctx.save();
+  ctx.globalAlpha = 0.5;
+  ctx.filter = "blur(9px)";
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.ellipse(originX, tableY + 6, BOWL.W * 0.82, 15, 0, 0, 6.2832);
+  ctx.fill();
+  ctx.restore();
+
+  const grad = bowlGradient(ctx, originX, originY);
+
+  if (phase === "intact" || phase === "done" || phase === "gilding" && goldProgress >= 1) {
+    // 完整碗
+    ctx.save();
+    traceOutline(OUTLINE, originX, originY);
+    ctx.fillStyle = grad; ctx.fill();
+    ctx.clip();
+    // 内壁阴影
+    const inner = ctx.createLinearGradient(originX - BOWL.W, originY, originX + BOWL.W, originY);
+    inner.addColorStop(0, "rgba(10,30,28,.30)"); inner.addColorStop(0.3, "rgba(255,255,255,.12)");
+    inner.addColorStop(0.55, "rgba(255,255,255,.05)"); inner.addColorStop(1, "rgba(10,30,28,.34)");
+    ctx.fillStyle = inner; ctx.fillRect(originX - BOWL.W, originY - 30, BOWL.W * 2, BOWL.Hh + 40);
+    // 口沿厚度
+    ctx.strokeStyle = "rgba(235,250,246,.72)"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.ellipse(originX, originY, BOWL.W, BOWL.rimRy, 0, Math.PI, 0); ctx.stroke();
+    ctx.strokeStyle = "rgba(40,70,64,.55)"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(originX, originY, BOWL.W, BOWL.rimRy, 0, 0, Math.PI); ctx.stroke();
+    // 高光
+    ctx.globalAlpha = 0.5;
+    ctx.strokeStyle = "#f4fffb"; ctx.lineWidth = 5; ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(originX - BOWL.W * 0.72, originY + BOWL.Hh * 0.30);
+    ctx.quadraticCurveTo(originX - BOWL.W * 0.66, originY + BOWL.Hh * 0.58, originX - BOWL.W * 0.42, originY + BOWL.Hh * 0.74);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    // 外轮廓
+    ctx.save();
+    traceOutline(OUTLINE, originX, originY);
+    ctx.strokeStyle = "rgba(18,40,38,.7)"; ctx.lineWidth = 2; ctx.stroke();
+    ctx.restore();
+
+    // 旧金线
+    for (const c of oldCracks) drawGoldPath(c, 1, 1);
+    if (phase === "gilding" && goldProgress >= 1) {
+      // 本轮金线
+      for (const c of cracks) drawGoldPath(c, 1, 1);
+    }
+    // 修复完成的金光扫过
+    if (phase === "gilding" && goldProgress >= 1) {
+      const sweep = Math.min(1, (phaseT - 1.5) / 1.1);
+      if (sweep > 0 && sweep < 1) {
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        const sx = originX - BOWL.W + sweep * BOWL.W * 2;
+        const sg = ctx.createLinearGradient(sx - 70, 0, sx + 70, 0);
+        sg.addColorStop(0, "rgba(255,210,120,0)"); sg.addColorStop(0.5, "rgba(255,236,180,.5)");
+        sg.addColorStop(1, "rgba(255,210,120,0)");
+        ctx.fillStyle = sg;
+        ctx.fillRect(originX - BOWL.W, originY - 40, BOWL.W * 2, BOWL.Hh + 50);
+        ctx.restore();
+      }
+    }
+  } else {
+    // 碎片态
+    for (const s of shards) {
+      ctx.save();
+      tracePoly(s.verts, s.x, s.y, s.a);
+      ctx.fillStyle = grad; ctx.fill();
+      ctx.clip();
+      // 边缘厚度（假高光/暗部）
+      ctx.strokeStyle = "rgba(255,255,255,.16)"; ctx.lineWidth = 2.4;
+      ctx.stroke();
+      ctx.restore();
+      ctx.save();
+      tracePoly(s.verts, s.x, s.y, s.a);
+      ctx.strokeStyle = "rgba(16,36,34,.82)"; ctx.lineWidth = 1.6; ctx.stroke();
+      ctx.restore();
+    }
+    // 釉屑
+    for (const p of particles) {
+      ctx.globalAlpha = Math.max(0, p.life / p.max) * 0.9;
+      ctx.fillStyle = p.c;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.2832); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // 尘埃
+  ctx.fillStyle = "rgba(255,226,170,.30)";
+  for (const d of dust) {
+    ctx.globalAlpha = d.a * (0.4 + 0.6 * Math.sin(t * d.s + d.p));
+    ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, 6.2832); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ---------------------------- 粒子 / 尘埃 ---------------------------- */
+let particles = [];
+let dust = [];
+function spawnParticles(x, y) {
+  const rnd = mulberry32((Math.random() * 1e9) >>> 0);
+  for (let i = 0; i < 90; i++) {
+    const a = rnd() * 6.2832, sp = 60 + rnd() * 340;
+    particles.push({
+      x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60,
+      r: 1 + rnd() * 3, life: 0.6 + rnd() * 0.9, max: 1.5,
+      c: rnd() < 0.75 ? "#cfe9df" : "#f0d9a8"
+    });
+  }
+}
+function stepParticles(dt) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.vy += 900 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+    p.life -= dt;
+    if (p.life <= 0 || p.y > tableY + 8) particles.splice(i, 1);
+  }
+}
+
+/* ---------------------------- 音效 ---------------------------- */
+let audioCtx = null, soundOn = true;
+function ac() {
+  if (!soundOn) return null;
+  if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+function playShatter() {
+  const a = ac(); if (!a) return;
+  const n = a.createBufferSource();
+  const len = Math.floor(a.sampleRate * 0.55);
+  const buf = a.createBuffer(1, len, a.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) {
+    const e = Math.pow(1 - i / len, 2.6);
+    d[i] = (Math.random() * 2 - 1) * e * (Math.random() < 0.02 ? 3 : 1);
+  }
+  n.buffer = buf;
+  const f = a.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 1400;
+  const g = a.createGain(); g.gain.value = 0.5;
+  g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + 0.6);
+  n.connect(f); f.connect(g); g.connect(a.destination); n.start();
+}
+let lastTick = 0;
+function playTick(v) {
+  const a = ac(); if (!a) return;
+  const now = a.currentTime;
+  if (now - lastTick < 0.045) return;
+  lastTick = now;
+  const o = a.createOscillator(); o.type = "triangle";
+  o.frequency.value = 1400 + Math.random() * 900;
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(0.09 * v, now + 0.006);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+  o.connect(g); g.connect(a.destination); o.start(now); o.stop(now + 0.2);
+}
+function playBell() {
+  const a = ac(); if (!a) return;
+  const now = a.currentTime;
+  [1, 2.02, 2.99, 4.2].forEach((mul, i) => {
+    const o = a.createOscillator(); o.type = "sine";
+    o.frequency.value = 528 * mul;
+    const g = a.createGain();
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(0.11 / (i + 1), now + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 1.6 - i * 0.25);
+    o.connect(g); g.connect(a.destination); o.start(now); o.stop(now + 1.8);
+  });
+}
+
+/* ---------------------------- 交互 ---------------------------- */
+cvs.addEventListener("pointerdown", (e) => {
+  if (phase === "falling" || phase === "flying" || phase === "gilding") return;
+  const x = e.clientX, y = e.clientY;
+  if (y > tableY + 4) return;
+  const lx = x - originX, ly = y - originY;
+  if (!pointInPoly(lx, ly, OUTLINE)) return;
+  oldCracks = oldCracks.concat(cracks);
+  fracturesReset();
+  fracture(x, y);
+  spawnParticles(x, y);
+});
+
+function fracturesReset() {
+  shards = [];
+  cracks = [];
+  pendingCracks = [];
+  goldProgress = 0;
+  phaseT = 0;
+}
+
+$("repair").addEventListener("click", startRepair);
+$("reset").addEventListener("click", () => {
+  fracturesReset();
+  oldCracks = [];
+  phase = "intact";
+  repairCount = 0;
+  $("s3").textContent = "0";
+  $("repair").disabled = true;
+  $("tip").classList.remove("gone");
+  updateHud();
+});
+$("sound").addEventListener("click", () => {
+  soundOn = !soundOn;
+  $("sound").textContent = soundOn ? "音 效：开" : "音 效：关";
+});
+
+const PHASE_TEXT = {
+  intact: "完整", falling: "坠落", resting: "静止",
+  flying: "归位", gilding: "金缮", done: "已成"
+};
+function updateHud() {
+  $("s1").textContent = shards.length;
+  $("s2").textContent = pendingCracks.length;
+  $("s3").textContent = repairCount;
+  $("s4").textContent = PHASE_TEXT[phase] || phase;
+  $("s5").textContent = oldCracks.length + cracks.length;
+}
+
+/* ---------------------------- 主循环 ---------------------------- */
+let lastT = performance.now();
+function loop(now) {
+  const dt = Math.min(0.032, (now - lastT) / 1000);
+  lastT = now;
+
+  if (phase === "falling") {
+    stepShards(dt);
+    stepParticles(dt);
+    phaseT += dt;
+    if (allSettled() && phaseT > 1.1) {
+      phase = "resting"; phaseT = 0;
+      $("repair").disabled = false;
+      updateHud();
+    } else updateHud();
+  } else if (phase === "resting") {
+    phaseT += dt;
+    if (phaseT > 2.6) startRepair();       // 静止后自动开始修复
+  } else if (phase === "flying") {
+    tweenBack(dt);
+    updateHud();
+  } else if (phase === "gilding") {
+    phaseT += dt;
+    goldProgress = Math.min(1, phaseT / 1.9);
+    updateHud();
+    if (goldProgress >= 1) {
+      phase = "done"; phaseT = 0;
+      playBell();
+      updateHud();
+    }
+  }
+  stepParticles(dt);
+
+  draw();
+
+  // 金线绘制（gilding 阶段）
+  if (phase === "gilding" && goldProgress < 1) {
+    const n = cracks.length;
+    for (let i = 0; i < n; i++) {
+      const p = (goldProgress * (n + 2) - i);
+      if (p <= 0) continue;
+      drawGoldPath(cracks[i], Math.min(1, p), 1);
+    }
+  }
+  requestAnimationFrame(loop);
+}
+
+/* ---------------------------- 尺寸 ---------------------------- */
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  cvs.width = W * DPR; cvs.height = H * DPR;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const scale = Math.min(1, (W * 0.86) / (BOWL.W * 2));
+  const s = Math.max(0.42, scale);
+  BOWL.W = 152 * s; BOWL.Hh = 124 * s; BOWL.Fw = 46 * s; BOWL.rimRy = 27 * s; BOWL.footH = 15 * s;
+  tableY = H * 0.74;
+  originX = W / 2;
+  originY = tableY - BOWL.Hh;
+  // 重算轮廓
+  OUTLINE.length = 0; OUTLINE_DENSE.length = 0;
+  const o1 = bowlOutline(64), o2 = bowlOutline(220);
+  OUTLINE.push(...o1); OUTLINE_DENSE.push(...o2);
+  // 尘埃
+  dust = [];
+  const rnd = mulberry32(20241020);
+  for (let i = 0; i < 46; i++) {
+    dust.push({
+      x: rnd() * W, y: rnd() * H * 0.85, r: 0.7 + rnd() * 1.8,
+      a: 0.10 + rnd() * 0.35, s: 0.25 + rnd() * 0.8, p: rnd() * 6.28
+    });
+  }
+}
+window.addEventListener("resize", () => { resize(); if (phase !== "intact") fracturesReset(); });
+resize();
+$("repair").disabled = true;
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VELORA V900 单反相机</title>
+<style>
+html,body{margin:0;height:100%}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 40%,#f6f4f0 0%,#e5e1d9 60%,#cdc8bf 100%);font-family:"Helvetica Neue",Helvetica,Arial,"PingFang SC","Microsoft YaHei",sans-serif}
+.stage{width:min(100%,980px);padding:16px;box-sizing:border-box}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.dial{cursor:pointer}
+.sheen{animation:sheen 9s ease-in-out infinite alternate}
+@keyframes sheen{from{transform:translate(-4px,-2px)}to{transform:translate(4px,2px)}}
+@media (prefers-reduced-motion:reduce){.sheen{animation:none}}
+</style>
+</head>
+<body>
+<main class="stage">
+<svg viewBox="0 0 1000 760" role="img" aria-label="VELORA V900 单反相机，3/4 视角">
+<defs>
+  <!-- body faces (screen-space gradients) -->
+  <linearGradient id="gLeft" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b3e46"/><stop offset=".5" stop-color="#272a30"/><stop offset="1" stop-color="#16171b"/></linearGradient>
+  <linearGradient id="gTopBody" x1="0" y1="0" x2="1" y2=".4"><stop offset="0" stop-color="#4b4f58"/><stop offset=".55" stop-color="#35383f"/><stop offset="1" stop-color="#2b2e34"/></linearGradient>
+  <linearGradient id="gFront" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a3d45"/><stop offset=".5" stop-color="#25282e"/><stop offset="1" stop-color="#15161a"/></linearGradient>
+  <linearGradient id="gGrip" x1="0" y1="0" x2="1" y2=".3"><stop offset="0" stop-color="#3d414a"/><stop offset=".35" stop-color="#262930"/><stop offset=".8" stop-color="#17181c"/><stop offset="1" stop-color="#0f1013"/></linearGradient>
+  <linearGradient id="gPrismTop" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f535c"/><stop offset="1" stop-color="#2e3138"/></linearGradient>
+  <linearGradient id="gPrismL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d4149"/><stop offset="1" stop-color="#1b1d22"/></linearGradient>
+  <linearGradient id="gPrismA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4c5059"/><stop offset="1" stop-color="#2c2f36"/></linearGradient>
+  <linearGradient id="gPrismB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a5f69"/><stop offset="1" stop-color="#34373f"/></linearGradient>
+  <linearGradient id="gSilver" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7f8691"/><stop offset=".4" stop-color="#e4e8ee"/><stop offset=".7" stop-color="#9aa1ac"/><stop offset="1" stop-color="#596070"/></linearGradient>
+  <radialGradient id="gDial" cx=".4" cy=".35" r=".72"><stop offset="0" stop-color="#f7f8fa"/><stop offset=".45" stop-color="#aab1bc"/><stop offset=".8" stop-color="#666d78"/><stop offset="1" stop-color="#383d46"/></radialGradient>
+  <radialGradient id="gShutter" cx=".38" cy=".3" r=".75"><stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#b9bfc8"/><stop offset=".8" stop-color="#5c626c"/><stop offset="1" stop-color="#2a2d33"/></radialGradient>
+  <linearGradient id="gSide" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0d0e11"/><stop offset=".5" stop-color="#2a2d34"/><stop offset="1" stop-color="#0d0e11"/></linearGradient>
+
+  <!-- lens barrel shading: gradient runs across the barrel, perpendicular to the lens axis (mm space) -->
+  <linearGradient id="gMetal" gradientUnits="userSpaceOnUse" x1="-15.3" y1="46.6" x2="25.1" y2="-44.9">
+    <stop offset=".05" stop-color="#1a1e25"/><stop offset=".25" stop-color="#3a404a"/><stop offset=".44" stop-color="#8a929e"/><stop offset=".6" stop-color="#eef1f5"/><stop offset=".68" stop-color="#c4cad3"/><stop offset=".8" stop-color="#6b727e"/><stop offset=".92" stop-color="#2e333c"/><stop offset="1" stop-color="#15181e"/>
+  </linearGradient>
+  <linearGradient id="gBlack" gradientUnits="userSpaceOnUse" x1="-15.3" y1="46.6" x2="25.1" y2="-44.9">
+    <stop offset=".05" stop-color="#050608"/><stop offset=".3" stop-color="#15181d"/><stop offset=".58" stop-color="#3c424c"/><stop offset=".7" stop-color="#1d2127"/><stop offset=".95" stop-color="#0a0b0e"/><stop offset="1" stop-color="#08090b"/>
+  </linearGradient>
+  <linearGradient id="gRubber" gradientUnits="userSpaceOnUse" x1="-15.3" y1="46.6" x2="25.1" y2="-44.9">
+    <stop offset=".05" stop-color="#040405"/><stop offset=".3" stop-color="#111216"/><stop offset=".58" stop-color="#2a2e36"/><stop offset=".7" stop-color="#15171b"/><stop offset=".95" stop-color="#08090b"/>
+  </linearGradient>
+  <linearGradient id="gRed" gradientUnits="userSpaceOnUse" x1="-15.3" y1="46.6" x2="25.1" y2="-44.9">
+    <stop offset=".05" stop-color="#2a0304"/><stop offset=".3" stop-color="#8e1218"/><stop offset=".6" stop-color="#ea4a48"/><stop offset=".7" stop-color="#b71c22"/><stop offset=".95" stop-color="#4a0a0d"/>
+  </linearGradient>
+
+  <!-- front element -->
+  <radialGradient id="gFrontRing" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#2e3138"/><stop offset=".6" stop-color="#111216"/><stop offset="1" stop-color="#050506"/></radialGradient>
+  <radialGradient id="gGlass" cx=".36" cy=".34" r=".75"><stop offset="0" stop-color="#4a5a8a"/><stop offset=".3" stop-color="#17203a"/><stop offset=".7" stop-color="#070a13"/><stop offset="1" stop-color="#1a2238"/></radialGradient>
+
+  <!-- textures -->
+  <pattern id="knurl" width="10" height="2.2" patternUnits="userSpaceOnUse" patternTransform="rotate(23.8)">
+    <rect width="10" height=".7" fill="#000" fill-opacity=".5"/><rect y="1.15" width="10" height=".3" fill="#fff" fill-opacity=".14"/>
+  </pattern>
+  <pattern id="dots" width="2.6" height="2.6" patternUnits="userSpaceOnUse" patternTransform="rotate(-18)">
+    <circle cx=".65" cy=".65" r=".42" fill="#000" fill-opacity=".6"/><circle cx="1.95" cy="1.95" r=".42" fill="#fff" fill-opacity=".08"/>
+  </pattern>
+
+  <filter id="blurS" x="-40%" y="-300%" width="180%" height="700%"><feGaussianBlur stdDeviation="3.2"/></filter>
+  <filter id="blurA" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation=".7"/></filter>
+  <filter id="blurG" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation=".45"/></filter>
+  <!-- matte plastic grain: sparse fine speckles clipped to the body silhouette -->
+  <filter id="matte" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+    <feTurbulence type="fractalNoise" baseFrequency="2.2" numOctaves="2" seed="4" result="n"/>
+    <feColorMatrix in="n" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0.25 0 0 0 -0.12" result="g"/>
+    <feComposite in="g" in2="SourceAlpha" operator="in" result="gi"/>
+    <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="gi"/></feMerge>
+  </filter>
+  <linearGradient id="gGripShade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".55" stop-color="#fff" stop-opacity=".07"/><stop offset=".85" stop-color="#000" stop-opacity=".35"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></linearGradient>
+
+  <!-- silhouettes reused by <use> -->
+  <path id="sg" d="M-55.7 -26L-31.1 -31.3L-22 -27.3L-17.4 -19.5L-13.3 -6.3L-11.6 11.5L-12.2 28.4L-14.5 44.5L-17.4 56.6L-20.8 62.6L-45.4 68L-55.7 63.4Z"/>
+  <path id="s0" d="M-24.6 7.2L-24.5 4.2L-24.1 1.2L-23.6 -1.9L-22.8 -4.9L-21.8 -7.8L-20.6 -10.8L-19.2 -13.6L-17.7 -16.3L-15.9 -18.9L-14 -21.3L-12 -23.5L-9.8 -25.6L-7.5 -27.5L-5.2 -29.2L-2.7 -30.6L-0.2 -31.8L2.3 -32.7L4.9 -33.4L7.5 -33.8L10 -34L12.5 -33.9L15 -33.5L17.4 -32.9L19.7 -32L24.2 -30L26.4 -28.8L28.5 -27.5L30.4 -25.9L32.1 -24L33.7 -22L35 -19.8L36.2 -17.4L37.2 -14.8L38 -12.2L38.5 -9.4L38.9 -6.5L39 -3.5L38.9 -0.5L38.5 2.5L38 5.6L37.2 8.6L36.2 11.6L35 14.5L33.7 17.3L32.1 20L30.4 22.6L28.5 25L26.4 27.3L24.2 29.3L22 31.2L19.6 32.9L17.1 34.3L14.6 35.5L12.1 36.4L9.5 37.1L6.9 37.5L4.4 37.7L1.9 37.6L-0.6 37.2L-3 36.6L-5.2 35.7L-9.8 33.7L-12 32.5L-14 31.2L-15.9 29.6L-17.7 27.7L-19.2 25.7L-20.6 23.5L-21.8 21.1L-22.8 18.5L-23.6 15.9L-24.1 13.1L-24.5 10.2Z"/>
+  <path id="s1" d="M-24.1 10.1L-24 6.7L-23.6 3.2L-22.9 -0.2L-22.1 -3.6L-20.9 -7L-19.6 -10.3L-18 -13.5L-16.2 -16.6L-14.2 -19.6L-12.1 -22.3L-9.8 -24.9L-7.3 -27.3L-4.7 -29.4L-2 -31.3L0.8 -32.9L3.7 -34.3L6.6 -35.3L9.5 -36.1L12.4 -36.6L15.3 -36.8L18.2 -36.7L21 -36.3L23.7 -35.5L26.3 -34.5L36.6 -30L39.1 -28.7L41.4 -27.1L43.6 -25.3L45.6 -23.2L47.3 -20.9L48.9 -18.4L50.3 -15.6L51.4 -12.7L52.3 -9.7L52.9 -6.5L53.3 -3.2L53.4 0.2L53.3 3.6L52.9 7L52.3 10.5L51.4 13.9L50.3 17.3L48.9 20.6L47.3 23.8L45.6 26.9L43.6 29.9L41.4 32.6L39.1 35.2L36.6 37.6L34 39.7L31.3 41.6L28.5 43.2L25.7 44.6L22.8 45.6L19.8 46.4L16.9 46.9L14 47.1L11.1 47L8.3 46.5L5.6 45.8L3 44.8L-7.3 40.3L-9.8 39L-12.1 37.4L-14.2 35.6L-16.2 33.5L-18 31.2L-19.6 28.7L-20.9 25.9L-22.1 23L-22.9 20L-23.6 16.8L-24 13.5Z"/>
+  <path id="s2" d="M-14.7 14.9L-14.6 11.4L-14.2 7.8L-13.6 4.3L-12.7 0.7L-11.5 -2.8L-10.1 -6.2L-8.5 -9.5L-6.7 -12.6L-4.6 -15.7L-2.4 -18.5L0 -21.2L2.5 -23.6L5.2 -25.8L8 -27.7L10.9 -29.4L13.8 -30.8L16.8 -31.9L19.8 -32.7L22.8 -33.2L25.8 -33.4L28.8 -33.3L31.7 -32.9L34.4 -32.1L37.1 -31.1L39.4 -30.1L41.9 -28.7L44.3 -27.1L46.6 -25.2L48.6 -23.1L50.4 -20.7L52.1 -18.1L53.5 -15.3L54.6 -12.3L55.5 -9.2L56.2 -5.9L56.6 -2.5L56.7 1L56.6 4.5L56.2 8L55.5 11.6L54.6 15.1L53.5 18.6L52.1 22L50.4 25.3L48.6 28.5L46.6 31.5L44.3 34.4L41.9 37L39.4 39.5L36.7 41.6L33.9 43.6L31.1 45.3L28.1 46.7L25.1 47.8L22.1 48.6L19.1 49.1L16.1 49.3L13.2 49.1L10.3 48.7L7.5 48L4.8 46.9L2.5 45.9L0 44.6L-2.4 43L-4.6 41.1L-6.7 38.9L-8.5 36.6L-10.1 34L-11.5 31.2L-12.7 28.2L-13.6 25L-14.2 21.8L-14.6 18.4Z"/>
+  <path id="s3" d="M-13.6 16.2L-13.5 12.5L-13.1 8.8L-12.4 5.2L-11.4 1.5L-10.2 -2.1L-8.8 -5.6L-7.1 -9L-5.2 -12.3L-3.1 -15.4L-0.8 -18.4L1.6 -21.1L4.3 -23.6L7 -25.9L9.9 -27.9L12.9 -29.6L15.9 -31.1L19 -32.2L22.1 -33L25.2 -33.5L28.3 -33.7L31.4 -33.6L34.3 -33.2L37.2 -32.4L40 -31.3L54.9 -24.8L57.5 -23.4L60 -21.7L62.3 -19.8L64.4 -17.6L66.3 -15.1L68 -12.4L69.4 -9.5L70.6 -6.4L71.5 -3.2L72.2 0.2L72.6 3.7L72.8 7.3L72.6 10.9L72.2 14.6L71.5 18.3L70.6 21.9L69.4 25.5L68 29.1L66.3 32.5L64.4 35.7L62.3 38.9L60 41.8L57.5 44.5L54.9 47.1L52.1 49.3L49.3 51.3L46.3 53.1L43.2 54.5L40.1 55.6L37 56.5L33.9 57L30.8 57.2L27.8 57.1L24.8 56.6L21.9 55.9L19.2 54.8L4.3 48.2L1.6 46.8L-0.8 45.2L-3.1 43.2L-5.2 41L-7.1 38.5L-8.8 35.9L-10.2 33L-11.4 29.9L-12.4 26.6L-13.1 23.2L-13.5 19.7Z"/>
+  <path id="s4" d="M1.1 22.8L1.2 19.1L1.6 15.4L2.3 11.7L3.2 8L4.4 4.4L5.9 0.9L7.6 -2.6L9.5 -5.9L11.6 -9L13.9 -12L16.4 -14.7L19.1 -17.3L21.8 -19.5L24.7 -21.6L27.7 -23.3L30.8 -24.8L33.9 -25.9L37 -26.7L40.2 -27.3L43.3 -27.5L46.3 -27.3L49.3 -26.9L52.2 -26.1L55 -25L57.3 -24L60 -22.6L62.4 -21L64.8 -19L66.9 -16.8L68.8 -14.3L70.5 -11.6L71.9 -8.7L73.1 -5.6L74.1 -2.3L74.7 1.1L75.2 4.6L75.3 8.2L75.2 11.9L74.7 15.6L74.1 19.3L73.1 23L71.9 26.6L70.5 30.2L68.8 33.6L66.9 36.9L64.8 40L62.4 43L60 45.8L57.3 48.3L54.5 50.6L51.6 52.6L48.6 54.3L45.6 55.8L42.5 56.9L39.3 57.8L36.2 58.3L33.1 58.5L30 58.4L27 57.9L24.1 57.2L21.3 56.1L19.1 55.1L16.4 53.7L13.9 52L11.6 50L9.5 47.8L7.6 45.3L5.9 42.6L4.4 39.7L3.2 36.6L2.3 33.3L1.6 29.9L1.2 26.4Z"/>
+  <path id="s5" d="M2.6 24L2.8 20.2L3.2 16.4L3.9 12.7L4.8 8.9L6.1 5.2L7.5 1.6L9.3 -1.9L11.2 -5.3L13.4 -8.5L15.7 -11.5L18.3 -14.3L21 -16.9L23.8 -19.2L26.8 -21.3L29.8 -23.1L33 -24.6L36.1 -25.7L39.3 -26.6L42.5 -27.1L45.7 -27.3L48.8 -27.2L51.9 -26.7L54.8 -25.9L57.7 -24.8L73.7 -17.8L76.4 -16.3L79 -14.6L81.3 -12.6L83.5 -10.4L85.5 -7.8L87.2 -5.1L88.6 -2.1L89.9 1.1L90.8 4.4L91.5 7.9L91.9 11.5L92.1 15.2L91.9 18.9L91.5 22.7L90.8 26.5L89.9 30.2L88.6 33.9L87.2 37.5L85.5 41L83.5 44.4L81.3 47.6L79 50.6L76.4 53.5L73.7 56L70.9 58.4L67.9 60.4L64.9 62.2L61.8 63.7L58.6 64.9L55.4 65.7L52.2 66.3L49 66.5L45.9 66.3L42.8 65.9L39.9 65.1L37 64L21 56.9L18.3 55.5L15.7 53.8L13.4 51.8L11.2 49.5L9.3 47L7.5 44.2L6.1 41.2L4.8 38.1L3.9 34.7L3.2 31.2L2.8 27.7Z"/>
+  <path id="s6" d="M18 31.2L18.2 27.4L18.6 23.5L19.3 19.7L20.3 15.9L21.5 12.1L23 8.4L24.8 4.9L26.8 1.4L29 -1.8L31.4 -4.9L34 -7.8L36.7 -10.4L39.6 -12.8L42.6 -14.9L45.7 -16.7L48.9 -18.2L52.1 -19.4L55.4 -20.3L58.6 -20.8L61.9 -21L65.1 -20.9L68.2 -20.4L71.2 -19.6L74.1 -18.5L78.7 -16.5L81.4 -15L84 -13.3L86.4 -11.2L88.6 -8.9L90.6 -6.4L92.3 -3.5L93.8 -0.5L95.1 2.7L96.1 6.1L96.8 9.6L97.2 13.3L97.3 17.1L97.2 20.9L96.8 24.7L96.1 28.6L95.1 32.4L93.8 36.1L92.3 39.8L90.6 43.4L88.6 46.8L86.4 50.1L84 53.2L81.4 56L78.7 58.7L75.8 61L72.8 63.1L69.6 64.9L66.5 66.4L63.2 67.6L60 68.5L56.7 69L53.5 69.3L50.3 69.1L47.2 68.7L44.2 67.9L41.3 66.7L36.7 64.7L34 63.3L31.4 61.5L29 59.5L26.8 57.2L24.8 54.6L23 51.8L21.5 48.8L20.3 45.5L19.3 42.1L18.6 38.6L18.2 34.9Z"/>
+</defs>
+
+<g transform="translate(501.8 387) scale(4.5)">
+
+  <!-- ground contact shadow -->
+  <ellipse cx="6" cy="74" rx="110" ry="7" fill="#2b2822" opacity=".3" filter="url(#blurS)"/>
+
+  <!-- body: left side, top plate, front plate -->
+  <g filter="url(#matte)">
+    <path d="M-98.1 -44.7L-55.7 -26L-55.7 53.9L-98.1 35.2Z" fill="url(#gLeft)"/>
+    <path d="M-98.1 -44.7L10 -68.1L52.4 -49.4L-31.1 -31.3L-22 -27.3L-46.5 -21.9Z" fill="url(#gTopBody)"/>
+    <path d="M-31.1 48.6L52.4 30.5L52.4 -49.4L-31.1 -31.3Z" fill="url(#gFront)"/>
+  </g>
+
+  <!-- lens mount opening on the front plate -->
+  <g transform="matrix(.81915 -.17725 0 -.95106 0 0)"><circle cx="6" cy="-2" r="38" fill="#060709"/></g>
+
+  <!-- pentaprism hump, hot shoe -->
+  <path d="M-19.2 -34.6L-23.2 -49.7L-26.1 -54.8L-43.3 -62.4L-47.8 -58.7L-51.3 -48.8Z" fill="url(#gPrismL)"/>
+  <path d="M-19.2 -34.6L26.7 -44.6L22.7 -59.7L-23.2 -49.7Z" fill="url(#gPrismA)"/>
+  <path d="M-23.2 -49.7L22.7 -59.7L19.8 -64.7L-26.1 -54.8Z" fill="url(#gPrismB)"/>
+  <path d="M-26.1 -54.8L19.8 -64.7L2.6 -72.3L-43.3 -62.4Z" fill="url(#gPrismTop)"/>
+  <path d="M-26.2 -68.4L-9.8 -71.9L3.9 -65.9L-12.5 -62.3Z" fill="url(#gSilver)"/>
+  <path d="M-26.2 -64.6L-12.5 -58.5L-12.5 -62.3L-26.2 -68.4Z" fill="#1b1d22"/>
+  <path d="M-12.5 -58.5L3.9 -62L3.9 -65.9L-12.5 -62.3Z" fill="#2b2e35"/>
+
+  <!-- contact occlusion: lens mount seam and grip seam -->
+  <g transform="matrix(.81915 -.17725 0 -.95106 0 0)"><circle cx="6" cy="-2" r="41" fill="#000" opacity=".5" filter="url(#blurA)"/></g>
+  <use href="#sg" fill="#000" opacity=".45" filter="url(#blurA)"/>
+
+  <!-- brand and model lettering, set on each face -->
+  <g transform="matrix(.57358 .25312 0 -.95106 -18.02 3.9)">
+    <text transform="scale(1 -1)" x="-30" y="-47.5" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="4.2" letter-spacing=".9" fill="#d5dbe3">VELORA</text>
+  </g>
+  <g transform="matrix(.57358 .25312 0 -.95106 -55.7 12.05)">
+    <text transform="scale(1 -1)" x="-42" y="6" font-family="Arial, sans-serif" font-weight="700" font-size="5.2" letter-spacing="1.4" fill="#c5cbd4">V900</text>
+  </g>
+  <g transform="matrix(.81915 -.17725 0 -.95106 0 0)">
+    <text transform="scale(1 -1)" x="40" y="-30" font-family="Arial, sans-serif" font-weight="700" font-size="3" letter-spacing=".7" fill="#aeb5c0">VELORA</text>
+    <rect x="51.5" y="7.5" width="7" height="5" rx="1.4" fill="#2a2d33" stroke="#6b717b" stroke-width=".3"/>
+  </g>
+
+  <!-- top plate: shutter button and mode dial (base ring, side band, top face) -->
+  <g transform="matrix(.81915 -.17725 .57358 .25312 0 -38.04)">
+    <circle cx="-50" cy="-4" r="8.5" fill="#0c0d10"/>
+    <circle cx="49" cy="-28" r="12" fill="#0c0d10"/>
+  </g>
+  <rect x="-50.45" y="-34" width="14.4" height="3.81" fill="url(#gSide)"/>
+  <rect x="13.08" y="-57.62" width="22" height="3.81" fill="url(#gSide)"/>
+  <g transform="matrix(.81915 -.17725 .57358 .25312 0 -41.85)">
+    <circle cx="-50" cy="-4" r="7.2" fill="url(#gShutter)"/>
+    <g id="modeDial" class="dial" tabindex="0" role="button" aria-label="模式转盘，点击转动">
+      <g id="dialRot" transform="rotate(0 49 -28)">
+        <circle cx="49" cy="-28" r="11" fill="url(#gDial)"/>
+        <circle cx="49" cy="-28" r="10.1" fill="none" stroke="#1d1f24" stroke-width=".5" stroke-dasharray=".55 1.15"/>
+        <g font-family="Arial, sans-serif" font-weight="700" font-size="3.3" fill="#15171b" text-anchor="middle" dominant-baseline="central">
+          <text x="49" y="-34.2">P</text><text x="55.2" y="-28">S</text><text x="49" y="-21.8">A</text><text x="42.8" y="-28">M</text>
+        </g>
+      </g>
+    </g>
+    <circle cx="49" cy="-14.2" r=".9" fill="#f2f4f7"/>
+  </g>
+
+  <!-- edge highlights (bevels catching the key light from upper left) -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M-98.1 -44.7L-55.7 -26" stroke="#7d838e" stroke-opacity=".55" stroke-width=".6"/>
+    <path d="M-98.1 -44.7L10 -68.1L52.4 -49.4" stroke="#8a909a" stroke-opacity=".45" stroke-width=".6"/>
+    <path d="M-31.1 -31.3L52.4 -49.4" stroke="#6f7580" stroke-opacity=".5" stroke-width=".5"/>
+    <path d="M52.4 30.5L52.4 -49.4" stroke="#6e747e" stroke-opacity=".45" stroke-width=".5"/>
+  </g>
+
+  <!-- lens barrel, rear to front -->
+  <use href="#s0" fill="url(#gMetal)"/>
+  <use href="#s1" fill="url(#gBlack)"/>
+  <use href="#s2" fill="url(#gMetal)"/>
+  <use href="#s3" fill="url(#gRubber)"/>
+  <use href="#s3" fill="url(#knurl)"/>
+  <use href="#s4" fill="url(#gRed)"/>
+  <use href="#s5" fill="url(#gMetal)"/>
+  <use href="#s5" fill="url(#knurl)" opacity=".7"/>
+  <use href="#s6" fill="url(#gBlack)"/>
+
+  <!-- front element, drawn on the lens face plane (local origin = lens axis) -->
+  <g transform="matrix(.81915 -.17725 0 -.95106 59.98 25.14)">
+    <circle r="45.6" fill="url(#gFrontRing)"/>
+    <circle r="37.2" fill="#050608"/>
+    <circle r="34.6" fill="url(#gGlass)"/>
+    <g fill="none" stroke="#8e9cc8" stroke-opacity=".3" stroke-width=".45">
+      <circle r="29"/><circle r="22.5"/><circle r="15.5"/><circle r="8.5"/>
+    </g>
+    <circle r="30" fill="none" stroke="#9db0ff" stroke-opacity=".32" stroke-width="1.1" stroke-dasharray="22 200" transform="rotate(150)"/>
+    <circle r="29" fill="none" stroke="#7ee8cc" stroke-opacity=".28" stroke-width="1" stroke-dasharray="18 200" transform="rotate(35)"/>
+    <g class="sheen">
+      <ellipse cx="-13" cy="16" rx="10" ry="4.2" transform="rotate(-38 -13 16)" fill="#fff" fill-opacity=".38" filter="url(#blurG)"/>
+      <circle cx="-19" cy="21" r="2.4" fill="#fff" fill-opacity=".95"/>
+    </g>
+    <circle cx="15" cy="-17" r="1.5" fill="#fff" fill-opacity=".45"/>
+  </g>
+
+  <!-- rubber grip (in front of the lens base) -->
+  <use href="#sg" fill="url(#gGrip)"/>
+  <use href="#sg" fill="url(#gGripShade)"/>
+  <use href="#sg" fill="url(#dots)"/>
+  <!-- grip front shoulder: soft sheen plus a crisp rim light -->
+  <path d="M-22 -27.3L-17.4 -19.5L-13.3 -6.3L-11.6 11.5L-12.2 28.4L-14.5 44.5L-17.4 56.6" fill="none" stroke="#c9ced6" stroke-opacity=".22" stroke-width="2.6" stroke-linejoin="round" filter="url(#blurG)"/>
+  <path d="M-22 -27.3L-17.4 -19.5L-13.3 -6.3L-11.6 11.5L-12.2 28.4L-14.5 44.5L-17.4 56.6" fill="none" stroke="#a4abb6" stroke-opacity=".55" stroke-width=".7" stroke-linejoin="round"/>
+
+</g>
+</svg>
+</main>
+<script>
+(function(){
+  var dial=document.getElementById('dialRot');
+  var hit=document.getElementById('modeDial');
+  if(!dial||!hit) return;
+  var angle=0,target=0,raf=0;
+  function step(){
+    angle+=(target-angle)*0.22;
+    if(Math.abs(target-angle)<0.05) angle=target;
+    dial.setAttribute('transform','rotate('+angle.toFixed(2)+' 49 -28)');
+    raf=(angle!==target)?requestAnimationFrame(step):0;
+  }
+  function turn(){
+    target+=90;
+    if(!raf) raf=requestAnimationFrame(step);
+  }
+  hit.addEventListener('click',turn);
+  hit.addEventListener('keydown',function(e){
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();turn();}
+  });
+})();
+</script>
+</body>
+</html>

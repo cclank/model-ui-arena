@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>倒计时 · T-MINUS 10</title>
+<style>
+  :root { --a1: #7de8ff; --a2: #b06bff; --ink: #04060f; --fg: #eaf6ff; --muted: #7f93ad; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; overflow: hidden; display: grid; place-items: center; color: var(--fg); background: var(--ink);
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .bg { position: fixed; inset: 0; background: radial-gradient(70% 55% at 50% 34%, rgba(70,120,255,.24) 0%, transparent 60%), linear-gradient(180deg, #050814 0%, #04060f 52%, #07040f 100%); }
+  .grid { position: fixed; left: -60%; right: -60%; bottom: -12%; height: 62%; opacity: .8; transform: perspective(340px) rotateX(64deg); transform-origin: 50% 100%;
+    background-image: linear-gradient(rgba(96,214,255,.3) 1px, transparent 1px), linear-gradient(90deg, rgba(96,214,255,.24) 1px, transparent 1px);
+    background-size: 62px 62px; -webkit-mask-image: linear-gradient(transparent 0%, #000 52%); mask-image: linear-gradient(transparent 0%, #000 52%); }
+  .scan { position: fixed; inset: 0; pointer-events: none; opacity: .45; background: repeating-linear-gradient(0deg, rgba(255,255,255,.045) 0 1px, transparent 1px 3px); }
+  .vignette { position: fixed; inset: 0; pointer-events: none; box-shadow: inset 0 0 180px 24px rgba(0,0,0,.78); }
+  #fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .stage { position: relative; display: flex; flex-direction: column; align-items: center; gap: clamp(16px, 3vh, 28px); padding: 24px 16px; z-index: 2; }
+  .eyebrow { font-size: 10px; letter-spacing: .58em; color: var(--muted); text-transform: uppercase; padding-left: .58em; }
+  .ringwrap { position: relative; width: min(76vw, 360px); aspect-ratio: 1; display: grid; place-items: center; }
+  .ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; filter: drop-shadow(0 0 18px rgba(125,232,255,.35)); }
+  .ring .track { fill: none; stroke: rgba(255,255,255,.07); stroke-width: 3; }
+  .ring .prog { fill: none; stroke: url(#neon); stroke-width: 5; stroke-linecap: round; stroke-dasharray: 879.6; stroke-dashoffset: 879.6; transition: stroke-dashoffset .12s linear; }
+  .ring .tick { stroke: rgba(255,255,255,.22); stroke-width: 1.4; stroke-linecap: round; transition: stroke .3s, opacity .3s; }
+  .ring .tick.on { stroke: var(--a1); opacity: 1; }
+  .core { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .num { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: clamp(104px, 26vw, 176px); font-weight: 200; line-height: .8; letter-spacing: -.06em;
+    font-variant-numeric: tabular-nums; background: linear-gradient(180deg, #ffffff 12%, var(--a1) 62%, var(--a2) 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 26px rgba(125,232,255,.4)); transition: filter .3s; }
+  .num.beat { animation: beat .5s cubic-bezier(.2,.8,.2,1); }
+  @keyframes beat { 0% { transform: scale(1.16); filter: drop-shadow(0 0 46px rgba(125,232,255,.85)); } 100% { transform: scale(1); } }
+  .sub { font-size: 11px; letter-spacing: .42em; color: var(--muted); text-transform: uppercase; padding-left: .42em; transition: color .3s; text-shadow: 0 1px 10px rgba(0,0,0,.75); }
+  .bar { width: min(74vw, 330px); height: 3px; border-radius: 3px; background: rgba(255,255,255,.08); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--a1), var(--a2)); box-shadow: 0 0 14px rgba(125,232,255,.6); transform-origin: left; }
+  .btn { border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.04); color: var(--fg); font: inherit; font-size: 12px; letter-spacing: .28em;
+    padding: 10px 26px; border-radius: 999px; cursor: pointer; transition: .25s; padding-left: calc(26px + .28em); }
+  .btn:hover { border-color: var(--a1); box-shadow: 0 0 22px rgba(125,232,255,.28); }
+  .btn:disabled { opacity: .3; cursor: default; box-shadow: none; border-color: rgba(255,255,255,.18); }
+  body.hot { --a1: #ffd166; --a2: #ff4d6d; }
+  body.hot .bg { background: radial-gradient(70% 55% at 50% 34%, rgba(255,80,110,.22) 0%, transparent 60%), linear-gradient(180deg, #120610 0%, #08040c 55%, #0d0510 100%); }
+  body.boom .num { animation: boom .9s cubic-bezier(.15,.9,.2,1); }
+  @keyframes boom { 0% { transform: scale(1.5); opacity: 1; } 55% { transform: scale(.94); } 100% { transform: scale(1); } }
+  body.boom .ringwrap { animation: ringboom .8s ease-out; }
+  @keyframes ringboom { 0% { filter: brightness(2.4); } 100% { filter: brightness(1); } }
+  @media (max-width: 520px) { .ringwrap { width: min(82vw, 300px); } .num { font-size: 106px; } .stage { gap: 20px; } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .001ms !important; } }
+</style>
+</head>
+<body>
+  <div class="bg"></div><div class="grid"></div><div class="scan"></div><div class="vignette"></div>
+  <canvas id="fx"></canvas>
+  <main class="stage">
+    <div class="eyebrow">T-Minus · Ignition Sequence</div>
+    <div class="ringwrap">
+      <svg class="ring" viewBox="0 0 320 320" aria-hidden="true">
+        <defs><linearGradient id="neon" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--a1)" /><stop offset="1" stop-color="var(--a2)" /></linearGradient></defs>
+        <circle class="track" cx="160" cy="160" r="140" />
+        <circle class="prog" id="prog" cx="160" cy="160" r="140" />
+        <g id="ticks"></g>
+      </svg>
+      <div class="core"><div class="num" id="num">10</div><div class="sub" id="sub">系统就绪</div></div>
+    </div>
+    <div class="bar"><i id="bar"></i></div>
+    <button class="btn" id="restart" disabled>重新开始</button>
+  </main>
+<script>
+  (() => {
+    const $ = (id) => document.getElementById(id);
+    const DURATION = 10, C = 879.6;
+    const numEl = $("num"), subEl = $("sub"), prog = $("prog"), barEl = $("bar"), btn = $("restart");
+    const cvs = $("fx"), ctx = cvs.getContext("2d");
+    let W = 0, H = 0, DPR = 1, parts = [], rings = [], start = 0, done = false, lastShown = -1, raf = 0, pausedAt = 0;
+
+    const ticks = $("ticks");
+    let out = "";
+    for (let i = 0; i < 60; i++) {
+      const a = (i * 6 + 90) * Math.PI / 180, r1 = 154, r2 = i % 5 === 0 ? 163 : 159;
+      out += `<line class="tick" data-i="${i}" x1="${(160 + Math.sin(a) * r1).toFixed(1)}" y1="${(160 - Math.cos(a) * r1).toFixed(1)}" x2="${(160 + Math.sin(a) * r2).toFixed(1)}" y2="${(160 - Math.cos(a) * r2).toFixed(1)}"/>`;
+    }
+    ticks.innerHTML = out;
+    const tickEls = [...ticks.children];
+
+    const resize = () => {
+      DPR = Math.min(2, window.devicePixelRatio || 1);
+      W = cvs.clientWidth; H = cvs.clientHeight;
+      cvs.width = Math.round(W * DPR); cvs.height = Math.round(H * DPR); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    };
+
+    function burst() {
+      const cx = W / 2, cy = H * 0.42, hot = document.body.classList.contains("hot");
+      const hues = hot ? [4, 28, 48] : [186, 262, 320];
+      for (let i = 0; i < 190; i++) {
+        const a = Math.random() * Math.PI * 2, sp = 2 + Math.random() * 10;
+        parts.push({ x: cx, y: cy, px: cx, py: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, decay: .006 + Math.random() * .012,
+          hue: hues[i % 3] + (Math.random() - .5) * 24, size: 1 + Math.random() * 2 });
+      }
+      for (let i = 0; i < 3; i++) rings.push({ r: 20, life: 1, hue: hues[i] });
+    }
+
+    function frame(now) {
+      if (!start) start = now;
+      const elapsed = Math.min(DURATION, (now - start) / 1000);
+      const left = DURATION - elapsed;
+      const shown = Math.ceil(left);
+      prog.style.strokeDashoffset = (C * (1 - elapsed / DURATION)).toFixed(1);
+      barEl.style.transform = `scaleX(${(1 - elapsed / DURATION).toFixed(3)})`;
+      tickEls.forEach((t, i) => t.classList.toggle("on", i / 60 <= elapsed / DURATION));
+      if (shown !== lastShown && !done) {
+        lastShown = shown;
+        numEl.textContent = shown;
+        numEl.classList.remove("beat"); void numEl.offsetWidth; numEl.classList.add("beat");
+        const hot = left <= 3.001;
+        document.body.classList.toggle("hot", hot);
+        subEl.textContent = hot ? "点火倒计时" : left <= 6 ? "准备升空" : "系统就绪";
+      }
+      if (elapsed >= DURATION && !done) {
+        done = true; document.body.classList.add("boom");
+        numEl.textContent = "0"; subEl.textContent = "升空 · LAUNCH";
+        btn.disabled = false; burst();
+      }
+      ctx.globalCompositeOperation = "destination-out"; ctx.fillStyle = "rgba(0,0,0,.18)"; ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = "lighter";
+      for (let i = rings.length - 1; i >= 0; i--) { rings[i].r += 4.2; rings[i].life -= .022; if (rings[i].life <= 0) rings.splice(i, 1); }
+      for (const r of rings) {
+        ctx.strokeStyle = `hsla(${r.hue},100%,70%,${r.life * .5})`; ctx.lineWidth = 2 + r.life * 4;
+        ctx.beginPath(); ctx.arc(W / 2, H * .42, r.r, 0, 6.2832); ctx.stroke();
+      }
+      for (let i = parts.length - 1; i >= 0; i--) {
+        const p = parts[i];
+        p.px = p.x; p.py = p.y; p.vx *= .988; p.vy = p.vy * .988 + .06; p.x += p.vx; p.y += p.vy; p.life -= p.decay;
+        if (p.life <= 0) { parts.splice(i, 1); continue; }
+        ctx.strokeStyle = `hsla(${p.hue},100%,66%,${p.life})`; ctx.lineWidth = p.size * p.life;
+        ctx.beginPath(); ctx.moveTo(p.px, p.py); ctx.lineTo(p.x, p.y); ctx.stroke();
+      }
+      raf = requestAnimationFrame(frame);
+    }
+
+    function reset() {
+      cancelAnimationFrame(raf); parts = []; rings = []; done = false; lastShown = -1; start = 0;
+      document.body.classList.remove("hot", "boom"); numEl.textContent = DURATION; subEl.textContent = "系统就绪";
+      prog.style.strokeDashoffset = C; barEl.style.transform = "scaleX(1)"; btn.disabled = true;
+      tickEls.forEach((t) => t.classList.remove("on"));
+      ctx.clearRect(0, 0, W, H); raf = requestAnimationFrame(frame);
+    }
+    btn.addEventListener("click", reset);
+    addEventListener("resize", resize);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) pausedAt = performance.now();
+      else if (pausedAt) { start += performance.now() - pausedAt; pausedAt = 0; }
+    });
+    resize(); reset();
+  })();
+</script>
+</body>
+</html>

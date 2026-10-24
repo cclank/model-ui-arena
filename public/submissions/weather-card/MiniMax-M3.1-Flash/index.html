@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>AERIS 天气 · 城市气象</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100dvh;display:grid;place-items:center;padding:24px 14px;overflow-x:hidden;
+background:#070a12;color:var(--ink);font:400 16px/1.45 ui-sans-serif,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+transition:background .8s ease,color .8s ease}
+body[data-mode=night]{--ink:#e8eefb;--dim:#93a6c6;--bg1:#0a1020;--bg2:#04060d;--acc:#7fd0ff;--glass:rgba(255,255,255,.07)}
+body[data-mode=day]{--ink:#152238;--dim:#5b6c86;--bg1:#dbe9fb;--bg2:#a8c6ea;--acc:#1f6fb2;--glass:rgba(255,255,255,.34)}
+.card{position:relative;width:100%;max-width:392px;border-radius:28px;overflow:hidden;
+background:linear-gradient(165deg,var(--bg1),var(--bg2));border:1px solid rgba(255,255,255,.13);
+box-shadow:0 34px 70px -28px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.18);
+transition:background .8s ease,transform .5s cubic-bezier(.4,0,.2,1),opacity .5s ease}
+.card.swap{transform:translateY(8px) scale(.985);opacity:.35}
+.fx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.fx-sun{position:absolute;right:-34px;top:-46px;width:136px;height:136px;translate:none;opacity:0;transition:opacity .9s ease}
+.fx-sun.on{opacity:.62}
+#rays{transform-origin:60px 60px;animation:spin 28s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sunc{fill:rgba(255,222,140,.95);filter:drop-shadow(0 0 18px rgba(255,200,90,.75))}
+.mote{position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(255,238,190,.9);
+box-shadow:0 0 9px rgba(255,214,130,.95);opacity:0;animation:float linear infinite}
+.mote.on{opacity:.85}
+@keyframes float{0%{transform:translateY(0) translateX(0);opacity:0}
+12%{opacity:.85}88%{opacity:.6}100%{transform:translateY(-260px) translateX(26px);opacity:0}}
+.rain .d,.snow .d{position:absolute;top:-12%;opacity:0}
+.rain .d{width:1.6px;height:17px;background:linear-gradient(transparent,rgba(190,225,255,.9));border-radius:2px;animation:fall linear infinite}
+.snow .d{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.92);box-shadow:0 0 7px rgba(205,235,255,.9);animation:drift linear infinite}
+.rain.on .d,.snow.on .d{opacity:1}
+@keyframes fall{to{transform:translateY(460px)}}
+@keyframes drift{to{transform:translate(22px,460px)}}
+.inner{position:relative;z-index:2;padding:20px 20px 18px}
+.hd{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.city{font-size:22px;font-weight:600;letter-spacing:.01em}
+.sub{font-size:11.5px;color:var(--dim);letter-spacing:.14em;margin-top:3px}
+.unit{border:1px solid rgba(255,255,255,.2);background:var(--glass);color:var(--ink);border-radius:999px;
+padding:6px 12px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;backdrop-filter:blur(8px)}
+.now{display:flex;align-items:center;gap:14px;margin:16px 0 6px}
+.temp{font-size:66px;font-weight:200;line-height:.95;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.temp i{font-size:26px;font-style:normal;color:var(--acc);vertical-align:top;margin-left:2px}
+.meta{flex:1;min-width:0}
+.desc{font-size:17px;font-weight:600}
+.hi{font-size:12px;color:var(--dim);margin-top:4px}
+.stats{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.stat{font-size:11px;color:var(--dim);background:var(--glass);border:1px solid rgba(255,255,255,.14);
+border-radius:9px;padding:4px 9px;backdrop-filter:blur(6px)}
+.stat b{color:var(--ink);font-weight:600}
+.fc{margin-top:14px;background:var(--glass);border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:12px 12px 10px;backdrop-filter:blur(10px)}
+.fc h3{font-size:10.5px;font-weight:500;letter-spacing:.22em;color:var(--dim);margin-bottom:6px}
+.chart{width:100%;height:78px;display:block;overflow:visible}
+.grow{fill:url(#gfill);opacity:.55}
+.gline{fill:none;stroke:var(--acc);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.gdot{fill:var(--acc);stroke:var(--bg2);stroke-width:1.6}
+.gtxt{fill:var(--dim);font:9.5px/1 ui-sans-serif,system-ui,sans-serif;text-anchor:middle}
+.days{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;margin-top:4px}
+.day{text-align:center;font-size:11px;color:var(--dim);line-height:1.5}
+.day b{display:block;color:var(--ink);font-size:12.5px;font-weight:600;margin-top:2px}
+.day u{display:block;text-decoration:none;color:var(--acc);font-size:11.5px}
+.ic{font-size:15px;line-height:1.15;filter:saturate(1.4)}
+.tabs{display:flex;gap:7px;margin-top:14px}
+.tab{flex:1;border:1px solid rgba(255,255,255,.16);background:var(--glass);color:var(--dim);border-radius:13px;
+padding:9px 4px;font:inherit;font-size:12px;cursor:pointer;backdrop-filter:blur(8px);transition:all .3s}
+.tab[aria-pressed=true]{color:#0b1220;background:var(--acc);border-color:transparent;font-weight:700}
+.hint{margin-top:10px;font-size:10.5px;color:var(--dim);letter-spacing:.1em;text-align:center;opacity:.8}
+</style>
+</head>
+<body data-mode="day">
+<div class="card" id="card">
+  <div class="fx" id="fx">
+    <svg class="fx-sun" id="sunSvg" viewBox="0 0 120 120"><g id="rays"></g><circle class="sunc" cx="60" cy="60" r="20"/></svg>
+    <div class="mote" id="mote"></div><div class="rain" id="rain"></div><div class="snow" id="snow"></div>
+  </div>
+  <div class="inner">
+    <div class="hd">
+      <div><div class="city" id="city">—</div><div class="sub" id="sub">—</div></div>
+      <button class="unit" id="unit" aria-label="切换温度单位">°C</button>
+    </div>
+    <div class="now">
+      <div class="temp"><span id="tv">--</span><i id="td">°C</i></div>
+      <div class="meta">
+        <div class="desc" id="desc">—</div>
+        <div class="hi" id="hi">—</div>
+        <div class="stats">
+          <span class="stat">风速 <b id="wind">—</b></span>
+          <span class="stat">湿度 <b id="hum">—</b></span>
+          <span class="stat">能见 <b id="vis">—</b></span>
+        </div>
+      </div>
+    </div>
+    <section class="fc">
+      <h3>5 日趋势</h3>
+      <svg class="chart" id="chart" viewBox="0 0 320 78" preserveAspectRatio="none">
+        <defs><linearGradient id="gfill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--acc)" stop-opacity=".42"/><stop offset="100%" stop-color="var(--acc)" stop-opacity="0"/>
+        </linearGradient></defs>
+        <path class="grow" id="area"/><path class="gline" id="line"/><g id="dots"></g><g id="xt"></g>
+      </svg>
+      <div class="days" id="days"></div>
+    </section>
+    <nav class="tabs" id="tabs" role="group" aria-label="城市切换"></nav>
+    <p class="hint" id="hint">—</p>
+  </div>
+</div>
+<script>
+const NS='http://www.w3.org/2000/svg';
+const CITIES=[
+ {n:'上海',s:'SHANGHAI · 东八区',w:'晴',ic:'☀',t:26,hi:29,lo:21,wind:9,hum:58,vis:18,type:'sun',
+  f:[['今天','晴','☀',29,21],['周三','多云','⛅',28,20],['周四','阵雨','🌦',25,19],['周五','雷阵雨','⛈',23,18],['周六','晴','☀',27,20]]},
+ {n:'京都',s:'KYOTO · 东九区',w:'小雨',ic:'🌧',t:18,hi:20,lo:14,wind:14,hum:82,vis:7,type:'rain',
+  f:[['今天','小雨','🌧',20,15],['周三','中雨','🌧',19,14],['周四','阴','☁',18,13],['周五','多云','⛅',21,14],['周六','阵雨','🌦',20,15]]},
+ {n:'雷克雅未克',s:'REYKJAVIK · 北大西洋',w:'小雪',ic:'❄',t:-3,hi:-1,lo:-7,wind:28,hum:71,vis:9,type:'snow',
+  f:[['今天','小雪','❄',-1,-6],['周三','多云','⛅',0,-5],['周四','降雪','❄',-2,-8],['周五','阴','☁',1,-4],['周六','小雪','❄',0,-6]]}
+];
+const $=id=>document.getElementById(id);
+const card=$('card'),fx=$('fx'),sunSvg=$('sunSvg'),rain=$('rain'),snow=$('snow');
+const rays=$('rays');
+for(let i=0;i<12;i++){const l=document.createElementNS(NS,'line');const a=i*30*Math.PI/180;
+l.setAttribute('x1',60+Math.cos(a)*28);l.setAttribute('y1',60+Math.sin(a)*28);
+l.setAttribute('x2',60+Math.cos(a)*44);l.setAttribute('y2',60+Math.sin(a)*44);
+l.setAttribute('stroke','rgba(255,214,120,.75)');l.setAttribute('stroke-width','3');l.setAttribute('stroke-linecap','round');
+rays.appendChild(l)}
+for(let i=0;i<34;i++){const d=document.createElement('div');d.className='d';
+d.style.left=(Math.random()*100)+'%';d.style.animationDuration=(0.5+Math.random()*0.5)+'s';
+d.style.animationDelay=(-Math.random()*1.2)+'s';d.style.opacity=(0.35+Math.random()*0.55);
+rain.appendChild(d)}
+for(let i=0;i<14;i++){const d=document.createElement('div');d.className='mote';
+d.style.left=(8+Math.random()*74)+'%';d.style.top=(58+Math.random()*40)+'%';
+d.style.animationDuration=(5+Math.random()*5)+'s';d.style.animationDelay=(-Math.random()*9)+'s';
+d.style.width=d.style.height=(2.5+Math.random()*3.5)+'px';
+$('mote').appendChild(d)}
+for(let i=0;i<26;i++){const d=document.createElement('div');d.className='d';
+d.style.left=(Math.random()*100)+'%';d.style.fontSize=(3+Math.random()*4)+'px';
+d.style.animationDuration=(3.4+Math.random()*3.2)+'s';d.style.animationDelay=(-Math.random()*5)+'s';
+snow.appendChild(d)}
+let idx=0,unit='C',curT=0;
+function conv(c){return unit==='C'?c:Math.round(c*9/5+32)}
+function tint(){const h=new Date().getHours();document.body.dataset.mode=(h>=6&&h<18)?'day':'night'}
+function fxMode(t){sunSvg.classList.toggle('on',t==='sun');rain.classList.toggle('on',t==='rain');snow.classList.toggle('on',t==='snow');
+$('mote').classList.toggle('on',t==='sun')}
+function countTo(target){const from=curT,t0=performance.now(),dur=620;
+function step(t){const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);
+$('tv').textContent=Math.round(from+(target-from)*e);
+if(p<1)requestAnimationFrame(step);else curT=target}
+requestAnimationFrame(step)}
+function chart(f){const xs=f.map((_,i)=>22+i*69),lo=Math.min(...f.map(d=>d[3])),hi=Math.max(...f.map(d=>d[3]));
+const sp=hi-lo||1,Y=t=>64-((t-lo)/sp)*44,ys=f.map(d=>Y(d[3]));
+let d='M'+xs.map((x,i)=>x+','+ys[i]).join(' L');
+$('line').setAttribute('d',d);
+$('area').setAttribute('d',d+' L'+xs[4]+',72 L'+xs[0]+',72 Z');
+const g=$('dots');g.replaceChildren();
+f.forEach((r,i)=>{const c=document.createElementNS(NS,'circle');c.setAttribute('class','gdot');
+c.setAttribute('cx',xs[i]);c.setAttribute('cy',ys[i]);c.setAttribute('r','3.6');g.appendChild(c);
+const t=document.createElementNS(NS,'text');t.setAttribute('class','gtxt');
+t.setAttribute('x',xs[i]);t.setAttribute('y',ys[i]-8);t.textContent=conv(r[3])+'°';g.appendChild(t)})}
+function render(i,animate){const c=CITIES[i];
+$('city').textContent=c.n;$('sub').textContent=c.s;$('desc').textContent=c.w+' · '+c.ic;
+$('hi').textContent='体感 '+conv(c.t-2)+'° · 最高 '+conv(c.hi)+'° / 最低 '+conv(c.lo)+'°';
+$('wind').textContent=c.wind+' km/h';$('hum').textContent=c.hum+'%';$('vis').textContent=c.vis+' km';
+fxMode(c.type);chart(c.f);
+$('days').innerHTML=c.f.map(d=>'<div class="day">'+d[0]+'<span class="ic">'+d[2]+'</span><b>'+conv(d[3])+'°</b><u>'+conv(d[4])+'°</u></div>').join('');
+$('hint').textContent=c.type==='sun'?'晴 · 阳光粒子与光晕缓慢旋转':c.type==='rain'?'雨 · 雨滴持续下落，密度随风变化':'雪 · 雪花飘落，缓慢而轻';
+if(animate)countTo(conv(c.t));else{$('tv').textContent=conv(c.t);curT=conv(c.t)}}
+$('tabs').innerHTML=CITIES.map((c,i)=>'<button class="tab" data-i="'+i+'" aria-pressed="'+(i===0)+'">'+c.n+'</button>').join('');
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(!b)return;
+const ni=+b.dataset.i;if(ni===idx)return;
+card.classList.add('swap');
+setTimeout(()=>{idx=ni;
+document.querySelectorAll('.tab').forEach((t,i)=>t.setAttribute('aria-pressed',String(i===ni)));
+render(idx,true);card.classList.remove('swap')},320)});
+$('unit').addEventListener('click',()=>{unit=unit==='C'?'F':'C';$('unit').textContent='°'+unit;
+document.querySelectorAll('.tab').forEach((t,i)=>t.setAttribute('aria-pressed',String(i===idx)));
+render(idx,false)});
+tint();render(0,false);setInterval(tint,60000);
+</script>
+</body>
+</html>

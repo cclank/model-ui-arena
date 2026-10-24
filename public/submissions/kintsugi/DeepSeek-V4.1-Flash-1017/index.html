@@ -1,0 +1,2779 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>金缮 · 碎处生金</title>
+<style>
+  :root{
+    --serif:"Songti SC","STSong","Noto Serif CJK SC","Source Han Serif SC","SimSun",Georgia,"Times New Roman",serif;
+    --sans:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    --ink:#0a0806;
+    --gold:#d7a94a;
+    --gold-hi:#f6e2a4;
+    --gold-dim:rgba(215,169,74,.55);
+    --paper:rgba(244,232,208,.9);
+    --muted:rgba(230,215,186,.52);
+  }
+  *{box-sizing:border-box}
+  html,body{
+    margin:0;padding:0;width:100%;height:100%;
+    background:var(--ink);color:var(--paper);
+    font-family:var(--sans);
+    overflow:hidden;
+    overscroll-behavior:none;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    text-rendering:optimizeLegibility;
+  }
+  .stage{
+    position:fixed;inset:0;overflow:hidden;
+    background:radial-gradient(120% 90% at 50% 18%,#16120d 0%,#0a0806 62%,#050403 100%);
+  }
+  #scene{
+    position:absolute;inset:0;display:block;
+    width:100%;height:100%;
+    touch-action:none;
+    cursor:default;
+  }
+  .sr{
+    position:absolute;width:1px;height:1px;margin:-1px;padding:0;
+    overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+  }
+  .top{
+    position:absolute;top:26px;left:32px;right:32px;
+    display:flex;justify-content:space-between;align-items:flex-start;gap:18px;
+    pointer-events:none;
+    max-width:calc(100vw - 64px);
+  }
+  .brand{min-width:0}
+  .brand .zh{
+    font-family:var(--serif);
+    font-size:23px;line-height:1.05;
+    letter-spacing:.44em;color:#f0e4c9;
+    text-shadow:0 2px 26px rgba(0,0,0,.7);
+    white-space:nowrap;
+  }
+  .brand .en{
+    margin-top:8px;
+    font-size:8px;letter-spacing:.52em;
+    color:rgba(222,190,135,.58);
+    white-space:nowrap;
+  }
+  .rule{
+    width:46px;height:1px;margin-top:11px;
+    background:linear-gradient(90deg,rgba(215,169,74,.75),rgba(215,169,74,0));
+  }
+  .phase{
+    display:flex;align-items:center;gap:8px;
+    margin-top:12px;
+    font-size:10.5px;letter-spacing:.24em;
+    color:rgba(235,218,185,.62);
+    white-space:nowrap;
+  }
+  .phase .dot{
+    width:4px;height:4px;border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 8px rgba(215,169,74,.9);
+    animation:breathe 2.6s ease-in-out infinite;
+    flex:0 0 auto;
+  }
+  @keyframes breathe{
+    0%,100%{opacity:.3;transform:scale(.75)}
+    50%{opacity:1;transform:scale(1.1)}
+  }
+  .poemwrap{
+    display:flex;flex-direction:column;align-items:center;
+    padding-top:2px;
+    flex:0 0 auto;
+  }
+  .poem{
+    writing-mode:vertical-rl;
+    text-orientation:upright;
+    font-family:var(--serif);
+    font-size:14px;
+    letter-spacing:.3em;
+    line-height:1.9;
+    color:rgba(238,222,188,.68);
+    text-shadow:0 2px 18px rgba(0,0,0,.6);
+    opacity:.9;
+  }
+  .seal{
+    width:25px;height:25px;margin-top:12px;
+    display:grid;place-items:center;
+    background:linear-gradient(160deg,#a83a2b,#8c2a20);
+    color:#f2ddc1;
+    font-family:var(--serif);font-size:13px;
+    border-radius:2px;
+    box-shadow:inset 0 0 0 1px rgba(255,220,190,.16),0 3px 12px rgba(0,0,0,.55);
+    opacity:.9;
+  }
+  .stats{
+    position:absolute;left:32px;bottom:28px;
+    display:flex;gap:28px;
+    padding:13px 20px 12px;
+    border:1px solid rgba(205,165,95,.16);
+    border-radius:2px;
+    background:linear-gradient(180deg,rgba(34,27,18,.55),rgba(13,10,7,.36));
+    -webkit-backdrop-filter:blur(6px);
+    backdrop-filter:blur(6px);
+    pointer-events:none;
+    z-index:3;
+  }
+  .stat{min-width:52px}
+  .stat + .stat{
+    border-left:1px solid rgba(205,165,95,.13);
+    padding-left:26px;
+  }
+  .stat .k{
+    font-size:8.5px;letter-spacing:.3em;
+    color:rgba(231,215,183,.46);
+    margin-bottom:5px;
+    white-space:nowrap;
+  }
+  .stat .v{
+    font-family:var(--serif);
+    font-size:23px;line-height:1;
+    color:#f2e5c8;
+    font-variant-numeric:tabular-nums;
+  }
+  .stat .v small{
+    font-family:var(--sans);
+    font-size:8px;
+    letter-spacing:.2em;
+    color:rgba(231,215,183,.34);
+    margin-left:3px;
+  }
+  .controls{
+    position:absolute;right:32px;bottom:28px;
+    display:flex;gap:9px;z-index:5;
+    pointer-events:auto;
+  }
+  .btn{
+    appearance:none;-webkit-appearance:none;
+    display:inline-flex;align-items:center;justify-content:center;
+    min-height:42px;
+    padding:11px 17px 10px;
+    border:1px solid rgba(210,170,95,.3);
+    border-radius:2px;
+    background:linear-gradient(180deg,rgba(40,31,20,.5),rgba(16,12,8,.45));
+    color:#e9d7b2;
+    font-family:var(--sans);
+    font-size:11.5px;
+    letter-spacing:.24em;
+    cursor:pointer;
+    -webkit-backdrop-filter:blur(5px);
+    backdrop-filter:blur(5px);
+    transition:border-color .28s ease,background .28s ease,color .28s ease,transform .12s ease,opacity .28s ease;
+    touch-action:manipulation;
+    white-space:nowrap;
+  }
+  .btn:hover:not(:disabled){
+    border-color:rgba(236,197,118,.68);
+    background:linear-gradient(180deg,rgba(80,58,28,.5),rgba(28,20,11,.5));
+    color:#fff0cd;
+    box-shadow:0 0 26px rgba(215,169,74,.12);
+  }
+  .btn:active:not(:disabled){transform:translateY(1px) scale(.995)}
+  .btn:focus-visible{outline:1px solid rgba(246,226,164,.85);outline-offset:3px}
+  .btn:disabled{opacity:.3;cursor:default}
+  #soundBtn{padding-left:12px;padding-right:12px;letter-spacing:0}
+  #soundBtn.on{color:rgba(246,226,164,.95);border-color:rgba(215,169,74,.5)}
+  .hint{
+    position:absolute;left:50%;bottom:112px;
+    transform:translateX(-50%);
+    width:max-content;max-width:calc(100vw - 48px);
+    text-align:center;
+    pointer-events:none;
+    z-index:2;
+    transition:opacity .55s ease;
+  }
+  .hint .main{
+    font-family:var(--serif);
+    font-size:15px;letter-spacing:.32em;
+    color:rgba(245,233,207,.88);
+    text-shadow:0 2px 20px rgba(0,0,0,.8);
+    transition:opacity .4s ease;
+  }
+  .hint .sub{
+    margin-top:9px;
+    font-size:9.5px;letter-spacing:.3em;
+    color:rgba(220,190,140,.56);
+    text-shadow:0 2px 14px rgba(0,0,0,.8);
+  }
+  .toast{
+    position:absolute;left:50%;top:17.5%;
+    transform:translate(-50%,10px);
+    width:max-content;max-width:calc(100vw - 56px);
+    text-align:center;
+    opacity:0;
+    pointer-events:none;
+    z-index:4;
+    transition:opacity .9s ease,transform .9s cubic-bezier(.22,1,.36,1);
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast .tline{
+    width:54px;height:1px;margin:0 auto 15px;
+    background:linear-gradient(90deg,rgba(215,169,74,0),rgba(246,226,164,.8),rgba(215,169,74,0));
+    opacity:.8;
+  }
+  .toast .main{
+    font-family:var(--serif);
+    font-size:clamp(18px,2.1vw,26px);
+    letter-spacing:.26em;
+    color:#f1dca9;
+    text-shadow:0 0 30px rgba(230,180,80,.3),0 3px 24px rgba(0,0,0,.7);
+    white-space:nowrap;
+  }
+  .toast .tag{
+    margin-top:12px;
+    font-size:8.5px;letter-spacing:.4em;
+    color:rgba(215,169,74,.68);
+  }
+  @media (max-width:700px){
+    .top{top:18px;left:18px;right:18px;max-width:calc(100vw - 36px)}
+    .brand .zh{font-size:20px;letter-spacing:.4em}
+    .brand .en{font-size:7px;letter-spacing:.44em;margin-top:6px}
+    .rule{margin-top:8px;width:34px}
+    .phase{margin-top:10px;font-size:9px;letter-spacing:.18em}
+    .poem{font-size:11px;letter-spacing:.2em;line-height:1.7}
+    .seal{width:21px;height:21px;font-size:11px;margin-top:9px}
+    .stats{
+      left:18px;right:auto;top:126px;bottom:auto;
+      gap:16px;padding:9px 13px 8px;
+    }
+    .stat{min-width:40px}
+    .stat + .stat{padding-left:15px}
+    .stat .k{font-size:7.5px;letter-spacing:.24em;margin-bottom:4px}
+    .stat .v{font-size:18px}
+    .stat .v small{font-size:7px;margin-left:2px}
+    .controls{
+      left:16px;right:16px;bottom:calc(15px + env(safe-area-inset-bottom));
+      gap:7px;
+    }
+    .controls .btn{flex:1 1 0;min-height:46px;padding:10px 5px;font-size:10.5px;letter-spacing:.18em}
+    #soundBtn{flex:0 0 52px;padding:0}
+    .hint{bottom:calc(78px + env(safe-area-inset-bottom));max-width:calc(100vw - 40px)}
+    .hint .main{font-size:12.5px;letter-spacing:.22em}
+    .hint .sub{font-size:8.5px;letter-spacing:.2em;margin-top:7px}
+    .toast{top:26%;max-width:calc(100vw - 44px)}
+    .toast .main{font-size:18px;letter-spacing:.16em;white-space:normal;line-height:1.6}
+    .toast .tag{font-size:7.5px;letter-spacing:.28em}
+  }
+  @media (max-height:640px){
+    .hint .sub{display:none}
+    .hint{bottom:84px}
+    .stats{bottom:20px}
+    .controls{bottom:20px}
+    .toast{top:17%}
+  }
+  @media (max-width:700px) and (max-height:640px){
+    .stats{top:112px;bottom:auto}
+    .hint{bottom:calc(72px + env(safe-area-inset-bottom))}
+  }
+</style>
+</head>
+<body>
+<main class="stage" id="stage">
+  <canvas id="scene" aria-label="案几上的一只青瓷碗，点击碗身可以打碎它"></canvas>
+
+  <header class="top">
+    <div class="brand">
+      <div class="zh">金缮</div>
+      <div class="en">K I N T S U G I</div>
+      <div class="rule"></div>
+      <div class="phase"><span class="dot"></span><span id="phaseText">静置 · 等一声轻叩</span></div>
+    </div>
+    <div class="poemwrap" aria-hidden="true">
+      <div class="poem">碎处生金<br>旧痕即器</div>
+      <div class="seal">缮</div>
+    </div>
+  </header>
+
+  <aside class="stats" aria-label="金缮状态">
+    <div class="stat"><div class="k">碎片</div><div class="v"><span id="statShards">1</span><small>片</small></div></div>
+    <div class="stat"><div class="k">裂纹</div><div class="v"><span id="statCracks">0</span><small>道</small></div></div>
+    <div class="stat"><div class="k">金缮</div><div class="v"><span id="statRepairs">0</span><small>次</small></div></div>
+  </aside>
+
+  <div class="hint" id="hint">
+    <div class="main" id="hintMain">以指轻叩碗身</div>
+    <div class="sub" id="hintSub">碎了，才看得见金子的方向</div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="repairBtn" type="button" disabled>修复</button>
+    <button class="btn" id="resetBtn" type="button">重新来过</button>
+    <button class="btn" id="soundBtn" type="button" aria-label="切换声音" aria-pressed="false" title="声音">声</button>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <div class="tline"></div>
+    <div class="main" id="toastMain">把碎了的，认成花纹。</div>
+    <div class="tag" id="toastTag">第一次金缮 · 裂痕已金</div>
+  </div>
+
+  <p class="sr" id="announcer" aria-live="polite"></p>
+  <p class="sr">点击碗身将其打碎，碎片落到案几上后会自行归位，并以金线沿着裂痕修补。也可以使用下方按钮提前修复或重新开始。</p>
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ==========================================================================
+     金缮 · KINTSUGI
+     --------------------------------------------------------------------------
+     一、碗体：全部由 Canvas 2D 程序化绘制（侧视、可见碗口椭圆、外壁弧线、
+         圈足、釉色渐变、高光、釉面细纹、案几倒影），没有任何位图与外部资源。
+     二、断裂算法（真实、可核查，无预设裂纹）：见 buildFracture()
+         1) 在碗的可见多边形区域内做加权采样：以点击点为种子，采样密度按
+            以点击点为圆心的指数衰减分布，因此点击处碎片最密、最碎。
+         2) 对每个采样点 p，用它与其余每个点的中垂线半平面（Voronoi 单元）
+            依次做 Sutherland–Hodgman 多边形裁剪，再与碗的轮廓多边形求交。
+            所有单元互不重叠，并集恰好等于原碗轮廓（拼起来就是原碗）。
+         3) 相邻两个单元共享的那段 Voronoi 边，就是一条裂缝：把两点中垂线
+            用「比到 p 更近」的其余半平面裁剪，再裁到碗轮廓内，得到裂缝线段；
+            裂缝与碎片边缘严格同源。加轻微摆动后即为金线的生长路径。
+     三、刚体：见 stepShard()。每个碎片是凸多边形，受重力、阻尼、与案几水平
+         面的冲量碰撞（法向恢复 + 切向库仑摩擦，作用点在最深顶点，含转动惯量），
+         低速静置计时后休眠，保证不穿透案几、不会永久抖动。
+     四、修复节奏：碎裂闪光(0.09s) → 坠落(~2s) → 余音停顿(1.3s) → 归位(0.9s)
+         → 金线生长(按距离与长度错峰 1.5~2.2s) → 金光扫过。每段各有缓动。
+     五、金线持久化：金线被烘焙进碗的离屏精灵图；再次碎裂时，碎片直接裁取
+         精灵图，新旧金线自然随碎片一起断裂、坠落、复原，实现叠加。
+     六、音效：首次手势后创建 WebAudio，全部实时合成（噪声碎裂声、落地清音、
+         修复钟音），不加载任何音频文件。
+     ========================================================================== */
+
+  const TAU = Math.PI * 2;
+  const PI = Math.PI;
+
+  const clamp = (v,a,b)=> v < a ? a : (v > b ? b : v);
+  const lerp = (a,b,t)=> a + (b-a) * t;
+  const rand = (a,b)=> a + Math.random() * (b-a);
+  const randInt = (a,b)=> Math.floor(a + Math.random() * (b-a+1));
+  const dist2 = (ax,ay,bx,by)=> (ax-bx)*(ax-bx) + (ay-by)*(ay-by);
+  const easeInOutCubic = t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+  const easeOutCubic = t => 1 - Math.pow(1-t,3);
+  const easeInOutSine = t => -(Math.cos(PI*t) - 1) / 2;
+  const easeOutQuint = t => 1 - Math.pow(1-t,5);
+  const nowS = ()=> performance.now() / 1000;
+  const smoothstep = t => { t = clamp(t,0,1); return t*t*(3-2*t); };
+
+  function mulberry32(a){
+    return function(){
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  /* ------------------------------------------------------------------ DOM */
+  const canvas = document.getElementById('scene');
+  const ctx = canvas.getContext('2d', { alpha: false });
+  const el = {
+    phase: document.getElementById('phaseText'),
+    hint: document.getElementById('hint'),
+    hintMain: document.getElementById('hintMain'),
+    hintSub: document.getElementById('hintSub'),
+    shards: document.getElementById('statShards'),
+    cracks: document.getElementById('statCracks'),
+    repairs: document.getElementById('statRepairs'),
+    repairBtn: document.getElementById('repairBtn'),
+    resetBtn: document.getElementById('resetBtn'),
+    soundBtn: document.getElementById('soundBtn'),
+    toast: document.getElementById('toast'),
+    toastMain: document.getElementById('toastMain'),
+    toastTag: document.getElementById('toastTag'),
+    announcer: document.getElementById('announcer')
+  };
+
+  /* ----------------------------------------------------------- 场景与状态 */
+  let W = 0, H = 0, DPR = 1;
+  let lastT = nowS();
+
+  const B = {
+    cx: 0, tableY: 0,
+    rx: 160, ry: 34, bodyH: 140, footH: 9, footTopY: 0, footBottomY: 0, rf: 52,
+    rimY: 0, outline: [], bbox: {x:0,y:0,w:0,h:0},
+    spriteBox: {x:0,y:0,w:0,h:0},
+    path: null, goldK: 1, clickCenter: {x:0,y:0}
+  };
+
+  const S = {
+    stage: 'idle',            // idle | falling | waiting | returning | gilding | healed
+    stageT: 0,
+    released: false,
+    releaseAt: 0,
+    shards: [],
+    cracks: [],
+    seams: [],                // 已烘焙的金线 {pts, tone}
+    recent: [],               // 最近一次金线，用于余韵流光
+    repairs: 0,
+    touched: false,
+    click: {x:0,y:0},
+    settledAt: 0,
+    autoRepairAt: 0,
+    retStart: 0, retDur: 0,
+    gildStart: 0, gildTotal: 0,
+    healedAt: 0,
+    sweepAt: -1,
+    flashAt: -1,
+    flashPt: {x:0,y:0},
+    toastUntil: 0,
+    arrived: 0,
+    announced: ''
+  };
+
+  let bgCanvas = null;
+  let sprite = null;
+  let reflection = null;
+  let shadowSprite = null;
+  let dust = [];
+  let particles = [];
+  let vignetteGrad = null;
+  let topGrad = null;
+  let bottomGrad = null;
+  let phaseText = '';
+  let hintText = '';
+
+  let waitTenths = -1;
+  const PHYS = { g: 2450, mu: 0.64, e: 0.24, maxV: 2500 };
+  const GOLD_TONES = ['#d8a646', '#e0b154', '#cd9b3f'];
+
+  /* ==========================================================================
+     几何工具
+     ========================================================================== */
+
+  function polyArea(poly){
+    let a = 0;
+    for (let i=0;i<poly.length;i++){
+      const p = poly[i], q = poly[(i+1)%poly.length];
+      a += p.x*q.y - q.x*p.y;
+    }
+    return a * 0.5;
+  }
+
+  function polyCentroid(poly){
+    let a = 0, cx = 0, cy = 0;
+    for (let i=0;i<poly.length;i++){
+      const p = poly[i], q = poly[(i+1)%poly.length];
+      const cr = p.x*q.y - q.x*p.y;
+      a += cr;
+      cx += (p.x + q.x) * cr;
+      cy += (p.y + q.y) * cr;
+    }
+    a *= 0.5;
+    if (Math.abs(a) < 1e-7){
+      let sx=0, sy=0;
+      for (const p of poly){ sx += p.x; sy += p.y; }
+      return { x: sx/poly.length, y: sy/poly.length };
+    }
+    return { x: cx/(6*a), y: cy/(6*a) };
+  }
+
+  function polyBBox(poly){
+    let x0=Infinity, y0=Infinity, x1=-Infinity, y1=-Infinity;
+    for (const p of poly){
+      if (p.x<x0) x0=p.x; if (p.y<y0) y0=p.y;
+      if (p.x>x1) x1=p.x; if (p.y>y1) y1=p.y;
+    }
+    return { x:x0, y:y0, w:x1-x0, h:y1-y0 };
+  }
+
+  function pointInPoly(poly, x, y){
+    let inside = false;
+    for (let i=0, j=poly.length-1; i<poly.length; j=i++){
+      const xi = poly[i].x, yi = poly[i].y;
+      const xj = poly[j].x, yj = poly[j].y;
+      if (((yi > y) !== (yj > y)) && (x < (xj-xi) * (y-yi) / (yj-yi) + xi)){
+        inside = !inside;
+      }
+    }
+    return inside;
+  }
+
+  function clipHalfPlane(poly, a, b, c){
+    // 保留 a*x + b*y <= c 的部分
+    const n = poly.length;
+    if (n === 0) return [];
+    const out = [];
+    let prev = poly[n-1];
+    let fp = a*prev.x + b*prev.y - c;
+    for (let i=0;i<n;i++){
+      const cur = poly[i];
+      const fc = a*cur.x + b*cur.y - c;
+      if (fc <= 1e-9){
+        if (fp > 1e-9){
+          const t = fp / (fp - fc);
+          out.push({ x: prev.x + (cur.x-prev.x)*t, y: prev.y + (cur.y-prev.y)*t });
+        }
+        out.push(cur);
+      } else if (fp <= 1e-9){
+        const t = fp / (fp - fc);
+        out.push({ x: prev.x + (cur.x-prev.x)*t, y: prev.y + (cur.y-prev.y)*t });
+      }
+      prev = cur; fp = fc;
+    }
+    return out;
+  }
+
+  function polyPath(path, poly){
+    if (!poly.length) return path;
+    path.moveTo(poly[0].x, poly[0].y);
+    for (let i=1;i<poly.length;i++) path.lineTo(poly[i].x, poly[i].y);
+    path.closePath();
+    return path;
+  }
+
+  function ellipsePath(path, x, y, rx, ry){
+    path.ellipse(x, y, rx, ry, 0, 0, TAU);
+    return path;
+  }
+
+  function sampleCubicInto(arr, p0, p1, p2, p3, n){
+    for (let i=1;i<=n;i++){
+      const t = i/n, u = 1-t;
+      const a = u*u*u, b = 3*u*u*t, c = 3*u*t*t, d = t*t*t;
+      arr.push({
+        x: a*p0.x + b*p1.x + c*p2.x + d*p3.x,
+        y: a*p0.y + b*p1.y + c*p2.y + d*p3.y
+      });
+    }
+  }
+
+  function nearestOnOutline(x, y){
+    let best = { x:0, y:0, d: Infinity };
+    const poly = B.outline;
+    for (let i=0;i<poly.length;i++){
+      const a = poly[i], b = poly[(i+1)%poly.length];
+      const dx = b.x-a.x, dy = b.y-a.y;
+      const L2 = dx*dx + dy*dy || 1;
+      let t = ((x-a.x)*dx + (y-a.y)*dy) / L2;
+      t = clamp(t, 0, 1);
+      const px = a.x + dx*t, py = a.y + dy*t;
+      const d = Math.hypot(px-x, py-y);
+      if (d < best.d) best = { x:px, y:py, d };
+    }
+    return best;
+  }
+
+  /* ==========================================================================
+     碗体几何
+     ========================================================================== */
+
+  function buildBowlGeometry(){
+    const narrow = W < 700;
+    let tableY = Math.round(H * (narrow ? 0.665 : 0.692));
+    tableY = clamp(tableY, H*0.54, H - 108);
+
+    const maxW = Math.min(W * (narrow ? 0.74 : 0.42), H * 0.66, 660);
+    const rx = Math.max(90, maxW/2);
+    const ry = rx * 0.20;
+    const bodyH = rx * 0.80;
+    const footH = Math.max(5, rx * 0.055);
+    const footBottomY = tableY - 3.2;
+    const footTopY = footBottomY - footH;
+    const rimY = footTopY - bodyH;
+    const rf = rx * 0.335;
+    const cx = W * 0.5;
+
+    Object.assign(B, {
+      cx, tableY, rx, ry, bodyH, footH, footTopY, footBottomY, rf, rimY,
+      goldK: clamp(rx/150, 0.72, 1.32)
+    });
+
+    const pts = [];
+
+    // 远端碗口弧（可见轮廓的上缘），从左碗口到右碗口
+    const topN = 36;
+    for (let i=0;i<=topN;i++){
+      const a = PI + PI * (i/topN);
+      pts.push({ x: cx + rx*Math.cos(a), y: rimY + ry*Math.sin(a) });
+    }
+
+    // 右外壁：由口沿收向圈足
+    sampleCubicInto(
+      pts,
+      { x: cx+rx, y: rimY },
+      { x: cx+rx*1.025, y: rimY+bodyH*0.17 },
+      { x: cx+rx*0.76, y: rimY+bodyH*0.66 },
+      { x: cx+rf, y: footTopY },
+      28
+    );
+
+    // 右侧圈足
+    pts.push({ x: cx+rf*0.985, y: footBottomY - 1.1 });
+
+    // 圈足底，微向下鼓，最低点几乎贴案
+    sampleCubicInto(
+      pts,
+      { x: cx+rf*0.985, y: footBottomY - 1.1 },
+      { x: cx+rf*0.52, y: footBottomY + 2.9 },
+      { x: cx-rf*0.52, y: footBottomY + 2.9 },
+      { x: cx-rf*0.985, y: footBottomY - 1.1 },
+      22
+    );
+
+    // 左侧圈足
+    pts.push({ x: cx-rf, y: footTopY });
+
+    // 左外壁：由圈足回到口沿
+    sampleCubicInto(
+      pts,
+      { x: cx-rf, y: footTopY },
+      { x: cx-rx*0.76, y: rimY+bodyH*0.66 },
+      { x: cx-rx*1.025, y: rimY+bodyH*0.17 },
+      { x: cx-rx, y: rimY },
+      28
+    );
+
+    // 去重并闭合
+    for (let i=pts.length-1;i>0;i--){
+      if (Math.abs(pts[i].x-pts[i-1].x) < 0.01 && Math.abs(pts[i].y-pts[i-1].y) < 0.01){
+        pts.splice(i,1);
+      }
+    }
+    const first = pts[0], last = pts[pts.length-1];
+    if (Math.abs(first.x-last.x) < 0.05 && Math.abs(first.y-last.y) < 0.05) pts.pop();
+
+    B.outline = pts;
+    B.bbox = polyBBox(pts);
+    B.clickCenter = { x: cx, y: rimY + bodyH*0.52 };
+    B.path = polyPath(new Path2D(), pts);
+
+    const pad = 16;
+    B.spriteBox = {
+      x: Math.floor(B.bbox.x - pad),
+      y: Math.floor(B.bbox.y - pad),
+      w: Math.ceil(B.bbox.w + pad*2),
+      h: Math.ceil(B.bbox.h + pad*2 + 1)
+    };
+    B.spriteBox.h = Math.ceil((B.bbox.y + B.bbox.h + 5) - B.spriteBox.y);
+
+    dust = buildDust();
+  }
+
+  /* ==========================================================================
+     背景（墙面 / 案几 / 光 / 漆面 / 颗粒）
+     ========================================================================== */
+
+  function buildBackground(){
+    const c = document.createElement('canvas');
+    c.width = Math.max(2, Math.round(W*DPR));
+    c.height = Math.max(2, Math.round(H*DPR));
+    const g = c.getContext('2d');
+    g.setTransform(DPR,0,0,DPR,0,0);
+    const rng = mulberry32(1337);
+
+    // 墙：极深的暖黑
+    const wall = g.createLinearGradient(0,0,0,B.tableY);
+    wall.addColorStop(0, '#080706');
+    wall.addColorStop(0.42, '#0f0c09');
+    wall.addColorStop(0.76, '#19130d');
+    wall.addColorStop(1, '#241b12');
+    g.fillStyle = wall;
+    g.fillRect(0,0,W,B.tableY);
+
+    // 碗后的一团柔光
+    const glow = g.createRadialGradient(B.cx, B.tableY - B.bodyH*0.72, 8, B.cx, B.tableY - B.bodyH*0.55, B.rx*2.5);
+    glow.addColorStop(0, 'rgba(226,190,132,0.12)');
+    glow.addColorStop(0.42, 'rgba(190,150,95,0.055)');
+    glow.addColorStop(1, 'rgba(120,90,55,0)');
+    g.fillStyle = glow;
+    g.fillRect(0,0,W,B.tableY);
+
+    // 左上的一团柔和光晕（无硬边）
+    const haze = g.createRadialGradient(W*0.2, H*0.02, 10, W*0.28, H*0.2, Math.max(W,H)*0.66);
+    haze.addColorStop(0, 'rgba(236,210,168,0.07)');
+    haze.addColorStop(0.46, 'rgba(224,194,144,0.028)');
+    haze.addColorStop(1, 'rgba(224,194,144,0)');
+    g.fillStyle = haze;
+    g.fillRect(0,0,W,B.tableY);
+
+    // 顶部压暗，让视线落向案上
+    const topDark = g.createLinearGradient(0,0,0,H*0.32);
+    topDark.addColorStop(0,'rgba(0,0,0,0.42)');
+    topDark.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle = topDark;
+    g.fillRect(0,0,W,H*0.32);
+
+    // 墙面极细的竖向肌理
+    for (let i=0;i<26;i++){
+      const x = rng()*W;
+      const w = 0.6 + rng()*2.8;
+      const grad = g.createLinearGradient(x, 0, x+w, 0);
+      grad.addColorStop(0,'rgba(255,240,215,0)');
+      grad.addColorStop(0.5,'rgba(255,240,215,'+(0.008+rng()*0.014)+')');
+      grad.addColorStop(1,'rgba(255,240,215,0)');
+      g.fillStyle = grad;
+      g.fillRect(x, 0, w, B.tableY);
+    }
+
+    // 案几（黑漆面）
+    const table = g.createLinearGradient(0, B.tableY, 0, H);
+    table.addColorStop(0, '#2b1e14');
+    table.addColorStop(0.12, '#21160f');
+    table.addColorStop(0.42, '#150e09');
+    table.addColorStop(1, '#070504');
+    g.fillStyle = table;
+    g.fillRect(0, B.tableY, W, H-B.tableY);
+
+    // 案几远缘：一线金色反光 + 阴影
+    g.fillStyle = 'rgba(0,0,0,0.55)';
+    g.fillRect(0, B.tableY, W, 5);
+    const edge = g.createLinearGradient(0,0,W,0);
+    edge.addColorStop(0,'rgba(215,169,74,0)');
+    edge.addColorStop(0.18,'rgba(230,190,120,0.22)');
+    edge.addColorStop(0.5,'rgba(246,226,164,0.34)');
+    edge.addColorStop(0.82,'rgba(230,190,120,0.2)');
+    edge.addColorStop(1,'rgba(215,169,74,0)');
+    g.fillStyle = edge;
+    g.fillRect(0, B.tableY-1, W, 1);
+
+    // 漆面柔光（来自左上）
+    const sheen = g.createRadialGradient(W*0.34, B.tableY+8, 10, W*0.34, B.tableY+8, W*0.62);
+    sheen.addColorStop(0,'rgba(196,150,92,0.13)');
+    sheen.addColorStop(0.45,'rgba(140,100,58,0.05)');
+    sheen.addColorStop(1,'rgba(80,55,30,0)');
+    g.fillStyle = sheen;
+    g.fillRect(0, B.tableY, W, H-B.tableY);
+
+    // 漆面横向木纹 / 刷痕
+    for (let i=0;i<90;i++){
+      const y = B.tableY + 3 + Math.pow(rng(),0.72) * (H-B.tableY);
+      const alpha = 0.012 + rng()*0.035;
+      const lw = 0.5 + rng()*1.2;
+      const x0 = rng()*W*0.7 - 40;
+      const x1 = x0 + W*(0.25 + rng()*0.7);
+      g.strokeStyle = rng() > 0.32
+        ? 'rgba(238,206,158,'+alpha+')'
+        : 'rgba(0,0,0,'+(alpha*1.7)+')';
+      g.lineWidth = lw;
+      g.beginPath();
+      g.moveTo(x0,y);
+      g.bezierCurveTo(x0+(x1-x0)*0.34, y+rand(-2.2,2.2), x0+(x1-x0)*0.7, y+rand(-2.2,2.2), x1, y+rand(-1.4,1.4));
+      g.stroke();
+    }
+
+    // 桌面上极淡的光斑与暗角
+    const pool = g.createRadialGradient(B.cx, B.tableY+40, 20, B.cx, B.tableY+30, B.rx*2.2);
+    pool.addColorStop(0,'rgba(226,182,120,0.055)');
+    pool.addColorStop(1,'rgba(226,182,120,0)');
+    g.fillStyle = pool;
+    g.fillRect(0,B.tableY,W,H-B.tableY);
+
+    // 细颗粒
+    const grain = document.createElement('canvas');
+    grain.width = 140; grain.height = 140;
+    const gg = grain.getContext('2d');
+    const pixels = gg.createImageData(140,140);
+    for (let i=0;i<pixels.data.length;i+=4){
+      const v = rng()*255;
+      pixels.data[i] = v; pixels.data[i+1] = v*0.92; pixels.data[i+2] = v*0.8;
+      pixels.data[i+3] = Math.floor(rng()*26);
+    }
+    gg.putImageData(pixels,0,0);
+    g.save();
+    g.globalAlpha = 0.5;
+    g.fillStyle = g.createPattern(grain,'repeat');
+    g.fillRect(0,0,W,H);
+    g.restore();
+
+    bgCanvas = c;
+  }
+
+  function buildDust(){
+    const rng = mulberry32(8891);
+    const arr = [];
+    const n = W < 700 ? 24 : 42;
+    for (let i=0;i<n;i++){
+      arr.push({
+        x: rng()*W,
+        y: B.tableY*(0.1+rng()*0.85),
+        r: 0.5 + rng()*1.6,
+        a: 0.04 + rng()*0.14,
+        ph: rng()*TAU,
+        sp: 0.1 + rng()*0.3,
+        dx: 6 + rng()*22,
+        dy: 5 + rng()*18
+      });
+    }
+    return arr;
+  }
+
+  function buildVignette(){
+    vignetteGrad = ctx.createRadialGradient(W*0.5, H*0.42, Math.min(W,H)*0.3, W*0.5, H*0.46, Math.max(W,H)*0.8);
+    vignetteGrad.addColorStop(0, 'rgba(0,0,0,0)');
+    vignetteGrad.addColorStop(0.62, 'rgba(0,0,0,0.18)');
+    vignetteGrad.addColorStop(1, 'rgba(0,0,0,0.66)');
+    topGrad = ctx.createLinearGradient(0,0,0,H*0.2);
+    topGrad.addColorStop(0,'rgba(0,0,0,0.45)');
+    topGrad.addColorStop(1,'rgba(0,0,0,0)');
+    bottomGrad = ctx.createLinearGradient(0,H*0.72,0,H);
+    bottomGrad.addColorStop(0,'rgba(0,0,0,0)');
+    bottomGrad.addColorStop(1,'rgba(0,0,0,0.5)');
+  }
+
+  /* ==========================================================================
+     碗体绘制（进入离屏精灵图）
+     ========================================================================== */
+
+  function drawBowlArt(g){
+    const { cx, rx, ry, rimY, bodyH, footTopY, footBottomY, footH, rf, path } = B;
+    const rng = mulberry32(7712);
+    const lipY = rimY + ry;              // 近端口沿的最低点
+
+    /* ---------------------------------------------------------- 外壁 */
+    g.save();
+    const base = g.createLinearGradient(0, rimY + ry*0.2, 0, footBottomY);
+    base.addColorStop(0, '#4b6e5a');
+    base.addColorStop(0.09, '#6b927c');
+    base.addColorStop(0.24, '#9cc0a7');
+    base.addColorStop(0.42, '#8db298');
+    base.addColorStop(0.62, '#739883');
+    base.addColorStop(0.82, '#557763');
+    base.addColorStop(0.95, '#3a5343');
+    base.addColorStop(1, '#2c4033');
+    g.fillStyle = base;
+    g.fill(path);
+
+    g.save();
+    g.clip(path);
+
+    // 左上方的主光（大而柔）
+    const key = g.createRadialGradient(
+      cx - rx*0.58, rimY + bodyH*0.24, rx*0.02,
+      cx - rx*0.34, rimY + bodyH*0.36, rx*1.2
+    );
+    key.addColorStop(0, 'rgba(236,252,238,0.42)');
+    key.addColorStop(0.24, 'rgba(218,242,222,0.24)');
+    key.addColorStop(0.55, 'rgba(198,228,205,0.08)');
+    key.addColorStop(1, 'rgba(198,228,205,0)');
+    g.fillStyle = key;
+    g.fillRect(cx-rx*1.3, rimY-ry, rx*2.6, bodyH+ry*2);
+
+    // 右侧背光，形成体积
+    const shade = g.createLinearGradient(cx + rx*0.05, 0, cx + rx*1.02, 0);
+    shade.addColorStop(0, 'rgba(9,24,16,0)');
+    shade.addColorStop(0.55, 'rgba(9,24,16,0.10)');
+    shade.addColorStop(0.86, 'rgba(7,20,14,0.34)');
+    shade.addColorStop(1, 'rgba(6,18,12,0.52)');
+    g.fillStyle = shade;
+    g.fillRect(cx-rx, rimY-ry, rx*2.1, bodyH+ry*2);
+
+    // 底部从案几反弹的暖光
+    const bounce = g.createLinearGradient(0, rimY + bodyH*0.58, 0, footBottomY);
+    bounce.addColorStop(0, 'rgba(212,164,104,0)');
+    bounce.addColorStop(0.62, 'rgba(212,164,104,0.055)');
+    bounce.addColorStop(0.9, 'rgba(224,176,112,0.13)');
+    bounce.addColorStop(1, 'rgba(236,190,126,0.17)');
+    g.fillStyle = bounce;
+    g.fillRect(cx-rx, rimY+bodyH*0.55, rx*2, bodyH);
+
+    // 底部接触处的暗积
+    const footAO = g.createLinearGradient(0, footTopY - bodyH*0.2, 0, footTopY + 2);
+    footAO.addColorStop(0, 'rgba(10,22,15,0)');
+    footAO.addColorStop(0.65, 'rgba(10,22,15,0.22)');
+    footAO.addColorStop(1, 'rgba(8,18,13,0.42)');
+    g.fillStyle = footAO;
+    g.fillRect(cx-rx, footTopY - bodyH*0.22, rx*2, bodyH*0.22+4);
+
+    // 极淡的釉下开片
+    g.save();
+    g.strokeStyle = 'rgba(36,64,49,0.10)';
+    g.lineWidth = 0.55;
+    for (let i=0;i<30;i++){
+      let x = cx + (rng()*2-1)*rx*0.96;
+      let y = rimY + ry*0.5 + rng()*bodyH*0.98;
+      g.beginPath();
+      g.moveTo(x,y);
+      const segs = 2 + Math.floor(rng()*3);
+      let ang = rng()*TAU;
+      for (let k=0;k<segs;k++){
+        ang += (rng()-0.5)*1.3;
+        const len = 5 + rng()*24;
+        x += Math.cos(ang)*len; y += Math.sin(ang)*len;
+        g.lineTo(x,y);
+      }
+      g.stroke();
+    }
+    g.restore();
+
+    // 釉面颗粒
+    for (let i=0;i<340;i++){
+      const x = cx + (rng()*2-1)*rx*1.02;
+      const y = rimY + ry*0.2 + rng()*(bodyH - ry*0.1);
+      const r = 0.3 + rng()*1.05;
+      g.fillStyle = rng() > 0.5 ? 'rgba(238,252,240,0.05)' : 'rgba(24,50,36,0.055)';
+      g.beginPath();
+      g.arc(x, y, r, 0, TAU);
+      g.fill();
+    }
+
+    // 釉色的斑驳：几团极淡的深浅变化，避免塑料感
+    g.save();
+    for (let i=0;i<9;i++){
+      const mx = cx + (rng()*2-1)*rx*0.72;
+      const my = rimY + ry + rng()*bodyH*0.9;
+      const mr = rx*(0.12 + rng()*0.25);
+      const warm = rng() > 0.5;
+      const blot = g.createRadialGradient(mx,my,1, mx,my,mr);
+      blot.addColorStop(0, warm ? 'rgba(226,240,208,0.055)' : 'rgba(36,66,50,0.06)');
+      blot.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = blot;
+      g.beginPath(); g.arc(mx,my,mr,0,TAU); g.fill();
+    }
+    g.restore();
+
+    // 左侧柔和的椭圆高光
+    g.save();
+    g.translate(cx - rx*0.47, rimY + bodyH*0.40);
+    g.rotate(-0.26);
+    g.scale(0.60, 1.55);
+    const specR = rx*0.5;
+    const spec = g.createRadialGradient(0,0,1, 0,0,specR);
+    spec.addColorStop(0, 'rgba(246,255,247,0.32)');
+    spec.addColorStop(0.36, 'rgba(238,252,241,0.14)');
+    spec.addColorStop(0.72, 'rgba(236,250,239,0.03)');
+    spec.addColorStop(1, 'rgba(236,250,239,0)');
+    g.fillStyle = spec;
+    g.beginPath();
+    g.arc(0,0,specR,0,TAU);
+    g.fill();
+    g.restore();
+
+    // 口沿下方、左肩的一道锐高光
+    g.save();
+    g.strokeStyle = 'rgba(250,255,250,0.20)';
+    g.lineWidth = 7;
+    g.lineCap = 'round';
+    g.beginPath();
+    g.moveTo(cx-rx*0.70, rimY + ry*0.75);
+    g.bezierCurveTo(cx-rx*0.69, rimY+bodyH*0.19, cx-rx*0.58, rimY+bodyH*0.35, cx-rx*0.52, rimY+bodyH*0.62);
+    g.stroke();
+    g.strokeStyle = 'rgba(255,255,250,0.32)';
+    g.lineWidth = 1.3;
+    g.stroke();
+    g.restore();
+
+    // 右侧一道极细的暖色轮廓光
+    g.save();
+    g.strokeStyle = 'rgba(226,186,128,0.16)';
+    g.lineWidth = 2.0;
+    g.beginPath();
+    g.arc(cx, rimY + bodyH*0.5, rx*0.86, -0.28, 0.55);
+    g.stroke();
+    g.restore();
+
+    // 圈足：暗带、上沿阴影、左侧受光、底沿反光
+    const footGrad = g.createLinearGradient(cx-rf, 0, cx+rf, 0);
+    footGrad.addColorStop(0, 'rgba(178,204,182,0.20)');
+    footGrad.addColorStop(0.28, 'rgba(96,128,106,0.22)');
+    footGrad.addColorStop(0.7, 'rgba(24,42,31,0.34)');
+    footGrad.addColorStop(1, 'rgba(14,28,20,0.46)');
+    g.fillStyle = footGrad;
+    g.fillRect(cx-rf, footTopY-0.5, rf*2, footH+3);
+    g.fillStyle = 'rgba(9,20,14,0.5)';
+    g.fillRect(cx-rf, footTopY-1.2, rf*2, 1.6);
+    g.fillStyle = 'rgba(208,230,210,0.22)';
+    g.fillRect(cx-rf*0.96, footBottomY-footH*0.2, rf*0.32, 1.1);
+    g.fillStyle = 'rgba(10,22,15,0.42)';
+    g.fillRect(cx-rf, footBottomY-2.6, rf*2, 2.6);
+
+    // 底部最深的接触暗面
+    g.fillStyle = 'rgba(8,18,12,0.35)';
+    g.beginPath();
+    g.ellipse(cx, footBottomY - 1.0, rf*1.02, 2.2, 0, 0, TAU);
+    g.fill();
+
+    g.restore();   // end clip(path)
+
+    // 轮廓的暗边（贴着背景，收紧形体）
+    g.save();
+    g.strokeStyle = 'rgba(15,30,22,0.42)';
+    g.lineWidth = 1.0;
+    g.stroke(path);
+    g.restore();
+
+    /* ---------------------------------------------------------- 碗口内壁 */
+    g.save();
+    const inner = new Path2D();
+    ellipsePath(inner, cx, rimY, rx, ry);
+
+    const ig = g.createLinearGradient(0, rimY-ry, 0, lipY);
+    ig.addColorStop(0, '#7e9e87');
+    ig.addColorStop(0.14, '#688b74');
+    ig.addColorStop(0.36, '#557664');
+    ig.addColorStop(0.58, '#456352');
+    ig.addColorStop(0.78, '#344c3e');
+    ig.addColorStop(0.92, '#253a2f');
+    ig.addColorStop(1, '#1d2f26');
+    g.fillStyle = ig;
+    g.fill(inner);
+
+    g.clip(inner);
+
+    // 内壁左上的一团柔光
+    const inKey = g.createRadialGradient(
+      cx - rx*0.32, rimY - ry*0.40, 2,
+      cx - rx*0.10, rimY + ry*0.05, rx*0.95
+    );
+    inKey.addColorStop(0, 'rgba(214,240,220,0.34)');
+    inKey.addColorStop(0.3, 'rgba(190,222,199,0.13)');
+    inKey.addColorStop(0.7, 'rgba(170,205,182,0.02)');
+    inKey.addColorStop(1, 'rgba(170,205,182,0)');
+    g.fillStyle = inKey;
+    g.fillRect(cx-rx, rimY-ry, rx*2, ry*2);
+
+    // 远端内壁贴着口沿的一线湿润反光
+    g.save();
+    g.strokeStyle = 'rgba(220,244,226,0.35)';
+    g.lineWidth = 3;
+    g.beginPath();
+    g.ellipse(cx, rimY-ry*0.06, rx*0.985, ry*0.9, 0, 1.07*PI, 1.93*PI);
+    g.stroke();
+    g.strokeStyle = 'rgba(255,255,250,0.5)';
+    g.lineWidth = 1.0;
+    g.beginPath();
+    g.ellipse(cx, rimY-ry*0.04, rx*0.985, ry*0.9, 0, 1.16*PI, 1.42*PI);
+    g.stroke();
+    g.restore();
+
+    // 内壁两侧的暗角，让开口“凹”下去
+    const sideShade = g.createLinearGradient(cx-rx, 0, cx+rx, 0);
+    sideShade.addColorStop(0, 'rgba(10,24,17,0.30)');
+    sideShade.addColorStop(0.18, 'rgba(10,24,17,0.02)');
+    sideShade.addColorStop(0.8, 'rgba(10,24,17,0.05)');
+    sideShade.addColorStop(1, 'rgba(10,24,17,0.34)');
+    g.fillStyle = sideShade;
+    g.fillRect(cx-rx, rimY-ry, rx*2, ry*2);
+
+    // 近端口沿以上的暗影（光被口沿挡掉）
+    const lipShade = g.createLinearGradient(0, lipY - ry*0.55, 0, lipY);
+    lipShade.addColorStop(0, 'rgba(8,20,14,0)');
+    lipShade.addColorStop(0.55, 'rgba(8,20,14,0.18)');
+    lipShade.addColorStop(1, 'rgba(6,16,11,0.48)');
+    g.fillStyle = lipShade;
+    g.fillRect(cx-rx, lipY-ry*0.55, rx*2, ry*0.6);
+
+    g.restore();   // end inner clip
+
+    /* ---------------------------------------------------------- 近口沿厚度 */
+    g.save();
+    g.lineCap = 'round';
+
+    g.save();
+    g.clip(path);
+    // 口沿下缘的暗线（压出边界）
+    g.strokeStyle = 'rgba(14,30,21,0.5)';
+    g.lineWidth = 1.6;
+    g.beginPath();
+    g.ellipse(cx, rimY, rx, ry, 0, 0.015*PI, 0.985*PI);
+    g.stroke();
+
+    // 唇面：一条略亮的带（收窄，避免玻璃感）
+    const lipGrad = g.createLinearGradient(cx-rx, 0, cx+rx, 0);
+    lipGrad.addColorStop(0, 'rgba(208,230,213,0.46)');
+    lipGrad.addColorStop(0.16, 'rgba(178,205,184,0.26)');
+    lipGrad.addColorStop(0.52, 'rgba(164,192,172,0.16)');
+    lipGrad.addColorStop(0.84, 'rgba(182,210,190,0.25)');
+    lipGrad.addColorStop(1, 'rgba(220,240,222,0.44)');
+    g.strokeStyle = lipGrad;
+    g.lineWidth = 4.2;
+    g.beginPath();
+    g.ellipse(cx, rimY-1.1, rx*0.999, ry*0.992, 0, 0.02*PI, 0.98*PI);
+    g.stroke();
+
+    // 唇口的亮边
+    g.strokeStyle = 'rgba(244,255,247,0.5)';
+    g.lineWidth = 1.0;
+    g.beginPath();
+    g.ellipse(cx, rimY-2.4, rx*0.998, ry*0.978, 0, 0.05*PI, 0.95*PI);
+    g.stroke();
+
+    // 左侧唇口的湿光
+    g.strokeStyle = 'rgba(255,255,252,0.45)';
+    g.lineWidth = 1.3;
+    g.beginPath();
+    g.ellipse(cx, rimY-1.9, rx*0.997, ry*0.982, 0, 0.10*PI, 0.34*PI);
+    g.stroke();
+    g.restore();
+
+    /* ------------------------------------------- 口沿投在外壁上的影（不碰内壁） */
+    g.save();
+    g.clip(path);
+    const lipCast = g.createLinearGradient(0, lipY-1, 0, lipY + bodyH*0.20);
+    lipCast.addColorStop(0, 'rgba(9,22,15,0.48)');
+    lipCast.addColorStop(0.28, 'rgba(9,22,15,0.24)');
+    lipCast.addColorStop(1, 'rgba(9,22,15,0)');
+    g.fillStyle = lipCast;
+    g.fillRect(cx-rx, lipY-1, rx*2, bodyH*0.22);
+    g.restore();
+
+    // 近口沿内侧一点点唇下的反光
+    g.save();
+    g.strokeStyle = 'rgba(236,250,240,0.20)';
+    g.lineWidth = 2.6;
+    g.beginPath();
+    g.ellipse(cx, rimY+1.8, rx*0.995, ry*0.985, 0, 0.08*PI, 0.92*PI);
+    g.stroke();
+    g.restore();
+
+    /* ---------------------------------------------------------- 口沿高光 */
+    g.save();
+    // 远端碗口的轮廓光
+    g.strokeStyle = 'rgba(240,255,246,0.62)';
+    g.lineWidth = 1.4;
+    g.beginPath();
+    g.ellipse(cx, rimY, rx, ry, 0, 1.03*PI, 1.94*PI);
+    g.stroke();
+    // 左上方最亮的一小段
+    g.strokeStyle = 'rgba(255,255,252,0.72)';
+    g.lineWidth = 2.6;
+    g.beginPath();
+    g.ellipse(cx, rimY-0.4, rx*0.999, ry*0.998, 0, 1.15*PI, 1.40*PI);
+    g.stroke();
+    // 整圈极细的光沿，压住轮廓
+    g.strokeStyle = 'rgba(226,246,232,0.22)';
+    g.lineWidth = 0.9;
+    g.beginPath();
+    g.ellipse(cx, rimY, rx, ry, 0, 0, TAU);
+    g.stroke();
+    g.restore();
+
+    // 碗底外侧的一点高光，交代转折
+    g.save();
+    g.strokeStyle = 'rgba(210,232,214,0.14)';
+    g.lineWidth = 1.2;
+    g.beginPath();
+    g.ellipse(cx, footTopY-1, rf*1.18, footH*0.55, 0, 0.15*PI, 0.85*PI);
+    g.stroke();
+    g.restore();
+  }
+
+  function buildSprite(){
+    const pad = 20;
+    const sb = B.spriteBox;
+    sprite = document.createElement('canvas');
+    sprite.width = Math.max(2, Math.ceil(sb.w * DPR));
+    sprite.height = Math.max(2, Math.ceil(sb.h * DPR));
+    const g = sprite.getContext('2d');
+    g.setTransform(DPR, 0, 0, DPR, -sb.x*DPR, -sb.y*DPR);
+    drawBowlArt(g);
+
+    // 已长成的金线烘焙进精灵图 → 再次碎裂时随碎片自然断开
+    if (S.seams.length){
+      g.save();
+      g.clip(B.path);
+      for (const s of S.seams) bakeSeam(g, s);
+      g.restore();
+    }
+    // 精灵图外的多余像素无影响
+    void pad;
+  }
+
+  function buildReflection(){
+    if (!sprite) return;
+    // 低分辨率倒影：放大绘制时自然柔化，接近漆面的模糊反射
+    const rw = Math.max(2, Math.round(sprite.width * 0.34));
+    const rh = Math.max(2, Math.round(sprite.height * 0.34));
+    const c = document.createElement('canvas');
+    c.width = rw; c.height = rh;
+    const g = c.getContext('2d');
+    g.save();
+    g.translate(0, rh);
+    g.scale(1, -1);
+    g.drawImage(sprite, 0, 0, rw, rh);
+    g.restore();
+
+    g.globalCompositeOperation = 'destination-in';
+    const fade = g.createLinearGradient(0, 0, 0, rh);
+    fade.addColorStop(0, 'rgba(0,0,0,0.42)');
+    fade.addColorStop(0.10, 'rgba(0,0,0,0.20)');
+    fade.addColorStop(0.26, 'rgba(0,0,0,0.06)');
+    fade.addColorStop(0.42, 'rgba(0,0,0,0)');
+    g.fillStyle = fade;
+    g.fillRect(0, 0, rw, rh);
+    g.globalCompositeOperation = 'source-over';
+    reflection = c;
+  }
+
+  function buildShadowSprite(){
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 128;
+    const g = c.getContext('2d');
+    const grad = g.createRadialGradient(128,64,2, 128,64,62);
+    grad.addColorStop(0, 'rgba(0,0,0,0.95)');
+    grad.addColorStop(0.35, 'rgba(0,0,0,0.6)');
+    grad.addColorStop(0.7, 'rgba(0,0,0,0.18)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = grad;
+    g.save();
+    g.translate(128,64);
+    g.scale(1, 0.5);
+    g.beginPath();
+    g.arc(0,0,62,0,TAU);
+    g.fill();
+    g.restore();
+    shadowSprite = c;
+  }
+
+  function softShadow(g, x, y, w, h, a){
+    if (!shadowSprite) return;
+    g.save();
+    g.globalAlpha = a;
+    g.drawImage(shadowSprite, x-w/2, y-h/2, w, h);
+    g.restore();
+  }
+
+  /* ==========================================================================
+     断裂算法：加权采样 → Voronoi 半平面裁剪 → 相邻裂缝
+     ========================================================================== */
+
+  function sampleSites(seed){
+    const target = 27 + randInt(0, 11);   // 27~38 个种子 → 15~60 片
+    const L = B.rx * 0.52;                // 衰减半径
+    const minSep = Math.max(6, B.rx * 0.045);
+    const bb = B.bbox;
+    const sites = [{ x: seed.x, y: seed.y }];
+    let guard = 0;
+
+    while (sites.length < target && guard++ < 9000){
+      const x = rand(bb.x, bb.x + bb.w);
+      const y = rand(bb.y, bb.y + bb.h);
+      if (!pointInPoly(B.outline, x, y)) continue;
+
+      const dc = Math.hypot(x-seed.x, y-seed.y);
+      if (dc < minSep*1.2) continue;
+
+      let ok = true;
+      for (let i=0;i<sites.length;i++){
+        if (dist2(x,y,sites[i].x,sites[i].y) < minSep*minSep){ ok = false; break; }
+      }
+      if (!ok) continue;
+
+      // 越靠近点击点，接受概率越高 → 碎片越密、越碎
+      const w = 0.11 + 1.6 * Math.exp(-Math.pow(dc/L, 1.7));
+      if (Math.random() > w/1.71) continue;
+      sites.push({ x, y });
+    }
+
+    // 兜底：极端情况下也保证足量碎片（15 片以上）
+    let guard2 = 0;
+    while (sites.length < 15 && guard2++ < 6000){
+      const x = rand(bb.x, bb.x + bb.w);
+      const y = rand(bb.y, bb.y + bb.h);
+      if (!pointInPoly(B.outline, x, y)) continue;
+      let ok = true;
+      for (let i=0;i<sites.length;i++){
+        if (dist2(x,y,sites[i].x,sites[i].y) < (minSep*0.8)*(minSep*0.8)){ ok = false; break; }
+      }
+      if (ok) sites.push({ x, y });
+    }
+    return sites;
+  }
+
+  function voronoiCells(sites){
+    const cells = [];
+    for (let i=0;i<sites.length;i++){
+      const p = sites[i];
+      let poly = B.outline;
+      for (let j=0;j<sites.length;j++){
+        if (i === j) continue;
+        const q = sites[j];
+        // 到 p 比到 q 更近：2(q-p)·x <= |q|^2-|p|^2
+        poly = clipHalfPlane(
+          poly,
+          2*(q.x-p.x),
+          2*(q.y-p.y),
+          q.x*q.x + q.y*q.y - p.x*p.x - p.y*p.y
+        );
+        if (poly.length < 3) break;
+      }
+      if (poly.length >= 3){
+        const area = Math.abs(polyArea(poly));
+        // 小于约 2.5px² 的退化碎屑不参与刚体，肉眼不可见，不影响拼合
+        if (area > 2.5){
+          cells.push({ poly, area, c: polyCentroid(poly), site: p });
+        }
+      }
+    }
+    return cells;
+  }
+
+  function buildCracks(sites){
+    const cracks = [];
+    const n = sites.length;
+    const poly = B.outline;
+
+    for (let i=0;i<n;i++){
+      for (let j=i+1;j<n;j++){
+        const p = sites[i], q = sites[j];
+        const dx = q.x-p.x, dy = q.y-p.y;
+        const d = Math.hypot(dx,dy);
+        if (d < 0.001) continue;
+        if (d > B.rx*3.4) continue;
+
+        const mx = (p.x+q.x)*0.5, my = (p.y+q.y)*0.5;
+        const ux = -dy/d, uy = dx/d;          // 中垂线方向
+        let tmin = -1e9, tmax = 1e9;
+
+        // 该段必须同时属于两个单元：比到 p 更近的任何其他种子都不能抢走
+        for (let k=0;k<n;k++){
+          if (k === i || k === j) continue;
+          const sk = sites[k];
+          const A = (sk.x-p.x)*ux + (sk.y-p.y)*uy;
+          const C = (sk.x*sk.x + sk.y*sk.y - p.x*p.x - p.y*p.y)*0.5
+                  - (sk.x-p.x)*mx - (sk.y-p.y)*my;
+          if (Math.abs(A) < 1e-9){
+            if (C < -1e-7){ tmin = 1; tmax = 0; break; }
+          } else if (A > 0){
+            if (C/A < tmax) tmax = C/A;
+          } else {
+            if (C/A > tmin) tmin = C/A;
+          }
+          if (tmin > tmax) break;
+        }
+        if (tmin > tmax) continue;
+
+        // 与碗轮廓求交，取轮廓内最长的一段
+        const ts = [];
+        for (let e=0;e<poly.length;e++){
+          const a = poly[e], b = poly[(e+1)%poly.length];
+          const ex = b.x-a.x, ey = b.y-a.y;
+          const den = ex*uy - ey*ux;
+          if (Math.abs(den) < 1e-9) continue;
+          const wx = a.x-mx, wy = a.y-my;
+          const t = (-wx*ey + ex*wy) / den;
+          const s = (ux*wy - uy*wx) / den;
+          if (s >= -1e-6 && s <= 1+1e-6) ts.push(t);
+        }
+        ts.push(tmin, tmax);
+        ts.sort((a,b)=>a-b);
+
+        let bestA = null, bestB = null, bestLen = 0;
+        for (let k=0;k<ts.length-1;k++){
+          const ta = Math.max(tmin, ts[k]);
+          const tb = Math.min(tmax, ts[k+1]);
+          if (tb - ta < 0.8) continue;
+          const tm = (ta+tb)*0.5;
+          if (!pointInPoly(poly, mx+ux*tm, my+uy*tm)) continue;
+          if (tb - ta > bestLen){
+            bestLen = tb - ta;
+            bestA = ta; bestB = tb;
+          }
+        }
+        if (!bestA && bestA !== 0) continue;
+
+        const ax = mx+ux*bestA, ay = my+uy*bestA;
+        const bx = mx+ux*bestB, by = my+uy*bestB;
+        if (Math.hypot(bx-ax, by-ay) < 2.2) continue;
+
+        cracks.push(makeSeam(ax, ay, bx, by, i*131 + j*977));
+      }
+    }
+    return cracks;
+  }
+
+  function makeSeam(ax, ay, bx, by, seed){
+    if (Math.random() < 0.5){ const tx=ax, ty=ay; ax=bx; ay=by; bx=tx; by=ty; }
+    const len = Math.hypot(bx-ax, by-ay);
+    const n = Math.max(2, Math.min(11, Math.round(len/18)));
+    const nx = -(by-ay)/len, ny = (bx-ax)/len;
+    const amp = Math.min(1.9, 0.55 + B.rx/190) * Math.min(1, len/30);
+    const phase = seed * 0.731 + Math.random()*0.4;
+    const pts = [];
+    for (let k=0;k<=n;k++){
+      const t = k/n;
+      const taper = Math.pow(Math.sin(PI*t), 0.62);
+      const off = (Math.sin(t*PI*2.15 + phase) * 0.66 +
+                   Math.sin(t*PI*4.9 + phase*2.1) * 0.34) * amp * taper;
+      pts.push({
+        x: lerp(ax,bx,t) + nx*off,
+        y: lerp(ay,by,t) + ny*off
+      });
+    }
+    const mid = pts[Math.floor(pts.length/2)];
+    return {
+      pts, len,
+      prog: 0, delay: 0, dur: 0.7,
+      mid,
+      tone: Math.floor(Math.random()*3),
+      seed
+    };
+  }
+
+  function makeShards(cells){
+    const sb = B.spriteBox;
+    const arr = [];
+    let seedI = 0;
+    for (const cell of cells){
+      const poly = cell.poly;
+      const c = cell.c;
+      const bb0 = polyBBox(poly);
+      const bb = {
+        x: Math.max(sb.x, bb0.x-5),
+        y: Math.max(sb.y, bb0.y-5),
+        w: 0, h: 0
+      };
+      bb.w = Math.min(sb.x+sb.w, bb0.x+bb0.w+5) - bb.x;
+      bb.h = Math.min(sb.y+sb.h, bb0.y+bb0.h+5) - bb.y;
+      const local = poly.map(p=>({ x:p.x-c.x, y:p.y-c.y }));
+      const m = Math.max(1, cell.area);
+      const I = m * (bb0.w*bb0.w + bb0.h*bb0.h) / 10;
+      const path = polyPath(new Path2D(), poly);
+      arr.push({
+        poly, path, c, local, bb, m, I,
+        area: cell.area,
+        x: c.x, y: c.y, angle: 0,
+        vx: 0, vy: 0, omega: 0,
+        sleep: false, calm: 0, mode: 'fall', _wv: null,
+        seed: seedI++
+      });
+    }
+    return arr;
+  }
+
+  function buildFracture(seed){
+    const sites = sampleSites(seed);
+    const cells = voronoiCells(sites);
+    const cracks = buildCracks(sites);
+    return { sites, cells, cracks };
+  }
+
+  /* ==========================================================================
+     物理：重力 / 案几面碰撞 / 摩擦 / 休眠
+     ========================================================================== */
+
+  function stepShard(s, h){
+    if (s.sleep) return;
+
+    s.vy += PHYS.g * h;
+    const damp = 1 - 0.16*h;
+    s.vx *= damp; s.vy *= damp;
+    s.omega *= (1 - 0.5*h);
+    s.vx = clamp(s.vx, -PHYS.maxV, PHYS.maxV);
+    s.vy = clamp(s.vy, -PHYS.maxV, PHYS.maxV);
+    s.omega = clamp(s.omega, -10, 10);
+
+    s.x += s.vx*h;
+    s.y += s.vy*h;
+    s.angle += s.omega*h;
+
+    const cos = Math.cos(s.angle), sin = Math.sin(s.angle);
+    if (!s._wv) s._wv = s.local.map(()=>({ x:0, y:0 }));
+    let lowest = -Infinity, lowI = 0;
+    for (let i=0;i<s.local.length;i++){
+      const v = s.local[i];
+      const px = s.x + v.x*cos - v.y*sin;
+      const py = s.y + v.x*sin + v.y*cos;
+      const o = s._wv[i];
+      o.x = px; o.y = py;
+      if (py > lowest){ lowest = py; lowI = i; }
+    }
+
+    const floor = B.tableY - 0.8;
+    if (lowest > floor){
+      s.y -= (lowest - floor);
+
+      const contact = s._wv[lowI];
+      contact.y = floor;
+      const rx = contact.x - s.x;
+      const ry = contact.y - s.y;
+
+      // 接触点速度
+      const vpx = s.vx - s.omega*ry;
+      const vpy = s.vy + s.omega*rx;
+      const vn = -vpy;            // 法向 (0,-1) 上的投影
+
+      let j = 0;
+      if (vn < 0){
+        const rn = -rx;
+        const denom = 1/s.m + (rn*rn)/s.I;
+        j = -(1 + PHYS.e) * vn / denom;
+        if (j < 0) j = 0;
+        // 法向冲量
+        s.vy -= j / s.m;
+        s.omega += (-rx*j) / s.I;
+        maybeLandSound(-vn);
+
+        // 切向摩擦（水平面）
+        const vt = vpx;
+        const denomT = 1/s.m + (ry*ry)/s.I;
+        let jt = -vt / denomT;
+        const maxF = PHYS.mu * j;
+        jt = clamp(jt, -maxF, maxF);
+        s.vx += jt / s.m;
+        s.omega += (-ry*jt) / s.I;
+      }
+
+      // 稳定：低速贴地时逐渐吃掉能量，计时休眠
+      if (Math.abs(s.vy) < 34 && Math.abs(vpx) < 46 && Math.abs(s.omega) < 1.25){
+        s.vx *= 0.9;
+        s.omega *= 0.86;
+        s.calm += h;
+        if (s.calm > 0.42 && Math.abs(s.vy) < 22){
+          s.sleep = true;
+          s.vx = 0; s.vy = 0; s.omega = 0;
+          s.calm = 0;
+        }
+      } else {
+        s.calm = 0;
+      }
+    } else {
+      s.calm = 0;
+    }
+  }
+
+  function stepPhysics(dt){
+    if (!S.released) return;
+    const sub = Math.max(1, Math.min(4, Math.ceil(dt/0.006)));
+    const h = Math.min(dt, 0.034) / sub;
+    for (let k=0;k<sub;k++){
+      for (const s of S.shards) stepShard(s, h);
+    }
+  }
+
+  function releaseShards(now){
+    if (S.released) return;
+    S.released = true;
+    for (const s of S.shards){
+      const dx = s.c.x - S.click.x;
+      const dy = s.c.y - S.click.y;
+      const d = Math.hypot(dx,dy) || 1;
+      const ux = dx/d, uy = dy/d;
+      const power = 38 + 120*Math.random() + 250/(1+d/80);
+      s.vx = ux*power + rand(-30,30);
+      s.vy = uy*power*0.34 - rand(40,150);
+      s.omega = rand(-1,1) * (2 + 22/(Math.sqrt(s.area)+9));
+      s.mode = 'fall';
+      s.sleep = false;
+      s.calm = 0;
+      // 立刻分开一点点，裂缝才看得见
+      s.x += ux*0.9;
+      s.y += uy*0.9;
+    }
+    S.released = true;
+  }
+
+  /* ==========================================================================
+     阶段状态机
+     ========================================================================== */
+
+  function consumeAudio(fn){
+    if (Audio && Audio.ready()) fn(Audio);
+  }
+
+  function doBreak(point){
+    if (S.stage !== 'idle' && S.stage !== 'healed') return;
+    S.touched = true;
+    S.stage = 'falling';
+    S.stageT = nowS();
+    S.releaseAt = S.stageT + 0.09;
+    S.released = false;
+    S.settledAt = 0;
+    S.arrived = 0;
+    S.click = { x: point.x, y: point.y };
+    S.flashAt = nowS();
+    S.flashPt = { x: point.x, y: point.y };
+    S.settledAt = 0;
+    S.autoRepairAt = 0;
+    S.shards = [];
+    S.cracks = [];
+
+    const frac = buildFracture(point);
+    S.shards = makeShards(frac.cells);
+    S.cracks = frac.cracks;
+
+    const now = nowS();
+    for (const c of S.cracks){
+      c.delay = clamp(Math.hypot(c.mid.x-point.x, c.mid.y-point.y) / (B.rx*1.7), 0, 1) * 0.45 + rand(0,0.08);
+      c.dur = clamp(0.32 + c.len/280, 0.42, 1.2);
+      c.prog = 0;
+    }
+
+    spawnGlaze(point.x, point.y, 34);
+    consumeAudio(a => a.shatter());
+    updateStats();
+    setPhase('falling');
+    setHint('falling');
+    announce('碎裂，坠落');
+    void now;
+  }
+
+  function startRepair(now){
+    if (S.stage !== 'falling' && S.stage !== 'waiting') return;
+    if (!S.released) return;
+
+    S.stage = 'returning';
+    S.stageT = now;
+    S.autoRepairAt = 0;
+    S.retStart = now;
+    S.arrived = 0;
+
+    const maxD = Math.max(1, B.rx*1.5);
+    let maxTotal = 0;
+
+    for (const s of S.shards){
+      const d = Math.hypot(s.c.x - S.click.x, s.c.y - S.click.y);
+      const delay = 0.05 + clamp(d/maxD,0,1)*0.3 + rand(0,0.05);
+      const dur = 0.68 + rand(0,0.14) * (1 - clamp(d/maxD,0,1)*0.4);
+      const sx = s.x, sy = s.y, ex = s.c.x, ey = s.c.y;
+      const vx = ex-sx, vy = ey-sy;
+      const vlen = Math.hypot(vx,vy) || 1;
+      const side = Math.random() < 0.5 ? -1 : 1;
+      const cx = (sx+ex)/2 + (-vy/vlen) * (26 + Math.random()*38) * side;
+      const cy = (sy+ey)/2 + ( vx/vlen) * (26 + Math.random()*38) * side - 26 - Math.random()*26;
+      s.ret = {
+        sx, sy, sa: s.angle, ex, ey,
+        cx, cy, delay, dur,
+        t: 0
+      };
+      s.mode = 'home';
+      maxTotal = Math.max(maxTotal, delay + dur);
+    }
+    S.retDur = maxTotal + 0.08;
+    consumeAudio(a => a.soft());
+    updateStats();
+    setPhase('returning');
+    setHint('returning');
+    announce('碎片归位');
+  }
+
+  function updateReturn(now){
+    const elapsed = now - S.retStart;
+    let arrived = 0;
+    for (const s of S.shards){
+      const r = s.ret;
+      if (!r) { arrived++; continue; }
+      const t = clamp((elapsed - r.delay) / r.dur, 0, 1);
+      r.t = t;
+      const e = easeInOutCubic(t);
+      const u = 1-e;
+      s.x = u*u*r.sx + 2*u*e*r.cx + e*e*r.ex;
+      s.y = u*u*r.sy + 2*u*e*r.cy + e*e*r.ey;
+      s.angle = r.sa * (1 - easeOutCubic(t));
+      if (t >= 1){
+        s.x = r.ex; s.y = r.ey; s.angle = 0;
+        arrived++;
+      }
+    }
+    S.arrived = arrived;
+    if (arrived >= S.shards.length || elapsed > S.retDur + 0.3){
+      for (const s of S.shards){
+        s.x = s.c.x; s.y = s.c.y; s.angle = 0;
+      }
+      startGild(now);
+    }
+  }
+
+  function startGild(now){
+    S.stage = 'gilding';
+    S.stageT = now;
+    S.gildStart = now;
+    let total = 0;
+    for (const c of S.cracks){
+      c.prog = 0;
+      total = Math.max(total, c.delay + c.dur);
+    }
+    S.gildTotal = total;
+    consumeAudio(a => a.softGold());
+    updateStats();
+    setPhase('gilding');
+    setHint('gilding');
+    announce('金线开始生长');
+  }
+
+  function updateGild(now){
+    const elapsed = now - S.gildStart;
+    let done = 0;
+    for (const c of S.cracks){
+      const t = clamp((elapsed - c.delay) / c.dur, 0, 1);
+      const prev = c.prog;
+      c.prog = easeInOutCubic(t);
+      if (c.prog >= 1) done++;
+      if (c.prog > prev && c.prog < 1 && Math.random() < 0.4){
+        const p = partialPolyline(c.pts, c.prog);
+        if (p.length > 1){
+          const head = p[p.length-1];
+          spawnGold(head.x, head.y, 1);
+        }
+      }
+    }
+    S.gildProgress = S.cracks.length ? done / S.cracks.length : 1;
+    if (done >= S.cracks.length || elapsed > S.gildTotal + 0.4){
+      finishGild(now);
+    }
+  }
+
+  function finishGild(now){
+    for (const c of S.cracks){
+      S.seams.push({ pts: c.pts, tone: c.tone });
+    }
+    S.recent = S.seams.slice(-S.cracks.length);
+    S.cracks = [];
+    S.repairs++;
+    S.stage = 'healed';
+    S.stageT = now;
+    S.healedAt = now;
+    S.sweepAt = now;
+    S.shards = [];
+    S.released = false;
+
+    buildSprite();
+    buildReflection();
+
+    spawnGoldMotes(18);
+    consumeAudio(a => a.chime());
+    showToast('把碎了的，认成花纹。', '第 ' + S.repairs + ' 次金缮 · 裂痕已金');
+    updateStats();
+    setPhase('healed');
+    setHint('healed');
+    announce('金缮完成，裂痕已经用金线补好');
+  }
+
+  function resetSession(){
+    S.stage = 'idle';
+    S.stageT = nowS();
+    S.released = false;
+    S.releaseAt = 0;
+    S.shards = [];
+    S.cracks = [];
+    S.seams = [];
+    S.recent = [];
+    S.repairs = 0;
+    S.touched = false;
+    S.settledAt = 0;
+    S.autoRepairAt = 0;
+    S.arrived = 0;
+    S.sweepAt = -1;
+    waitTenths = -1;
+    S.flashAt = -1;
+    S.toastUntil = 0;
+    particles = [];
+    hideToast();
+    if (sprite) buildSprite();
+    if (sprite) buildReflection();
+    updateStats();
+    setPhase('idle');
+    setHint('idle');
+    announce('青瓷碗静置于案上');
+  }
+
+  /* ==========================================================================
+     金线绘制
+     ========================================================================== */
+
+  function partialPolyline(pts, t){
+    if (t <= 0) return [];
+    if (t >= 1) return pts;
+    const segs = [];
+    let total = 0;
+    for (let i=0;i<pts.length-1;i++){
+      const d = Math.hypot(pts[i+1].x-pts[i].x, pts[i+1].y-pts[i].y);
+      segs.push(d); total += d;
+    }
+    const target = total * t;
+    const out = [pts[0]];
+    let acc = 0;
+    for (let i=0;i<segs.length;i++){
+      if (acc + segs[i] >= target){
+        const f = segs[i] > 1e-9 ? (target-acc)/segs[i] : 0;
+        out.push({
+          x: lerp(pts[i].x, pts[i+1].x, f),
+          y: lerp(pts[i].y, pts[i+1].y, f)
+        });
+        return out;
+      }
+      acc += segs[i];
+      out.push(pts[i+1]);
+    }
+    return out;
+  }
+
+  function tracePath(pts, path){
+    const p = path || new Path2D();
+    p.moveTo(pts[0].x, pts[0].y);
+    for (let i=1;i<pts.length;i++) p.lineTo(pts[i].x, pts[i].y);
+    return p;
+  }
+
+  function bakeSeam(g, seam){
+    const pts = seam.pts;
+    const k = B.goldK;
+    const tone = GOLD_TONES[seam.tone % 3];
+    g.save();
+    g.lineJoin = 'round';
+    g.lineCap = 'round';
+
+    const p = tracePath(pts);
+
+    g.strokeStyle = 'rgba(32,20,5,0.38)';
+    g.lineWidth = 6.4*k;
+    g.stroke(p);
+
+    g.strokeStyle = 'rgba(146,96,32,0.92)';
+    g.lineWidth = 4.3*k;
+    g.stroke(p);
+
+    g.strokeStyle = tone;
+    g.lineWidth = 2.9*k;
+    g.stroke(p);
+
+    g.strokeStyle = 'rgba(255,236,176,0.92)';
+    g.lineWidth = 1.2*k;
+    g.stroke(p);
+
+    // 一点液态金属的堆积感
+    if (seam.len > 26){
+      g.fillStyle = 'rgba(255,228,158,0.5)';
+      const a = pts[Math.floor(pts.length*0.32)];
+      const b = pts[Math.floor(pts.length*0.74)];
+      g.beginPath(); g.arc(a.x, a.y, 1.25*k, 0, TAU); g.fill();
+      g.beginPath(); g.arc(b.x, b.y, 0.9*k, 0, TAU); g.fill();
+    }
+    g.restore();
+  }
+
+  function liveSeam(g, crack, now){
+    const t = crack.prog;
+    if (t <= 0.001) return;
+    const pts = partialPolyline(crack.pts, t);
+    if (pts.length < 2) return;
+
+    const k = B.goldK;
+    const tone = GOLD_TONES[crack.tone % 3];
+    const p = tracePath(pts);
+
+    g.save();
+    g.lineJoin = 'round';
+    g.lineCap = 'round';
+
+    g.strokeStyle = 'rgba(30,19,5,0.34)';
+    g.lineWidth = 7.0*k;
+    g.stroke(p);
+
+    g.strokeStyle = 'rgba(150,101,35,0.9)';
+    g.lineWidth = 4.6*k;
+    g.stroke(p);
+
+    g.strokeStyle = tone;
+    g.lineWidth = 3.1*k;
+    g.stroke(p);
+
+    g.strokeStyle = 'rgba(255,238,182,0.95)';
+    g.lineWidth = 1.25*k;
+    g.stroke(p);
+
+    // 流动的亮纹
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    g.setLineDash([2.2*k, 15*k]);
+    g.lineDashOffset = -(now*46*k) % (17.2*k);
+    g.strokeStyle = 'rgba(255,250,224,' + (0.35 + 0.25*Math.sin(now*2.2 + crack.seed)) + ')';
+    g.lineWidth = 1.15*k;
+    g.stroke(p);
+    g.restore();
+
+    // 生长前端的一点金珠与光晕
+    const head = pts[pts.length-1];
+    const hg = g.createRadialGradient(head.x, head.y, 0.4, head.x, head.y, 8.5*k);
+    hg.addColorStop(0, 'rgba(255,250,224,0.85)');
+    hg.addColorStop(0.22, 'rgba(255,224,150,0.45)');
+    hg.addColorStop(1, 'rgba(255,200,110,0)');
+    g.fillStyle = hg;
+    g.beginPath(); g.arc(head.x, head.y, 8.5*k, 0, TAU); g.fill();
+
+    if (crack.len > 18){
+      g.fillStyle = 'rgba(255,240,190,0.7)';
+      const mid = pts[Math.floor(pts.length*0.5)];
+      g.beginPath(); g.arc(mid.x, mid.y, 1.0*k, 0, TAU); g.fill();
+    }
+
+    g.restore();
+  }
+
+  function shimmerRecent(g, now){
+    if (!S.recent.length) return;
+    const age = now - S.healedAt;
+    if (age > 12) return;
+    const fade = 1 - smoothstep((age-6)/6);
+    if (fade <= 0.01) return;
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    g.lineJoin = 'round';
+    g.lineCap = 'round';
+    for (let i=0;i<S.recent.length;i++){
+      const seam = S.recent[i];
+      const p = tracePath(seam.pts);
+      g.setLineDash([3.5*B.goldK, 26*B.goldK]);
+      g.lineDashOffset = -(now*(26 + i%5*4))*B.goldK;
+      g.strokeStyle = 'rgba(255,244,200,' + (0.24*fade) + ')';
+      g.lineWidth = 0.9*B.goldK;
+      g.stroke(p);
+    }
+    g.restore();
+  }
+
+  /* ==========================================================================
+     粒子与特效
+     ========================================================================== */
+
+  function spawnGlaze(x, y, n){
+    for (let i=0;i<n;i++){
+      const a = rand(0, TAU);
+      const sp = rand(40, 330);
+      particles.push({
+        type: 'glaze',
+        x: x + rand(-4,4), y: y + rand(-4,4),
+        vx: Math.cos(a)*sp,
+        vy: Math.sin(a)*sp*0.7 - rand(20,150),
+        rot: rand(0,TAU),
+        spin: rand(-9,9),
+        size: rand(0.8, 2.9),
+        life: 0, max: rand(0.7, 1.7),
+        color: Math.random() > 0.78 ? '#f0d79b' : (Math.random() > 0.4 ? '#cfead3' : '#9dc3aa')
+      });
+    }
+  }
+
+  function spawnGold(x, y, n){
+    for (let i=0;i<n;i++){
+      particles.push({
+        type: 'gold',
+        x: x + rand(-2,2), y: y + rand(-2,2),
+        vx: rand(-16,16), vy: rand(-34, -6),
+        rot: 0, spin: 0,
+        size: rand(0.5, 1.7),
+        life: 0, max: rand(0.5, 1.2),
+        color: '#ffe6a8'
+      });
+    }
+  }
+
+  function spawnGoldMotes(n){
+    for (let i=0;i<n;i++){
+      const a = rand(0,TAU), r = rand(0, B.rx*0.8);
+      particles.push({
+        type: 'gold',
+        x: B.cx + Math.cos(a)*r,
+        y: B.rimY + B.bodyH*0.4 + Math.sin(a)*r*0.5,
+        vx: rand(-10,10), vy: rand(-45,-12),
+        rot: 0, spin: 0,
+        size: rand(0.7, 2.1),
+        life: 0, max: rand(1.0, 2.2),
+        color: '#ffe6a8'
+      });
+    }
+  }
+
+  function updateParticles(dt){
+    for (let i=particles.length-1;i>=0;i--){
+      const p = particles[i];
+      p.life += dt;
+      if (p.life >= p.max){ particles.splice(i,1); continue; }
+      if (p.type === 'glaze'){
+        p.vy += 1500*dt;
+        p.vx *= (1 - 0.5*dt);
+        p.x += p.vx*dt;
+        p.y += p.vy*dt;
+        p.rot += p.spin*dt;
+        if (p.y > B.tableY - 1){
+          p.y = B.tableY - 1;
+          if (p.vy > 30){ p.vy *= -0.28; p.vx *= 0.6; p.spin *= 0.6; }
+          else { p.vy = 0; p.vx *= (1-3*dt); p.spin *= 0.9; }
+        }
+      } else {
+        p.vy += 18*dt;
+        p.vx += Math.sin(p.life*2 + p.x*0.01)*8*dt;
+        p.x += p.vx*dt;
+        p.y += p.vy*dt;
+      }
+    }
+  }
+
+  function drawParticles(g, front){
+    if (front) g.save(), g.globalCompositeOperation = 'lighter';
+    for (const p of particles){
+      const lifeT = p.life / p.max;
+      const alpha = (1 - lifeT) * (p.type === 'gold' ? 0.95 : 0.85);
+      if (p.type === 'glaze'){
+        const s = p.size * (1 - lifeT*0.35);
+        g.save();
+        g.globalAlpha = alpha;
+        g.translate(p.x, p.y);
+        g.rotate(p.rot);
+        g.fillStyle = p.color;
+        g.beginPath();
+        g.moveTo(-s, -s*0.5);
+        g.lineTo(s*0.9, -s*0.2);
+        g.lineTo(s*0.2, s*1.1);
+        g.closePath();
+        g.fill();
+        g.restore();
+      } else {
+        const s = p.size * (1 - lifeT*0.5);
+        g.globalAlpha = alpha;
+        g.fillStyle = p.color;
+        g.beginPath();
+        g.arc(p.x, p.y, Math.max(0.2, s), 0, TAU);
+        g.fill();
+      }
+    }
+    if (front) g.restore();
+  }
+
+  /* ==========================================================================
+     WebAudio（首次手势后创建；全部实时合成）
+     ========================================================================== */
+
+  const Audio = (function(){
+    let ac = null, master = null, noise = null, muted = false, lastLand = 0;
+    const supported = !!(window.AudioContext || window.webkitAudioContext);
+
+    function unlock(){
+      if (!supported) return false;
+      if (!ac){
+        try{
+          const C = window.AudioContext || window.webkitAudioContext;
+          ac = new C();
+          master = ac.createGain();
+          master.gain.value = muted ? 0 : 0.5;
+          master.connect(ac.destination);
+          const len = Math.floor(ac.sampleRate * 0.8);
+          noise = ac.createBuffer(1, len, ac.sampleRate);
+          const data = noise.getChannelData(0);
+          for (let i=0;i<len;i++) data[i] = Math.random()*2-1;
+        } catch(e){
+          ac = null;
+          return false;
+        }
+      }
+      if (ac.state === 'suspended') ac.resume().catch(function(){});
+      return true;
+    }
+
+    function ready(){ return !!ac && !muted && ac.state !== 'closed'; }
+    function current(){ return ac ? ac.currentTime : 0; }
+
+    function ping(freq, dur, gainVal){
+      if (!ready()) return;
+      const t = current();
+      const o = ac.createOscillator();
+      const g = ac.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0002, gainVal), t+0.006);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+      o.connect(g); g.connect(master);
+      o.start(t); o.stop(t+dur+0.02);
+    }
+
+    function shatter(){
+      if (!ready()) return;
+      const t = current();
+
+      const src = ac.createBufferSource();
+      src.buffer = noise;
+      src.playbackRate.value = 1.15;
+      const bp = ac.createBiquadFilter();
+      bp.type = 'bandpass'; bp.frequency.value = 2400; bp.Q.value = 0.8;
+      const hp = ac.createBiquadFilter();
+      hp.type = 'highpass'; hp.frequency.value = 800;
+      const g = ac.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.42, t+0.006);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+0.45);
+      src.connect(bp); bp.connect(hp); hp.connect(g); g.connect(master);
+      src.start(t); src.stop(t+0.5);
+
+      for (let i=0;i<6;i++){
+        const f = rand(2100, 5200);
+        const d = rand(0.16, 0.5);
+        const t0 = t + rand(0, 0.05);
+        const o = ac.createOscillator();
+        const og = ac.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(f, t0);
+        o.frequency.exponentialRampToValueAtTime(f*0.86, t0+d);
+        og.gain.setValueAtTime(0.0001, t0);
+        og.gain.exponentialRampToValueAtTime(rand(0.02,0.055), t0+0.004);
+        og.gain.exponentialRampToValueAtTime(0.0001, t0+d);
+        o.connect(og); og.connect(master);
+        o.start(t0); o.stop(t0+d+0.03);
+      }
+    }
+
+    function land(volume){
+      if (!ready()) return;
+      const t = current();
+      if (t - lastLand < 0.035) return;
+      lastLand = t;
+      const f = rand(1500, 3600);
+      const o = ac.createOscillator();
+      const g = ac.createGain();
+      const pan = ac.createStereoPanner ? ac.createStereoPanner() : null;
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(f, t);
+      o.frequency.exponentialRampToValueAtTime(f*0.7, t+0.06);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(clamp(volume, 0.005, 0.06), t+0.004);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+0.1);
+      o.connect(g);
+      if (pan){
+        pan.pan.value = rand(-0.35,0.35);
+        g.connect(pan); pan.connect(master);
+      } else {
+        g.connect(master);
+      }
+      o.start(t); o.stop(t+0.12);
+    }
+
+    function soft(){
+      if (!ready()) return;
+      ping(560, 0.5, 0.018);
+      ping(840, 0.42, 0.012);
+    }
+
+    function softGold(){
+      if (!ready()) return;
+      const t = current();
+      const o = ac.createOscillator();
+      const g = ac.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(392, t);
+      o.frequency.exponentialRampToValueAtTime(523.25, t+0.7);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.03, t+0.08);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+1.0);
+      o.connect(g); g.connect(master);
+      o.start(t); o.stop(t+1.05);
+    }
+
+    function chime(){
+      if (!ready()) return;
+      const t = current();
+      const base = 523.25;
+      const parts = [
+        { m: 1, g: 0.10, d: 2.8 },
+        { m: 2.01, g: 0.05, d: 2.1 },
+        { m: 2.98, g: 0.026, d: 1.6 },
+        { m: 4.16, g: 0.012, d: 1.1 }
+      ];
+      for (const p of parts){
+        const o = ac.createOscillator();
+        const g = ac.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(base*p.m, t);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(p.g, t+0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t+p.d);
+        o.connect(g); g.connect(master);
+        o.start(t); o.stop(t+p.d+0.05);
+      }
+      // 低频的一口“瓮”气
+      const o2 = ac.createOscillator();
+      const g2 = ac.createGain();
+      o2.type = 'sine';
+      o2.frequency.setValueAtTime(196, t);
+      g2.gain.setValueAtTime(0.0001, t);
+      g2.gain.exponentialRampToValueAtTime(0.035, t+0.06);
+      g2.gain.exponentialRampToValueAtTime(0.0001, t+2.6);
+      o2.connect(g2); g2.connect(master);
+      o2.start(t); o2.stop(t+2.7);
+    }
+
+    function toggle(){
+      muted = !muted;
+      if (!ac) unlock();
+      if (master){
+        master.gain.setTargetAtTime(muted ? 0 : 0.5, current(), 0.03);
+      }
+      return !muted;
+    }
+
+    return { unlock, ready, shatter, land, soft, softGold, chime, toggle,
+             isMuted: ()=>muted, supported: ()=>supported };
+  })();
+
+  function updateSoundBtn(){
+    const muted = Audio.isMuted();
+    el.soundBtn.textContent = muted ? '静' : '声';
+    el.soundBtn.classList.toggle('on', !muted);
+    el.soundBtn.setAttribute('aria-pressed', String(!muted));
+  }
+
+  /* ==========================================================================
+     音频：碎片落地时的轻响（在物理里触发）
+     ========================================================================== */
+
+  function maybeLandSound(impact){
+    if (!S.released) return;
+    if (impact > 210){
+      consumeAudio(a => a.land(clamp((impact-210)/2400, 0.004, 0.055)));
+    }
+  }
+
+  /* ==========================================================================
+     渲染
+     ========================================================================== */
+
+  function drawBackground(now){
+    ctx.drawImage(bgCanvas, 0, 0, W, H);
+
+    // 呼吸的暖光（静态之外的活气）
+    const pulse = 0.5 + 0.5*Math.sin(now*0.6);
+    const glow = ctx.createRadialGradient(
+      B.cx, B.tableY - B.bodyH*0.75, 10,
+      B.cx, B.tableY - B.bodyH*0.6, B.rx*1.9
+    );
+    glow.addColorStop(0, 'rgba(235,196,132,' + (0.045 + 0.02*pulse) + ')');
+    glow.addColorStop(1, 'rgba(235,196,132,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0,0,W,H);
+
+    // 尘埃
+    ctx.save();
+    for (const d of dust){
+      const x = d.x + Math.sin(now*d.sp + d.ph)*d.dx;
+      const y = d.y + Math.cos(now*d.sp*0.7 + d.ph*1.7)*d.dy;
+      const a = d.a * (0.55 + 0.45*Math.sin(now*0.7 + d.ph));
+      ctx.globalAlpha = a;
+      ctx.fillStyle = '#f3dfb9';
+      ctx.beginPath();
+      ctx.arc(x, y, d.r, 0, TAU);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawTableShadow(now){
+    const whole = (S.stage === 'idle' || S.stage === 'gilding' || S.stage === 'healed' || !S.released);
+    if (whole){
+      const breathe = 1 + 0.012*Math.sin(now*0.8);
+      const halo = ctx.createRadialGradient(B.cx, B.tableY+4, 4, B.cx, B.tableY+4, B.rx*1.7);
+      halo.addColorStop(0, 'rgba(226,188,128,0.075)');
+      halo.addColorStop(0.5, 'rgba(210,168,108,0.028)');
+      halo.addColorStop(1, 'rgba(210,168,108,0)');
+      ctx.fillStyle = halo;
+      ctx.fillRect(B.cx-B.rx*1.9, B.tableY-4, B.rx*3.8, B.rx*0.65);
+      softShadow(ctx, B.cx + B.rx*0.15, B.tableY+4, B.rx*2.5*breathe, 40, 0.72);
+      softShadow(ctx, B.cx, B.tableY+1.5, B.rf*2.5, 14, 0.78);
+      softShadow(ctx, B.cx, B.tableY+0.5, B.rf*2.25, 7, 0.5);
+    }
+  }
+
+  function drawShardShadows(){
+    for (const s of S.shards){
+      const top = s.y - s.bb.h*0.5;
+      const hgt = Math.max(0, B.tableY - (s.y + s.bb.h*0.4));
+      const a = 0.34 / (1 + hgt/90);
+      const w = s.bb.w * (0.85 + Math.min(1.6, hgt/200));
+      softShadow(ctx, s.x, B.tableY+2, Math.max(8, w), 10 + Math.min(16, hgt*0.06), a);
+      void top;
+    }
+  }
+
+  function drawReflection(now){
+    if (!reflection) return;
+    let alpha = 0;
+    if (S.stage === 'idle' || S.stage === 'healed' || S.stage === 'gilding') alpha = 0.16;
+    else if (S.stage === 'falling' || S.stage === 'waiting') alpha = 0.05;
+    else if (S.stage === 'returning') alpha = 0.06;
+    if (alpha <= 0) return;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = alpha * (1 + 0.02*Math.sin(now*0.9));
+    ctx.drawImage(reflection, B.spriteBox.x, B.tableY + 1, B.spriteBox.w, B.spriteBox.h);
+    ctx.restore();
+  }
+
+  function drawWholeBowl(now){
+    ctx.drawImage(sprite, B.spriteBox.x, B.spriteBox.y, B.spriteBox.w, B.spriteBox.h);
+
+    if (S.stage === 'gilding'){
+      ctx.save();
+      ctx.clip(B.path);
+      for (const c of S.cracks) liveSeam(ctx, c, now);
+      ctx.restore();
+    }
+
+    if (S.stage === 'healed'){
+      ctx.save();
+      ctx.clip(B.path);
+      shimmerRecent(ctx, now);
+      ctx.restore();
+    }
+  }
+
+  function drawShards(now){
+    const sb = B.spriteBox;
+    for (const s of S.shards){
+      const edge = s.bb;
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(s.angle);
+      ctx.translate(-s.c.x, -s.c.y);
+
+      // 断口的厚度（瓷胎暗边）
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = 'rgba(26,45,34,0.72)';
+      ctx.lineWidth = 2.2;
+      ctx.stroke(s.path);
+      ctx.strokeStyle = 'rgba(196,222,200,0.16)';
+      ctx.lineWidth = 1.0;
+      ctx.stroke(s.path);
+
+      ctx.save();
+      ctx.clip(s.path);
+      const sx = (edge.x - sb.x) * DPR;
+      const sy = (edge.y - sb.y) * DPR;
+      const sw = Math.max(1, (edge.w) * DPR);
+      const sh = Math.max(1, (edge.h) * DPR);
+      if (sx >= 0 && sy >= 0 && sx+sw <= sprite.width && sy+sh <= sprite.height){
+        ctx.drawImage(sprite, sx, sy, sw, sh, edge.x, edge.y, edge.w, edge.h);
+      } else {
+        ctx.drawImage(sprite, sb.x, sb.y, sb.w, sb.h);
+      }
+      ctx.restore();
+
+      // 釉面断口的一线高光
+      ctx.strokeStyle = 'rgba(236,250,238,0.26)';
+      ctx.lineWidth = 0.7;
+      ctx.stroke(s.path);
+
+      ctx.restore();
+      void now;
+    }
+  }
+
+  function drawBreakFlash(now){
+    if (S.flashAt < 0) return;
+    const age = now - S.flashAt;
+    if (age < 0 || age > 0.75){ S.flashAt = -1; return; }
+
+    const fade = clamp(1 - age/0.55, 0, 1);
+    const grow = easeOutCubic(clamp(age/0.6,0,1));
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+
+    // 点击处的一团白光
+    const r = B.rx * (0.1 + grow*0.5);
+    const g = ctx.createRadialGradient(S.flashPt.x, S.flashPt.y, 0, S.flashPt.x, S.flashPt.y, r);
+    g.addColorStop(0, 'rgba(255,252,235,' + (0.55*fade) + ')');
+    g.addColorStop(0.35, 'rgba(255,231,171,' + (0.25*fade) + ')');
+    g.addColorStop(1, 'rgba(255,210,130,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(S.flashPt.x, S.flashPt.y, r, 0, TAU); ctx.fill();
+
+    // 一圈冲击环
+    if (age < 0.5){
+      const rr = B.rx * (0.12 + easeOutCubic(age/0.5)*0.6);
+      ctx.strokeStyle = 'rgba(255,238,190,' + (0.22*(1-age/0.5)) + ')';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(S.flashPt.x, S.flashPt.y, rr, 0, TAU); ctx.stroke();
+    }
+
+    // 裂缝的第一次发光
+    if (age < 0.32 && S.cracks.length){
+      ctx.save();
+      ctx.clip(B.path);
+      ctx.strokeStyle = 'rgba(255,246,214,' + (0.75*(1-age/0.32)) + ')';
+      ctx.lineWidth = 2.2;
+      ctx.lineJoin = 'round';
+      for (const c of S.cracks){
+        const p = tracePath(c.pts);
+        ctx.stroke(p);
+      }
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  function drawGoldSweep(now){
+    if (S.sweepAt < 0) return;
+    const t = (now - S.sweepAt) / 1.15;
+    if (t < 0 || t > 1){ S.sweepAt = -1; return; }
+
+    const e = easeInOutSine(t);
+    const a = Math.sin(PI*t);
+    const k = B.goldK;
+
+    ctx.save();
+    ctx.clip(B.path);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.translate(B.cx, B.rimY + B.bodyH*0.45);
+    ctx.rotate(-0.45);
+
+    const band = B.rx * 0.52;
+    const x = -B.rx*2.1 + e*B.rx*4.2;
+    const grad = ctx.createLinearGradient(x-band, 0, x+band, 0);
+    grad.addColorStop(0, 'rgba(255,231,168,0)');
+    grad.addColorStop(0.42, 'rgba(255,240,200,' + (0.28*a) + ')');
+    grad.addColorStop(0.5, 'rgba(255,252,235,' + (0.5*a) + ')');
+    grad.addColorStop(0.58, 'rgba(255,240,200,' + (0.28*a) + ')');
+    grad.addColorStop(1, 'rgba(255,231,168,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x-band, -H*1.2, band*2, H*2.4);
+
+    ctx.strokeStyle = 'rgba(255,252,238,' + (0.36*a) + ')';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(x, -H*1.2);
+    ctx.lineTo(x, H*1.2);
+    ctx.stroke();
+
+    ctx.restore();
+    void k;
+  }
+
+  function drawGuide(now){
+    if (S.touched) return;
+    const x = B.clickCenter.x;
+    const y = B.rimY + B.bodyH*0.5;
+    const pulse = 0.5 + 0.5*Math.sin(now*1.9);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+
+    for (let k=0;k<2;k++){
+      const ph = ((now*0.34 + k*0.5) % 1);
+      const r = 6 + ph * (B.rx*0.27);
+      ctx.strokeStyle = 'rgba(244,215,150,' + (0.10*(1-ph)*(0.5+0.5*pulse)) + ')';
+      ctx.lineWidth = 0.9;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, TAU);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = 'rgba(255,232,176,' + (0.16 + 0.2*pulse) + ')';
+    ctx.beginPath(); ctx.arc(x, y, 1.7, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawVignette(){
+    ctx.fillStyle = vignetteGrad;
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = topGrad;
+    ctx.fillRect(0, 0, W, H*0.2);
+    ctx.fillStyle = bottomGrad;
+    ctx.fillRect(0, H*0.72, W, H*0.28);
+  }
+
+  function render(now){
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    drawBackground(now);
+
+    const wholeView = !(S.shards.length && S.released &&
+      (S.stage === 'falling' || S.stage === 'waiting' || S.stage === 'returning'));
+
+    // 案几上的影子
+    if (wholeView){
+      drawTableShadow(now);
+      drawReflection(now);
+    } else {
+      drawShardShadows();
+    }
+
+    if (wholeView){
+      if (sprite) drawWholeBowl(now);
+    } else {
+      ctx.save();
+      // 碎裂预闪的第一瞬：仍以整碗显示，裂缝发光由 drawBreakFlash 负责
+      drawShards(now);
+      ctx.restore();
+    }
+
+    drawParticles(ctx, true);
+    drawGoldSweep(now);
+    drawBreakFlash(now);
+    drawGuide(now);
+    drawVignette();
+  }
+
+  /* ==========================================================================
+     状态 / 文案 / UI
+     ========================================================================== */
+
+  const STAGE_TEXT = {
+    idle:      { phase:'静置 · 等一声轻叩', hint:'以指轻叩碗身', sub:'碎了，才看得见金子的方向' },
+    falling:   { phase:'碎裂 · 坠落',       hint:'瓷在案上翻身', sub:'听，每一片都有自己的声音' },
+    waiting:   { phase:'静 · 余音落定',     hint:'碎已落地', sub:'静候 2.8 秒 · 金会自己回来' },
+    returning: { phase:'归位 · 一片片回到从前', hint:'正在归位', sub:'慢慢拼回原来的样子' },
+    gilding:   { phase:'敷金 · 顺着裂痕走', hint:'金在裂缝里走', sub:'每一条裂，都有自己的路' },
+    healed:    { phase:'缮成 · 裂痕已金',   hint:'再叩一次', sub:'新旧金线会一起留下来' }
+  };
+
+  function setPhase(stage){
+    const base = STAGE_TEXT[stage] ? STAGE_TEXT[stage].phase : STAGE_TEXT.idle.phase;
+    let txt = base;
+    if (stage === 'gilding'){
+      const pct = Math.round((S.gildProgress || 0) * 100);
+      txt = '敷金 · ' + pct + '%';
+    }
+    if (txt !== phaseText){
+      phaseText = txt;
+      el.phase.textContent = txt;
+    }
+  }
+
+  function setHint(stage){
+    const t = STAGE_TEXT[stage] || STAGE_TEXT.idle;
+    const key = t.hint + '|' + t.sub;
+    if (key !== hintText){
+      hintText = key;
+      el.hintMain.textContent = t.hint;
+      el.hintSub.textContent = t.sub;
+    }
+    el.hint.style.opacity = '1';
+  }
+
+  function updateStats(){
+    const broken = (S.stage === 'falling' || S.stage === 'waiting' || S.stage === 'returning');
+    const shardCount = broken ? S.shards.length : 1;
+    const crackCount = S.seams.length + ((S.stage === 'falling' || S.stage === 'waiting' ||
+      S.stage === 'returning' || S.stage === 'gilding') ? S.cracks.length : 0);
+    el.shards.textContent = String(shardCount);
+    el.cracks.textContent = String(crackCount);
+    el.repairs.textContent = String(S.repairs);
+    el.repairBtn.disabled = !(S.stage === 'falling' || S.stage === 'waiting');
+  }
+
+  function announce(text){
+    if (text === S.announced) return;
+    S.announced = text;
+    el.announcer.textContent = text;
+  }
+
+  let toastTimer = null;
+  function showToast(main, tag){
+    el.toastMain.textContent = main;
+    el.toastTag.textContent = tag;
+    el.toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.toast.classList.remove('show'); }, 4200);
+  }
+  function hideToast(){
+    el.toast.classList.remove('show');
+    clearTimeout(toastTimer);
+  }
+
+  /* ==========================================================================
+     主循环
+     ========================================================================== */
+
+  function update(now, dt){
+    if (S.stage === 'falling'){
+      if (!S.released && now >= S.releaseAt){
+        releaseShards(now);
+      }
+      if (S.released){
+        stepPhysics(dt);
+        let allSleep = true;
+        for (const s of S.shards) if (!s.sleep) { allSleep = false; break; }
+        if (!S.settledAt && (allSleep || now - S.releaseAt > 3.0)){
+          S.settledAt = now;
+          S.stage = 'waiting';
+          S.stageT = now;
+          S.autoRepairAt = now + 2.8;   // 静止后静候约三秒，自动归位
+          setPhase('waiting');
+          setHint('waiting');
+          announce('碎片已落在案几上，约三秒后自动归位');
+        }
+      }
+    } else if (S.stage === 'waiting'){
+      stepPhysics(dt);
+      const remain = Math.max(0, S.autoRepairAt - now);
+      const tenths = Math.ceil(remain*10)/10;
+      if (tenths !== waitTenths){
+        waitTenths = tenths;
+        el.hintSub.textContent = '静候 ' + tenths.toFixed(1) + ' 秒 · 金会自己回来';
+      }
+      if (now >= S.autoRepairAt) startRepair(now);
+    } else if (S.stage === 'returning'){
+      updateReturn(now);
+    } else if (S.stage === 'gilding'){
+      updateGild(now);
+      if (S.stage === 'gilding') setPhase('gilding');
+    }
+
+    updateParticles(dt);
+    updateStats();
+    if (S.stage === 'idle') setPhase('idle');
+  }
+
+  function frame(){
+    const now = nowS();
+    let dt = now - lastT;
+    if (!isFinite(dt) || dt <= 0) dt = 1/60;
+    dt = Math.min(dt, 0.05);
+    lastT = now;
+    update(now, dt);
+    render(now);
+    requestAnimationFrame(frame);
+  }
+
+  /* ==========================================================================
+     布局 / 初始化
+     ========================================================================== */
+
+  function layout(){
+    buildBowlGeometry();
+    buildBackground();
+    buildVignette();
+    buildSprite();
+    buildReflection();
+    buildBreakFlashReset();
+  }
+
+  function buildBreakFlashReset(){
+    S.flashAt = -1;
+    S.sweepAt = -1;
+  }
+
+  function resize(){
+    W = Math.max(240, window.innerWidth || 360);
+    H = Math.max(320, window.innerHeight || 640);
+    DPR = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+    canvas.width = Math.round(W*DPR);
+    canvas.height = Math.round(H*DPR);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    layout();
+    resetSession();
+  }
+
+  function hitBowl(x, y){
+    if (pointInPoly(B.outline, x, y)) return { x, y };
+    const near = nearestOnOutline(x, y);
+    if (near.d < Math.max(34, B.rx*0.16)){
+      // 往碗心方向收一点，避免种子落在轮廓外
+      const cx = B.cx, cy = B.rimY + B.bodyH*0.45;
+      const dx = cx - near.x, dy = cy - near.y;
+      const dl = Math.hypot(dx,dy) || 1;
+      return { x: near.x + dx/dl*8, y: near.y + dy/dl*8 };
+    }
+    return null;
+  }
+
+  function onPointerDown(e){
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    Audio.unlock();
+
+    if (S.stage === 'idle' || S.stage === 'healed'){
+      const p = hitBowl(x, y);
+      if (p){
+        e.preventDefault();
+        doBreak(p);
+      } else {
+        showToast('轻叩碗身', '把手指落在青瓷上');
+        S.touched = false;
+      }
+    } else if (S.stage === 'falling' || S.stage === 'waiting'){
+      // 点击空白处不打断；给一次提示
+      if (!hitBowl(x, y)) {
+        // 不打扰
+      }
+    }
+  }
+
+  function onPointerMove(e){
+    if (e.pointerType !== 'mouse') return;
+    const rect = canvas.getBoundingClientRect();
+    const inside = pointInPoly(B.outline, e.clientX-rect.left, e.clientY-rect.top);
+    const want = inside ? 'pointer' : 'default';
+    if (canvas.style.cursor !== want) canvas.style.cursor = want;
+  }
+
+  function bindEvents(){
+    window.addEventListener('resize', function(){
+      clearTimeout(bindEvents._t);
+      bindEvents._t = setTimeout(resize, 180);
+    });
+
+    canvas.addEventListener('pointerdown', onPointerDown, { passive: false });
+    canvas.addEventListener('pointermove', onPointerMove, { passive: true });
+
+    window.addEventListener('pointerdown', function(){ Audio.unlock(); }, { once: true });
+    window.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){
+        if (S.stage === 'idle' || S.stage === 'healed'){
+          e.preventDefault();
+          Audio.unlock();
+          doBreak({ x: B.clickCenter.x + rand(-B.rx*0.22, B.rx*0.22), y: B.rimY + B.bodyH*0.5 + rand(-20,20) });
+        }
+      }
+      if (e.key === 'r' || e.key === 'R'){
+        if (S.stage === 'falling' || S.stage === 'waiting') startRepair(nowS());
+      }
+    });
+
+    el.repairBtn.addEventListener('click', function(){
+      Audio.unlock();
+      startRepair(nowS());
+    });
+    el.resetBtn.addEventListener('click', function(){
+      Audio.unlock();
+      resetSession();
+      lastT = nowS();
+    });
+    el.soundBtn.addEventListener('click', function(){
+      Audio.unlock();
+      Audio.toggle();
+      updateSoundBtn();
+    });
+
+    document.addEventListener('visibilitychange', function(){
+      lastT = nowS();
+    });
+  }
+
+  function init(){
+    buildShadowSprite();
+    resize();
+    bindEvents();
+    updateSoundBtn();
+
+    // 调试增强：以 #demo 打开时 1 秒后自动击碎一次；正常打开不受影响
+    if (location.hash === '#demo' || location.hash === '#demo-break'){
+      setTimeout(function(){
+        if (S.stage === 'idle' || S.stage === 'healed'){
+          doBreak({ x: B.cx - B.rx*0.26, y: B.rimY + B.bodyH*0.5 });
+        }
+      }, 1000);
+    }
+
+    // 供自动化核查使用的小钩子（不影响正常交互）
+    window.__kintsugi = {
+      breakAt: function(x,y){ doBreak({x,y}); },
+      repair: function(){ startRepair(nowS()); },
+      reset: function(){ resetSession(); },
+      stats: function(){
+        return {
+          stage: S.stage,
+          shards: S.shards.length,
+          cracks: S.cracks.length,
+          seams: S.seams.length,
+          repairs: S.repairs
+        };
+      }
+    };
+
+    lastT = nowS();
+    render(nowS());
+    requestAnimationFrame(frame);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

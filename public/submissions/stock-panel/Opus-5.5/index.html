@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-scheme="cn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Opus-5.5 · 行情看板</title>
+<!-- 设计说明：
+1. 深色行情终端：左侧 6 支自选股（价格、涨跌额、涨跌幅、迷你走势），右侧为选中个股的实时分时图 + 成交量柱。
+2. 分时图以“昨收”为界上红下绿双色填充，最新价圆点脉动；悬停出十字光标与浮窗，涨跌同时用颜色、▲▼ 和正负号三重区分。
+3. 行情按几何布朗运动（含偶发跳空）每秒推送，逐笔闪烁；按板块模拟 ±10% / ±20% 涨跌停，触及即锁定并标注。
+4. 实时计算短时波动率与振幅，超阈值弹出“波动加剧”风险提示；可一键切换 红涨绿跌 / 绿涨红跌 配色习惯。 -->
+<style>
+:root{--up:#f2453d;--dn:#16b36b;--bg:#0a0e16;--panel:#111827;--line:#1f2a3d;--ink:#e7ecf6;--sub:#7f8aa0;--warn:#f5a524}
+html[data-scheme=intl]{--up:#16b36b;--dn:#f2453d}
+*{box-sizing:border-box;margin:0}
+body{min-height:100vh;padding:16px;color:var(--ink);background:radial-gradient(80% 50% at 75% -10%,#1b2747,transparent),var(--bg);font:14px/1.45 -apple-system,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif}
+.num{font-variant-numeric:tabular-nums;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.up{color:var(--up)}.dn{color:var(--dn)}
+.app{max-width:1180px;margin:0 auto;display:grid;gap:14px;grid-template-columns:350px minmax(0,1fr);grid-template-areas:"top top" "list main"}
+header{grid-area:top;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:17px;letter-spacing:1px;display:flex;align-items:center;gap:8px}
+.live{width:8px;height:8px;border-radius:50%;background:var(--dn);box-shadow:0 0 0 0 var(--dn);animation:ping 1.6s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.idx{display:flex;gap:16px;flex:1;min-width:0;overflow:hidden;font-size:12px;color:var(--sub)}.idx b{color:var(--ink);font-weight:600;margin:0 4px}
+button{font:inherit;font-size:12px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer}
+.panel{background:linear-gradient(180deg,rgba(255,255,255,.025),transparent),var(--panel);border:1px solid var(--line);border-radius:16px}
+.list{grid-area:list;padding:6px;align-self:start}
+.row{display:grid;grid-template-columns:1fr 64px 86px;align-items:center;gap:8px;padding:10px;border-radius:11px;cursor:pointer;transition:background .25s}
+.row:hover{background:rgba(255,255,255,.04)}.row.sel{background:rgba(96,140,255,.12);box-shadow:inset 3px 0 0 #6d8cff}
+.row .nm{font-weight:600}.row .cd{font-size:11px;color:var(--sub)}.row svg{width:64px;height:26px}
+.px{text-align:right}.px .p{font-weight:600}.px .c{font-size:12px}
+.px{border-radius:7px;padding:2px 4px}.flash-up{animation:fu .55s ease-out}.flash-dn{animation:fd .55s ease-out}
+@keyframes fu{from{background:color-mix(in srgb,var(--up) 24%,transparent)}}@keyframes fd{from{background:color-mix(in srgb,var(--dn) 24%,transparent)}}
+.main{grid-area:main;padding:18px 18px 12px;min-width:0}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.big{font-size:38px;font-weight:700;line-height:1}.chg{font-size:15px;margin-left:10px;font-weight:600}
+.tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:6px;margin-left:8px;vertical-align:4px;border:1px solid currentColor}
+.risk{display:none;align-items:center;gap:8px;margin-top:12px;padding:9px 12px;border-radius:10px;font-size:13px;color:var(--warn);background:rgba(245,165,36,.1);border:1px solid rgba(245,165,36,.35)}
+.risk.on{display:flex;animation:pulse 1.8s infinite}@keyframes pulse{50%{background:rgba(245,165,36,.18)}}
+.chart{position:relative;height:clamp(240px,42vh,360px);margin-top:12px}
+.chart svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;touch-action:none}
+.tip{position:absolute;pointer-events:none;background:rgba(12,17,28,.92);border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:12px;opacity:0;transition:opacity .15s;white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:10px}
+.stats div{background:rgba(255,255,255,.03);border-radius:10px;padding:8px 10px}.stats span{display:block;font-size:11px;color:var(--sub)}.stats b{font-weight:600;font-size:13px}
+@media (max-width:860px){.app{grid-template-columns:1fr;grid-template-areas:"top" "main" "list"}.stats{grid-template-columns:repeat(3,1fr)}}
+.breadth{margin:8px 10px 6px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--sub)}
+.breadth .bar{display:flex;height:6px;border-radius:6px;overflow:hidden;margin:8px 0}.breadth .bar i{background:var(--up);transition:flex .6s}.breadth .bar i+i{background:var(--dn)}
+@media (max-width:420px){body{padding:10px}.big{font-size:30px}.main{padding:14px 12px 10px}.idx{order:3;flex-basis:100%;gap:12px;font-size:11px}.head>.num{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><i class="live"></i>OPUS 行情</div>
+    <div class="idx num" id="idx"></div>
+    <button id="scheme">红涨绿跌</button>
+  </header>
+  <section class="panel list" aria-label="自选股"><div id="list"></div>
+    <div class="breadth"><div style="display:flex;justify-content:space-between"><span>自选涨跌分布</span><span id="brTxt" class="num"></span></div>
+      <div class="bar"><i id="brUp"></i><i id="brDn"></i></div>行情为本地模拟数据，仅供界面演示，不构成投资建议。</div></section>
+  <section class="panel main">
+    <div class="head">
+      <div><div style="color:var(--sub);font-size:13px"><b id="mName" style="color:var(--ink);font-size:16px"></b> <span id="mCode"></span><span id="mTag"></span></div>
+        <div style="margin-top:6px"><span class="big num" id="mPx"></span><span class="chg num" id="mChg"></span></div></div>
+      <div class="num" style="font-size:12px;color:var(--sub);text-align:right">分时 · 每秒推送<br><span id="clock"></span></div>
+    </div>
+    <div class="risk" id="risk"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 1.5 15 14H1Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 6v4M8 11.6v.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span id="riskTxt"></span></div>
+    <div class="chart" id="chartBox"><svg id="chart"></svg><div class="tip num" id="tip"></div></div>
+    <div class="stats num" id="stats"></div>
+  </section>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const STOCKS = [
+  ["星河科技", "688001", 128.5, 0.0042], ["蓝鲸能源", "600321", 23.68, 0.0018], ["云帆半导体", "688512", 86.2, 0.0047],
+  ["青禾农业", "000876", 9.42, 0.0016], ["远航物流", "601998", 15.07, 0.0022], ["极光医疗", "300759", 42.35, 0.0036]
+].map(([name, code, p, sig]) => ({ name, code, p, sig, lim: /^(688|300)/.test(code) ? 0.2 : 0.1 }));
+const INDEX = [["上证指数", 3286.45, 0.0009], ["深证成指", 10458.2, 0.0012], ["创业板指", 2168.7, 0.0016]].map(([n, v, s]) => ({ n, v, pc: v, s }));
+const gauss = () => Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
+const fmt = (v, d = 2) => v.toFixed(d), sign = (v) => (v > 0 ? "+" : v < 0 ? "−" : ""), arrow = (v) => (v > 0 ? "▲" : v < 0 ? "▼" : "■");
+const cls = (v) => (v >= 0 ? "up" : "dn"), pct = (s) => (s.p - s.pc) / s.pc;
+const clockStr = (t) => new Date(t).toTimeString().slice(0, 8);
+let sel = 0, hover = null;
+// 几何布朗运动（偶发跳空），并按板块做涨跌停截断
+function step(s, quiet) { // quiet：本秒无成交，价格不变、只补一个小量点，保证分时横轴等间距
+  const jump = Math.random() < 0.01 ? gauss() * s.sig * 3.5 : 0;
+  const next = quiet ? s.p : s.p * Math.exp(s.sig * gauss() + jump + (s.pc - s.p) / s.pc * 0.004);
+  s.p = Math.min(s.pc * (1 + s.lim), Math.max(s.pc * (1 - s.lim), next));
+  s.hi = Math.max(s.hi, s.p); s.lo = Math.min(s.lo, s.p);
+  const v = Math.round((600 + Math.random() * 2400) * (1 + Math.abs(s.p - s.hist.at(-1).p) / s.p * 400));
+  s.vol += v; s.hist.push({ p: s.p, v, t: Date.now() });
+  if (s.hist.length > 180) s.hist.shift();
+}
+STOCKS.forEach((s) => { // 预生成 120 笔历史，让首帧就有完整走势
+  s.pc = s.p * (1 + gauss() * 0.012); s.p = s.pc; s.hi = s.lo = s.p; s.open = s.p * (1 + gauss() * 0.004); s.vol = 0;
+  s.hist = [{ p: s.p, v: 0, t: Date.now() - 121e3 }];
+  for (let i = 120; i > 0; i--) { step(s); s.hist.at(-1).t = Date.now() - i * 1000; }
+});
+const list = $("list");
+STOCKS.forEach((s, i) => {
+  const r = document.createElement("div");
+  r.className = "row"; r.tabIndex = 0;
+  r.innerHTML = `<div><div class="nm">${s.name}</div><div class="cd num">${s.code}</div></div><svg viewBox="0 0 64 26" preserveAspectRatio="none"><path fill="none" stroke-width="1.5"/></svg><div class="px num"><div class="p"></div><div class="c"></div></div>`;
+  r.onclick = r.onkeydown = (e) => { if (e.type === "click" || e.key === "Enter") { sel = i; hover = null; render(); } };
+  s.row = r; list.appendChild(r);
+});
+function spark(s) {
+  const h = s.hist.slice(-60), mx = Math.max(...h.map((d) => d.p), s.pc), mn = Math.min(...h.map((d) => d.p), s.pc);
+  return h.map((d, i) => `${i ? "L" : "M"}${(i / (h.length - 1)) * 64},${24 - ((d.p - mn) / (mx - mn || 1)) * 22}`).join("");
+}
+function renderList(prev) {
+  STOCKS.forEach((s, i) => {
+    const c = pct(s), r = s.row, dir = s.p > (prev?.[i] ?? s.p) ? "up" : s.p < (prev?.[i] ?? s.p) ? "dn" : "";
+    r.classList.toggle("sel", i === sel);
+    r.querySelector(".p").textContent = fmt(s.p); r.querySelector(".p").className = "p " + cls(c);
+    r.querySelector(".c").innerHTML = `<span class="${cls(c)}">${arrow(c)} ${sign(c)}${fmt(Math.abs(c) * 100)}%</span>`;
+    const path = r.querySelector("path"); path.setAttribute("d", spark(s)); path.setAttribute("stroke", `var(--${cls(c)})`);
+    const px = r.querySelector(".px");
+    if (dir) { px.classList.remove("flash-up", "flash-dn"); void px.offsetWidth; px.classList.add("flash-" + dir); }
+  });
+}
+function renderChart() {
+  const s = STOCKS[sel], box = $("chartBox"), W = box.clientWidth, H = box.clientHeight, svg = $("chart");
+  const pH = H * 0.72, vTop = H * 0.8, h = s.hist, n = 180, xs = (i) => 6 + (i / (n - 1)) * (W - 64);
+  const mx = Math.max(...h.map((d) => d.p), s.pc * 1.004), mn = Math.min(...h.map((d) => d.p), s.pc * 0.996);
+  const ys = (p) => 10 + ((mx - p) / (mx - mn)) * (pH - 16), yPc = ys(s.pc), vMax = Math.max(...h.map((d) => d.v));
+  const line = h.map((d, i) => `${i ? "L" : "M"}${xs(i).toFixed(1)},${ys(d.p).toFixed(1)}`).join("");
+  const area = `${line}L${xs(h.length - 1)},${yPc}L${xs(0)},${yPc}Z`, split = (yPc / pH) * 100;
+  const last = h.at(-1), lx = xs(h.length - 1), ly = ys(last.p), c = pct(s);
+  let grid = "";
+  for (let k = 0; k <= 4; k++) {
+    const p = mx - ((mx - mn) * k) / 4, y = ys(p), q = (p - s.pc) / s.pc;
+    grid += `<line x1="0" x2="${W - 58}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-dasharray="2 4"/><text x="${W - 52}" y="${y + 4}" fill="var(--${cls(q)})" font-size="11">${fmt(p)}</text>`;
+  }
+  const bars = h.map((d, i) => `<rect x="${xs(i) - 1.2}" width="2.4" y="${H - ((d.v / vMax) * (H - vTop))}" height="${(d.v / vMax) * (H - vTop)}" fill="var(--${cls(d.p - (h[i - 1] || d).p)})" opacity=".55"/>`).join("");
+  let cross = "";
+  if (hover !== null && h[hover]) {
+    const d = h[hover], x = xs(hover), y = ys(d.p), q = (d.p - s.pc) / s.pc, tip = $("tip");
+    cross = `<line x1="${x}" x2="${x}" y1="0" y2="${H}" stroke="#8ea2c8" stroke-dasharray="3 3"/><line x1="0" x2="${W - 58}" y1="${y}" y2="${y}" stroke="#8ea2c8" stroke-dasharray="3 3"/><circle cx="${x}" cy="${y}" r="4" fill="#fff"/>`;
+    tip.innerHTML = `${clockStr(d.t)}<br><b class="${cls(q)}">${fmt(d.p)}</b> <span class="${cls(q)}">${sign(q)}${fmt(Math.abs(q) * 100)}%</span><br><span style="color:var(--sub)">量 ${d.v.toLocaleString()}</span>`;
+    tip.style.opacity = 1; tip.style.left = Math.min(x + 12, W - 130) + "px"; tip.style.top = Math.max(0, y - 70) + "px";
+  } else $("tip").style.opacity = 0;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.innerHTML = `<defs><linearGradient id="fill" x1="0" x2="0" y1="0" y2="${pH}" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="var(--up)" stop-opacity=".35"/><stop offset="${split}%" stop-color="var(--up)" stop-opacity=".04"/>
+      <stop offset="${split}%" stop-color="var(--dn)" stop-opacity=".04"/><stop offset="1" stop-color="var(--dn)" stop-opacity=".35"/></linearGradient>
+      <linearGradient id="stroke" x1="0" x2="0" y1="0" y2="${pH}" gradientUnits="userSpaceOnUse"><stop offset="${split}%" stop-color="var(--up)"/><stop offset="${split}%" stop-color="var(--dn)"/></linearGradient></defs>
+    ${grid}<line x1="0" x2="${W - 58}" y1="${yPc}" y2="${yPc}" stroke="#9aa6bd" stroke-dasharray="6 4" opacity=".7"/><text x="4" y="${yPc - 5}" fill="#9aa6bd" font-size="11">昨收 ${fmt(s.pc)}</text>
+    <path d="${area}" fill="url(#fill)"/><path d="${line}" fill="none" stroke="url(#stroke)" stroke-width="1.8" stroke-linejoin="round"/>
+    <line x1="0" x2="${W - 58}" y1="${vTop - 6}" y2="${vTop - 6}" stroke="var(--line)"/>${bars}
+    <circle cx="${lx}" cy="${ly}" r="9" fill="var(--${cls(c)})" opacity=".25"><animate attributeName="r" values="4;12;4" dur="1.6s" repeatCount="indefinite"/></circle>
+    <line x1="${lx}" x2="${W - 56}" y1="${ly}" y2="${ly}" stroke="var(--${cls(c)})" stroke-dasharray="1 3" opacity=".7"/><circle cx="${lx}" cy="${ly}" r="3.5" fill="var(--${cls(c)})"/><rect x="${W - 56}" y="${ly - 10}" width="54" height="20" rx="4" fill="var(--${cls(c)})"/>
+    <text x="${W - 29}" y="${ly + 4}" fill="#fff" font-size="11" text-anchor="middle" font-weight="700">${fmt(s.p)}</text>${cross}`;
+}
+function renderMain() {
+  const s = STOCKS[sel], c = pct(s), atLim = Math.abs(c) >= s.lim - 1e-6;
+  $("mName").textContent = s.name; $("mCode").textContent = s.code;
+  $("mTag").innerHTML = atLim ? `<span class="tag ${cls(c)}">${c > 0 ? "涨停" : "跌停"}</span>` : s.lim > 0.1 ? `<span class="tag" style="color:var(--sub)">±20%</span>` : "";
+  $("mPx").textContent = fmt(s.p); $("mPx").className = "big num " + cls(c);
+  $("mChg").innerHTML = `<span class="${cls(c)}">${arrow(c)} ${sign(c)}${fmt(Math.abs(s.p - s.pc))}  ${sign(c)}${fmt(Math.abs(c) * 100)}%</span>`;
+  const rets = s.hist.slice(-30).map((d, i, a) => (i ? Math.log(d.p / a[i - 1].p) : 0)).slice(1);
+  const vola = Math.sqrt(rets.reduce((a, r) => a + r * r, 0) / rets.length) * Math.sqrt(60) * 100, amp = ((s.hi - s.lo) / s.pc) * 100;
+  const warn = vola > 3.2 ? `短时波动率 ${fmt(vola)}% 显著放大，注意追涨杀跌风险` : amp > 6 ? `日内振幅已达 ${fmt(amp)}%，建议控制仓位` : atLim ? "已触及涨跌停价，流动性可能骤降" : "";
+  $("risk").classList.toggle("on", !!warn); $("riskTxt").textContent = "波动加剧 · " + warn;
+  $("stats").innerHTML = [["今开", fmt(s.open), s.open - s.pc], ["最高", fmt(s.hi), s.hi - s.pc], ["最低", fmt(s.lo), s.lo - s.pc], ["成交量", (s.vol / 1e4).toFixed(1) + "万", 0], ["振幅", fmt(amp) + "%", 0], ["波动率", fmt(vola) + "%", 0]]
+    .map(([k, v, d]) => `<div><span>${k}</span><b class="${d ? cls(d) : ""}">${v}</b></div>`).join("");
+  renderChart();
+}
+function renderIndex() {
+  $("idx").innerHTML = INDEX.map((x) => { const c = (x.v - x.pc) / x.pc; return `<span>${x.n}<b>${fmt(x.v)}</b><em class="${cls(c)}" style="font-style:normal">${sign(c)}${fmt(Math.abs(c) * 100)}%</em></span>`; }).join("");
+  $("clock").textContent = clockStr(Date.now());
+  const ups = STOCKS.filter((s) => s.p >= s.pc).length;
+  $("brTxt").innerHTML = `<span class="up">上涨 ${ups}</span> · <span class="dn">下跌 ${STOCKS.length - ups}</span>`;
+  $("brUp").style.flex = ups; $("brDn").style.flex = STOCKS.length - ups;
+}
+function render(prev) { renderList(prev); renderMain(); renderIndex(); }
+function tick() {
+  const prev = STOCKS.map((s) => s.p);
+  STOCKS.forEach((s, i) => step(s, i !== sel && Math.random() < 0.4)); // 非选中个股随机“无成交”，推送节奏错落
+  INDEX.forEach((x) => (x.v *= Math.exp(x.s * gauss())));
+  render(prev);
+}
+const svgEl = $("chart");
+svgEl.addEventListener("pointermove", (e) => {
+  const r = svgEl.getBoundingClientRect(), n = 180, x = e.clientX - r.left, len = STOCKS[sel].hist.length;
+  hover = Math.max(0, Math.min(len - 1, Math.round(((x - 6) / (r.width - 64)) * (n - 1))));
+  renderChart();
+});
+svgEl.addEventListener("pointerleave", () => { hover = null; renderChart(); });
+$("scheme").onclick = () => {
+  const intl = document.documentElement.dataset.scheme !== "intl";
+  document.documentElement.dataset.scheme = intl ? "intl" : "cn";
+  $("scheme").textContent = intl ? "绿涨红跌" : "红涨绿跌";
+};
+new ResizeObserver(renderChart).observe($("chartBox"));
+render();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>

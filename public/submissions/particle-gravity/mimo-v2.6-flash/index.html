@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="QRwbi7FDP8FhmfMlXBZfa4">
+<head data-page-node-id="lsiyQTcZrC9ev0YctX27nn">
+<meta charset="utf-8" data-page-node-id="hKgf9dCN0O6hYjlBQEZJL3">
+<meta name="viewport" content="width=device-width,initial-scale=1" data-page-node-id="NlY02g5kyMW6FLCK8msJLB">
+<title>粒子引力场</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#04050c;font-family:-apple-system,"PingFang SC",sans-serif}
+canvas{display:block;touch-action:none;cursor:grab}
+.hud{position:fixed;top:14px;left:14px;background:rgba(10,14,30,.72);border:1px solid #26305a;
+  border-radius:14px;padding:12px 14px;color:#aab6ee;font-size:12px;line-height:1.9;
+  backdrop-filter:blur(8px);pointer-events:none;min-width:150px}
+.hud b{color:#7dd3fc;font-variant-numeric:tabular-nums;float:right}
+.hud h3{font-size:11px;letter-spacing:.25em;color:#5f6ca8;margin-bottom:4px;font-weight:600}
+.tip{position:fixed;bottom:16px;left:0;right:0;text-align:center;color:#5f6ca8;font-size:12px;letter-spacing:.2em;pointer-events:none}
+.mode{color:#ffd166}
+</style>
+</head>
+<body data-page-node-id="W0xP3XNQ6VJsKwg4rggIO8">
+<canvas id="c" data-page-node-id="Jo2pvjxhM1e7EHNTXOUVRG"></canvas>
+<div class="hud" data-page-node-id="Hnp8ue2uIwfwSyZOlOPGGV"><h3 data-page-node-id="nzPLVFebTmUordShp0iY6g">GRAVITY FIELD</h3>
+  粒子数 <b id="pn" data-page-node-id="8Gv1nmaSYoB7KnuuG9pnHl">0</b><br data-page-node-id="EkhjX4cU9w9rEJwmaH3PXY">系统能量 <b id="en" data-page-node-id="DFxF2MXLGxRw74wDVpu7ug">0</b><br data-page-node-id="CtNjn3YjD4HUooe4JVcACK">FPS <b id="fps" data-page-node-id="a5xXhou9CluC5KXpeU7np5">60</b><br data-page-node-id="VSnsEuErfL4GOlSJxoBPIA">模式 <b class="mode" id="md" data-page-node-id="ECh7dDN8bU2kROxxMISzZp">吸引</b>
+</div>
+<div class="tip" data-page-node-id="dd4tVHsVHm4dRRlXEpTlsB">点击 / 触摸 → 冲击波 &nbsp;·&nbsp; 移动 → 排斥力场 &nbsp;·&nbsp; 双击 → 切换吸引/排斥</div>
+<script>
+const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+let W,H,DPR;
+function resize(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth*DPR;H=innerHeight*DPR;
+  cv.width=W;cv.height=H;cv.style.width=innerWidth+"px";cv.style.height=innerHeight+"px";}
+resize();addEventListener("resize",resize);
+const MAXN=260;let N=innerWidth<420?150:230;
+let mode=1; // 1 吸引 -1 排斥
+const cx=()=>W/2,cy=()=>H/2;
+let parts=[],waves=[],mx=-1e4,my=-1e4,moving=0;
+const HUE=[190,265,320,45];
+function spawn(){const a=Math.random()*6.283,r=60*DPR+Math.random()*Math.min(W,H)*.42,
+  // 初速给切向，形成环绕而非直落
+  v=Math.sqrt(0.9*r)*(0.7+Math.random()*.5)*(Math.random()<.85?1:-1);
+  return{x:cx()+Math.cos(a)*r,y:cy()+Math.sin(a)*r,
+    vx:-Math.sin(a)*v*.09,vy:Math.cos(a)*v*.09,
+    hue:HUE[(Math.random()*HUE.length)|0],size:(.8+Math.random()*1.8)*DPR,
+    trail:[],life:1};}
+for(let i=0;i<N;i++)parts.push(spawn());
+const G=1.15;
+function step(){
+  const X=cx(),Y=cy();
+  if(moving>0)moving--;
+  for(let i=parts.length-1;i>=0;i--){
+    const p=parts[i];
+    const dx=X-p.x,dy=Y-p.y,r2=Math.max(400*DPR*DPR,dx*dx+dy*dy),r=Math.sqrt(r2);
+    let ax=0,ay=0;
+    const f=G*mode*2600*DPR/r2;
+    ax+=dx/r*f;ay+=dy/r*f;
+    if(moving>0&&mx>-9e3){ // 鼠标排斥场
+      const ex=p.x-mx,ey=p.y-my,er2=Math.max(900*DPR*DPR,ex*ex+ey*ey),er=Math.sqrt(er2);
+      const g=1800*DPR/er2;ax+=ex/er*g;ay+=ey/er*g;}
+    p.vx+=ax*.06;p.vy+=ay*.06;
+    p.vx*=.999;p.vy*=.999;
+    p.x+=p.vx;p.y+=p.vy;
+    p.trail.push(p.x,p.y);if(p.trail.length>10)p.trail.shift();
+    // 出界回收
+    if(p.x<-40*DPR||p.x>W+40*DPR||p.y<-40*DPR||p.y>H+40*DPR){parts[i]=spawn();continue;}
+  }
+  for(let i=waves.length-1;i>=0;i--){waves[i].r+=6*DPR;waves[i].a*=.96;if(waves[i].a<.02)waves.splice(i,1);}
+}
+function shock(x,y){waves.push({x,y,r:4*DPR,a:1});
+  for(const p of parts){const dx=p.x-x,dy=p.y-y,d=Math.hypot(dx,dy);
+    if(d<160*DPR&&d>0.1){const imp=(1-d/(160*DPR))*7*DPR;p.vx+=dx/d*imp;p.vy+=dy/d*imp;}}}
+function draw(){
+  ctx.fillStyle="rgba(4,5,12,.3)";ctx.fillRect(0,0,W,H);
+  // 中心能量核心
+  const X=cx(),Y=cy(),pulse=1+Math.sin(Date.now()/600)*.12;
+  let g=ctx.createRadialGradient(X,Y,0,X,Y,70*DPR*pulse);
+  g.addColorStop(0,"rgba(255,255,255,.95)");g.addColorStop(.18,"rgba(125,211,252,.9)");
+  g.addColorStop(.5,"rgba(91,140,255,.35)");g.addColorStop(1,"rgba(91,140,255,0)");
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(X,Y,70*DPR*pulse,0,6.283);ctx.fill();
+  ctx.strokeStyle="rgba(199,125,255,.5)";ctx.lineWidth=1.5*DPR;
+  ctx.beginPath();ctx.ellipse(X,Y,46*DPR,20*DPR,Date.now()/2400,0,6.283);ctx.stroke();
+  // 粒子与尾迹
+  let energy=0;
+  for(const p of parts){
+    energy+=p.vx*p.vx+p.vy*p.vy;
+    if(p.trail.length>2){ctx.strokeStyle=`hsla(${p.hue},90%,65%,.4)`;ctx.lineWidth=p.size*.8;
+      ctx.beginPath();ctx.moveTo(p.trail[0],p.trail[1]);
+      for(let t=2;t<p.trail.length;t+=2)ctx.lineTo(p.trail[t],p.trail[t+1]);ctx.stroke();}
+    ctx.fillStyle=`hsla(${p.hue},95%,72%,.95)`;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,6.283);ctx.fill();
+    ctx.fillStyle=`hsla(${p.hue},95%,60%,.18)`;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.size*3.4,0,6.283);ctx.fill();
+  }
+  for(const w of waves){ctx.strokeStyle=`rgba(255,255,255,${w.a})`;ctx.lineWidth=2*DPR;
+    ctx.beginPath();ctx.arc(w.x,w.y,w.r,0,6.283);ctx.stroke();}
+  return energy;
+}
+let last=performance.now(),fa=0,fn=0;
+function loop(now){fa+=1000/Math.max(1,now-last);last=now;fn++;
+  if(fn>=30){document.getElementById("fps").textContent=Math.round(fa/fn);fa=0;fn=0;}
+  step();const e=draw();
+  document.getElementById("pn").textContent=parts.length;
+  document.getElementById("en").textContent=(e/1000).toFixed(1);
+  requestAnimationFrame(loop);}
+requestAnimationFrame(loop);
+cv.addEventListener("pointerdown",e=>{shock(e.clientX*DPR,e.clientY*DPR);moving=120;mx=e.clientX*DPR;my=e.clientY*DPR;});
+cv.addEventListener("pointermove",e=>{mx=e.clientX*DPR;my=e.clientY*DPR;moving=60;});
+cv.addEventListener("dblclick",()=>{mode*=-1;
+  document.getElementById("md").textContent=mode>0?"吸引":"排斥";});
+</script>
+</body>
+</html>

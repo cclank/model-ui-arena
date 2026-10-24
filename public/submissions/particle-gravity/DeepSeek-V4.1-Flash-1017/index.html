@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>引力场 · Gravity Well</title>
+<style>
+  :root { --fg: #e8f4ff; --muted: #8fa3bd; --dim: #5b6c85; --a: #6fe3ff; --b: #b16bff; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; overflow: hidden; background: #03050b; color: var(--fg); touch-action: none;
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .bg { position: fixed; inset: 0; background: radial-gradient(60% 50% at 50% 50%, rgba(58,96,180,.2) 0%, transparent 62%), radial-gradient(120% 90% at 50% 120%, #0a0f22 0%, #03050b 60%); }
+  #c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .hud { position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px clamp(14px, 3vw, 30px); pointer-events: none; }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: 12px; letter-spacing: .3em; color: var(--muted); }
+  .brand i { width: 6px; height: 6px; border-radius: 50%; background: var(--a); box-shadow: 0 0 12px var(--a); }
+  .stats { display: flex; gap: 18px; font-family: ui-monospace, Menlo, monospace; text-align: right; }
+  .stats div { display: flex; flex-direction: column; gap: 3px; }
+  .stats span { font-size: 9px; letter-spacing: .24em; color: var(--dim); }
+  .stats b { font-size: 15px; font-weight: 400; font-variant-numeric: tabular-nums; }
+  .controls { position: fixed; bottom: clamp(18px, 4vh, 34px); left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .btns { display: flex; gap: 10px; }
+  .btn { border: 1px solid rgba(255,255,255,.15); background: rgba(10,16,28,.66); color: var(--muted); font: inherit; font-size: 11.5px; letter-spacing: .18em;
+    padding: 9px 18px; border-radius: 999px; cursor: pointer; backdrop-filter: blur(10px); transition: .25s; }
+  .btn:hover { color: var(--fg); border-color: rgba(111,227,255,.5); }
+  .btn.on { color: #04121a; background: var(--a); border-color: transparent; box-shadow: 0 0 26px rgba(111,227,255,.35); }
+  .hint { font-size: 10.5px; letter-spacing: .16em; color: var(--dim); text-align: center; }
+  @media (max-width: 620px) {
+    .stats { gap: 11px; } .stats b { font-size: 12.5px; } .brand { font-size: 10px; letter-spacing: .2em; }
+    .hint { font-size: 9.5px; letter-spacing: .08em; max-width: 82vw; }
+  }
+</style>
+</head>
+<body>
+  <div class="bg"></div>
+  <canvas id="c" aria-label="粒子引力场"></canvas>
+  <div class="hud">
+    <div class="brand"><i></i>引力场 · GRAVITY WELL</div>
+    <div class="stats">
+      <div><span>粒子</span><b id="pc">0</b></div>
+      <div><span>能量</span><b id="en">0</b></div>
+      <div><span>FPS</span><b id="fps">60</b></div>
+    </div>
+  </div>
+  <div class="controls">
+    <div class="btns"><button class="btn on" id="mode">吸引模式</button><button class="btn" id="boom">释放冲击波</button></div>
+    <div class="hint">移动指针牵引粒子 · 点击场域释放冲击波</div>
+  </div>
+<script>
+  (() => {
+    const $ = (id) => document.getElementById(id);
+    const cvs = $("c"), ctx = cvs.getContext("2d");
+    const mobile = innerWidth < 620;
+    const COUNT = mobile ? 620 : 1250, GM = mobile ? 2600 : 3600;
+    let W = 0, H = 0, DPR = 1, cx = 0, cy = 0, parts = [], waves = [];
+    let pointer = { x: 0, y: 0, active: false, repel: false, down: false };
+    let frames = 0, fpsAt = performance.now(), fps = 60, last = performance.now(), energy = 0;
+
+    const resize = () => {
+      DPR = Math.min(2, window.devicePixelRatio || 1);
+      W = cvs.clientWidth; H = cvs.clientHeight;
+      cvs.width = Math.round(W * DPR); cvs.height = Math.round(H * DPR);
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      cx = W / 2; cy = H / 2;
+    };
+
+    function spawnRandom(p) {
+      const ang = Math.random() * Math.PI * 2;
+      const r = 110 + Math.sqrt(Math.random()) * Math.min(W, H) * 0.55;
+      const speed = Math.sqrt(GM / r) * (0.86 + Math.random() * 0.3);
+      p.x = cx + Math.cos(ang) * r; p.y = cy + Math.sin(ang) * r;
+      p.px = p.x; p.py = p.y;
+      p.vx = -Math.sin(ang) * speed; p.vy = Math.cos(ang) * speed;
+      p.z = 0.45 + Math.random() * 0.9;
+      return p;
+    }
+    const make = () => { const p = {}; spawnRandom(p); return p; };
+    parts = Array.from({ length: COUNT }, make);
+
+    function shockwave() {
+      waves.push({ r: 6, life: 1 });
+      if (waves.length > 6) waves.shift();
+    }
+
+    function frame(now) {
+      const dt = Math.min(2.2, (now - last) / 16.667); last = now;
+      frames++;
+      if (now - fpsAt > 500) { fps = Math.round(frames * 1000 / (now - fpsAt)); frames = 0; fpsAt = now; $("fps").textContent = Math.min(99, fps); }
+
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = `rgba(0,0,0,${Math.min(.5, .16 * dt)})`; ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = "lighter";
+
+      let sum = 0;
+      for (let i = 0; i < waves.length; i++) {
+        const w = waves[i];
+        w.r += (mobile ? 11 : 14) * dt; w.life -= .022 * dt;
+        if (w.life <= 0) { waves.splice(i--, 1); continue; }
+        ctx.strokeStyle = `rgba(140,225,255,${w.life * .3})`; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.arc(cx, cy, w.r, 0, 6.2832); ctx.stroke();
+      }
+
+      for (const p of parts) {
+        p.px = p.x; p.py = p.y;
+        const dx = cx - p.x, dy = cy - p.y, d2 = dx * dx + dy * dy + 900, d = Math.sqrt(d2);
+        const g = GM / d2;
+        p.vx += dx / d * g * dt; p.vy += dy / d * g * dt;
+
+        if (pointer.active) {
+          const ox = p.x - pointer.x, oy = p.y - pointer.y, od2 = ox * ox + oy * oy + 500, od = Math.sqrt(od2);
+          if (od < (mobile ? 210 : 260)) {
+            const f = (pointer.repel ? 1 : -1) * 5200 / od2;
+            p.vx += ox / od * f * dt; p.vy += oy / od * f * dt;
+          }
+        }
+        for (const w of waves) {
+          const wd = Math.abs(d - w.r);
+          if (wd < 34) { p.vx += dx / d * 1.5 * w.life * dt; p.vy += dy / d * 1.5 * w.life * dt; }
+        }
+        p.vx *= Math.pow(.9995, dt); p.vy *= Math.pow(.9995, dt);
+        p.x += p.vx * dt; p.y += p.vy * dt;
+
+        const v = Math.hypot(p.vx, p.vy);
+        sum += v;
+        if (d > Math.max(W, H) * 1.25 || d < 26 || !isFinite(p.x) || !isFinite(p.y)) { spawnRandom(p); continue; }
+
+        const speedT = Math.min(1, v / 5.2);
+        const hue = 195 + speedT * 96;
+        const alpha = (0.2 + speedT * 0.55) * (0.55 + p.z * 0.42);
+        ctx.strokeStyle = `hsla(${hue},92%,${58 + speedT * 18}%,${alpha})`;
+        ctx.lineWidth = p.z * 1.25;
+        ctx.beginPath(); ctx.moveTo(p.px, p.py); ctx.lineTo(p.x, p.y); ctx.stroke();
+      }
+
+      energy = Math.round(energy * 0.94 + sum * 0.05);
+      $("en").textContent = energy.toLocaleString("en-US");
+      $("pc").textContent = COUNT;
+
+      const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, 78);
+      core.addColorStop(0, "rgba(255,255,255,.72)");
+      core.addColorStop(.14, "rgba(150,230,255,.5)");
+      core.addColorStop(.36, "rgba(90,160,255,.16)");
+      core.addColorStop(1, "rgba(60,110,255,0)");
+      ctx.fillStyle = core; ctx.beginPath(); ctx.arc(cx, cy, 78, 0, 6.2832); ctx.fill();
+      ctx.strokeStyle = "rgba(200,245,255,.55)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(cx, cy, 15, 0, 6.2832); ctx.stroke();
+
+      if (pointer.active) {
+        const pr = pointer.repel ? 58 : 44;
+        ctx.strokeStyle = pointer.repel ? "rgba(177,107,255,.55)" : "rgba(111,227,255,.5)";
+        ctx.lineWidth = 1; ctx.setLineDash([3, 5]);
+        ctx.beginPath(); ctx.arc(pointer.x, pointer.y, pr, 0, 6.2832); ctx.stroke(); ctx.setLineDash([]);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    const setPointer = (e) => { pointer.x = e.clientX; pointer.y = e.clientY; pointer.active = true; };
+    cvs.addEventListener("pointermove", setPointer);
+    cvs.addEventListener("pointerdown", (e) => { setPointer(e); pointer.down = true; shockwave(); });
+    cvs.addEventListener("pointerup", () => { pointer.down = false; });
+    cvs.addEventListener("pointerleave", () => { pointer.active = false; });
+    cvs.addEventListener("pointercancel", () => { pointer.active = false; });
+
+    $("mode").addEventListener("click", () => {
+      pointer.repel = !pointer.repel;
+      $("mode").textContent = pointer.repel ? "排斥模式" : "吸引模式";
+      $("mode").classList.toggle("on", !pointer.repel);
+    });
+    $("boom").addEventListener("click", shockwave);
+    addEventListener("resize", () => { resize(); parts.forEach(spawnRandom); });
+    addEventListener("keydown", (e) => { if (e.code === "Space") { e.preventDefault(); shockwave(); } });
+    document.addEventListener("visibilitychange", () => { last = performance.now(); });
+
+    resize(); requestAnimationFrame(frame);
+  })();
+</script>
+</body>
+</html>

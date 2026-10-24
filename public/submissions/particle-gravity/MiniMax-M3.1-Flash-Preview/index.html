@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>粒子引力场 · Particle Gravity</title>
+<style>
+*{margin:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#04060e;color:#d7e6ff;font:500 13px/1.45 ui-sans-serif,system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+#v{position:fixed;inset:0;pointer-events:none;background:radial-gradient(120% 92% at 50% 50%,rgba(0,0,0,0) 42%,rgba(2,4,10,.62) 100%)}
+#ui{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom));pointer-events:none}
+.card{pointer-events:auto;background:rgba(8,13,26,.6);border:1px solid rgba(122,168,255,.18);border-radius:14px;padding:9px 11px;box-shadow:0 10px 34px rgba(0,0,0,.5)}
+h1{font-size:13px;letter-spacing:.16em;font-weight:700;display:flex;align-items:center;gap:7px}
+h1 s{width:7px;height:7px;border-radius:50%;background:#7fd8ff;box-shadow:0 0 11px #4fc3ff;text-decoration:none;animation:bl 2.4s ease-in-out infinite}
+@keyframes bl{50%{opacity:.3;transform:scale(.65)}}
+h1 small{font-size:9px;letter-spacing:.22em;color:#6d86b8;font-weight:600}
+.s{display:grid;grid-template-columns:repeat(3,minmax(62px,1fr));gap:6px;margin-top:8px}
+.s div{background:rgba(120,170,255,.07);border-radius:8px;padding:5px 8px}
+.s b{display:block;font:700 15px/1.25 ui-monospace,SFMono-Regular,Menlo,monospace;color:#eaf4ff;letter-spacing:.01em}
+.s span{font-size:8.5px;letter-spacing:.12em;color:#7e97c6}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+.row>i{font:600 9px/1 sans-serif;letter-spacing:.14em;color:#6d86b8;font-style:normal;margin-right:1px}
+button{pointer-events:auto;font:600 11px/1 inherit;color:#b9cdf0;background:rgba(122,168,255,.08);border:1px solid rgba(122,168,255,.2);border-radius:9px;padding:8px 10px;cursor:pointer;transition:.18s}
+button:hover{background:rgba(122,168,255,.2)}
+button.on{color:#04121f;background:linear-gradient(180deg,#93e6ff,#47a6e0);border-color:#a6ecff;box-shadow:0 0 15px rgba(90,200,255,.4)}
+#mg{flex:1;max-width:130px;height:16px;accent-color:#7fd8ff;background:transparent}
+#mv{font:700 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfe4ff;min-width:30px}
+#hint{margin-top:7px;font-size:10px;letter-spacing:.04em;color:#8ea7d2;transition:opacity .6s}
+#hint b{color:#c3e8ff;font-weight:600}
+#lg{display:flex;align-items:center;gap:7px;margin-top:7px;font-size:8.5px;letter-spacing:.12em;color:#7e97c6}
+#lg i{flex:1;height:3px;border-radius:2px;background:linear-gradient(90deg,rgba(48,64,164,.6),rgba(74,152,244,.85),rgba(180,238,255,.95),rgba(255,166,88,.9))}
+@media(max-width:400px){button{padding:8px 8px;font-size:10.5px}h1{font-size:12px}.s b{font-size:14px}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="v"></div>
+<div id="ui">
+<div><div class="card">
+<h1><s></s>粒子引力场 <small>PARTICLE GRAVITY</small></h1>
+<div class="s">
+<div><b id="n">0</b><span>粒子 PARTICLES</span></div>
+<div><b id="f">60</b><span>帧率 FPS</span></div>
+<div><b id="e">0</b><span>能量 ENERGY</span></div>
+</div>
+<div id="lg"><span>慢</span><i></i><span>快 · 速度色阶</span></div>
+</div></div>
+<div><div class="card">
+<div class="row">
+<i>密度</i><button data-q="0">低</button><button data-q="1">中</button><button data-q="2">高</button>
+<i>场</i><button id="bg" class="on">引力 开</button><button id="bm" class="on">吸引</button>
+<button id="bp">形态 · 星盘</button><button id="br">重置</button>
+</div>
+<div class="row"><i>核心质量</i><input id="mg" type="range" min="35" max="260" value="100"><b id="mv">1.00</b></div>
+<div id="hint">拖动 = 移动<b>引力井</b> · 轻点 = <b>冲击波</b> + 质量注入 · 空格 = 切换引力</div>
+</div></div>
+</div>
+<script>
+const cv=document.getElementById('c'),C=cv.getContext('2d',{alpha:false}),$=i=>document.getElementById(i),hint=$('hint');
+const MAX=5600,LV=[1800,3200,5200],GMB=2.6e5,SOFT=4900,CR=14,NMD=['星盘','双旋','疏散'];
+const px=new Float32Array(MAX),py=new Float32Array(MAX),vx=new Float32Array(MAX),vy=new Float32Array(MAX),ms=new Float32Array(MAX);
+const bx=new Float32Array(3),by=new Float32Array(3),bvx=new Float32Array(3),bvy=new Float32Array(3),bm=new Float32Array([.5,.38,.27]);
+const wx=new Float32Array(5),wy=new Float32Array(5),wm=new Float32Array(5),ws=new Float32Array(5),wl=new Float32Array(5),rings=[],stx=new Float32Array(70),sty=new Float32Array(70);
+const CL=['rgba(48,64,164,.5)','rgba(60,98,226,.7)','rgba(74,152,244,.8)','rgba(92,198,246,.88)','rgba(180,238,255,.95)','rgba(255,228,182,.95)','rgba(255,166,88,.9)'];
+let W=0,H=0,CX=0,CY=0,R0=400,T2=6e5,grd=null,n=3200,nq=1,wn=0,gra=1,rep=0,MD=0,GM=GMB,dr=0,dT=0,dm=0,MX=0,MY=0,E=0,fa=60,tm=0,ui=0,last=0;
+function vcirc(r){const d=r*r+SOFT;return Math.sqrt(GM*r*r/(d*Math.sqrt(d)));}
+function fit(){const d=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;C.setTransform(d,0,0,d,0,0);CX=W/2;CY=H*.5;R0=Math.max(160,Math.min(W,H)*.46+150);T2=R0*R0*1.5;
+ grd=C.createRadialGradient(CX,CY,0,CX,CY,Math.max(W,H)*.6);grd.addColorStop(0,'rgba(74,134,240,.30)');grd.addColorStop(.34,'rgba(40,72,196,.11)');grd.addColorStop(1,'rgba(0,0,0,0)');
+ for(let i=0;i<70;i++){stx[i]=Math.random();sty[i]=Math.random();}C.fillStyle='#04060e';C.fillRect(0,0,W,H);}
+function spawn(i){let r,a;const m=MD;
+ if(m===1){r=CR+30+Math.pow(Math.random(),.72)*R0*.62;a=(i&1)*3.1416+Math.log(r/CR)*1.55+(Math.random()-.5)*.55;}
+ else if(m===2){r=R0*(.28+Math.random()*.72);a=Math.random()*6.2832;}
+ else{r=Math.random()<.4?R0*(.42+Math.random()*.5):CR+24+Math.random()*Math.min(210,R0*.45);a=Math.random()*6.2832;}
+ const e=m===0&&Math.random()>.4?.72+Math.random()*.4:.96+Math.random()*.08,v=vcirc(r)*e,c=Math.cos(a),s=Math.sin(a);
+ px[i]=CX+c*r;py[i]=CY+s*r;vx[i]=-s*v;vy[i]=c*v;ms[i]=.45+Math.random()*Math.random()*1.7;}
+function init(){for(let i=0;i<n;i++)spawn(i);for(let i=0;i<3;i++){const r=CR+34+R0*(.2+i*.11),a=i*2.1+.6,v=vcirc(r)*.88,c=Math.cos(a),s=Math.sin(a);bx[i]=CX+c*r;by[i]=CY+s*r;bvx[i]=-s*v;bvy[i]=c*v;}rings.length=0;wn=0;E=0;}
+function step(h){const G=GM*gra,GG=G*G*9;
+ for(let i=0;i<3;i++){let ex=CX-bx[i],ey=CY-by[i],d2=ex*ex+ey*ey+SOFT,ax=ex*G/(d2*Math.sqrt(d2)),ay=ey*G/(d2*Math.sqrt(d2));
+  for(let t=0;t<3;t++){if(t===i)continue;const ux=bx[t]-bx[i],uy=by[t]-by[i],q=ux*ux+uy*uy+5200,k=G*.004*bm[t]/(q+4200);ax+=ux*k;ay+=uy*k;}
+  bvx[i]+=ax*h;bvy[i]+=ay*h;bx[i]+=bvx[i]*h;by[i]+=bvy[i]*h;}
+ for(let i=0;i<n;i++){let ex=CX-px[i],ey=CY-py[i],d2=ex*ex+ey*ey+SOFT,ax=ex*G/(d2*Math.sqrt(d2)),ay=ey*G/(d2*Math.sqrt(d2)),rr=ex*ex+ey*ey;
+  for(let t=0;t<3;t++){const ux=bx[t]-px[i],uy=by[t]-py[i],q=ux*ux+uy*uy+3600,k=G*.004*bm[t]/(q+4200);ax+=ux*k;ay+=uy*k;}
+  for(let t=0;t<wn;t++){const ux=wx[t]-px[i],uy=wy[t]-py[i],q=ux*ux+uy*uy+9000,k=G*.011*wm[t]/(q+9000);ax+=ux*k;ay+=uy*k;}
+  vx[i]+=ax*h;vy[i]+=ay*h;px[i]+=vx[i]*h;py[i]+=vy[i]*h;
+  if(rr>T2||rr<CR*CR*.7||vx[i]*vx[i]+vy[i]*vy[i]>GG/d2)spawn(i);}}
+function burst(X,Y){for(let i=0;i<n;i++){const ex=px[i]-X,ey=py[i]-Y,d2=ex*ex+ey*ey;if(d2<150*150&&d2>4){const d=Math.sqrt(d2),f=3200*ms[i]/(d2+1200);vx[i]+=ex*f;vy[i]+=ey*f;}}
+ if(wn<5){wx[wn]=X;wy[wn]=Y;wm[wn]=1.25;ws[wn]=1;wl[wn]=1.15;wn++;}rings.push({x:X,y:Y,t:0,r:170,lf:.85});}
+function draw(dt){C.globalCompositeOperation='source-over';C.fillStyle='rgba(4,6,16,.33)';C.fillRect(0,0,W,H);
+ C.globalCompositeOperation='lighter';C.fillStyle=grd;C.fillRect(0,0,W,H);
+ C.fillStyle='rgba(198,220,255,.45)';for(let i=0;i<70;i++)C.fillRect(stx[i]*W,sty[i]*H,1,1);
+ for(let i=0;i<n;i++){let k=(Math.sqrt(vx[i]*vx[i]+vy[i]*vy[i])*.145-2.6)|0;if(k<0)k=0;if(k>6)k=6;C.fillStyle=CL[k];const m=ms[i];C.fillRect(px[i],py[i],m>1.1?2.2:1.35,m>1.1?2.2:1.35);}
+ const p=.5+.5*Math.sin(tm*1.5);
+ for(let i=0;i<3;i++){const r=Math.sqrt((bx[i]-CX)*(bx[i]-CX)+(by[i]-CY)*(by[i]-CY));C.strokeStyle='rgba(130,190,255,.08)';C.lineWidth=1;C.beginPath();C.arc(CX,CY,r,0,6.2832);C.stroke();
+  C.fillStyle='rgba(168,232,255,.95)';C.beginPath();C.arc(bx[i],by[i],1.8+bm[i]*1.6,0,6.2832);C.fill();}
+ for(let g=0;g<4;g++){C.fillStyle='rgba(120,186,255,'+((.15-g*.032)*(1+p*.3))+')';C.beginPath();C.arc(CX,CY,CR*(.8+g*.95)+p*3,0,6.2832);C.fill();}
+ C.fillStyle='rgba(255,236,198,'+(.5+p*.28)+')';C.beginPath();C.arc(CX,CY,CR*.5+p,0,6.2832);C.fill();
+ for(let t=0;t<wn;t++){const f=Math.max(0,wl[t]);C.strokeStyle='rgba(140,205,255,'+(f*.55)+')';C.lineWidth=.6+f*1.4;C.beginPath();C.arc(wx[t],wy[t],8+(1-Math.min(f,1))*26,0,6.2832);C.stroke();
+  C.strokeStyle='rgba(140,205,255,'+(f*.3)+')';C.beginPath();C.moveTo(wx[t]-30,wy[t]);C.lineTo(wx[t]-14,wy[t]);C.moveTo(wx[t]+14,wy[t]);C.lineTo(wx[t]+30,wy[t]);C.stroke();}
+ for(let i=rings.length-1;i>=0;i--){const g=rings[i];g.t+=dt;const f=g.t/g.lf;if(f>=1){rings.splice(i,1);continue;}
+  C.strokeStyle='rgba(186,228,255,'+((1-f)*.5)+')';C.lineWidth=(1-f)*3.2+.4;C.beginPath();C.arc(g.x,g.y,8+f*g.r,0,6.2832);C.stroke();}
+ C.globalCompositeOperation='source-over';
+ if((ui+=dt)>.22){ui=0;$('n').textContent=n;$('f').textContent=Math.min(99,fa|0);$('e').textContent=(E/1e3).toFixed(1)+'k';
+  if(!E){let s=0,c=0;for(let i=0;i<n;i+=6){const ex=px[i]-CX,ey=py[i]-CY;s+=.5*(vx[i]*vx[i]+vy[i]*vy[i])-GM/(Math.sqrt(ex*ex+ey*ey)+CR);c++;}E=s/c;}}}
+function frame(now){const dt=Math.min((now-last)/1000,.05);last=now;tm+=dt;fa+=((1/Math.max(dt,.004))-fa)*.12;
+ if(dr){if(wn<1)wn=1;wx[0]=MX;wy[0]=MY;wm[0]=rep?-1.2:1.2;ws[0]=1;wl[0]=1.4;}
+ for(let t=0;t<wn;t++){if(t||!dr)wl[t]-=dt;if(wl[t]<=0){wn--;wx[t]=wx[wn];wy[t]=wy[wn];wm[t]=wm[wn];ws[t]=ws[wn];wl[t]=wl[wn];t--;}}
+ const h=dt/2;step(h);step(h);draw(dt);requestAnimationFrame(frame);}
+cv.addEventListener('pointerdown',e=>{dr=1;dT=performance.now();dm=0;MX=e.clientX;MY=e.clientY;try{cv.setPointerCapture(e.pointerId);}catch(t){}hint.style.opacity=0;});
+cv.addEventListener('pointermove',e=>{if(dr)dm+=Math.hypot(e.clientX-MX,e.clientY-MY);MX=e.clientX;MY=e.clientY;});
+addEventListener('pointerup',e=>{if(dr&&performance.now()-dT<300&&dm<14)burst(e.clientX,e.clientY);dr=0;});
+cv.addEventListener('pointercancel',()=>{dr=0;});
+addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();tg();}});
+function tg(){$('bg').classList.toggle('on');gra=gra?0:1;$('bg').textContent=gra?'引力 开':'引力 关';}
+$('bg').onclick=tg;
+$('bm').onclick=()=>{rep=rep?0:1;$('bm').classList.toggle('on',!rep);$('bm').textContent=rep?'排斥':'吸引';};
+$('br').onclick=()=>{E=0;init();};
+$('bp').onclick=()=>{MD=(MD+1)%3;$('bp').textContent='形态 · '+NMD[MD];E=0;init();};
+$('mg').oninput=e=>{GM=GMB*(e.target.value/100);$('mv').textContent=(GM/GMB).toFixed(2);};
+document.querySelectorAll('button[data-q]').forEach(b=>b.onclick=()=>{nq=b.dataset.q|0;n=LV[nq];E=0;init();
+ document.querySelectorAll('button[data-q]').forEach(o=>o.classList.toggle('on',o===b));});
+addEventListener('resize',()=>{fit();init();});
+nq=innerWidth<520?0:2;n=LV[nq];document.querySelectorAll('button[data-q]').forEach(o=>o.classList.toggle('on',o.dataset.q==''+nq));
+fit();init();last=performance.now();requestAnimationFrame(frame);
+</script>
+</body>
+</html>

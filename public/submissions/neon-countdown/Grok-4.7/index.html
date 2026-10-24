@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>十秒 · 霓虹倒计时</title>
+<style>
+:root{--ink:#f4fbff;--dim:#8aa0b5;--neon:#7ef0ff;--hot:#ff4d6d}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:#07090f;color:var(--ink);font:16px/1.3 "Avenir Next","Segoe UI",sans-serif;display:grid;place-items:center;overflow:hidden}
+body::before{content:"";position:fixed;inset:-10%;background:radial-gradient(circle at 50% 45%,#143044,transparent 55%);opacity:.9;transition:background .3s}
+body.hot::before{background:radial-gradient(circle at 50% 45%,#3a1020,transparent 58%)}
+body.done::before{background:radial-gradient(circle at 50% 45%,#fff4,#123 40%,transparent 70%)}
+.stage{position:relative;width:min(420px,100%);text-align:center;padding:24px 16px;z-index:1}
+.kicker{letter-spacing:.42em;font-size:11px;color:var(--neon)}
+.ring{width:min(300px,78vw);height:auto;display:block;margin:8px auto 0;filter:drop-shadow(0 0 12px #7ef0ff88)}
+.track{fill:none;stroke:#1c2836;stroke-width:8}
+.bar{fill:none;stroke:var(--neon);stroke-width:8;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke .2s}
+body.hot .bar{stroke:var(--hot);filter:drop-shadow(0 0 8px var(--hot))}
+.num{font-weight:600;font-size:min(28vw,120px);letter-spacing:-.06em;margin:-188px 0 0;font-variant-numeric:tabular-nums;text-shadow:0 0 24px #7ef0ff66}
+body.hot .num{color:#ffe4ea;animation:throb .5s ease-in-out infinite}
+@keyframes throb{50%{transform:scale(1.04)}}
+.label{min-height:1.4em;color:var(--dim);letter-spacing:.2em;margin:78px 0 18px}
+button{font:inherit;letter-spacing:.2em;background:transparent;color:var(--ink);border:1px solid #345;border-radius:999px;padding:10px 22px;cursor:pointer}
+button:focus-visible{outline:2px solid var(--neon);outline-offset:3px}
+.burst{position:fixed;inset:0;pointer-events:none}
+.burst i{position:absolute;left:50%;top:46%;width:6px;height:6px;border-radius:50%;background:var(--neon);opacity:0}
+body.done .burst i{animation:pop .9s ease-out forwards}
+@keyframes pop{to{transform:translate(var(--x),var(--y)) scale(.4);opacity:0}}
+@media(prefers-reduced-motion:reduce){body.hot .num,.burst i{animation:none}}
+</style>
+</head>
+<body>
+<main class="stage">
+  <div class="kicker">AFTER TEN</div>
+  <svg class="ring" viewBox="0 0 200 200" aria-hidden="true">
+    <circle class="track" cx="100" cy="100" r="84"></circle>
+    <circle id="bar" class="bar" cx="100" cy="100" r="84"></circle>
+  </svg>
+  <div class="num" id="num">10</div>
+  <p class="label" id="label">自动开始</p>
+  <button id="restart" type="button">RESTART</button>
+</main>
+<div class="burst" id="burst"></div>
+<script>
+const $=id=>document.getElementById(id);
+const C=2*Math.PI*84+1.2;
+const bar=$("bar");
+bar.style.strokeDasharray=String(C);
+const burst=$("burst");
+for(let i=0;i<28;i++){
+  const s=document.createElement("i");
+  const a=i/28*Math.PI*2, d=90+ (i%5)*28;
+  s.style.setProperty("--x",`${Math.cos(a)*d}px`);
+  s.style.setProperty("--y",`${Math.sin(a)*d}px`);
+  s.style.animationDelay=`${(i%6)*0.03}s`;
+  s.style.background=i%2?"#ff4d6d":"#7ef0ff";
+  burst.appendChild(s);
+}
+let end=0, lastShown=10, raf=0, finished=false;
+function frame(t){
+  const left=Math.max(0,end-t);
+  const shown=left<=0?0:Math.ceil(left/1000);
+  const ratio=Math.min(1,left/10000);
+  bar.style.strokeDashoffset=String(C*(1-ratio));
+  if(shown!==lastShown){
+    lastShown=shown;
+    $("num").textContent=String(shown);
+    $("num").animate([{transform:"scale(.86)",filter:"brightness(2)"},{transform:"scale(1)",filter:"brightness(1)"}],{duration:220,easing:"ease-out"});
+  }
+  document.body.classList.toggle("hot",shown>0&&shown<=3);
+  $("label").textContent=shown>3?"倒数进行中":shown>0?"最后三秒":"完成";
+  if(left<=0){finish();return}
+  raf=requestAnimationFrame(frame);
+}
+function finish(){
+  if(finished) return;
+  finished=true;
+  cancelAnimationFrame(raf);
+  $("num").textContent="0";
+  bar.style.strokeDashoffset=String(C);
+  document.body.classList.remove("hot");
+  document.body.classList.add("done");
+  $("label").textContent="完成 · 时间到了";
+}
+function start(){
+  finished=false;
+  lastShown=10;
+  document.body.classList.remove("hot","done");
+  $("num").textContent="10";
+  $("label").textContent="自动开始";
+  bar.style.strokeDashoffset="0";
+  end=performance.now()+10000;
+  cancelAnimationFrame(raf);
+  raf=requestAnimationFrame(frame);
+}
+$("restart").onclick=start;
+start();
+</script>
+</body>
+</html>

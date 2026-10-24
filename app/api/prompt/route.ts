@@ -5,18 +5,17 @@ import replicaPrompt from "@/prompts/base-replica.md";
 import svgPrompt from "@/prompts/base-svg.md";
 import webglPrompt from "@/prompts/base-webgl.md";
 import creativePrompt from "@/prompts/base-creative.md";
-import pelicanBicyclePrompt from "@/prompts/themes/pelican-bicycle.md";
-import kintsugiPrompt from "@/prompts/themes/kintsugi.md";
-import watchMovementPrompt from "@/prompts/themes/watch-movement.md";
 import carwashDecisionPrompt from "@/prompts/themes/carwash-decision.md";
 import cheetahTrophyRunPrompt from "@/prompts/themes/cheetah-trophy-run.md";
 import clickFireworksPrompt from "@/prompts/themes/click-fireworks.md";
 import clockPrompt from "@/prompts/themes/clock.md";
 import dataDashboardPrompt from "@/prompts/themes/data-dashboard.md";
 import dslrCameraPrompt from "@/prompts/themes/dslr-camera.md";
+import kintsugiPrompt from "@/prompts/themes/kintsugi.md";
+import watchMovementPrompt from "@/prompts/themes/watch-movement.md";
 import neonCountdownPrompt from "@/prompts/themes/neon-countdown.md";
 import particleGravityPrompt from "@/prompts/themes/particle-gravity.md";
-import recorderPrompt from "@/prompts/themes/recorder.md";
+import pelicanBicyclePrompt from "@/prompts/themes/pelican-bicycle.md";
 import schwarzschildBlackHolePrompt from "@/prompts/themes/schwarzschild-black-hole.md";
 import stockPanelPrompt from "@/prompts/themes/stock-panel.md";
 import weatherCardPrompt from "@/prompts/themes/weather-card.md";
@@ -25,6 +24,8 @@ const noLimitThemes = new Set(["cheetah-trophy-run", "pelican-bicycle"]);
 const replicaThemes = new Set(["dslr-camera"]);
 const webglThemes = new Set(["schwarzschild-black-hole"]);
 const creativeThemes = new Set(["kintsugi", "watch-movement"]);
+// 已退役主题：题目文件移至 prompts/themes/retired/，不再对外提供
+const retiredThemes = new Set(["recorder", "lunar-calendar", "sun-moon", "shadow-puppet", "ink-landscape"]);
 
 const basePrompts: Record<string, string> = {
   "base.md": basePrompt,
@@ -42,15 +43,14 @@ const themePrompts: Record<string, string> = {
   clock: clockPrompt,
   "data-dashboard": dataDashboardPrompt,
   "dslr-camera": dslrCameraPrompt,
+  kintsugi: kintsugiPrompt,
+  "watch-movement": watchMovementPrompt,
   "neon-countdown": neonCountdownPrompt,
   "particle-gravity": particleGravityPrompt,
-  recorder: recorderPrompt,
+  "pelican-bicycle": pelicanBicyclePrompt,
   "schwarzschild-black-hole": schwarzschildBlackHolePrompt,
   "stock-panel": stockPanelPrompt,
-  "weather-card": weatherCardPrompt,
-  "pelican-bicycle": pelicanBicyclePrompt,
-  kintsugi: kintsugiPrompt,
-  "watch-movement": watchMovementPrompt
+  "weather-card": weatherCardPrompt
 };
 
 export async function GET(request: Request) {
@@ -59,6 +59,9 @@ export async function GET(request: Request) {
   // 仅允许安全字符，防路径遍历
   if (!/^[a-z0-9-]+$/i.test(theme)) {
     return NextResponse.json({ error: "invalid theme" }, { status: 400 });
+  }
+  if (retiredThemes.has(theme)) {
+    return NextResponse.json({ error: "theme retired" }, { status: 410 });
   }
 
   const baseFile =
@@ -83,6 +86,8 @@ export async function GET(request: Request) {
   const language =
     webglThemes.has(theme)
       ? "HTML + CSS + WebGL2 + JavaScript"
+      : creativeThemes.has(theme)
+        ? "HTML + CSS + JavaScript"
       : replicaThemes.has(theme) || noLimitThemes.has(theme)
         ? "HTML + CSS + SVG + JavaScript"
         : "HTML + CSS + JavaScript";

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orbital Singularity Gravity Field</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body {
+    width: 100vw; height: 100vh; overflow: hidden;
+    background: #050811; color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    touch-action: none;
+  }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .telemetry {
+    position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+    width: calc(100% - 24px); max-width: 390px;
+    background: rgba(9, 14, 28, 0.78); border: 1px solid rgba(56, 189, 248, 0.25);
+    backdrop-filter: blur(12px); border-radius: 18px; padding: 10px 14px;
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    z-index: 10; box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+  }
+  .t-left { display: flex; flex-direction: column; gap: 2px; }
+  .t-title { font-size: 12px; font-weight: 800; color: #38bdf8; letter-spacing: 0.06em; }
+  .t-stats { font-size: 11px; color: #94a3b8; font-variant-numeric: tabular-nums; }
+  .mode-btn {
+    border: 1px solid rgba(56,189,248,0.4); background: rgba(56,189,248,0.15);
+    color: #f8fafc; font-size: 11px; font-weight: 700; padding: 6px 11px;
+    border-radius: 99px; cursor: pointer; white-space: nowrap;
+  }
+  .bottom-tip {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; color: rgba(226,232,240,0.65); background: rgba(0,0,0,0.45);
+    padding: 5px 12px; border-radius: 99px; pointer-events: none; white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+<canvas id="field"></canvas>
+<div class="telemetry">
+  <div class="t-left">
+    <div class="t-title">GRAVITY WELL // 引力奇点</div>
+    <div class="t-stats" id="statLine">粒子: 320 · 能量: 100% · 60 FPS</div>
+  </div>
+  <button class="mode-btn" id="modeBtn" type="button">模式: 吸引涡旋</button>
+</div>
+<div class="bottom-tip">拖动指针引导副引力源 · 点击释放引力冲击波</div>
+<script>
+const cvs = document.getElementById('field'), ctx = cvs.getContext('2d');
+let W = window.innerWidth, H = window.innerHeight;
+function resize() { W = cvs.width = window.innerWidth; H = cvs.height = window.innerHeight; }
+window.addEventListener('resize', resize); resize();
+
+const COUNT = 320;
+const particles = Array.from({ length: COUNT }, (_, i) => {
+  const a = Math.random() * Math.PI * 2;
+  const r = 45 + Math.random() * Math.min(W, H) * 0.42;
+  const cx = W / 2, cy = H / 2;
+  const speed = Math.sqrt(1400 / (r + 30));
+  return {
+    x: cx + Math.cos(a) * r,
+    y: cy + Math.sin(a) * r,
+    vx: -Math.sin(a) * speed,
+    vy: Math.cos(a) * speed,
+    z: 0.4 + (i % 3) * 0.35,
+    hue: 185 + (i % 60) * 1.4
+  };
+});
+
+let attractMode = true;
+const pointer = { x: W / 2, y: H / 2, active: false };
+const waves = [];
+
+document.getElementById('modeBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  attractMode = !attractMode;
+  e.currentTarget.textContent = attractMode ? '模式: 吸引涡旋' : '模式: 斥力散射';
+});
+
+window.addEventListener('pointermove', e => {
+  pointer.x = e.clientX; pointer.y = e.clientY; pointer.active = true;
+});
+window.addEventListener('pointerdown', e => {
+  if (e.target.closest('button')) return;
+  pointer.x = e.clientX; pointer.y = e.clientY; pointer.active = true;
+  waves.push({ x: e.clientX, y: e.clientY, r: 6, alpha: 0.9 });
+  particles.forEach(p => {
+    const dx = p.x - e.clientX, dy = p.y - e.clientY;
+    const d2 = dx * dx + dy * dy + 900;
+    const d = Math.sqrt(d2);
+    const impulse = (attractMode ? -1 : 1) * (420 / d);
+    p.vx += (dx / d) * impulse;
+    p.vy += (dy / d) * impulse;
+  });
+});
+
+let lastT = performance.now(), frames = 0, fps = 60;
+function step(now) {
+  frames++;
+  if (now - lastT >= 500) {
+    fps = Math.min(60, Math.round((frames * 1000) / (now - lastT)));
+    frames = 0; lastT = now;
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = 'rgba(5, 8, 17, 0.22)';
+  ctx.fillRect(0, 0, W, H);
+
+  const cx = W / 2, cy = H / 2;
+  ctx.globalCompositeOperation = 'lighter';
+  const coreGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 68);
+  coreGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+  coreGrad.addColorStop(0.25, 'rgba(56, 189, 248, 0.55)');
+  coreGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+  ctx.fillStyle = coreGrad;
+  ctx.beginPath(); ctx.arc(cx, cy, 68, 0, Math.PI * 2); ctx.fill();
+
+  for (let i = waves.length - 1; i >= 0; i--) {
+    const w = waves[i];
+    w.r += 5.5; w.alpha -= 0.025;
+    if (w.alpha <= 0) { waves.splice(i, 1); continue; }
+    ctx.strokeStyle = `rgba(56, 189, 248, ${w.alpha})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(w.x, w.y, w.r, 0, Math.PI * 2); ctx.stroke();
+  }
+
+  let totalE = 0;
+  for (let i = 0; i < COUNT; i++) {
+    const p = particles[i];
+    const ox = p.x, oy = p.y;
+    const dx = cx - p.x, dy = cy - p.y;
+    const distSq = dx * dx + dy * dy + 1200;
+    const dist = Math.sqrt(distSq);
+    const force = (1800 * p.z) / distSq;
+    p.vx += (dx / dist) * force + (-dy / dist) * force * 0.26;
+    p.vy += (dy / dist) * force + (dx / dist) * force * 0.26;
+
+    if (pointer.active) {
+      const px = pointer.x - p.x, py = pointer.y - p.y;
+      const pdSq = px * px + py * py + 1600;
+      const pd = Math.sqrt(pdSq);
+      const pForce = ((attractMode ? 1100 : -1400) * p.z) / pdSq;
+      p.vx += (px / pd) * pForce;
+      p.vy += (py / pd) * pForce;
+    }
+
+    p.vx *= 0.992; p.vy *= 0.992;
+    p.x += p.vx; p.y += p.vy;
+    const spd = Math.hypot(p.vx, p.vy);
+    totalE += spd;
+
+    ctx.strokeStyle = `hsla(${p.hue + spd * 8}, 95%, 68%, ${0.45 + p.z * 0.4})`;
+    ctx.lineWidth = 1.2 * p.z;
+    ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(p.x, p.y); ctx.stroke();
+  }
+
+  const avgE = Math.min(999, Math.round((totalE / COUNT) * 28));
+  document.getElementById('statLine').textContent = `粒子: ${COUNT} · 能量: ${avgE} GJ · ${fps} FPS`;
+  requestAnimationFrame(step);
+}
+requestAnimationFrame(step);
+</script>
+</body>
+</html>

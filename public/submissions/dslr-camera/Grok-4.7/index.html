@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HALO H7 · 手绘单反</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:radial-gradient(80% 60% at 50% 30%,#f7f4ee,#d9d3c7);color:#2a241c}
+body{font:14px/1.4 Georgia,"Songti SC",serif;display:grid;place-items:center;padding:16px 8px 24px}
+svg{width:min(640px,100%);height:auto;filter:drop-shadow(0 28px 24px #0002)}
+.caption{text-align:center;margin-top:8px}
+.kicker{font:11px ui-monospace,Menlo,monospace;letter-spacing:.22em;color:#8a6840}
+h1{font-weight:500;font-size:22px;margin:4px 0;letter-spacing:.18em}
+p{margin:0;color:#6d6256;font-size:13px}
+button{font:inherit}
+#dial{cursor:pointer}
+#dial:focus-visible{outline:2px solid #9c3b24;outline-offset:3px}
+#glint{animation:glide 5s ease-in-out infinite}
+@keyframes glide{50%{transform:translate(7px,-5px);opacity:.95}}
+@media(prefers-reduced-motion:reduce){#glint{animation:none}}
+</style>
+</head>
+<body>
+<svg viewBox="0 0 1000 720" role="img" aria-label="HALO H7 单反相机，四分之三视角">
+<defs>
+  <linearGradient id="body" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a4e55"/><stop offset=".45" stop-color="#2c3138"/><stop offset="1" stop-color="#1a1e24"/></linearGradient>
+  <linearGradient id="side" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3a4048"/><stop offset="1" stop-color="#15181d"/></linearGradient>
+  <linearGradient id="top" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#6a717b"/><stop offset="1" stop-color="#2e343c"/></linearGradient>
+  <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f7fb"/><stop offset=".35" stop-color="#b7c0cc"/><stop offset=".7" stop-color="#6d7682"/><stop offset="1" stop-color="#eef2f6"/></linearGradient>
+  <radialGradient id="glass" cx="38%" cy="36%" r="70%"><stop offset="0" stop-color="#f7fbff"/><stop offset=".18" stop-color="#9eb6d8"/><stop offset=".45" stop-color="#1e3d66"/><stop offset="1" stop-color="#070b12"/></radialGradient>
+  <linearGradient id="grip" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#23282f"/><stop offset="1" stop-color="#101318"/></linearGradient>
+  <filter id="grain" x="-10%" y="-10%" width="120%" height="120%">
+    <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="4" result="n"/>
+    <feColorMatrix in="n" type="matrix" values="0 0 0 0 .45  0 0 0 0 .45  0 0 0 0 .45  0 0 0 .25 0" result="g"/>
+    <feBlend in="SourceGraphic" in2="g" mode="multiply"/>
+  </filter>
+  <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="8"/></filter>
+</defs>
+<ellipse cx="500" cy="610" rx="280" ry="28" fill="#000" opacity=".22" filter="url(#shadow)"/>
+<g filter="url(#grain)">
+  <polygon points="620,250 860,330 880,540 640,470" fill="url(#side)"/>
+  <polygon points="300,290 620,250 640,470 320,530" fill="url(#body)"/>
+  <polygon points="300,290 620,250 860,330 520,380" fill="url(#top)"/>
+  <polygon points="640,330 820,390 830,520 650,460" fill="url(#grip)"/>
+  <g stroke="#0e1116" stroke-width="3" opacity=".7">
+    <line x1="670" y1="390" x2="800" y2="430"/><line x1="674" y1="406" x2="804" y2="446"/>
+    <line x1="678" y1="422" x2="808" y2="462"/><line x1="682" y1="438" x2="810" y2="478"/>
+    <line x1="686" y1="454" x2="808" y2="492"/>
+  </g>
+  <polygon points="430,200 590,180 620,270 455,295" fill="#3d4450"/>
+  <polygon points="430,200 590,180 690,230 520,252" fill="url(#top)"/>
+  <polygon points="590,180 690,230 715,315 620,270" fill="#232830"/>
+  <rect x="500" y="168" width="70" height="14" rx="2" transform="rotate(-8 535 175)" fill="#1a1e24" stroke="#9aa3ae" stroke-width="2"/>
+  <rect x="512" y="162" width="46" height="6" transform="rotate(-8 535 165)" fill="#c5ced8"/>
+</g>
+<g id="lens">
+  <ellipse cx="430" cy="400" rx="108" ry="86" fill="#1c2128" stroke="url(#metal)" stroke-width="10"/>
+  <ellipse cx="404" cy="408" rx="112" ry="90" fill="none" stroke="#8e2630" stroke-width="7"/>
+  <ellipse cx="392" cy="412" rx="116" ry="92" fill="none" stroke="url(#metal)" stroke-width="14"/>
+  <ellipse cx="392" cy="412" rx="104" ry="82" fill="none" stroke="#14181d" stroke-width="16" stroke-dasharray="3 4"/>
+  <ellipse cx="368" cy="418" rx="108" ry="86" fill="none" stroke="url(#metal)" stroke-width="18"/>
+  <ellipse cx="368" cy="418" rx="96" ry="76" fill="none" stroke="#101318" stroke-width="10" stroke-dasharray="1.5 3.5"/>
+  <ellipse cx="348" cy="424" rx="86" ry="68" fill="url(#glass)" stroke="#d5dde6" stroke-width="4"/>
+  <ellipse cx="348" cy="424" rx="58" ry="46" fill="none" stroke="#9eb4d0" stroke-width="3" opacity=".8"/>
+  <ellipse cx="348" cy="424" rx="34" ry="26" fill="none" stroke="#071018" stroke-width="6"/>
+  <ellipse cx="348" cy="424" rx="16" ry="12" fill="#0c1828"/>
+  <g id="glint">
+    <path d="M300 400 q30 -28 70 -10" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".75"/>
+    <circle cx="312" cy="408" r="5" fill="#fff" opacity=".8"/>
+  </g>
+  <g fill="#e8eef5" font-family="ui-monospace,Menlo,monospace" font-size="11">
+    <text x="300" y="392">0.45</text><text x="336" y="360">1</text><text x="372" y="352">2</text><text x="404" y="368">5</text><text x="420" y="400">∞</text>
+  </g>
+  <text x="300" y="470" fill="#d5dde6" font-family="ui-monospace,Menlo,monospace" font-size="13" letter-spacing="1">HALO 24-70</text>
+</g>
+<g filter="url(#grain)">
+  <text x="500" y="330" fill="#f4f1ea" font-family="Georgia,serif" font-size="32" letter-spacing="7" transform="rotate(-8 540 330)">HALO</text>
+  <text x="620" y="358" fill="#c5a572" font-family="ui-monospace,Menlo,monospace" font-size="16" letter-spacing="3" transform="rotate(-8 630 358)">H7</text>
+  <circle cx="560" cy="430" r="7" fill="#9c3b24"/>
+</g>
+<g id="dial" tabindex="0" role="button" aria-label="转动模式盘">
+  <ellipse cx="760" cy="300" rx="46" ry="28" fill="#2a3038" stroke="url(#metal)" stroke-width="4"/>
+  <g id="needle">
+    <ellipse cx="760" cy="300" rx="34" ry="18" fill="none" stroke="#9aa3ae" stroke-width="1" stroke-dasharray="2 4"/>
+    <line x1="760" y1="300" x2="760" y2="276" stroke="#f2f5f8" stroke-width="2"/>
+  </g>
+  <circle cx="760" cy="300" r="4" fill="#c5a572"/>
+  <g fill="#d7dde4" font-family="ui-monospace,Menlo,monospace" font-size="11">
+    <text x="748" y="268">M</text><text x="792" y="292">A</text><text x="770" y="332">S</text><text x="724" y="308">P</text>
+  </g>
+</g>
+<g id="shutter">
+  <ellipse cx="690" cy="268" rx="18" ry="10" fill="#c5ced6"/>
+  <rect x="676" y="258" width="28" height="14" rx="6" fill="url(#metal)"/>
+  <ellipse cx="690" cy="258" rx="12" ry="7" fill="#f7fafc" stroke="#8b949e"/>
+  <circle cx="690" cy="258" r="3" fill="#9c3b24"/>
+</g>
+<circle cx="250" cy="340" r="10" fill="#1a1e24" stroke="#9aa3ae" stroke-width="3"/>
+<circle cx="860" cy="360" r="8" fill="#111" stroke="#666" stroke-width="2"/>
+</svg>
+<div class="caption"><div class="kicker">HAND DRAWN · NO BITMAP</div><h1>HALO H7</h1><p>点按顶部模式盘，刻度会转动。镜片高光会慢慢游移。</p></div>
+<script>
+let rot=0;
+const dial=document.getElementById("dial"), needle=document.getElementById("needle");
+function turn(){rot=(rot+36)%360;needle.setAttribute("transform",`rotate(${rot} 760 300)`)}
+dial.addEventListener("click",turn);
+dial.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();turn()}});
+</script>
+</body>
+</html>

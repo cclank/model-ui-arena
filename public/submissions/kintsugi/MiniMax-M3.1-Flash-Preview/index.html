@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<title>金缮</title>
+<style>
+  :root{
+    --gold:#e6c079; --gold-dim:#a8874a; --ink:#efe9dd; --ink-soft:#b8ada0; --celadon:#93b8ab;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;margin:0;padding:0;background:#0a0908;overflow:hidden;overscroll-behavior:none}
+  body{
+    font-family:"Songti SC","STSong","SimSun","Noto Serif CJK SC","Source Han Serif SC",serif;
+    color:var(--ink); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+  #c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:pointer}
+
+  .ui{position:fixed;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between}
+  .bar{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+       padding:clamp(13px,3.1vw,30px) clamp(14px,3.4vw,32px)}
+  .bar.bottom{align-items:flex-end}
+
+  .title{line-height:1.25;user-select:none}
+  .title h1{margin:0;font-size:clamp(21px,4.4vw,34px);letter-spacing:.34em;font-weight:500;
+    text-indent:.34em;color:#f4ecdd;text-shadow:0 1px 18px rgba(0,0,0,.6)}
+  .title p{margin:.5em 0 0;font-size:clamp(10.5px,2.5vw,13px);letter-spacing:.16em;color:var(--ink-soft);opacity:.72}
+
+  .chips{display:flex;gap:clamp(5px,1.4vw,9px);flex-wrap:wrap;justify-content:flex-end;max-width:58%}
+  .chip{display:flex;align-items:baseline;gap:.45em;padding:.42em .78em;border-radius:2px;
+    background:rgba(18,16,14,.44);border:1px solid rgba(214,190,140,.17);
+    backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);white-space:nowrap}
+  .chip span{font-size:clamp(9.5px,2.2vw,11.5px);letter-spacing:.2em;color:var(--ink-soft);opacity:.8}
+  .chip b{font-weight:500;font-size:clamp(13px,3.1vw,17px);color:var(--gold);
+    font-variant-numeric:tabular-nums;letter-spacing:.04em;min-width:1.1em;text-align:right;display:inline-block}
+
+  .btns{display:flex;gap:clamp(7px,1.8vw,12px);flex-wrap:wrap;justify-content:flex-end;pointer-events:auto}
+  button{font-family:inherit;font-size:clamp(12px,2.9vw,14.5px);letter-spacing:.22em;text-indent:.22em;
+    color:#f2e9d8;background:linear-gradient(180deg,rgba(60,48,34,.62),rgba(26,21,16,.66));
+    border:1px solid rgba(216,188,132,.3);border-radius:2px;padding:.62em 1.15em;cursor:pointer;
+    transition:background .22s,border-color .22s,transform .12s,box-shadow .22s;
+    box-shadow:0 1px 0 rgba(255,231,180,.07) inset,0 4px 14px rgba(0,0,0,.4)}
+  button:hover{border-color:rgba(232,205,150,.62);background:linear-gradient(180deg,rgba(82,66,44,.7),rgba(34,27,20,.7))}
+  button:active{transform:translateY(1px)}
+  button:disabled{opacity:.32;cursor:default}
+  button.mini{padding:.62em .85em;letter-spacing:.1em;text-indent:.1em;opacity:.82}
+
+  .colophon{max-width:46%;text-align:left;font-size:clamp(10.5px,2.4vw,12.5px);line-height:1.95;
+    letter-spacing:.13em;color:var(--ink-soft);opacity:.6;user-select:none}
+  .colophon em{font-style:normal;color:var(--gold-dim);opacity:.85}
+
+  .hint{position:fixed;left:50%;transform:translateX(-50%);
+    bottom:clamp(74px,15vh,150px);pointer-events:none;text-align:center;
+    font-size:clamp(11.5px,2.8vw,14px);letter-spacing:.3em;text-indent:.3em;color:#f2e8d6;
+    padding:.62em 1.5em;border-radius:2px;background:rgba(14,12,10,.4);
+    border:1px solid rgba(230,196,124,.22);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+    transition:opacity .7s,transform .7s;animation:breathe 3.1s ease-in-out infinite}
+  .hint .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--gold);
+    margin-right:.8em;vertical-align:middle;animation:ping 2.1s ease-out infinite}
+  .hint.gone{opacity:0;transform:translateX(-50%) translateY(12px);animation:none}
+  .hint.nope{animation:shake .42s ease}
+  @keyframes breathe{0%,100%{box-shadow:0 0 0 rgba(230,196,124,0)}50%{box-shadow:0 0 22px rgba(230,196,124,.14)}}
+  @keyframes ping{0%{box-shadow:0 0 0 0 rgba(230,196,124,.5)}70%{box-shadow:0 0 0 9px rgba(230,196,124,0)}100%{box-shadow:0 0 0 0 rgba(230,196,124,0)}}
+  @keyframes shake{0%,100%{transform:translateX(-50%)}25%{transform:translateX(calc(-50% - 7px))}75%{transform:translateX(calc(-50% + 7px))}}
+
+  @media (max-width:560px){
+    .chips{max-width:100%;justify-content:flex-end}
+    .colophon{max-width:100%;margin-top:9px}
+    .bar.bottom{flex-direction:column;align-items:stretch;gap:9px}
+    .btns{justify-content:space-between}
+    button{flex:1;padding:.68em .5em}
+    .title p{letter-spacing:.1em}
+  }
+  @media (prefers-reduced-motion:reduce){ .hint{animation:none} }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="ui">
+  <div class="bar">
+    <div class="title">
+      <h1>金缮</h1>
+      <p>一只记得如何复原的碗</p>
+    </div>
+    <div class="chips">
+      <div class="chip"><span>碎片</span><b id="nShard">—</b></div>
+      <div class="chip"><span>裂缝</span><b id="nCrack">—</b></div>
+      <div class="chip"><span>修复</span><b id="nFix">0</b></div>
+    </div>
+  </div>
+
+  <div class="bar bottom">
+    <div class="colophon">破处以金相迎，<br><em>裂处，即来处。</em></div>
+    <div class="btns">
+      <button id="bFix" type="button">修 复</button>
+      <button id="bReset" type="button">重新来过</button>
+      <button id="bSnd" class="mini" type="button">音</button>
+    </div>
+  </div>
+</div>
+
+<div class="hint" id="hint"><span class="dot"></span>点击碗身任意处 · 碗将从那一点裂开</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ==========================================================================
+   金缮 / kintsugi
+   断裂 = 加权 Voronoi（power diagram）由半平面裁剪实时生成，逐次点击不同
+   碎片 = 刚体 + 案几高度堆，路径动画归位，金线沿裂缝逐段生长并累积
+   ========================================================================== */
+
+/* ---------- 0. 基础工具 ---------- */
+var TAU = Math.PI * 2;
+var SEED = 1, SEQ = 0;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function newSeed(){SEED=((Math.floor(performance.now()*131)%1e7)^(++SEQ*2654435761)^(Math.floor(Math.random()*1e6)))>>>0;return SEED;}
+
+var clamp=function(v,a,b){return v<a?a:(v>b?b:v);};
+var lerp=function(a,b,t){return a+(b-a)*t;};
+var E={
+  outQuad:function(t){return 1-(1-t)*(1-t);},
+  outCubic:function(t){var u=1-t;return 1-u*u*u;},
+  outQuart:function(t){var u=1-t;return 1-u*u*u*u;},
+  inOutCubic:function(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;},
+  inOutSine:function(t){return -(Math.cos(Math.PI*t)-1)/2;},
+  outBack:function(t){var c1=1.15,c3=c1+1,u=t-1;return 1+c3*u*u*u+c1*u*u;}
+};
+
+/* ---------- 1. 画布 ---------- */
+var cv=document.getElementById('c');
+var ctx=cv.getContext('2d');
+var tex=document.createElement('canvas'), tctx=tex.getContext('2d');
+var goldTex=document.createElement('canvas'), gctx=goldTex.getContext('2d');
+var W=0,H=0,DPR=1,TABLE_Y=0;
+var REG=null;             /* 碗的几何区域 */
+var SEAMS=[];             /* 累积的裂缝（世界坐标折线） */
+var SHARDS=[];
+var pile=null, pileX0=0, pileDX=1, PILE_N=96;
+var phase='idle', phaseT=0, T=0, last=0, repairs=0, goldSeeds=0, goldLive=false;
+var sweepP=0, resetFade=0, motes=[], parts=[];
+var FLASH_R=0, lastClick={x:0,y:0};
+var MINS=15, MAXS=58, MINAREA=7;
+
+/* ---------- 2. 几何 ---------- */
+function polyArea(p){var a=0;for(var i=0,n=p.length;i<n;i++){var q=p[(i+1)%n];a+=p[i].x*q.y-q.x*p[i].y;}return a*0.5;}
+function polyCentroid(p){
+  var a=0,cx=0,cy=0;
+  for(var i=0,n=p.length;i<n;i++){var q=p[(i+1)%n],cr=p[i].x*q.y-q.x*p[i].y;a+=cr;cx+=(p[i].x+q.x)*cr;cy+=(p[i].y+q.y)*cr;}
+  a*=0.5; if(Math.abs(a)<1e-9){var s=0;for(var j=0;j<p.length;j++){s+=p[j].x;}return {x:s/p.length,y:p[0].y};}
+  return {x:cx/(6*a),y:cy/(6*a)};
+}
+function cross3(o,a,b){return (a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x);}
+function convexHull(pts){
+  var p=pts.slice().sort(function(a,b){return a.x-b.x||a.y-b.y;});
+  var lo=[],i; for(i=0;i<p.length;i++){while(lo.length>=2&&cross3(lo[lo.length-2],lo[lo.length-1],p[i])<=0)lo.pop();lo.push(p[i]);}
+  var up=[]; for(i=p.length-1;i>=0;i--){while(up.length>=2&&cross3(up[up.length-2],up[up.length-1],p[i])<=0)up.pop();up.push(p[i]);}
+  lo.pop(); up.pop(); return lo.concat(up);
+}
+function dedupePoly(p){
+  var out=[],i;
+  for(i=0;i<p.length;i++){
+    var a=p[i], b=p[(i+1)%p.length];
+    if(Math.abs(a.x-b.x)+Math.abs(a.y-b.y)>0.02) out.push(a);
+  }
+  return out;
+}
+/* Douglas–Peucker，闭合环 */
+function simplifyRing(pts,eps){
+  if(pts.length<6) return pts;
+  var keep=new Array(pts.length); keep[0]=1;
+  var stack=[[0,pts.length-1]];
+  while(stack.length){
+    var seg=stack.pop(), a=seg[0], b=seg[1];
+    var ax=pts[a].x, ay=pts[a].y, bx=pts[b].x, by=pts[b].y;
+    var dx=bx-ax, dy=by-ay, L=Math.hypot(dx,dy)||1, ux=dx/L, uy=dy/L, best=-1, bi=-1;
+    for(var i=a+1;i<b;i++){
+      var px=pts[i].x-ax, py=pts[i].y-ay;
+      var t=px*ux+py*uy; if(t<0)t=0; else if(t>L)t=L;
+      var d=Math.hypot(px-ux*t, py-uy*t);
+      if(d>best){best=d;bi=i;}
+    }
+    if(best>eps && bi>0){ keep[bi]=1; stack.push([a,bi],[bi,b]);}
+  }
+  var out=[]; for(var k=0;k<pts.length;k++) if(keep[k]) out.push(pts[k]);
+  return out.length>=3?out:pts;
+}
+/* 给凸多边形每条边配一个朝外法线：内部判定 n·x <= c（与绕向无关） */
+function outwardEdges(poly){
+  var c=polyCentroid(poly), out=[];
+  for(var i=0,n=poly.length;i<n;i++){
+    var a=poly[i], b=poly[(i+1)%n];
+    var ex=b.x-a.x, ey=b.y-a.y, L=Math.hypot(ex,ey)||1;
+    var n1x=ey/L, n1y=-ex/L, n2x=-n1x, n2y=-n1y;
+    var d1=n1x*(c.x-a.x)+n1y*(c.y-a.y);
+    var nx = d1>0?n1x:n2x, ny = d1>0?n1y:n2y;
+    out.push({a:a,b:b,nx:nx,ny:ny,c:nx*a.x+ny*a.y});
+  }
+  return out;
+}
+function insideConvex(p,edges){
+  for(var i=0;i<edges.length;i++){var e=edges[i]; if(e.nx*p.x+e.ny*p.y-e.c<-0.02) return false;}
+  return true;
+}
+function distToRing(p,poly){
+  var m=1e9;
+  for(var i=0,n=poly.length;i<n;i++){
+    var a=poly[i], b=poly[(i+1)%n], dx=b.x-a.x, dy=b.y-a.y, L2=dx*dx+dy*dy;
+    var t = L2>0 ? ((p.x-a.x)*dx+(p.y-a.y)*dy)/L2 : 0;
+    t=clamp(t,0,1);
+    var d=Math.hypot(p.x-(a.x+dx*t), p.y-(a.y+dy*t));
+    if(d<m)m=d;
+  }
+  return m;
+}
+/* Sutherland–Hodgman：保留 n·x <= c 的一侧 */
+function clipHalf(poly,nx,ny,c){
+  var out=[];
+  for(var i=0,n=poly.length;i<n;i++){
+    var a=poly[i], b=poly[(i+1)%n];
+    var da=nx*a.x+ny*a.y-c, db=nx*b.x+ny*b.y-c;
+    var ain=da<=0, bin=db<=0;
+    if(ain) out.push(a);
+    if(ain!==bin){var t=da/(da-db); out.push({x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t});}
+  }
+  return dedupePoly(out);
+}
+/* power diagram：site i 的胞腔 = 碗 ∩ ⋂_j { |x-pi|²-wi <= |x-pj|²-wj } */
+function powerCell(sites,weights,i,base){
+  var poly=base, pi=sites[i], wi=weights[i];
+  for(var j=0;j<sites.length;j++){
+    if(j===i) continue;
+    var pj=sites[j], wj=weights[j];
+    var nx=2*(pj.x-pi.x), ny=2*(pj.y-pi.y);
+    var len=Math.hypot(nx,ny); if(len<1e-9) continue;
+    var c=(pj.x*pj.x+pj.y*pj.y)-wj-(pi.x*pi.x+pi.y*pi.y)+wi;
+    poly=clipHalf(poly,nx/len,ny/len,c/len);
+    if(poly.length<3) return null;
+  }
+  return poly.length<3?null:poly;
+}
+function computeCells(sites,weights,alive,base){
+  var out=[];
+  for(var k=0;k<alive.length;k++){
+    var i=alive[k];
+    var c=powerCell(sites,weights,i,base);
+    if(!c) continue;
+    var a=Math.abs(polyArea(c));
+    if(a<MINAREA) continue;
+    out.push({i:i,poly:c,area:a,ed:outwardEdges(c)});
+  }
+  return out;
+}
+/* 折线对凸胞腔的 Liang–Barsky 裁剪，返回若干段折线（携带原链上的起始弧长） */
+function clipPolylineConvex(pts,ce,s0){
+  var pieces=[],cur=null;
+  for(var i=0;i<pts.length-1;i++){
+    var a=pts[i], b=pts[i+1];
+    var t0=0,t1=1,ok=true;
+    for(var k=0;k<ce.length;k++){
+      var e=ce[k];
+      var d0=e.nx*a.x+e.ny*a.y-e.c, d1=e.nx*b.x+e.ny*b.y-e.c;
+      if(d0<=0&&d1<=0) continue;
+      if(d0>0&&d1>0){ok=false;break;}
+      var t=d0/(d0-d1);
+      if(d0>0){ if(t>t0)t0=t; } else { if(t<t1)t1=t; }
+      if(t0>=t1){ok=false;break;}
+    }
+    if(ok&&t1-t0>1e-4){
+      var p0={x:a.x+(b.x-a.x)*t0,y:a.y+(b.y-a.y)*t0};
+      var p1={x:a.x+(b.x-a.x)*t1,y:a.y+(b.y-a.y)*t1};
+      if(!cur || Math.hypot(p0.x-cur[cur.length-1].x,p0.y-cur[cur.length-1].y)>0.06){
+        if(cur&&cur.length>1) pieces.push(cur);
+        cur=[p0,p1];
+      } else { cur.push(p1); }
+    }
+  }
+  if(cur&&cur.length>1) pieces.push(cur);
+  for(var q=0;q<pieces.length;q++) pieces[q].s0=s0;
+  return pieces;
+}
+
+/* ---------- 3. 碗的侧视几何（严格凸） ---------- */
+function buildBowlRegion(){
+  var bh=Math.min(H*0.285, W*0.455);
+  var hw=bh*0.62;
+  var rb=bh*0.118;
+  var cx0=W*0.5;
+  var baseY=TABLE_Y-1.5;
+  var oy=baseY-bh;
+  var raw=[],i;
+  var NA=16,NW=18,uF=0.315;
+  /* 口沿：上半椭圆（关于 x 凹 ⇒ 整体凸） */
+  for(i=0;i<=NA;i++){var t=i/NA,u=-1+2*t;raw.push({x:cx0+u*hw,y:oy-rb*Math.sqrt(Math.max(0,1-u*u))});}
+  /* 碗壁：四分之一椭圆 u=v 下的凹函数（关于 v 凹 ⇒ 侧影凸），底部自然收成平底圈足 */
+  for(i=1;i<=NW;i++){var v=i/NW;var ur=uF+(1-uF)*Math.sqrt(Math.max(0,1-v*v));raw.push({x:cx0+ur*hw,y:oy+v*bh});}
+  raw.push({x:cx0-uF*hw,y:baseY});
+  for(i=NW-1;i>=1;i--){var v2=i/NW;var ul=-(uF+(1-uF)*Math.sqrt(Math.max(0,1-v2*v2)));raw.push({x:cx0+ul*hw,y:oy+v2*bh});}
+  var outline=simplifyRing(convexHull(raw),0.12);
+  var c=polyCentroid(outline);
+  var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  for(i=0;i<outline.length;i++){
+    if(outline[i].x<x0)x0=outline[i].x; if(outline[i].x>x1)x1=outline[i].x;
+    if(outline[i].y<y0)y0=outline[i].y; if(outline[i].y>y1)y1=outline[i].y;
+  }
+  return {outline:outline, edges:outwardEdges(outline), cen:c,
+          bbox:{x0:x0,y0:y0,x1:x1,y1:y1}, w:x1-x0, h:y1-y0,
+          hw:hw, bh:bh, rb:rb, cx:cx0, oy:oy, baseY:baseY, area:Math.abs(polyArea(outline))};
+}
+
+/* ---------- 4. 断裂：生成 + 抽裂缝网 ---------- */
+function buildFracture(rng,click,region){
+  var area=region.area;
+  var nTarget=clamp(Math.round(area/1500),22,46);
+  var sites=[],weights=[],i;
+  var cr=region.w*0.115;
+  for(i=0;i<9;i++){                      /* 点击点附近的必然密集团 */
+    var a=rng()*TAU, r=Math.pow(rng(),0.55)*cr;
+    sites.push({x:click.x+Math.cos(a)*r, y:click.y+Math.sin(a)*r});
+  }
+  var bb=region.bbox, guard=0;
+  while(sites.length<nTarget&&guard++<30000){
+    var p={x:bb.x0+rng()*(bb.x1-bb.x0), y:bb.y0+rng()*(bb.y1-bb.y0)};
+    if(!insideConvex(p,region.edges)) continue;
+    var d=Math.hypot(p.x-click.x,p.y-click.y);
+    var acc=0.12+0.88/(1+Math.pow(d/(region.w*0.34),2.1));   /* 越近越密 */
+    if(rng()<acc) sites.push(p);
+  }
+  guard=0;
+  while(sites.length<nTarget&&guard++<30000){
+    var q={x:bb.x0+rng()*(bb.x1-bb.x0), y:bb.y0+rng()*(bb.y1-bb.y0)};
+    if(insideConvex(q,region.edges)) sites.push(q);
+  }
+  var cellSize=Math.sqrt(area/Math.max(8,nTarget));
+  for(i=0;i<sites.length;i++) weights.push(rng()*rng()*0.9*cellSize*2*cellSize);
+  var alive=[]; for(i=0;i<sites.length;i++) alive.push(i);
+  var cells=computeCells(sites,weights,alive,region.outline);
+  if(cells.length>MAXS){
+    cells.sort(function(a,b){return a.area-b.area;});
+    var cut=cells.slice(0,cells.length-MAXS);
+    var kill={}; for(i=0;i<cut.length;i++) kill[cut[i].i]=1;
+    alive=alive.filter(function(k){return !kill[k];});
+    cells=computeCells(sites,weights,alive,region.outline);
+  }
+  var guardB=0;
+  while(cells.length<MINS&&guardB++<12){
+    cells.sort(function(a,b){return b.area-a.area;});
+    var big=cells[0].poly, ctr=polyCentroid(big);
+    for(var t=0;t<3;t++){                     /* 重心附近的重心化随机点 */
+      var a1=rng()*TAU,r1=Math.sqrt(rng());
+      var qx=lerp(ctr.x,lerp(big[0].x,ctr.x,r1),0.6), qy=lerp(ctr.y,lerp(big[0].y,ctr.y,r1),0.6);
+      var cand={x:lerp(qx,ctr.x,0.5)+Math.cos(a1)*region.w*0.02*r1, y:lerp(qy,ctr.y,0.5)+Math.sin(a1)*region.w*0.02*r1};
+      if(insideConvex(cand,cells[0].ed)){ sites.push(cand); weights.push(rng()*rng()*0.9*cellSize*2*cellSize); alive.push(sites.length-1); break; }
+      if(t===2){ sites.push(ctr); weights.push(0); alive.push(sites.length-1); }
+    }
+    cells=computeCells(sites,weights,alive,region.outline);
+  }
+  if(cells.length>60){
+    cells.sort(function(a,b){return a.area-b.area;});
+    var kill2={}; for(i=0;i<cells.length-60;i++) kill2[cells[i].i]=1;
+    alive=alive.filter(function(k){return !kill2[k];});
+    cells=computeCells(sites,weights,alive,region.outline);
+  }
+  return {cells:cells, seams:extractCracks(cells,region)};
+}
+function extractCracks(cells,region){
+  var K=function(p){return Math.round(p.x*2)*100000+Math.round(p.y*2);};
+  var emap={},inner=[],i;
+  for(i=0;i<cells.length;i++){
+    var P=cells[i].poly,n=P.length;
+    for(var j=0;j<n;j++){
+      var a=P[j],b=P[(j+1)%n], ka=K(a),kb=K(b);
+      if(ka===kb) continue;
+      var k=ka<kb?(ka+'_'+kb):(kb+'_'+ka);
+      if(emap[k]) emap[k].n++;
+      else emap[k]={a:a,b:b,n:1};
+    }
+  }
+  for(var key in emap){
+    var e=emap[key];
+    if(e.n<2) continue;
+    var mx=(e.a.x+e.b.x)/2,my=(e.a.y+e.b.y)/2;
+    if(distToRing(mx,my,region.outline)>0.9) inner.push(e);
+  }
+  var adj={};
+  for(i=0;i<inner.length;i++){
+    var q=inner[i], ka2=K(q.a), kb2=K(q.b);
+    (adj[ka2]=adj[ka2]||[]).push({idx:i,other:q.b});
+    (adj[kb2]=adj[kb2]||[]).push({idx:i,other:q.a});
+  }
+  var used=new Array(inner.length);
+  function step(cur,ck,hx,hy){
+    var list=adj[ck]; if(!list) return null;
+    var best=null,bs=-1e9;
+    for(var t=0;t<list.length;t++){
+      var it=list[t]; if(used[it.idx]) continue;
+      var dx=it.other.x-cur.x,dy=it.other.y-cur.y,L=Math.hypot(dx,dy)||1;
+      var sc=(dx/L)*hx+(dy/L)*hy;
+      if(sc>bs){bs=sc;best=it;}
+    }
+    return best;
+  }
+  function walk(cur,ck,hx,hy){
+    var pts=[],guard=0;
+    while(guard++<300){
+      var nx=step(cur,ck,hx,hy); if(!nx) break;
+      used[nx.idx]=1;
+      var dx=nx.other.x-cur.x,dy=nx.other.y-cur.y;
+      if(pts.length===0||Math.hypot(dx,dy)>0.05) pts.push({x:nx.other.x,y:nx.other.y});
+      hx=dx;hy=dy;cur=nx.other;ck=K(cur);
+    }
+    return pts;
+  }
+  var chains=[];
+  for(i=0;i<inner.length;i++){
+    if(used[i]) continue;
+    used[i]=1;
+    var e0=inner[i];
+    var fwd=[{x:e0.a.x,y:e0.a.y},{x:e0.b.x,y:e0.b.y}];
+    var dx0=e0.b.x-e0.a.x,dy0=e0.b.y-e0.a.y,L0=Math.hypot(dx0,dy0)||1;
+    var rest=walk(e0.b,K(e0.b),dx0/L0,dy0/L0);
+    for(var r=0;r<rest.length;r++) fwd.push(rest[r]);
+    var bk=walk(e0.a,K(e0.a),-dx0/L0,-dy0/L0);
+    var chain=bk.slice().reverse().concat(fwd);
+    var len=0; for(var s=1;s<chain.length;s++) len+=Math.hypot(chain[s].x-chain[s-1].x,chain[s-1+1].y*0+chain[s].y-chain[s-1].y);
+    if(len>4) chains.push({pts:chain,len:len});
+  }
+  return chains;
+}
+
+/* ---------- 5. 碎片 ---------- */
+function buildShards(fr,rng){
+  var shards=[],i,j;
+  for(i=0;i<fr.cells.length;i++){
+    var c=fr.cells[i];
+    var poly=simplifyRing(c.poly,0.12);
+    var ctr=polyCentroid(poly);
+    var local=[],x0=1e9,y0=1e9,x1=-1e9,y1=-1e9,rad=0;
+    for(j=0;j<poly.length;j++){
+      var p=poly[j];
+      local.push({x:p.x-ctr.x,y:p.y-ctr.y});
+      if(p.x<x0)x0=p.x; if(p.x>x1)x1=p.x; if(p.y<y0)y0=p.y; if(p.y>y1)y1=p.y;
+      var r=Math.hypot(p.x-ctr.x,p.y-ctr.y); if(r>rad)rad=r;
+    }
+    var c2=polyCentroid(c.poly);         /* 用未简化多边形求形心，保证贴合 */
+    shards.push({id:i,local:local,cx:c2.x,cy:c2.y,ed:c.ed,
+      bbox:{x:x0-1,y:y0-1,w:(x1-x0)+2,h:(y1-y0)+2},
+      x:c2.x,y:c2.y,a:0,phi:0,vx:0,vy:0,av:0,pv:0,asleep:false,st:0,
+      rad:rad,cosP:1,scatter:0,gold:[],dly:0,dur:1,sx:0,sy0:0,sa:0,sphi:0,arcS:1,home:false,
+      wob:rng()*TAU,lastImp:0});
+  }
+  return shards;
+}
+function attachGold(shards,seams){
+  var seen={};
+  for(var s=0;s<seams.length;s++){
+    var seam=seams[s], pts=seam.pts;
+    var cum=[0];
+    for(var p=1;p<pts.length;p++) cum.push(cum[p-1]+Math.hypot(pts[p].x-pts[p-1].x,pts[p].y-pts[p-1].y));
+    for(var k=0;k<shards.length;k++){
+      var sh=shards[k], pieces=clipPolylineConvex(pts,sh.ed,0);
+      for(var q=0;q<pieces.length;q++){
+        var pp=pieces[q];
+        var loc=[],cc=[0],t0=0,t1=0,any=false;
+        for(var z=0;z<pp.length;z++){
+          if(z===0) t0=cum[segIndexAt(cum,pts,pp[0])];
+          var key=Math.round(pp[z].x*2)+'_'+Math.round(pp[z].y*2)+'_'+seam.id;
+          if(seen[key]){any=false;break;}
+        }
+        /* 逐段登记：同一几何只归一个碎片，避免接缝处重绘 */
+        for(var m=0;m<pp.length-1;m++){
+          var kA=Math.round(pp[m].x*2)+'_'+Math.round(pp[m].y*2)+'_'+seam.id;
+          var kB=Math.round(pp[m+1].x*2)+'_'+Math.round(pp[m+1].y*2)+'_'+seam.id;
+          if(seen[kA]||seen[kB]) continue;
+          seen[kA]=1;seen[kB]=1;
+          loc=[{x:pp[m].x-sh.cx,y:pp[m].y-sh.cy},{x:pp[m+1].x-sh.cx,y:pp[m+1].y-sh.cy}];
+          for(var w=2;w<pp.length-m;w++){ loc.push({x:pp[m+w].x-sh.cx,y:pp[m+w].y-sh.cy}); }
+          t0=cum[segIndexAt(cum,pts,pp[m])];
+          t1=cum[segIndexAt(cum,pts,pp[Math.min(pp.length-1,m+loc.length-1)])];
+          cc=[0];
+          for(var u=1;u<loc.length;u++) cc.push(cc[u-1]+Math.hypot(loc[u].x-loc[u-1].x,loc[u].y-loc[u-1].y));
+          sh.gold.push({seam:seam,pts:loc,cum:cc,s0:t0,len:cc[cc.length-1]});
+          any=true;
+        }
+      }
+    }
+  }
+  return seen;
+}
+function segIndexAt(cum,pts,p){
+  var best=0,bd=1e9;
+  for(var i=0;i<pts.length;i++){var d=Math.abs(pts[i].x-p.x)+Math.abs(pts[i].y-p.y);if(d<bd){bd=d;best=i;}}
+  return clamp(best,0,cum.length-1);
+}
+
+/* ---------- 6. 刚体物理（固定步长 + 案几高度堆） ---------- */
+var PHYS={g:2050,rest:0.30,drag:0.9972,fric:0.62,spinDrag:0.985,dt:1/120};
+function floorAt(x){
+  if(!pile) return TABLE_Y;
+  var b=Math.floor((x-pileX0)/pileDX);
+  if(b<0||b>=PILE_N) return TABLE_Y;
+  return TABLE_Y-pile[b];
+}
+function resetPile(){
+  pile=new Float32Array(PILE_N);
+  pileX0=REG.cx-REG.w*1.05; pileDX=(REG.w*2.1)/PILE_N;
+}
+function worldOf(sh){
+  var ca=Math.cos(sh.a), sa=Math.sin(sh.a), cp=sh.cosP;
+  var lo=1e9, hi=-1e9, xl=1e9, xr=-1e9, i, P=sh.local;
+  for(i=0;i<P.length;i++){
+    var px=P[i].x, py=P[i].y*cp;
+    var Y=sh.y+px*sa+py*ca, X=sh.x+px*ca-py*sa;
+    if(Y<lo)lo=Y; if(Y>hi)hi=Y; if(X<xl)xl=X; if(X>xr)xr=X;
+  }
+  return {lo:lo,hi:hi,xl:xl,xr:xr};
+}
+function stepPhysics(shards,dt,onImpact){
+  var damp=0;
+  for(var i=0;i<shards.length;i++){
+    var s=shards[i];
+    if(s.asleep) continue;
+    if(damp){s.vx*=damp;s.vy*=damp;s.av*=damp;s.pv*=damp;}
+    s.vy+=PHYS.g*dt;
+    s.vx*=Math.pow(PHYS.drag,dt*60);
+    s.av*=Math.pow(PHYS.spinDrag,dt*60);
+    s.x+=s.vx*dt; s.y+=s.vy*dt;
+    s.a+=s.av*dt; s.phi+=s.pv*dt;
+    s.cosP=Math.cos(s.phi);
+    var bb=worldOf(s);
+    var fl=floorAt((bb.xl+bb.xr)/2);
+    if(bb.lo>fl){
+      s.y-=(bb.lo-fl);
+      if(s.vy>0){
+        var imp=s.vy;
+        s.vy=-imp*PHYS.rest;
+        s.vx+=(Math.random()-0.5)*imp*0.10;
+        s.av+=(Math.random()-0.5)*imp*0.016;
+        s.pv+=(Math.random()-0.5)*imp*0.020;
+        if(onImpact&&imp>90&&T-s.lastImp>0.035){s.lastImp=T;onImpact(s,imp);}
+        s.av*=0.82; s.pv*=0.74;
+      } else s.vy=0;
+      s.vx*=Math.pow(PHYS.fric,dt*60);
+      if(Math.abs(s.cosP)>0.986||Math.abs(s.pv)<0.30){s.pv*=0.34;s.av*=0.55;}
+      var fl2=floorAt((bb.xl+bb.xr)/2);
+      if(bb.lo>fl2) s.y-=(bb.lo-fl2);
+    }
+    var bb2=worldOf(s);
+    var ke=s.vx*s.vx+s.vy*s.vy;
+    if(ke<30&&Math.abs(s.av)<0.30&&Math.abs(s.pv)<0.42&&s.vy>=-1&&bb2.lo>=floorAt((bb2.xl+bb2.xr)/2)-0.7){
+      s.st+=dt;
+      if(s.st>0.22){
+        s.asleep=true;s.vx=0;s.vy=0;s.av=0;s.pv=0;
+        s.phi=Math.round(s.phi/Math.PI)*Math.PI; s.cosP=Math.cos(s.phi);
+        var b3=worldOf(s), f3=floorAt((b3.xl+b3.xr)/2);
+        s.y+=(f3-b3.lo);
+        if(pile){
+          var i0=clamp(Math.floor((b3.xl-pileX0)/pileDX),0,PILE_N-1);
+          var i1=clamp(Math.floor((b3.xr-pileX0)/pileDX),0,PILE_N-1);
+          var hgt=Math.max(6,Math.min(REG.h*0.5, s.rad*1.15));
+          for(var b=i0;b<=i1;b++) if(pile[b]<hgt) pile[b]=hgt;
+        }
+      }
+    } else s.st=0;
+  }
+}
+function allAsleep(shards){for(var i=0;i<shards.length;i++) if(!shards[i].asleep) return false; return true;}
+
+/* ---------- 7. 节奏 ---------- */
+var PACE={flash:0.30, fallDamp:2.5, settleMax:3.2, retDur:0.78, retStag:0.30,
+          goldDelay:0.16, goldStag:0.42, sweep:0.95};
+var goldTotal=0;
+
+/* ---------- 8. 音频（WebAudio 实时合成） ---------- */
+var AU={ctx:null,on:true,buf:null,last:0};
+AU.init=function(){
+  if(AU.ctx) return;
+  var AC=(typeof window!=='undefined'&&(window.AudioContext||window.webkitAudioContext));
+  if(!AC) return;
+  try{ AU.ctx=new AC(); }catch(e){ return; }
+  AU.master=AU.ctx.createGain(); AU.master.gain.value=0.85; AU.master.connect(AU.ctx.destination);
+  var sr=AU.ctx.sampleRate, len=(sr*1.2)|0, b=AU.ctx.createBuffer(1,len,sr), d=b.getChannelData(0);
+  for(var i=0;i<len;i++) d[i]=Math.random()*2-1;
+  AU.buf=b;
+};
+AU.tone=function(f,dur,g,when,type){
+  if(!AU.ctx||!AU.on) return;
+  var t=AU.ctx.currentTime+(when||0);
+  var o=AU.ctx.createOscillator(), gn=AU.ctx.createGain();
+  o.type=type||'sine'; o.frequency.setValueAtTime(f,t);
+  gn.gain.setValueAtTime(0.0001,t);
+  gn.gain.exponentialRampToValueAtTime(Math.max(0.0002,g),t+0.006);
+  gn.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(gn); gn.connect(AU.master); o.start(t); o.stop(t+dur+0.02);
+};
+AU.noise=function(dur,f,q,g,when,type){
+  if(!AU.ctx||!AU.on||!AU.buf) return;
+  var t=AU.ctx.currentTime+(when||0);
+  var s=AU.ctx.createBufferSource(); s.buffer=AU.buf;
+  var bp=AU.ctx.createBiquadFilter(); bp.type=type||'bandpass'; bp.frequency.setValueAtTime(f,t); bp.Q.value=q||1.2;
+  var gn=AU.ctx.createGain();
+  gn.gain.setValueAtTime(0.0001,t);
+  gn.gain.exponentialRampToValueAtTime(Math.max(0.0002,g),t+0.008);
+  gn.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  s.connect(bp); bp.connect(gn); gn.connect(AU.master);
+  s.start(t,Math.random()*0.6); s.stop(t+dur+0.02);
+};
+AU.fracture=function(){
+  if(!AU.ctx) return; AU.init(); if(!AU.ctx) return;
+  AU.noise(0.42,2600,0.7,0.30,0,'bandpass');
+  AU.noise(0.10,5200,2.4,0.22,0.012,'bandpass');
+  AU.tone(96,0.34,0.22,0,'sine');
+  for(var i=0;i<8;i++){
+    AU.tone(760+Math.random()*2900,0.05+Math.random()*0.16,0.055+Math.random()*0.05,Math.random()*0.075,'sine');
+  }
+  AU.noise(0.5,900,0.6,0.10,0.03,'lowpass');
+};
+AU.tick=function(v){
+  if(!AU.ctx||!AU.on) return;
+  if(T-AU.last<0.035) return; AU.last=T;
+  var g=clamp(v/1400,0.02,0.15);
+  AU.tone(1300+Math.random()*1900,0.045+Math.random()*0.05,g,0,'sine');
+  AU.noise(0.03,4200,2.0,g*0.5,0,'bandpass');
+};
+AU.whoosh=function(){
+  if(!AU.ctx||!AU.on) return;
+  var t=AU.ctx.currentTime;
+  if(!AU.buf) return;
+  var s=AU.ctx.createBufferSource(); s.buffer=AU.buf;
+  var bp=AU.ctx.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=1.1;
+  bp.frequency.setValueAtTime(420,t);
+  bp.frequency.exponentialRampToValueAtTime(2600,t+0.30);
+  bp.frequency.exponentialRampToValueAtTime(520,t+0.72);
+  var gn=AU.ctx.createGain();
+  gn.gain.setValueAtTime(0.0001,t);
+  gn.gain.exponentialRampToValueAtTime(0.075,t+0.10);
+  gn.gain.exponentialRampToValueAtTime(0.0001,t+0.75);
+  s.connect(bp);bp.connect(gn);gn.connect(AU.master);
+  s.start(t,Math.random()*0.5); s.stop(t+0.8);
+};
+AU.chime=function(){
+  if(!AU.ctx) return; AU.init(); if(!AU.ctx) return;
+  var f=587.33, parts=[1,2.01,2.99,4.23,5.44], dec=[2.5,1.7,1.25,0.9,0.7], amp=[0.13,0.075,0.05,0.032,0.022];
+  for(var i=0;i<parts.length;i++) AU.tone(f*parts[i],dec[i],amp[i],i*0.012,'sine');
+  AU.noise(0.7,5200,1.0,0.05,0.02,'bandpass');
+};
+
+/* ---------- 9. 粒子 ---------- */
+function spawnDust(x,y,n,col){
+  for(var i=0;i<n;i++){
+    var a=Math.random()*TAU, sp=40+Math.random()*230;
+    parts.push({x:x,y:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-60,life:0,max:0.5+Math.random()*0.9,
+      r:0.5+Math.random()*1.5,col:col||'229,238,231',sp2:0});
+  }
+}
+function initMotes(){
+  motes=[];
+  for(var i=0;i<44;i++) motes.push({x:Math.random()*W,y:Math.random()*H,r:0.4+Math.random()*1.5,
+    s:0.05+Math.random()*0.22,ph:Math.random()*TAU,a:0.05+Math.random()*0.2});
+}
+
+/* ---------- 10. 碗贴图（矢量绘制到离屏画布） ---------- */
+function renderBowlTex(){
+  var R=REG; if(!R) return;
+  var w=Math.ceil(W*DPR), h=Math.ceil(H*DPR);
+  if(tex.width!==w||tex.height!==h){tex.width=w;tex.height=h;}
+  g2(tctx);
+  tctx.setTransform(DPR,0,0,DPR,0,0);
+  tctx.clearRect(0,0,W,H);
+  var O=R.outline, i;
+  function path(g){
+    g.beginPath(); g.moveTo(O[0].x,O[0].y);
+    for(i=1;i<O.length;i++) g.lineTo(O[i].x,O[i].y);
+    g.closePath();
+  }
+  var top=R.oy-R.rb, bot=R.baseY;
+  /* 釉色主体 */
+  path(tctx);
+  var bg=tctx.createLinearGradient(0,top,0,bot);
+  bg.addColorStop(0,'#b9d3c6'); bg.addColorStop(0.18,'#9cc0b0');
+  bg.addColorStop(0.52,'#6d9a8c'); bg.addColorStop(0.82,'#4c7870'); bg.addColorStop(1,'#3c6159');
+  tctx.fillStyle=bg; tctx.fill();
+  /* 圆柱受光 */
+  tctx.save(); path(tctx); tctx.clip();
+  var cyl=tctx.createLinearGradient(R.cx-R.hw,0,R.cx+R.hw,0);
+  cyl.addColorStop(0,'rgba(20,40,36,0.42)'); cyl.addColorStop(0.16,'rgba(255,255,255,0.06)');
+  cyl.addColorStop(0.38,'rgba(255,255,255,0.20)'); cyl.addColorStop(0.60,'rgba(0,0,0,0.0)');
+  cyl.addColorStop(0.86,'rgba(0,0,0,0.20)'); cyl.addColorStop(1,'rgba(12,26,24,0.5)');
+  tctx.fillStyle=cyl; tctx.fillRect(R.bbox.x0-4,top-8,R.w+8,bot-top+16);
+  /* 口沿内侧暗部（碗腔） */
+  var mA=R.hw*0.895, mB=R.rb*0.80, mCy=R.oy+R.rb*0.14;
+  tctx.beginPath(); tctx.ellipse(R.cx,mCy,mA,mB,0,0,TAU);
+  var mg=tctx.createLinearGradient(0,mCy-mB,0,mCy+mB);
+  mg.addColorStop(0,'#26433e'); mg.addColorStop(0.45,'#3a6058'); mg.addColorStop(1,'#6d9a8c');
+  tctx.fillStyle=mg; tctx.fill();
+  /* 内壁受光 */
+  tctx.beginPath(); tctx.ellipse(R.cx,mCy-mB*0.18,mA*0.9,mB*0.7,0,0,TAU);
+  tctx.fillStyle='rgba(190,220,208,0.13)'; tctx.fill();
+  /* 近侧口沿（釉面） */
+  tctx.beginPath();
+  tctx.ellipse(R.cx,R.oy,R.hw,R.rb,0,0,Math.PI);
+  tctx.ellipse(R.cx,mCy,mA,mB,0,Math.PI,0,true);
+  tctx.closePath();
+  var rg=tctx.createLinearGradient(0,R.oy,0,R.oy+R.rb*1.2);
+  rg.addColorStop(0,'#cfe3d7'); rg.addColorStop(1,'#8fb3a4');
+  tctx.fillStyle=rg; tctx.fill();
+  /* 口沿高光 */
+  tctx.lineWidth=Math.max(1,R.hw*0.016);
+  tctx.strokeStyle='rgba(246,253,247,0.78)';
+  tctx.beginPath(); tctx.ellipse(R.cx,R.oy,R.hw,R.rb,0,Math.PI*0.06,Math.PI*0.94); tctx.stroke();
+  tctx.strokeStyle='rgba(255,255,255,0.5)'; tctx.lineWidth=Math.max(0.8,R.hw*0.009);
+  tctx.beginPath(); tctx.ellipse(R.cx,mCy,mA,mB,0,Math.PI*0.05,Math.PI*0.95); tctx.stroke();
+  /* 釉的积厚（下腹偏深） */
+  var pg=tctx.createLinearGradient(0,bot-R.h*0.34,0,bot);
+  pg.addColorStop(0,'rgba(38,66,60,0)'); pg.addColorStop(1,'rgba(30,56,52,0.42)');
+  tctx.fillStyle=pg; tctx.fillRect(R.bbox.x0-4,bot-R.h*0.34,R.w+8,R.h*0.34);
+  /* 圈足（露胎） */
+  var fy=bot-R.h*0.155;
+  tctx.beginPath(); tctx.rect(R.bbox.x0-4,fy,R.w+8,bot-fy+4);
+  var fg=tctx.createLinearGradient(0,fy,0,bot);
+  fg.addColorStop(0,'#cbbfa8'); fg.addColorStop(0.35,'#ded4c0'); fg.addColorStop(1,'#8e8471');
+  tctx.fillStyle=fg; tctx.fill();
+  tctx.strokeStyle='rgba(40,52,48,0.34)'; tctx.lineWidth=1;
+  tctx.beginPath(); tctx.moveTo(R.bbox.x0-4,fy); tctx.lineTo(R.bbox.x0+R.w+4,fy); tctx.stroke();
+  /* 釉线：露胎上沿的一圈青釉边 */
+  tctx.beginPath(); tctx.rect(R.bbox.x0-4,fy-R.h*0.014,R.w+8,R.h*0.016);
+  tctx.fillStyle='rgba(122,164,148,0.7)'; tctx.fill();
+  /* 主体高光 */
+  var hx=R.cx-R.hw*0.40, hy=top+R.h*0.34, hr=Math.max(18,R.hw*0.42);
+  var hgr=tctx.createRadialGradient(hx,hy,0,hx,hy,hr);
+  hgr.addColorStop(0,'rgba(255,255,255,0.40)'); hgr.addColorStop(0.45,'rgba(255,255,255,0.13)');
+  hgr.addColorStop(1,'rgba(255,255,255,0)');
+  tctx.fillStyle=hgr;
+  tctx.beginPath(); tctx.ellipse(hx,hy,hr*0.42,hr*0.95,0,0,TAU); tctx.fill();
+  var hx2=R.cx+R.hw*0.62, hy2=top+R.h*0.5;
+  var hgr2=tctx.createRadialGradient(hx2,hy2,0,hx2,hy2,hr*0.5);
+  hgr2.addColorStop(0,'rgba(228,246,238,0.22)'); hgr2.addColorStop(1,'rgba(228,246,238,0)');
+  tctx.fillStyle=hgr2;
+  tctx.beginPath(); tctx.ellipse(hx2,hy2,hr*0.16,hr*0.72,0,0,TAU); tctx.fill();
+  /* 描边 */
+  path(tctx);
+  tctx.lineWidth=1.1; tctx.strokeStyle='rgba(24,44,40,0.5)'; tctx.stroke();
+  tctx.restore();
+}
+function g2(g){ g.setTransform(1,0,0,1,0,0); }
+
+/* ---------- 11. 金线 ---------- */
+function buildGoldPath(g,pts,upto){
+  g.beginPath();
+  if(!pts.length) return 0;
+  g.moveTo(pts[0].x,pts[0].y);
+  var tot=0;
+  for(var i=1;i<pts.length;i++){
+    var dx=pts[i].x-pts[i-1].x, dy=pts[i].y-pts[i-1].y, L=Math.hypot(dx,dy);
+    if(tot+L<=upto){ g.lineTo(pts[i].x,pts[i].y); tot+=L; }
+    else { var t=(upto-tot)/(L||1); if(t>0) g.lineTo(pts[i-1].x+dx*t,pts[i-1].y+dy*t); return tot+L*t; }
+  }
+  return tot;
+}
+function buildGoldPathLocal(g,pts,cum,upto){
+  g.beginPath();
+  if(!pts.length) return 0;
+  g.moveTo(pts[0].x,pts[0].y);
+  for(var i=1;i<pts.length;i++){
+    var dx=pts[i].x-pts[i-1].x, dy=pts[i].y-pts[i-1].y, L=cum[i]-cum[i-1];
+    if(cum[i]<=upto){ g.lineTo(pts[i].x,pts[i].y); }
+    else { var t=(upto-cum[i-1])/(L||1); if(t>0) g.lineTo(pts[i-1].x+dx*t,pts[i-1].y+dy*t); break; }
+  }
+  return upto;
+}
+var GOLDW=2.4;
+function goldStyle(g,seam,alpha,t){
+  var p=seam.pts, i, x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  for(i=0;i<p.length;i++){if(p[i].x<x0)x0=p[i].x;if(p[i].x>x1)x1=p[i].x;if(p[i].y<y0)y0=p[i].y;if(p[i].y>y1)y1=p[i].y;}
+  var cx=(x0+x1)/2, cy=(y0+y1)/2, r=Math.max(6,Math.hypot(x1-x0,y1-y0)/2);
+  var ang=seam.ang+(goldLive?Math.sin(t*0.9+seam.ph)*0.5:0);
+  var dx=Math.cos(ang)*r, dy=Math.sin(ang)*r;
+  var gr=g.createLinearGradient(cx-dx,cy-dy,cx+dx,cy+dy);
+  var deep=seam.tint;
+  gr.addColorStop(0.00,deep?'#5c3610':'#6b4113');
+  gr.addColorStop(0.24,deep?'#a9751f':'#c08a2b');
+  gr.addColorStop(0.46,'#ffe6a4');
+  gr.addColorStop(0.58,deep?'#c99a34':'#e0b04a');
+  gr.addColorStop(0.82,deep?'#8a5a17':'#a06d1c');
+  gr.addColorStop(1.00,'#4d2d0b');
+  return gr;
+}
+function drawSeam(g,seam,L,alpha,t,local){
+  if(L<=0.3) return;
+  var w=GOLDW*(local?0.9:1);
+  if(local) buildGoldPathLocal(g,seam.pts,seam.cum,L); else buildGoldPath(g,seam.pts,L);
+  g.lineCap='round'; g.lineJoin='round';
+  g.globalAlpha=alpha;
+  /* 外晕 */
+  g.save();
+  g.shadowColor='rgba(255,196,96,0.85)'; g.shadowBlur=10*w*0.5;
+  g.lineWidth=w*2.5; g.strokeStyle='rgba(240,178,80,0.16)'; g.stroke();
+  g.restore();
+  /* 液态金属本体 */
+  g.lineWidth=w; g.strokeStyle=goldStyle(g,seam,alpha,t); g.stroke();
+  /* 流动高光 */
+  if(goldLive){
+    var p=seam.pts, i, x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+    for(i=0;i<p.length;i++){if(p[i].x<x0)x0=p[i].x;if(p[i].x>x1)x1=p[i].x;if(p[i].y<y0)y0=p[i].y;if(p[i].y>y1)y1=p[i].y;}
+    var cx=(x0+x1)/2, cy=(y0+y1)/2, r=Math.max(6,Math.hypot(x1-x0,y1-y0)/2);
+    var a2=seam.ang+1.9;
+    var ex=Math.cos(a2)*r, ey=Math.sin(a2)*r;
+    var gg=g.createLinearGradient(cx-ex,cy-ey,cx+ex,cy+ey);
+    var ph=0.5+0.5*Math.sin(t*1.7+seam.ph*1.7);
+    var tt=0.16+ph*0.68, ww=0.17;
+    gg.addColorStop(0,'rgba(255,246,214,0)');
+    gg.addColorStop(tt-ww,'rgba(255,246,214,0)');
+    gg.addColorStop(tt,'rgba(255,252,232,0.9)');
+    gg.addColorStop(tt+ww,'rgba(255,246,214,0)');
+    gg.addColorStop(1,'rgba(255,246,214,0)');
+    g.save();
+    g.globalCompositeOperation='lighter';
+    g.lineWidth=w*0.7; g.strokeStyle=gg; g.stroke();
+    g.restore();
+  }
+  /* 高光芯线 */
+  g.lineWidth=Math.max(0.5,w*0.3); g.strokeStyle='rgba(255,250,226,'+(0.62*alpha)+')'; g.stroke();
+  g.globalAlpha=1;
+}
+function drawSeamLocal(g,seam,upto,alpha,t){
+  if(upto<=0.3) return;
+  var w=GOLDW*0.9;
+  buildGoldPathLocal(g,seam.pts,seam.cum,upto);
+  g.lineCap='round'; g.lineJoin='round';
+  g.save();
+  g.shadowColor='rgba(255,196,96,0.8)'; g.shadowBlur=7;
+  g.lineWidth=w*1.9; g.strokeStyle='rgba(240,178,80,'+(0.15*alpha)+')'; g.stroke();
+  g.restore();
+  g.lineWidth=w;
+  var gr=g.createLinearGradient(seam.pts[0].x-seam.pts[0].y,seam.pts[0].y,seam.pts[0].x+seam.pts[0].y,seam.pts[0].y);
+  gr.addColorStop(0,'#8a5a17'); gr.addColorStop(0.45,'#ffe6a4'); gr.addColorStop(1,'#5c3610');
+  g.strokeStyle=gr; g.stroke();
+  g.lineWidth=Math.max(0.5,w*0.3); g.strokeStyle='rgba(255,250,226,'+(0.55*alpha)+')'; g.stroke();
+}
+function renderGoldLayer(g,force){
+  if(!SEAMS.length) return;
+  if(!goldLive&&!force&&goldTex.width===Math.ceil(W*DPR)&&goldTexValid) return;
+  if(goldTex.width!==Math.ceil(W*DPR)||goldTex.height!==Math.ceil(H*DPR)){
+    goldTex.width=Math.ceil(W*DPR); goldTex.height=Math.ceil(H*DPR);
+  }
+  gctx.setTransform(1,0,0,1,0,0);
+  gctx.clearRect(0,0,goldTex.width,goldTex.height);
+  gctx.setTransform(DPR,0,0,DPR,0,0);
+  for(var i=0;i<SEAMS.length;i++){
+    var s=SEAMS[i];
+    drawSeam(gctx,s,Math.min(s.grow,1)*s.len,1,T,false);
+  }
+  gctx.setTransform(1,0,0,1,0,0);
+  goldTexValid=true;
+}
+var goldTexValid=false;
+
+/* ---------- 12. 渲染 ---------- */
+function drawTable(){
+  var wall=ctx.createLinearGradient(0,0,0,TABLE_Y);
+  wall.addColorStop(0,'#100c0a'); wall.addColorStop(0.55,'#191310'); wall.addColorStop(1,'#241a14');
+  ctx.fillStyle=wall; ctx.fillRect(0,0,W,TABLE_Y);
+  var pool=ctx.createRadialGradient(W*0.5,TABLE_Y-H*0.30,0,W*0.5,TABLE_Y-H*0.26,Math.max(W,H)*0.62);
+  pool.addColorStop(0,'rgba(120,96,66,0.20)'); pool.addColorStop(1,'rgba(120,96,66,0)');
+  ctx.fillStyle=pool; ctx.fillRect(0,0,W,TABLE_Y);
+  var tb=ctx.createLinearGradient(0,TABLE_Y,0,H);
+  tb.addColorStop(0,'#33241a'); tb.addColorStop(0.10,'#3e2c1f');
+  tb.addColorStop(0.45,'#2b1e16'); tb.addColorStop(1,'#140e0a');
+  ctx.fillStyle=tb; ctx.fillRect(0,TABLE_Y,W,H-TABLE_Y);
+  var sh=ctx.createLinearGradient(0,TABLE_Y,0,TABLE_Y+H*0.10);
+  sh.addColorStop(0,'rgba(255,224,178,0.13)'); sh.addColorStop(1,'rgba(255,224,178,0)');
+  ctx.fillStyle=sh; ctx.fillRect(0,TABLE_Y,W,H*0.10);
+  ctx.strokeStyle='rgba(255,226,182,0.13)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(0,TABLE_Y+0.5); ctx.lineTo(W,TABLE_Y+0.5); ctx.stroke();
+}
+function drawReflection(){
+  var R=REG;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0,TABLE_Y,W,H-TABLE_Y); ctx.clip();
+  ctx.translate(0,TABLE_Y*2); ctx.scale(1,-1);
+  ctx.globalAlpha=0.17;
+  ctx.drawImage(tex,0,0,tex.width,tex.height,0,0,W,H);
+  if(goldTexValid) ctx.drawImage(goldTex,0,0,goldTex.width,goldTex.height,0,0,W,H);
+  ctx.globalAlpha=1;
+  ctx.restore();
+  var fade=ctx.createLinearGradient(0,TABLE_Y,0,TABLE_Y+H*0.30);
+  fade.addColorStop(0,'rgba(38,27,19,0.10)'); fade.addColorStop(1,'rgba(20,14,10,0.94)');
+  ctx.fillStyle=fade; ctx.fillRect(0,TABLE_Y,W,H-TABLE_Y);
+}
+function drawShadow(){
+  var R=REG;
+  var g=ctx.createRadialGradient(R.cx,TABLE_Y+2,0,R.cx,TABLE_Y+2,R.hw*1.18);
+  g.addColorStop(0,'rgba(12,7,4,0.55)'); g.addColorStop(0.55,'rgba(12,7,4,0.24)');
+  g.addColorStop(1,'rgba(12,7,4,0)');
+  ctx.fillStyle=g;
+  ctx.save(); ctx.translate(R.cx,TABLE_Y+2); ctx.scale(1,0.20); ctx.translate(-R.cx,-(TABLE_Y+2));
+  ctx.beginPath(); ctx.arc(R.cx,TABLE_Y+2,R.hw*1.18,0,TAU); ctx.fill();
+  ctx.restore();
+}
+function assembledNow(){return phase==='idle'||phase==='flash'||phase==='gold'||phase==='sweep';}
+function drawBowlFlat(){
+  ctx.drawImage(tex,0,0,tex.width,tex.height,0,0,W,H);
+  if(goldLive){
+    for(var i=0;i<SEAMS.length;i++){var s=SEAMS[i];drawSeam(ctx,s,Math.min(s.grow,1)*s.len,1,T,false);}
+  } else if(goldTexValid){
+    ctx.drawImage(goldTex,0,0,goldTex.width,goldTex.height,0,0,W,H);
+  }
+}
+function drawShard(s){
+  var cp=s.cosP, back=cp<0;
+  ctx.save();
+  ctx.translate(s.x,s.y);
+  ctx.rotate(s.a);
+  ctx.scale(1,Math.abs(cp)<0.02?0.02:cp);
+  var L=s.local,i;
+  ctx.beginPath();
+  ctx.moveTo(L[0].x,L[0].y);
+  for(i=1;i<L.length;i++) ctx.lineTo(L[i].x,L[i].y);
+  ctx.closePath();
+  ctx.save();
+  ctx.clip();
+  if(back){
+    var bb=s.bbox;
+    var g=ctx.createLinearGradient(bb.x-1,bb.y-1,bb.x+bb.w,bb.y+bb.h);
+    g.addColorStop(0,'#ded5c2'); g.addColorStop(0.5,'#bdb39f'); g.addColorStop(1,'#948a78');
+    ctx.fillStyle=g; ctx.fillRect(bb.x-s.cx-2,bb.y-s.cy-2,bb.w+4,bb.h+4);
+    var dots=0.9;
+    ctx.fillStyle='rgba(90,80,66,0.10)';
+    for(var q=0;q<dots;q++){}
+  } else {
+    var b2=s.bbox;
+    ctx.drawImage(tex,b2.x*DPR,b2.y*DPR,b2.w*DPR,b2.h*DPR, b2.x-s.cx,b2.y-s.cy,b2.w,b2.h);
+    /* 断口厚度：随运动增强 */
+    var eW=(0.8+2.1*s.scatter)*(0.85+0.15*Math.sin(T*3+s.wob));
+    ctx.save();
+    ctx.shadowColor='rgba(16,30,26,0.55)'; ctx.shadowBlur=3; ctx.shadowOffsetY=1.2;
+    ctx.lineJoin='round'; ctx.lineCap='round';
+    ctx.lineWidth=Math.max(0.7,eW);
+    ctx.strokeStyle='rgba(228,237,229,'+(0.55+0.35*s.scatter)+')';
+    ctx.stroke();
+    ctx.restore();
+  }
+  /* 金线随碎片走 */
+  for(var gi=0;gi<s.gold.length;gi++){
+    var gp=s.gold[gi], se=gp.seam;
+    var L2=Math.min(se.grow,1)*se.len-gp.s0;
+    if(L2>0.3) drawSeamLocal(ctx,gp,L2,1,T);
+  }
+  ctx.restore();
+  ctx.restore();
+}
+function drawScatter(){
+  for(var i=0;i<SHARDS.length;i++) drawShard(SHARDS[i]);
+}
+function drawFlash(){
+  var p=clamp((T-phaseT)/PACE.flash,0,1);
+  var R=REG;
+  var w=R.w*0.11;
+  var e=E.outCubic(p);
+  var maxD=Math.hypot(R.w,R.h);
+  ctx.save();
+  ctx.beginPath(); ctx.arc(lastClick.x,lastClick.y,e*maxD*0.95,0,TAU);
+  ctx.clip();
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  for(var i=0;i<SEAMS.length;i++){
+    var s=SEAMS[i];
+    buildGoldPath(ctx,s.pts,s.len);
+    ctx.lineWidth=GOLDW*0.55;
+    ctx.strokeStyle='rgba(255,255,255,0.9)';
+    ctx.save(); ctx.shadowColor='rgba(200,240,255,0.9)'; ctx.shadowBlur=16;
+    ctx.globalAlpha=0.55+0.45*(1-p); ctx.stroke(); ctx.restore();
+  }
+  ctx.restore();
+  /* 冲击环 */
+  var r=e*maxD*0.5;
+  ctx.save();
+  ctx.globalAlpha=(1-p)*0.55;
+  ctx.strokeStyle='rgba(226,244,255,0.9)'; ctx.lineWidth=2.4*(1-p)+0.4;
+  ctx.beginPath(); ctx.arc(lastClick.x,lastClick.y,r,0,TAU); ctx.stroke();
+  ctx.restore();
+  /* 釉屑 */
+  for(var k=0;k<parts.length;k++){
+    var q=parts[k], a2=q.life/q.max;
+    ctx.globalAlpha=(1-a2)*0.85;
+    ctx.fillStyle='rgba('+q.col+',1)';
+    ctx.beginPath(); ctx.arc(q.x,q.y,q.r*(1-a2*0.5),0,TAU); ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+function drawSweep(){
+  var R=REG, p=clamp(sweepP,0,1), e=E.inOutSine(p);
+  var b=R.bbox, w=R.w*0.42;
+  var x=lerp(b.x0-w,b.x1+w,e);
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(b.x0-6,b.y0-6); ctx.lineTo(b.x1+6,b.y0-6);
+  ctx.lineTo(b.x1+6,b.y1+6); ctx.lineTo(b.x0-6,b.y1+6); ctx.closePath();
+  ctx.clip();
+  ctx.globalCompositeOperation='lighter';
+  var g=ctx.createLinearGradient(x-w*0.5,b.y0,x+w*0.5,b.y0);
+  g.addColorStop(0,'rgba(255,206,120,0)');
+  g.addColorStop(0.42,'rgba(255,226,158,0.20)');
+  g.addColorStop(0.5,'rgba(255,248,224,0.52)');
+  g.addColorStop(0.58,'rgba(255,222,150,0.20)');
+  g.addColorStop(1,'rgba(255,206,120,0)');
+  ctx.fillStyle=g; ctx.fillRect(b.x0-8,b.y0-8,R.w+16,R.h+16);
+  ctx.restore();
+  /* 金屑 */
+  var n=Math.round(26*(1-Math.abs(p-0.5)*1.2));
+  for(var i=0;i<n;i++){
+    var t=((T*1.7+i*0.37)%1);
+    var sx=lerp(b.x0-6,b.x1+6,t);
+    var sy=b.y0+((i*97)%100)/100*R.h + Math.sin(t*7+i)*R.h*0.06;
+    var a=Math.sin(t*Math.PI)*(0.3+((i*53)%100)/100*0.5);
+    ctx.globalAlpha=a;
+    ctx.fillStyle='rgba(255,236,178,1)';
+    ctx.beginPath(); ctx.arc(sx,sy,0.8+((i*17)%10)/10*1.5,0,TAU); ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+function drawParts(){
+  for(var i=0;i<parts.length;i++){
+    var q=parts[i], a=1-q.life/q.max;
+    ctx.globalAlpha=a*a*0.9;
+    ctx.fillStyle='rgba('+q.col+',1)';
+    ctx.beginPath(); ctx.arc(q.x,q.y,q.r*(0.4+0.6*a),0,TAU); ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+function drawMotes(){
+  ctx.save();
+  for(var i=0;i<motes.length;i++){
+    var m=motes[i];
+    ctx.globalAlpha=m.a*(0.6+0.4*Math.sin(T*0.9+m.ph));
+    ctx.fillStyle='#f6e6c4';
+    ctx.beginPath(); ctx.arc(m.x,m.y,m.r,0,TAU); ctx.fill();
+  }
+  ctx.restore();
+}
+function drawVignette(){
+  var g=ctx.createRadialGradient(W*0.5,H*0.46,Math.min(W,H)*0.28,W*0.5,H*0.5,Math.max(W,H)*0.78);
+  g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,0.55)');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  if(resetFade>0){
+    ctx.fillStyle='rgba(246,236,214,'+(resetFade*0.5)+')';
+    ctx.fillRect(0,0,W,H);
+  }
+}
+function render(){
+  g2(ctx); ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.clearRect(0,0,W,H);
+  drawTable();
+  if(assembledNow()&&phase!=='flash') drawReflection();
+  drawShadow();
+  if(assembledNow()) drawBowlFlat(); else drawScatter();
+  if(phase==='flash') drawFlash();
+  if(phase==='sweep') drawSweep();
+  drawParts();
+  drawMotes();
+  drawVignette();
+}
+
+/* ---------- 13. 状态机 ---------- */
+function setPhase(p){phase=p;phaseT=T;}
+function fractureAt(x,y){
+  if(phase!=='idle') return;
+  if(!insideConvex({x:x,y:y},REG.edges)){ hintEl.classList.remove('nope'); void hintEl.offsetWidth; hintEl.classList.add('nope'); return; }
+  var rng=mulberry32(newSeed());
+  lastClick={x:x,y:y};
+  var fr=buildFracture(rng,{x:x,y:y},REG);
+  SHARDS=buildShards(fr,rng);
+  SEAMS=SEAMS.concat(fr.seams.map(function(s){
+    var p=s.pts, i, x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+    for(i=0;i<p.length;i++){if(p[i].x<x0)x0=p[i].x;if(p[i].x>x1)x1=p[i].x;if(p[i].y<y0)y0=p[i].y;if(p[i].y>y1)y1=p[i].y;}
+    var cx=(x0+x1)/2,cy=(y0+y1)/2;
+    return {id:++goldSeeds,pts:p,len:s.len,grow:0,debt:0,
+      ang:Math.atan2(y1-y0,x1-x0), ph:rng()*TAU, tint:rng()<0.45?1:0,
+      d0:Math.hypot(p[0].x-x,p[0].y-y)};
+  }));
+  attachGold(SHARDS,SEAMS);
+  resetPile();
+  GOLDW=clamp(REG.w*0.008,1.5,3.1);
+  /* 初始冲量：近点击点更猛 */
+  for(var i=0;i<SHARDS.length;i++){
+    var s=SHARDS[i];
+    var dx=s.cx-x, dy=s.cy-y, d=Math.hypot(dx,dy)||1;
+    var prox=1/(1+(d/(REG.w*0.30)));      /* 0..1 */
+    var sp=(60+230*prox)*(0.75+0.5*((i*37)%11)/11);
+    s.vx=dx/d*sp+ (Math.random()-0.5)*40;
+    s.vy=dy/d*sp*0.34 - (25+120*prox+Math.random()*60);
+    s.av=(Math.random()-0.5)*7- (dx>0?1.6:-1.6);
+    s.pv=(Math.random()-0.5)*9+ (dx>0?2.2:-2.2);
+    s.asleep=false; s.st=0; s.home=false; s.scatter=1;
+  }
+  spawnDust(x,y,52,'226,238,230');
+  spawnDust(x,y,18,'150,186,172');
+  AU.fracture();
+  hintEl.classList.add('gone');
+  goldTexValid=false;
+  setPhase('flash');
+  updateChips();
+}
+function beginReturn(){
+  var maxD=1,i;
+  for(i=0;i<SHARDS.length;i++) maxD=Math.max(maxD,Math.hypot(SHARDS[i].x-SHARDS[i].cx,SHARDS[i].y-SHARDS[i].cy));
+  for(i=0;i<SHARDS.length;i++){
+    var s=SHARDS[i];
+    var d=Math.hypot(s.x-s.cx,s.y-s.cy);
+    s.sx=s.x; s.sy0=s.y; s.sa=s.a; s.sphi=s.phi;
+    s.dly=(d/maxD)*PACE.retStag+Math.random()*0.05;
+    s.dur=PACE.retDur*(0.85+0.3*Math.random());
+    var dd=Math.hypot(s.cx-s.x,s.cy-s.y)||1;
+    s.arcS=(i%2)?1:-1;
+    s.home=false;
+  }
+  AU.whoosh();
+  setPhase('return');
+}
+function beginGold(){
+  var maxD=1,i;
+  for(i=0;i<SEAMS.length;i++) maxD=Math.max(maxD,SEAMS[i].d0);
+  var end=0;
+  for(i=0;i<SEAMS.length;i++){
+    var s=SEAMS[i];
+    if(s.grow>=1) continue;
+    s.debt=PACE.goldDelay+(s.d0/maxD)*PACE.goldStag;
+    s.dur=clamp(0.28+s.len*0.0042,0.30,0.95);
+    s.growAt=T+s.debt;
+    end=Math.max(end,s.debt+s.dur);
+  }
+  goldTotal=end;
+  goldLive=true;
+  setPhase('gold');
+}
+function finishRepair(){
+  goldLive=false;
+  repairs++;
+  goldTexValid=false;
+  renderGoldLayer(gctx,true);
+  AU.chime();
+  spawnDust(REG.cx,REG.oy+REG.h*0.45,26,'255,226,160');
+  setPhase('idle');
+  updateChips();
+}
+function doReset(){
+  SEAMS=[]; SHARDS=[]; pile=null; repairs=0; goldSeeds=0; goldTotal=0;
+  goldTexValid=false; goldLive=false; resetFade=1;
+  setPhase('idle');
+  hintEl.classList.remove('gone');
+  updateChips();
+}
+function update(dt){
+  if(phase==='flash'){ if(T-phaseT>=PACE.flash) setPhase('fall'); }
+  else if(phase==='fall'){
+    var el=T-phaseT;
+    var d=el>PACE.fallDamp?Math.pow(0.90,dt*60):1;
+    stepPhysics(SHARDS,Math.min(dt,1/45),function(s,imp){ AU.tick(imp); if(imp>320) spawnDust(s.x,floorAt(s.x),4,'214,228,218'); });
+    if(allAsleep(SHARDS)||el>PACE.settleMax) beginReturn();
+  }
+  else if(phase==='return'){
+    for(var i=0;i<SHARDS.length;i++){
+      var s=SHARDS[i];
+      var t=(T-phaseT-s.dly)/s.dur;
+      if(t<0) continue;
+      t=clamp(t,0,1);
+      var e=E.inOutCubic(t);
+      var dx=s.cx-s.sx, dy=s.cy-s.sy0, L=Math.hypot(dx,dy)||1;
+      var nx=-dy/L, ny=dx/L;
+      var off=L*0.13*s.arcS, lift=L*0.20+16;
+      var qx=(s.sx+s.cx)/2+nx*off, qy=(s.sy0+s.cy)/2+ny*off-lift;
+      var u=1-e;
+      s.x=u*u*s.sx+2*u*e*qx+e*e*s.cx;
+      s.y=u*u*s.sy0+2*u*e*qy+e*e*s.cy;
+      var da=(( -s.sa+Math.PI)%TAU+TAU)%TAU-Math.PI;
+      s.a=s.sa+da*e;
+      var k=Math.round(s.sphi/TAU);
+      s.phi=s.sphi+(k*TAU-s.sphi)*E.outQuart(t);
+      s.cosP=Math.cos(s.phi);
+      s.scatter=1-t;
+      if(t>=1){s.x=s.cx;s.y=s.cy;s.a=0;s.phi=0;s.cosP=1;s.scatter=0;s.home=true;}
+    }
+    if(T-phaseT>PACE.retStag+PACE.retDur+0.06) beginGold();
+  }
+  else if(phase==='gold'){
+    for(var k=0;k<SEAMS.length;k++){
+      var sm=SEAMS[k];
+      if(sm.grow>=1) continue;
+      sm.grow=clamp((T-sm.growAt)/sm.dur,0,1);
+      if(sm.grow>=1) spawnDust(sm.pts[0].x,sm.pts[0].y,2,'255,226,160');
+    }
+    if(T-phaseT>goldTotal+0.05){ setPhase('sweep'); sweepP=0; }
+  }
+  else if(phase==='sweep'){
+    sweepP=(T-phaseT)/PACE.sweep;
+    if(sweepP>=1) finishRepair();
+  }
+  /* 粒子 */
+  for(var p=parts.length-1;p>=0;p--){
+    var q=parts[p];
+    q.life+=dt;
+    if(q.life>=q.max){parts.splice(p,1);continue;}
+    q.vy+=520*dt; q.vx*=0.985; q.x+=q.vx*dt; q.y+=q.vy*dt;
+    var fl=floorAt(q.x);
+    if(q.y>fl){ q.y=fl; q.vy*=-0.28; q.vx*=0.7; }
+  }
+  /* 尘埃 */
+  for(var m=0;m<motes.length;m++){
+    var mm=motes[m];
+    mm.y-=mm.s*dt*10;
+    mm.x+=Math.sin(T*0.35+mm.ph)*4*dt;
+    if(mm.y<-6){mm.y=H+6;mm.x=Math.random()*W;}
+  }
+  if(resetFade>0) resetFade=Math.max(0,resetFade-dt/0.5);
+  /* 归位后重建静态金层 */
+  if(phase==='idle'&&!goldLive&&!goldTexValid) renderGoldLayer(gctx,true);
+}
+
+/* ---------- 14. UI ---------- */
+var hintEl=document.getElementById('hint');
+var nS=document.getElementById('nShard'), nC=document.getElementById('nCrack'), nF=document.getElementById('nFix');
+var lastTxt='';
+function updateChips(){
+  var a=SHARDS.length?String(SHARDS.length):'—';
+  var b=SEAMS.length?String(SEAMS.length):'—';
+  var c=String(repairs);
+  var t=a+'|'+b+'|'+c;
+  if(t===lastTxt) return;
+  lastTxt=t;
+  nS.textContent=a; nC.textContent=b; nF.textContent=c;
+}
+function resize(){
+  var w=Math.max(240,window.innerWidth||360), h=Math.max(320,window.innerHeight||480);
+  DPR=Math.min(2,window.devicePixelRatio||1);
+  W=w; H=h; TABLE_Y=Math.round(h*0.795);
+  cv.width=Math.ceil(W*DPR); cv.height=Math.ceil(H*DPR);
+  cv.style.width=W+'px'; cv.style.height=H+'px';
+  var sx=REG?REG.w/w:0;
+  var sc=REG?(REG.w/ (Math.min(h*0.285,w*0.455)*0.62*2) ):0;
+  if(REG&&SEAMS.length){                 /* 已有金线：按比例迁移 */
+    var kx=(Math.min(h*0.285,w*0.455)*0.62*2)/REG.w;
+    for(var i=0;i<SEAMS.length;i++){
+      var s=SEAMS[i];
+      for(var k=0;k<s.pts.length;k++){ s.pts[k].x*=kx; s.pts[k].y*=kx; }
+      var len=0; for(var q=1;q<s.pts.length;q++) len+=Math.hypot(s.pts[q].x-s.pts[q-1].x,s.pts[q].y-s.pts[q-1].y);
+      s.len=len;
+    }
+    goldTexValid=false;
+  }
+  REG=buildBowlRegion();
+  SHARDS=[]; pile=null; goldLive=false; goldTexValid=false;
+  if(phase!=='idle'){phase='idle';}
+  GOLDW=clamp(REG.w*0.008,1.5,3.1);
+  renderBowlTex();
+  initMotes();
+  if(!SEAMS.length) renderGoldLayer(gctx,true);
+  updateChips();
+}
+function pt(e){
+  var r=cv.getBoundingClientRect?cv.getBoundingClientRect():{left:0,top:0};
+  return {x:(e.clientX-r.left), y:(e.clientY-r.top)};
+}
+cv.addEventListener('pointerdown',function(e){
+  AU.init(); if(AU.ctx&&AU.ctx.state==='suspended') AU.ctx.resume();
+  var p=pt(e);
+  if(e.cancelable) e.preventDefault();
+  fractureAt(p.x,p.y);
+},{passive:false});
+document.getElementById('bFix').addEventListener('click',function(){
+  AU.init();
+  if(phase==='fall'||phase==='flash'){ if(phase==='flash'){for(var i=0;i<SHARDS.length;i++){SHARDS[i].asleep=true;SHARDS[i].vy=0;}} beginReturn(); }
+  else if(phase==='return'||phase==='gold'||phase==='sweep'){ /* 已在进行 */ }
+  else if(phase==='idle'&&SEAMS.length){ hintPulse(); }
+});
+document.getElementById('bReset').addEventListener('click',function(){ AU.init(); doReset(); });
+var bSnd=document.getElementById('bSnd');
+bSnd.addEventListener('click',function(){
+  AU.init();
+  AU.on=!AU.on;
+  bSnd.textContent=AU.on?'音':'静';
+  bSnd.style.opacity=AU.on?0.82:0.45;
+  if(AU.on) AU.tone(880,0.12,0.06,0,'sine');
+});
+function hintPulse(){
+  hintEl.classList.remove('gone');
+  hintEl.textContent='';
+  hintEl.innerHTML='<span class="dot"></span>金线已生 · 再点碗身可复碎';
+  clearTimeout(hintPulse._t);
+  hintPulse._t=setTimeout(function(){
+    hintEl.innerHTML='<span class="dot"></span>点击碗身任意处 · 碗将从那一点裂开';
+    hintEl.classList.add('gone');
+  },2600);
+}
+window.addEventListener('resize',function(){
+  clearTimeout(resize._t);
+  resize._t=setTimeout(resize,140);
+});
+window.addEventListener('orientationchange',function(){
+  clearTimeout(resize._t);
+  resize._t=setTimeout(resize,260);
+});
+
+/* ---------- 15. 主循环 ---------- */
+function frame(ts){
+  requestAnimationFrame(frame);
+  var dt=(last?(ts-last)/1000:0.016);
+  last=ts;
+  dt=Math.min(0.05,Math.max(0.001,dt));
+  T+=dt;
+  update(dt);
+  render();
+}
+
+/* 测试钩子：几何 / 物理的纯函数，供离线数值校验 */
+window.__KIN__={
+  buildBowlRegion:buildBowlRegion,
+  buildFracture:buildFracture,
+  buildShards:buildShards,
+  computeCells:computeCells,
+  powerCell:powerCell,
+  clipHalf:clipHalf,
+  polyArea:polyArea,
+  simplifyRing:simplifyRing,
+  convexHull:convexHull,
+  outwardEdges:outwardEdges,
+  stepPhysics:stepPhysics,
+  worldOf:worldOf,
+  floorAt:floorAt,
+  setRegion:function(r){REG=r;resetPile();},
+  getPile:function(){return pile;},
+  setTable:function(y){TABLE_Y=y;},
+  STATE:function(){return {phase:phase,seams:SEAMS.length,shards:SHARDS.length,repairs:repairs};}
+};
+
+resize();
+updateChips();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>股票监控面板</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 18px;
+    background: #0b0f16; color: #dbe4f0;
+    font-family: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .panel { width: min(96vw, 460px); background: linear-gradient(170deg, #151d2b, #0d131d); border: 1px solid rgba(255,255,255,.07); border-radius: 22px; padding: 20px; box-shadow: 0 20px 50px rgba(0,0,0,.5); }
+  .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .top h1 { font-size: 17px; font-weight: 600; letter-spacing: .05em; }
+  .top h1 small { font-size: 11px; color: #7d8ba1; font-weight: 400; margin-left: 8px; }
+  .live { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #7d8ba1; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: #ff5252; animation: pulse 1.2s infinite; }
+  @keyframes pulse { 50% { opacity: .25; } }
+  .chartbox { position: relative; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.05); border-radius: 16px; padding: 14px 14px 6px; }
+  .sel { display: flex; align-items: baseline; gap: 10px; }
+  .sel .nm { font-size: 15px; font-weight: 600; }
+  .sel .cd { font-size: 11px; color: #7d8ba1; }
+  .sel .pr { margin-left: auto; font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; transition: color .3s; }
+  .sel .ch { font-size: 12px; font-variant-numeric: tabular-nums; }
+  .up { color: #ff5252; } .down { color: #12b876; }
+  .sel .pr.up, .sel .ch.up { color: #ff5252; } .sel .pr.down, .sel .ch.down { color: #12b876; }
+  #main { width: 100%; height: 130px; display: block; }
+  .tags { display: flex; gap: 6px; padding: 4px 2px 10px; }
+  .tags span { font-size: 10px; color: #8f9cb3; background: rgba(255,255,255,.05); border-radius: 6px; padding: 2px 8px; }
+  .list { display: flex; flex-direction: column; gap: 8px; }
+  .row { display: grid; grid-template-columns: 1fr 64px 76px; align-items: center; gap: 10px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.05); border-radius: 14px; padding: 10px 12px; cursor: pointer; transition: background .25s, transform .15s; }
+  .row:hover { background: rgba(255,255,255,.07); }
+  .row.on { border-color: rgba(120,170,255,.45); background: rgba(80,130,255,.09); }
+  .row .nm { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .row .nm em { font-style: normal; font-size: 10px; color: #7d8ba1; font-weight: 400; }
+  .row .p { text-align: right; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; transition: color .3s; }
+  .row .c { text-align: right; font-size: 11px; font-variant-numeric: tabular-nums; }
+  .row .c small { display: block; font-size: 10px; opacity: .8; }
+  .row flash { animation: flash .5s; }
+  @keyframes flash { 0% { background: rgba(255,255,255,.16); } }
+  .warn { margin-top: 12px; display: flex; align-items: center; gap: 8px; background: rgba(255,180,60,.1); border: 1px solid rgba(255,180,60,.35); color: #ffc86b; font-size: 11px; border-radius: 12px; padding: 8px 12px; }
+  .warn b { font-weight: 600; }
+  @media (max-width: 390px) { .panel { padding: 14px; border-radius: 16px; } .row { grid-template-columns: 1fr 56px 70px; } }
+</style>
+</head>
+<body>
+<div class="panel">
+  <div class="top">
+    <h1>实时监控<small>数据模拟 · 非投资建议</small></h1>
+    <div class="live"><span class="dot"></span>LIVE · <span id="clock">--:--:--</span></div>
+  </div>
+  <div class="chartbox">
+    <div class="sel">
+      <span class="nm" id="sName">—</span><span class="cd" id="sCode">—</span>
+      <span class="pr" id="sPrice">0.00</span><span class="ch" id="sChg">—</span>
+    </div>
+    <svg id="main" preserveAspectRatio="none"></svg>
+    <div class="tags"><span>分时</span><span>量 128.4万手</span><span>换手 3.2%</span><span>振幅 <b id="amp">—</b></span></div>
+  </div>
+  <div class="list" id="list"></div>
+  <div class="warn">⚠ <span><b>波动提示：</b><span id="warnTxt">当前监控中暂无异动</span></span></div>
+</div>
+<script>
+  const UP = '#ff5252', DOWN = '#12b876';
+  const seed = (n, base, vol) => Array.from({ length: 40 }, (_, i) => base + Math.sin(i / 4) * vol * 2 + (Math.random() - .5) * vol);
+  const mk = (name, code, base, vol, unit) => ({ name, code, base, vol, unit, price: base, prev: base, hist: seed(40, base, vol) });
+  const stocks = [
+    mk('星舟科技', 'SH688888', 142.5, 1.6, ''),
+    mk('云岭能源', 'SZ300666', 38.2, .5, ''),
+    mk('澜山酒业', 'SH603999', 76.8, .9, ''),
+    mk('苍穹生物', 'SH688111', 210.3, 2.2, '')
+  ];
+  let sel = 0;
+  const $ = id => document.getElementById(id);
+  const path = (arr, w, h, pad) => {
+    const min = Math.min(...arr), max = Math.max(...arr), r = (max - min) || 1;
+    return arr.map((v, i) => `${(i / (arr.length - 1) * (w - pad * 2) + pad).toFixed(1)},${(h - 12 - (v - min) / r * (h - 30)).toFixed(1)}`).join(' ');
+  };
+  function drawMain() {
+    const s = stocks[sel], box = $('main').getBoundingClientRect(), w = box.width, h = 130;
+    const up = s.price >= s.base;
+    const c = up ? UP : DOWN;
+    $('main').setAttribute('viewBox', `0 0 ${w} ${h}`);
+    $('main').innerHTML = `
+      <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${c}" stop-opacity=".32"/><stop offset="1" stop-color="${c}" stop-opacity="0"/>
+      </linearGradient></defs>
+      <polygon points="${path(s.hist, w, h, 10)} ${w - 10},${h} 10,${h}" fill="url(#ag)"/>
+      <polyline points="${path(s.hist, w, h, 10)}" fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="${w - 10}" cy="${(h - 12 - (s.price - Math.min(...s.hist)) / ((Math.max(...s.hist) - Math.min(...s.hist)) || 1) * (h - 30)).toFixed(1)}" r="3.4" fill="#fff" stroke="${c}" stroke-width="2"/>`;
+  }
+  function drawRow(s, i) {
+    const el = $('list').children[i];
+    const up = s.price >= s.prev, cls = up ? 'up' : 'down', ar = up ? '▲' : '▼';
+    const pct = ((s.price - s.prev) / s.prev * 100).toFixed(2);
+    el.className = 'row' + (i === sel ? ' on' : '');
+    el.innerHTML = `<span class="nm">${s.name}<em>${s.code}</em></span>
+      <span class="p ${cls}" style="color:${up ? UP : DOWN}">${s.price.toFixed(2)}</span>
+      <span class="c ${cls}" style="color:${up ? UP : DOWN}">${ar} ${Math.abs(s.price - s.prev).toFixed(2)}<small>${pct}%</small></span>`;
+    el.onclick = () => { sel = i; refresh(true); };
+  }
+  function refresh(soft) {
+    const s = stocks[sel];
+    $('sName').textContent = s.name; $('sCode').textContent = s.code;
+    $('sPrice').textContent = s.price.toFixed(2);
+    const up = s.price >= s.prev, diff = s.price - s.prev, pct = (diff / s.prev * 100).toFixed(2);
+    $('sPrice').className = 'pr ' + (up ? 'up' : 'down');
+    $('sChg').className = 'ch ' + (up ? 'up' : 'down');
+    $('sChg').textContent = `${up ? '▲ +' : '▼ '}${diff.toFixed(2)}  ${pct}%`;
+    $('amp').textContent = ((Math.max(...s.hist) - Math.min(...s.hist)) / s.prev * 100).toFixed(2) + '%';
+    stocks.forEach((st, i) => drawRow(st, i));
+    drawMain();
+    const hot = stocks.filter(st => (Math.max(...st.hist) - Math.min(...st.hist)) / st.prev > .06);
+    $('warnTxt').innerHTML = hot.length ? `<b>${hot.map(h => h.name).join('、')}</b> 振幅超 6%，注意波动风险` : '当前监控中暂无异动';
+    if (!soft) requestAnimationFrame(drawMain);
+  }
+  $('list').innerHTML = stocks.map(() => '<div class="row"></div>').join('');
+  function tick() {
+    stocks.forEach(s => {
+      const drift = (Math.random() - .5) * s.vol * (s.unit ? 1 : 1);
+      s.price = Math.max(s.prev * .9, s.price + drift);
+      s.hist.push(s.price); if (s.hist.length > 40) s.hist.shift();
+    });
+    const row = $('list').children[sel];
+    row.classList.remove('flash'); void row.offsetWidth; row.classList.add('flash');
+    refresh(true);
+  }
+  setInterval(tick, 900);
+  setInterval(() => { $('clock').textContent = new Date().toLocaleTimeString('zh-CN', { hour12: false }); }, 1000);
+  addEventListener('resize', drawMain);
+  refresh();
+</script>
+</body>
+</html>

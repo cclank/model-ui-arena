@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>山水长卷 · 卧游</title>
+<style>
+  :root{--ink:#efe4cc;--muted:rgba(239,228,204,.6);--gold:#d9b46a}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#1a130e;color:var(--ink);font-family:"Songti SC","STSong","Noto Serif SC",serif;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+  canvas.stamp{cursor:crosshair}
+  .title{position:fixed;left:24px;top:18px;z-index:2}
+  .title h1{font-size:24px;letter-spacing:.45em;font-weight:700;line-height:1.1}
+  .title p{font-size:13px;letter-spacing:.2em;color:var(--muted);margin-top:6px}
+  .info{position:fixed;right:24px;top:20px;z-index:2;font-size:12px;letter-spacing:.12em;color:var(--muted);text-align:right;line-height:1.8}
+  .info b{color:var(--gold);font-weight:400}
+  .ctrl{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:2;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:max-content;max-width:calc(100% - 20px)}
+  button{font:inherit;font-size:13px;letter-spacing:.16em;color:var(--ink);background:rgba(239,228,204,.07);border:1px solid rgba(239,228,204,.25);border-radius:999px;padding:9px 16px;cursor:pointer;transition:.2s}
+  button:hover{border-color:var(--gold);color:var(--gold)}
+  button.on{background:var(--gold);border-color:var(--gold);color:#2a1a08}
+  .hint{position:fixed;left:24px;bottom:22px;z-index:2;font-size:12px;color:var(--muted);letter-spacing:.1em;line-height:1.8}
+  @media (max-width:760px){.title{left:14px;top:12px}.title h1{font-size:19px}.info{right:14px;top:14px;font-size:11px}.hint{display:none}.ctrl{bottom:12px}button{padding:8px 11px;font-size:12px;letter-spacing:.06em}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="title"><h1>山水长卷</h1><p id="ttl"></p></div>
+<div class="info" id="info"></div>
+<div class="hint">拖动展卷，自右向左读<br>滚轮、方向键亦可 · 盖章后点击画面</div>
+<div class="ctrl" id="ctrl"><button id="bAuto" class="on">卧游</button><button id="bNew">换一卷</button><button id="bStamp">盖章</button><button id="bHome">回到卷首</button></div>
+<script>
+"use strict";
+/* ==========================================================================
+   山水长卷 · 卧游 —— 无尽生成的水墨手卷（Canvas 2D，零依赖）
+   · 手卷自右向左展开：最右是包首与引首（大字题名、引首章），隔水之后是画心，向左无限生成
+   · 同一卷号 = 同一幅画：画心按“层 × 段”分块，每块由 hash(卷号, 层, 段) 播种；
+     每个物件（山、树、屋、石、题跋）自带种子，跨块重绘时笔笔一致，所以块与块之间无缝
+   · 三远法分层：远山（花青淡染）/ 中景（淡墨，塔、林）/ 近景（高远峭壁或平远水岸：披麻皴、斧劈皴、苔点）/ 前景
+     各层视差不同，远层走得慢、墨色淡；层与层之间以游移的云雾留白相隔
+   · 会呼吸：云雾游移、浓淡起伏；瀑布下泻、炊烟袅袅、渔舟来回、雁阵过空、帆影远行
+   ========================================================================== */
+const cv = document.getElementById("c"), ctx = cv.getContext("2d"), $ = (i) => document.getElementById(i);
+const TAU = Math.PI * 2, clamp = (v, a, b) => Math.max(a, Math.min(b, v)), lerp = (a, b, t) => a + (b - a) * t, smooth = (t) => t * t * (3 - 2 * t);
+function rng(a) { return function () { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const hash3 = (a, b, c) => { let h = (2166136261 ^ a) >>> 0; h = Math.imul(h ^ (b + 0x9e3779b9), 16777619); h = Math.imul(h ^ Math.imul(c, 0x27d4eb2d), 16777619); h ^= h >>> 13; h = Math.imul(h, 0x5bd1e995); return (h ^ (h >>> 15)) >>> 0; };
+const gauss = (R) => Math.sqrt(-2 * Math.log(R() + 1e-9)) * Math.cos(TAU * R()), pick = (R, a) => a[Math.floor(R() * a.length)];
+const PH = 1000, CW = 1000;                                            // 画心高 1000 单位；每块宽 1000 单位
+const INK = (a) => `rgba(28,24,20,${a})`, BLUE = (a) => `rgba(62,80,100,${a})`, OCHRE = (a) => `rgba(160,112,64,${a})`, PAPER = "#e9dbba", PAPER_A = "rgba(234,222,194,0.97)";
+let SEED = 0, QJ = false, TITLE = "", SIGN = "", SIGNER_NAME = "", SEALS = [];
+const FLECKS = [];
+
+/* ---------- 毛笔：起笔重按、收笔提锋，宽度抖动；dry > 0 时拆成数股并随机断笔 = 飞白 ---------- */
+function brush(c, pts, w, col, R, o = {}) {
+  const n = pts.length; if (n < 2) return;
+  const press = o.press ?? 0.18, lift = o.lift ?? 0.6, dry = o.dry || 0, prof = (t) => (0.4 + 0.6 * Math.min(1, t / press)) * Math.max(0.1, Math.pow(1 - t, lift));
+  const nrm = []; for (let i = 0; i < n; i++) { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1; nrm.push([-dy / l, dx / l]); }
+  const strands = dry ? 3 + Math.floor(dry * 4) : 1; c.fillStyle = col;
+  for (let s = 0; s < strands; s++) {
+    const off = strands === 1 ? 0 : (s / (strands - 1) - 0.5) * w * 0.8, sw = strands === 1 ? 1 : 0.5 + R() * 0.5; let L = [], Rt = [];
+    const flush = () => { if (L.length > 1) { c.beginPath(); c.moveTo(L[0][0], L[0][1]); for (let i = 1; i < L.length; i++) c.lineTo(L[i][0], L[i][1]); for (let i = Rt.length - 1; i >= 0; i--) c.lineTo(Rt[i][0], Rt[i][1]); c.closePath(); c.fill(); } L = []; Rt = []; };
+    for (let i = 0; i < n; i++) {
+      if (dry && R() < dry * 0.16) { flush(); continue; }
+      const t = i / (n - 1), hw = (w * prof(t) * sw * (0.85 + R() * 0.3)) / (strands === 1 ? 2 : strands * 0.9), nx = nrm[i][0], ny = nrm[i][1], cx = pts[i][0] + nx * off, cy = pts[i][1] + ny * off;
+      L.push([cx + nx * hw, cy + ny * hw]); Rt.push([cx - nx * hw, cy - ny * hw]);
+    }
+    flush();
+  }
+}
+function pl(x0, y0, x1, y1, n, bend, R, jit = 0.5) { const pts = [], dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l; for (let i = 0; i < n; i++) { const t = i / (n - 1), b = Math.sin(Math.PI * t) * bend + (R() - 0.5) * jit; pts.push([x0 + dx * t + nx * b, y0 + dy * t + ny * b]); } return pts; }
+function blot(c, x, y, rx, ry, col, rot = 0) { c.fillStyle = col; c.beginPath(); c.ellipse(x, y, rx, ry, rot, 0, TAU); c.fill(); }
+
+/* ---------- 题名、落款、诗句素材（自拟组合） ---------- */
+const TA = ["溪山", "江山", "云山", "松泉", "烟岚", "秋林", "春江", "雪霁", "万壑", "千岩", "林泉", "渔村"], TB = ["清远", "无尽", "卧游", "行旅", "秋霁", "晴晓", "渔隐", "烟雨", "归棹", "幽居", "胜览", "长春"];
+const GAN = "甲乙丙丁戊己庚辛壬癸", ZHI = "子丑寅卯辰巳午未申酉戌亥", SEASON = ["春日", "夏日", "秋日", "冬日", "春暮", "秋暮"], SIGNER = ["霜天", "卧游者", "溪上人", "松下客"];
+const PA = ["远岫", "寒林", "孤舟", "松风", "溪云", "野渡", "疏钟", "晴岚", "空江", "石径", "柴门", "夕照", "渔灯", "烟树", "春水", "秋山", "暮雪", "白鸥", "苍苔", "竹影", "归雁", "断桥", "茅檐", "清泉"];
+const PB = ["初歇", "欲晚", "渐远", "相送", "不语", "犹湿", "半掩", "独往", "长流", "微茫", "未收", "如梦", "无声", "暗度", "轻飞", "自闲", "空明", "欲断"];
+const PC = ["处", "里", "外", "中", "边", "后", "深", "迟", "闲", "归", "时", "寒"], PD = ["数峰", "一径", "千重", "几点", "半江", "满山", "一川", "两岸"];
+const poemLine = (R, five) => (five ? "" : pick(R, PD)) + pick(R, PA) + pick(R, PB) + pick(R, PC);
+const SEAL_TEXTS = ["卧游", "山长水远", "烟云供养", "闲云", "心远", "林泉高致", "溪山", "清赏"];
+function makeSeal(text, zhu, R) {                                        // 印章：白文（红底白字）/ 朱文（红字红框），带印泥斑驳
+  const S = 160, cvs = document.createElement("canvas"); cvs.width = cvs.height = S; const c = cvs.getContext("2d");
+  const chars = [...text], n = chars.length, cols = n === 4 ? 2 : 1, rows = n === 4 ? 2 : n, w = cols === 1 ? S * 0.62 : S, x0 = (S - w) / 2, j = () => (R() - 0.5) * 5;
+  const rect = new Path2D(); rect.moveTo(x0 + 6 + j(), 6 + j()); rect.lineTo(x0 + w - 6 + j(), 6 + j()); rect.lineTo(x0 + w - 6 + j(), S - 6 + j()); rect.lineTo(x0 + 6 + j(), S - 6 + j()); rect.closePath();
+  const fs = cols === 2 ? S * 0.4 : Math.min(w * 0.8, ((S - 20) / rows) * 0.95), pos = (i) => (cols === 2 ? [x0 + (i < 2 ? w * 0.74 : w * 0.26), S * (i % 2 ? 0.72 : 0.29)] : [S / 2, 10 + ((S - 20) / rows) * (i + 0.5)]);
+  c.fillStyle = c.strokeStyle = "#b3261e"; c.font = `700 ${fs}px "STKaiti","KaiTi","Kaiti SC","Songti SC",serif`; c.textAlign = "center"; c.textBaseline = "middle";
+  if (!zhu) { c.fill(rect); c.globalCompositeOperation = "destination-out"; chars.forEach((ch, i) => c.fillText(ch, ...pos(i))); }
+  else { c.lineWidth = 7; c.stroke(rect); chars.forEach((ch, i) => c.fillText(ch, ...pos(i))); }
+  c.globalCompositeOperation = "destination-out"; for (let i = 0; i < 260; i++) { c.globalAlpha = 0.3 + R() * 0.7; c.beginPath(); c.arc(R() * S, R() * S, R() * 1.8, 0, TAU); c.fill(); }
+  c.globalAlpha = 1; c.globalCompositeOperation = "source-over"; return cvs;
+}
+
+/* ---------- 云雾贴图（纸色半透明）与绢本纸纹 ---------- */
+const MIST = document.createElement("canvas");
+(() => { MIST.width = 512; MIST.height = 160; const c = MIST.getContext("2d"), R = rng(4242); c.scale(1, 0.4);
+  for (let i = 0; i < 28; i++) { const x = 130 + R() * 252, y = 150 + R() * 100, r = 40 + R() * 70, g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, "rgba(236,226,200,.5)"); g.addColorStop(1, "rgba(236,226,200,0)"); c.fillStyle = g; c.fillRect(x - r, y - r, 2 * r, 2 * r); } })();
+let PAPER_TILE = null;
+function buildPaper(dpr) {
+  const T = 420, p = document.createElement("canvas"); p.width = p.height = Math.round(T * dpr); const c = p.getContext("2d"), R = rng(99); c.scale(dpr, dpr);
+  c.fillStyle = PAPER; c.fillRect(0, 0, T, T);
+  for (let i = 0; i < 700; i++) { const x = R() * T, y = R() * T, l = 4 + R() * 14, a = R() * TAU; c.strokeStyle = R() < 0.5 ? "rgba(120,90,40,.05)" : "rgba(255,252,240,.12)"; c.lineWidth = 0.5 + R() * 0.8; c.beginPath(); for (const ox of [-T, 0, T]) for (const oy of [-T, 0, T]) { c.moveTo(x + ox, y + oy); c.lineTo(x + ox + Math.cos(a) * l, y + oy + Math.sin(a) * l); } c.stroke(); }   // 绕边重复 → 平铺无缝
+  for (let y = 0; y < T; y += 3) { c.fillStyle = "rgba(120,96,60,.03)"; c.fillRect(0, y, T, 1); }                    // 绢丝经纬
+  for (let x = 0; x < T; x += 3) { c.fillStyle = "rgba(255,250,235,.045)"; c.fillRect(x, 0, 1, T); }
+  PAPER_TILE = p;
+}
+
+/* ---------- 山形：若干高斯峰叠加 + 体量包络 + 多尺度起伏 + 峰顶“矾头” ---------- */
+function profile(e) {
+  const R = rng(e.seed), far = e.style === "far", n = far ? 70 : 110, np = 1 + Math.floor(R() * (far ? 3 : 3.99)), pk = [];
+  for (let i = 0; i < np; i++) pk.push({ c: (R() - 0.5) * 1.1, s: 0.1 + R() * 0.2, h: i ? 0.35 + R() * 0.5 : 1 });
+  pk[0].c *= 0.4; const ph = [R() * 6, R() * 6, R() * 6, R() * 6], xs = [], ys = [];
+  for (let i = 0; i <= n; i++) {
+    const u = (i / n) * 2 - 1, env = Math.pow(Math.max(0, 1 - u * u), 0.9); let v = 0;
+    for (const p of pk) v = Math.max(v, p.h * Math.exp(-((u - p.c) ** 2) / (2 * p.s * p.s)));
+    v = Math.max(v, 0.28 * env) * env + env * (0.045 * Math.sin(u * 11 + ph[0]) + 0.025 * Math.sin(u * 27 + ph[1]) + 0.012 * Math.sin(u * 61 + ph[2]));
+    v += env * Math.max(0, v - 0.55) * 0.12 * Math.abs(Math.sin(u * 40 + ph[3]));
+    xs.push(e.cx + (u * e.w) / 2); ys.push(e.base - e.h * Math.max(0, v));
+  }
+  const P = { xs, ys, pk: [] }; for (const p of pk) { const x = e.cx + (p.c * e.w) / 2; P.pk.push({ x, y: ridgeAt(P, x), s: (p.s * e.w) / 2 }); }
+  return P;
+}
+function ridgeAt(P, x) { const xs = P.xs, n = xs.length - 1; if (x <= xs[0]) return P.ys[0]; if (x >= xs[n]) return P.ys[n]; const f = ((x - xs[0]) / (xs[n] - xs[0])) * n, i = Math.floor(f); return lerp(P.ys[i], P.ys[Math.min(n, i + 1)], f - i); }
+const nearestPeak = (P, x) => P.pk.reduce((a, b) => (Math.abs(b.x - x) < Math.abs(a.x - x) ? b : a));
+function fallSpot(e, P) { const n = P.xs.length - 1; let bi = Math.round(n * 0.55), by = -1; for (let i = Math.round(n * 0.3); i <= Math.round(n * 0.7); i++) if (P.ys[i] > by) { by = P.ys[i]; bi = i; } return { x: P.xs[bi], y0: P.ys[bi] + 16, y1: e.base - 24, w: 12 }; }
+function templeSpot(P) { const p = P.pk[0], x = p.x - p.s * 0.55; return { x, y: ridgeAt(P, x) + 26 }; }
+
+/* ---------- 构图：近景每段在“高远峭壁 / 平远水岸 / 空阔水面”之间交替，保证疏密开合 ---------- */
+const typeRaw = (k) => { const r = rng(hash3(SEED, 99, k))(); return r < 0.36 ? "cliff" : r < 0.7 ? "shore" : "water"; };
+const typeOf = (k) => (k === -1 ? "shore" : typeRaw(k) === "cliff" && typeRaw(k + 1) === "cliff" ? "shore" : typeRaw(k));
+function treeOf(x, y, h, R, sd, t) { return { kind: "tree", t: t || pick(R, ["pine", "leaf", "leaf", "willow", "pine"]), x, y, h, lean: (R() - 0.5) * 0.45, seed: sd() }; }
+function gen(L, k) {
+  const R = rng(hash3(SEED, L, k)), rr = (a, b) => a + R() * (b - a), sd = () => (R() * 4294967296) >>> 0, x0 = k * CW, E = [], live = [];
+  if (L === 0) {                                                       // 远山：花青淡染
+    for (let i = 0, n = R() < 0.6 ? 2 : 1; i < n; i++) E.push({ kind: "mtn", style: "far", cx: x0 + rr(100, 900), w: rr(650, 1300), h: rr(110, 260), base: rr(640, 660), tone: rr(0.2, 0.36), seed: sd() });
+    live.push({ kind: "mist", x: x0 + 500, y: 632, w: 1400, h: 100, ph: R() * 6 });
+  } else if (L === 1) {                                                // 中景：淡墨山、塔、帆、雁
+    const cx = x0 + rr(150, 850), w = rr(420, 900);
+    E.push({ kind: "mtn", style: "mid", cx, w, h: rr(170, 360), base: rr(692, 712), seed: sd(), pagoda: R() < 0.3 });
+    live.push({ kind: "mist", x: cx, y: 676, w: w * 1.15, h: 90, ph: R() * 6 });
+    if (R() < 0.4) live.push({ kind: "sail", x: x0 + rr(100, 900), y: rr(716, 738), s: rr(0.5, 0.8), ph: R() * 6, range: rr(30, 90) });
+    if (R() < 0.25) live.push({ kind: "birds", x: x0 + rr(0, 1000), y: rr(140, 320), n: 4 + ((R() * 6) | 0), ph: R() * 6 });
+  } else if (L === 2 && k < 0) {                                       // 近景
+    const t = typeOf(k), shore = rr(765, 800);
+    if (t === "cliff") {
+      const cx = x0 + rr(300, 700), w = rr(520, 800), h = rr(470, 690), m = { kind: "mtn", style: "near", cx, w, h, base: shore + 8, seed: sd(), fall: R() < 0.55, temple: R() < 0.5, cun: R() < 0.5 ? "pima" : "fupi" };
+      E.push(m); const P = profile(m);
+      if (m.fall) { const f = fallSpot(m, P); live.push({ kind: "fall", ...f }); live.push({ kind: "mist", x: f.x, y: f.y1 - 6, w: 200, h: 60, ph: R() * 6 }); }
+      if (m.temple) { const tp = templeSpot(P); live.push({ kind: "mist", x: tp.x + 20, y: tp.y + 16, w: 240, h: 56, ph: R() * 6 }); }
+      live.push({ kind: "mist", x: cx + rr(-100, 100), y: m.base - h * rr(0.35, 0.55), w: w * 0.8, h: 80, ph: R() * 6 });
+      for (let i = 0, n = 2 + ((R() * 3) | 0); i < n; i++) E.push({ kind: "rock", x: cx + rr(-w * 0.5, w * 0.5), y: shore + rr(6, 30), w: rr(50, 120), h: rr(30, 70), seed: sd() });
+      for (let i = 0, n = 2 + ((R() * 3) | 0); i < n; i++) E.push(treeOf(cx + rr(-w * 0.55, w * 0.55), shore + rr(0, 14), rr(70, 130), R, sd));
+      if (R() < 0.6) { const hx = cx + rr(-w * 0.45, w * 0.45); E.push({ kind: "hut", x: hx, y: shore + 6, s: rr(0.8, 1.1), seed: sd() }); live.push({ kind: "smoke", x: hx + 8, y: shore - 28, ph: R() * 6 }); }
+    } else if (t === "shore") {
+      for (let i = 0, n = R() < 0.6 ? 2 : 1; i < n; i++) E.push({ kind: "mtn", style: "near", cx: x0 + rr(150, 850), w: rr(300, 620), h: rr(90, 230), base: shore + 10, seed: sd(), cun: "pima" });
+      const ta = x0 + rr(100, 450), tb = ta + rr(250, 450);
+      for (let i = 0, n = 4 + ((R() * 7) | 0); i < n; i++) E.push(treeOf(rr(ta, tb), shore + rr(-4, 16), rr(70, 170), R, sd));
+      for (let i = 0, n = R() < 0.55 ? 1 : 2; i < n; i++) { const hx = rr(ta - 60, tb + 60); E.push({ kind: "hut", x: hx, y: shore + 8, s: rr(0.8, 1.15), seed: sd() }); if (R() < 0.7) live.push({ kind: "smoke", x: hx + 8, y: shore - 26, ph: R() * 6 }); }
+      if (R() < 0.4) E.push({ kind: "person", x: rr(ta, tb), y: shore + 16, seed: sd() });
+      if (R() < 0.35) E.push({ kind: "bridge", x: x0 + rr(150, 850), y: shore + 14, w: rr(70, 120), seed: sd() });
+      for (let i = 0, n = 2 + ((R() * 3) | 0); i < n; i++) E.push({ kind: "rock", x: x0 + rr(60, 940), y: shore + rr(10, 40), w: rr(40, 100), h: rr(24, 60), seed: sd() });
+    } else {                                                           // 平远：大片留白水面
+      if (R() < 0.65) { const ix = x0 + rr(250, 750), iy = rr(800, 850); E.push({ kind: "mtn", style: "near", cx: ix, w: rr(160, 300), h: rr(40, 90), base: iy, seed: sd(), cun: "pima" }); for (let i = 0, n = 2 + ((R() * 2) | 0); i < n; i++) E.push(treeOf(ix + rr(-60, 60), iy - rr(10, 25), rr(60, 110), R, sd)); }
+      for (let i = 0, n = 1 + ((R() * 3) | 0); i < n; i++) E.push({ kind: "reeds", x: x0 + rr(80, 920), y: rr(860, 960), seed: sd() });
+      if (R() < 0.35) live.push({ kind: "birds", x: x0 + 500, y: rr(180, 300), n: 5 + ((R() * 5) | 0), ph: R() * 6 });
+    }
+    E.push({ kind: "ripples", x0, x1: x0 + CW, y0: t === "water" ? 722 : shore + 22, y1: 990, seed: sd() });
+    for (let i = 0, n = t === "water" ? (R() < 0.5 ? 2 : 1) : R() < 0.5 ? 1 : 0; i < n; i++) live.push({ kind: "boat", x: x0 + rr(150, 850), y: rr(855, 935), range: rr(40, 140), sp: rr(0.03, 0.08), ph: R() * 6, s: rr(0.9, 1.2) });
+    if (t !== "cliff" && k % 2 === 0 && R() < 0.7) { const x = x0 + rr(500, 900); E.push({ kind: "poem", x, y: rr(90, 150), seed: sd(), x0: x - 240, x1: x + 30 }); }
+  } else if (L === 3 && k < 0 && R() < 0.28) {                         // 前景：偶尔有近石巨松压住画底
+    const x = x0 + rr(100, 900); E.push({ kind: "rock", x, y: rr(985, 1010), w: rr(160, 300), h: rr(90, 150), seed: sd(), big: true }); E.push(treeOf(x + rr(-80, 80), rr(960, 990), rr(260, 380), R, sd, pick(R, ["pine", "leaf"])));
+  }
+  for (const e of E) if (e.x0 === undefined) { const c = e.cx ?? e.x, hw = e.w ? e.w / 2 + 40 : (e.h || 60) * 0.7 + 30; e.x0 = c - hw; e.x1 = c + hw; }
+  return { E, live };
+}
+
+/* ---------- 画山：纸底遮挡 → 淡墨/设色晕染 → 阴面 → 皴（顺山势）→ 结构线 → 轮廓（干笔飞白）→ 苔点 → 点景 ---------- */
+function drawMountain(c, e) {
+  const P = profile(e), R = rng(e.seed ^ 0x2545f491), rr = (a, b) => a + R() * (b - a), far = e.style === "far", near = e.style === "near", n = P.xs.length - 1;
+  const top = Math.min(...P.ys), sil = new Path2D(); sil.moveTo(P.xs[0], e.base + 2); P.xs.forEach((x, i) => sil.lineTo(x, P.ys[i])); sil.lineTo(P.xs[n], e.base + 2); sil.closePath();
+  const g = c.createLinearGradient(0, top, 0, e.base);
+  if (far) {
+    g.addColorStop(0, BLUE(e.tone)); g.addColorStop(0.6, BLUE(e.tone * 0.45)); g.addColorStop(1, BLUE(0)); c.fillStyle = g; c.fill(sil);
+    brush(c, P.xs.map((x, i) => [x, P.ys[i]]), 1.6, BLUE(e.tone * 0.9), R, { lift: 0.3 }); return;
+  }
+  c.fillStyle = PAPER; c.fill(sil);                                     // 近处的山遮住远处
+  g.addColorStop(0, INK(near ? 0.3 : 0.2)); g.addColorStop(0.45, INK(near ? 0.13 : 0.09)); g.addColorStop(1, INK(0)); c.fillStyle = g; c.fill(sil);
+  if (QJ) { const g2 = c.createLinearGradient(0, top, 0, e.base); g2.addColorStop(0, BLUE(0.14)); g2.addColorStop(0.5, OCHRE(0.13)); g2.addColorStop(1, OCHRE(0)); c.fillStyle = g2; c.fill(sil); }
+  c.save(); c.clip(sil);
+  for (const p of P.pk) { const cx = p.x + p.s * 0.55, cy = p.y + (e.base - p.y) * 0.3, rg = c.createRadialGradient(cx, cy, 0, cx, cy, p.s * 1.25); rg.addColorStop(0, INK(near ? 0.16 : 0.1)); rg.addColorStop(1, INK(0)); c.fillStyle = rg; c.fillRect(p.x - p.s, p.y - 20, p.s * 3, e.base - p.y + 20); }
+  const nC = Math.round((near ? 420 : 200) * clamp((e.w * (e.base - top)) / 300000, 0.3, 2.2));
+  for (let i = 0; i < nC; i++) {                                        // 皴：沿山势顺坡而下，越近山脊越密，阴面更密
+    const x = e.cx + (R() - 0.5) * e.w * 0.92, r = ridgeAt(P, x), dep = e.base - r; if (dep < 18) continue;
+    if (R() > (x > nearestPeak(P, x).x ? 1 : 0.55)) continue;
+    const y = r + 3 + Math.abs(gauss(R)) * dep * 0.32, sl = (ridgeAt(P, x + 5) - ridgeAt(P, x - 5)) / 10, len = rr(10, 34) * (near ? 1.2 : 0.9), fade = 1 - ((y - r) / dep) * 0.6;
+    if (e.cun === "fupi" && R() < 0.55) { const w2 = rr(4, 9); c.fillStyle = INK(rr(0.14, 0.3) * fade); c.beginPath(); c.moveTo(x, y); c.lineTo(x - w2 * 0.5 + sl * len * 0.3, y + len * 0.7); c.lineTo(x + w2, y + len * 0.15); c.closePath(); c.fill(); continue; }   // 斧劈皴
+    const dx = clamp(sl * 0.9, -1.4, 1.4) + (R() - 0.5) * 0.3, l = Math.hypot(dx, 1);
+    brush(c, pl(x, y, x + (dx / l) * len, y + len / l, 5, rr(-3, 3), R, 0.4), rr(1, 1.9), INK(rr(0.12, 0.3) * fade), R, { press: 0.3, lift: 0.8 });   // 披麻皴
+  }
+  for (const p of P.pk) for (let j = 0, m = near ? 2 + ((R() * 3) | 0) : 1 + ((R() * 2) | 0); j < m; j++) {   // 结构线：从峰侧向下向外
+    const side = R() < 0.5 ? -1 : 1, sx = p.x + side * rr(0.05, 0.5) * p.s, sy = ridgeAt(P, sx) + 2, depth = (e.base - sy) * rr(0.35, 0.75), pts = []; let x = sx;
+    for (let s = 0; s <= 8; s++) { pts.push([x, sy + (depth * s) / 8]); x += side * (depth / 8) * rr(0.15, 0.55) + (R() - 0.5) * 4; }
+    brush(c, pts, near ? rr(1.6, 2.6) : rr(1.1, 1.8), INK(near ? 0.5 : 0.36), R, { dry: 0.25, lift: 0.9 });
+  }
+  c.restore();
+  for (let i = 0; i < n; i += 12) { const pts = []; for (let j = i; j <= Math.min(n, i + 14); j++) pts.push([P.xs[j], P.ys[j]]); if (R() > 0.08) brush(c, pts, near ? rr(2.2, 3.6) : rr(1.4, 2.4), INK(near ? 0.78 : 0.5), R, { dry: 0.3, press: 0.25, lift: 0.5 }); }
+  for (let i = 0, m = near ? 60 : 30; i < m; i++) { const x = e.cx + (R() - 0.5) * e.w * 0.85, r = ridgeAt(P, x); if (e.base - r < e.h * 0.35) continue; for (let q = 0; q < 2; q++) blot(c, x + rr(-4, 4), r + rr(-2, 3), rr(1.2, 2.6), rr(0.8, 1.6), INK(rr(0.6, 0.9)), rr(0, 3)); }   // 苔点
+  if (!near) { for (let i = 0, m = 6 + ((R() * 12) | 0); i < m; i++) { const x = e.cx + (R() - 0.5) * e.w * 0.8, r = ridgeAt(P, x); if (e.base - r > e.h * 0.3) farTree(c, x, r + 2, rr(10, 20), R); } if (e.pagoda) pagoda(c, P.pk[0].x + rr(-20, 20), P.pk[0].y + 4, 0.8); return; }
+  if (e.fall) {                                                        // 瀑布：纸色留白，两岸断续勾线
+    const f = fallSpot(e, P); c.fillStyle = PAPER_A; c.beginPath(); c.moveTo(f.x - f.w / 2, f.y0); c.lineTo(f.x + f.w / 2, f.y0); c.lineTo(f.x + f.w * 0.8, f.y1); c.lineTo(f.x - f.w * 0.8, f.y1); c.closePath(); c.fill();
+    brush(c, pl(f.x - f.w / 2, f.y0, f.x - f.w * 0.8, f.y1, 10, 3, R, 1.2), 1.6, INK(0.55), R, { dry: 0.4 }); brush(c, pl(f.x + f.w / 2, f.y0, f.x + f.w * 0.8, f.y1, 10, -3, R, 1.2), 1.6, INK(0.55), R, { dry: 0.4 });
+  }
+  if (e.h > 300) for (let i = 0, m = 2 + ((R() * 4) | 0); i < m; i++) { const x = e.cx + (R() - 0.5) * e.w * 0.7; drawTree(c, { t: "pine", x, y: ridgeAt(P, x) + 6, h: rr(45, 95), lean: ((x - e.cx) / e.w) * 0.8, seed: (R() * 4294967296) >>> 0 }); }
+  if (e.temple) { const tp = templeSpot(P); pavilion(c, tp.x, tp.y, 1, R); }
+}
+
+/* ---------- 树：松（放射松针）/ 杂树（鹿角枝 + 点叶、个字点、夹叶）/ 柳（垂丝） ---------- */
+function needles(c, x, y, s, R) {
+  blot(c, x, y + 1, 16 * s, 7 * s, INK(0.1)); c.strokeStyle = INK(0.82); c.lineWidth = Math.max(0.7, 0.9 * s); c.lineCap = "round"; c.beginPath();
+  for (let i = 0; i < 18; i++) { const a = Math.PI + (i / 17) * Math.PI + (R() - 0.5) * 0.1, l = (7 + R() * 5) * s; c.moveTo(x + Math.cos(a) * 3 * s, y + Math.sin(a) * 1.5 * s); c.lineTo(x + Math.cos(a) * l * 1.5, y + Math.sin(a) * l * 0.75); }
+  c.stroke();
+}
+function drawTree(c, e) {
+  const R = rng(e.seed), rr = (a, b) => a + R() * (b - a), h = e.h, s = h / 100, lean = e.lean ?? rr(-0.22, 0.22), kind = e.t, th = kind === "willow" ? 0.5 : kind === "pine" ? 0.92 : 0.62, n = 7, pts = [], ph = R() * 6;
+  for (let i = 0; i < n; i++) { const t = i / (n - 1); pts.push([e.x + lean * h * t * t * 0.6 + Math.sin(t * 3.2 + ph) * 3 * s, e.y - h * th * t]); }
+  const tw = (kind === "pine" ? 7.5 : 6) * s, Lp = [], Rp = [];
+  pts.forEach((p, i) => { const t = i / (n - 1), a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, hw = tw * (1 - 0.6 * t) * 0.5; Lp.push([p[0] - (dy / l) * hw, p[1] + (dx / l) * hw]); Rp.push([p[0] + (dy / l) * hw, p[1] - (dx / l) * hw]); });
+  c.fillStyle = QJ ? OCHRE(0.3) : INK(0.2); c.beginPath(); c.moveTo(Lp[0][0], Lp[0][1]); Lp.forEach((p) => c.lineTo(p[0], p[1])); for (let i = n - 1; i >= 0; i--) c.lineTo(Rp[i][0], Rp[i][1]); c.closePath(); c.fill();
+  brush(c, Lp, 1.8 * s, INK(0.85), R, { lift: 0.9, dry: 0.15 }); brush(c, Rp, 1.5 * s, INK(0.75), R, { lift: 0.9, dry: 0.2 });
+  const top = pts[n - 1];
+  if (kind === "pine") {
+    c.strokeStyle = INK(0.5); c.lineWidth = 0.8 * s; for (let i = 1; i < n - 1; i++) { c.beginPath(); c.ellipse(pts[i][0] + rr(-1.5, 1.5) * s, pts[i][1], tw * 0.28 * (1 - i / n), 2 * s, 0, 0.2, Math.PI - 0.2); c.stroke(); }   // 鳞皮
+    for (let b = 0, nb = 3 + ((R() * 3) | 0); b < nb; b++) {
+      const t = 0.4 + (b / nb) * 0.55, bp = pts[Math.round(t * (n - 1))], dir = (b % 2 ? 1 : -1) * (R() < 0.8 ? 1 : -1), len = h * rr(0.18, 0.42) * (1 - t * 0.4), ex = bp[0] + dir * len, ey = bp[1] - len * rr(0, 0.25);
+      brush(c, pl(bp[0], bp[1], ex, ey, 5, rr(-4, 4) * s, R, 0.6), 2.4 * s, INK(0.8), R, { lift: 0.9 });
+      for (let q = 0; q < 2; q++) needles(c, lerp(bp[0], ex, 0.55 + q * 0.45), lerp(bp[1], ey, 0.55 + q * 0.45) - 1, s * rr(0.8, 1.2), R);
+    }
+    needles(c, top[0], top[1] - 2, s * 1.1, R);
+  } else if (kind === "leaf") {
+    const tips = [], mark = pick(R, ["dot", "ge", "ring", "dot"]);
+    const br = (x, y, a, len, d) => { const ex = x + Math.cos(a) * len, ey = y + Math.sin(a) * len; brush(c, pl(x, y, ex, ey, 4, rr(-2, 2) * s, R, 0.3), (2 - d * 0.5) * s, INK(0.78), R, { lift: 0.9 }); if (d < 2) { br(ex, ey, a - rr(0.25, 0.6), len * 0.72, d + 1); br(ex, ey, a + rr(0.25, 0.6), len * 0.72, d + 1); } else tips.push([ex, ey]); };
+    br(top[0], top[1], -Math.PI / 2 + lean * 0.6, h * 0.2, 0);
+    for (const [x, y] of tips) {
+      blot(c, x, y, 15 * s, 11 * s, INK(0.07));
+      for (let i = 0, m = 14 + ((R() * 10) | 0); i < m; i++) {
+        const a = R() * TAU, r = Math.sqrt(R()) * 13 * s, px = x + Math.cos(a) * r, py = y + Math.sin(a) * r * 0.8;
+        if (mark === "dot") blot(c, px, py, rr(1.4, 2.4) * s, rr(1.1, 1.8) * s, INK(rr(0.55, 0.85)), R() * 3);
+        else if (mark === "ge") { c.strokeStyle = INK(rr(0.55, 0.85)); c.lineWidth = 1.1 * s; c.beginPath(); c.moveTo(px, py - 2 * s); c.lineTo(px - 2.2 * s, py + 1.6 * s); c.moveTo(px, py - 2 * s); c.lineTo(px + 2.2 * s, py + 1.6 * s); c.moveTo(px, py - 2 * s); c.lineTo(px, py + 2 * s); c.stroke(); }
+        else { c.strokeStyle = INK(rr(0.5, 0.75)); c.lineWidth = 0.8 * s; c.beginPath(); c.ellipse(px, py, 2.2 * s, 1.5 * s, R() * 3, 0, TAU); c.stroke(); }
+      }
+    }
+  } else {
+    const tips = []; for (let b = 0; b < 4; b++) { const a = -Math.PI / 2 + rr(-0.9, 0.9), len = h * rr(0.15, 0.28), ex = top[0] + Math.cos(a) * len, ey = top[1] + Math.sin(a) * len; brush(c, pl(top[0], top[1], ex, ey, 4, rr(-2, 2) * s, R), 1.8 * s, INK(0.75), R, { lift: 0.9 }); tips.push([ex, ey]); }
+    c.strokeStyle = INK(0.5); c.lineWidth = 0.7 * s;
+    for (const [x, y] of tips) for (let i = 0; i < 6; i++) { const sx = x + rr(-8, 8) * s, dl = h * rr(0.35, 0.6), sw = rr(-6, 6) * s; c.beginPath(); c.moveTo(sx, y); c.bezierCurveTo(sx + sw, y - 6 * s, sx + sw * 2, y + dl * 0.4, sx + sw * 1.5, y + dl); c.stroke(); }
+  }
+}
+function farTree(c, x, y, h, R) { c.strokeStyle = INK(0.55); c.lineWidth = 1; c.beginPath(); c.moveTo(x, y); c.lineTo(x + (R() - 0.5) * 2, y - h); c.stroke(); for (let i = 0; i < 4; i++) blot(c, x + (R() - 0.5) * h * 0.5, y - h * (0.6 + R() * 0.45), h * 0.12 + 1, h * 0.09 + 0.8, INK(0.45 + R() * 0.3)); }
+
+/* ---------- 石、屋、亭、塔、桥、人、芦苇、水纹、题跋 ---------- */
+function drawRock(c, e) {
+  const R = rng(e.seed), rr = (a, b) => a + R() * (b - a), n = 7 + ((R() * 3) | 0), pts = [];
+  for (let i = 0; i < n; i++) { const a = Math.PI + (i / (n - 1)) * Math.PI; pts.push([e.x + Math.cos(a) * (e.w / 2) * rr(0.85, 1.1), e.y + Math.sin(a) * e.h * rr(0.7, 1.1)]); }
+  pts[0][1] = e.y; pts[n - 1][1] = e.y;
+  const p = new Path2D(); p.moveTo(pts[0][0], e.y + 4); pts.forEach((q) => p.lineTo(q[0], q[1])); p.lineTo(pts[n - 1][0], e.y + 4); p.closePath();
+  c.fillStyle = PAPER; c.fill(p); const g = c.createLinearGradient(0, e.y - e.h, 0, e.y); g.addColorStop(0, INK(0.12)); g.addColorStop(1, INK(0.3)); c.fillStyle = g; c.fill(p); if (QJ) { c.fillStyle = OCHRE(0.14); c.fill(p); }
+  c.save(); c.clip(p); const rg = c.createRadialGradient(e.x + e.w * 0.3, e.y - e.h * 0.3, 0, e.x + e.w * 0.3, e.y - e.h * 0.3, e.w * 0.6); rg.addColorStop(0, INK(0.25)); rg.addColorStop(1, INK(0)); c.fillStyle = rg; c.fillRect(e.x - e.w, e.y - e.h * 1.2, e.w * 2, e.h * 1.3);
+  for (let i = 0, m = 6 + ((R() * 10) | 0); i < m; i++) { const x = e.x + rr(-0.4, 0.45) * e.w, y = e.y - e.h * rr(0.1, 0.8), l = rr(8, 20); brush(c, pl(x, y, x - l * 0.4, y + l, 3, rr(-2, 2), R, 0.3), rr(1.4, 2.6), INK(rr(0.3, 0.55)), R, { lift: 0.7 }); }
+  c.restore(); brush(c, pts, rr(2.4, 3.6) * (e.big ? 1.5 : 1), INK(0.82), R, { dry: 0.3, press: 0.2, lift: 0.4 });
+  for (let i = 0, m = 3 + ((R() * 7) | 0); i < m; i++) { const q = pts[1 + ((R() * (n - 2)) | 0)]; blot(c, q[0] + rr(-4, 4), q[1] - rr(0, 2), rr(1.5, 3), rr(1, 2), INK(rr(0.7, 0.9)), R()); }
+}
+function drawHut(c, e) {
+  const R = rng(e.seed), s = e.s, x = e.x, y = e.y; c.fillStyle = PAPER_A; c.fillRect(x - 16 * s, y - 15 * s, 32 * s, 15 * s);
+  for (const [a, b] of [[[x - 16 * s, y], [x - 16 * s, y - 15 * s]], [[x + 16 * s, y], [x + 16 * s, y - 15 * s]], [[x - 18 * s, y], [x + 18 * s, y]]]) brush(c, [a, b], 1.5 * s, INK(0.75), R);
+  c.fillStyle = INK(0.55); c.fillRect(x - 3.5 * s, y - 10 * s, 7 * s, 10 * s);
+  const roof = [[x - 25 * s, y - 13 * s], [x - 11 * s, y - 30 * s], [x + 12 * s, y - 30 * s], [x + 26 * s, y - 13 * s]];
+  c.fillStyle = QJ ? OCHRE(0.4) : INK(0.3); c.beginPath(); roof.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]))); c.closePath(); c.fill(); brush(c, roof, 2 * s, INK(0.85), R, { dry: 0.2 });
+  c.strokeStyle = INK(0.45); c.lineWidth = 0.8 * s; c.beginPath(); for (let i = 0; i < 9; i++) { const t = (i + 0.5) / 9; c.moveTo(lerp(x - 11 * s, x + 12 * s, t), y - 29 * s); c.lineTo(lerp(x - 25 * s, x + 26 * s, t), y - 14 * s); } c.stroke();
+  if (R() < 0.6) { const fx = x + 22 * s; c.strokeStyle = INK(0.6); c.lineWidth = s; c.beginPath(); for (let i = 0; i < 6; i++) { c.moveTo(fx + i * 5 * s, y); c.lineTo(fx + i * 5 * s, y - 9 * s); } c.moveTo(fx - 1, y - 6 * s); c.lineTo(fx + 26 * s, y - 6 * s); c.stroke(); }
+}
+function pavilion(c, x, y, s, R) {
+  brush(c, [[x - 14 * s, y], [x + 14 * s, y]], 2 * s, INK(0.7), R); c.strokeStyle = INK(0.7); c.lineWidth = 1.2 * s; c.beginPath(); c.moveTo(x - 9 * s, y); c.lineTo(x - 9 * s, y - 14 * s); c.moveTo(x + 9 * s, y); c.lineTo(x + 9 * s, y - 14 * s); c.stroke();
+  c.fillStyle = INK(0.62); c.beginPath(); c.moveTo(x - 20 * s, y - 12 * s); c.quadraticCurveTo(x - 8 * s, y - 16 * s, x, y - 30 * s); c.quadraticCurveTo(x + 8 * s, y - 16 * s, x + 20 * s, y - 12 * s); c.quadraticCurveTo(x, y - 17 * s, x - 20 * s, y - 12 * s); c.fill();
+  c.lineWidth = s; c.beginPath(); c.moveTo(x, y - 30 * s); c.lineTo(x, y - 35 * s); c.stroke();
+}
+function pagoda(c, x, y, s) {
+  c.fillStyle = INK(0.45);
+  for (let i = 0; i < 5; i++) { const w = (12 - i * 1.6) * s, yy = y - i * 9 * s; c.fillRect(x - w * 0.45, yy - 7 * s, w * 0.9, 7 * s); c.beginPath(); c.moveTo(x - w, yy - 6 * s); c.lineTo(x + w, yy - 6 * s); c.lineTo(x + w * 0.6, yy - 9 * s); c.lineTo(x - w * 0.6, yy - 9 * s); c.closePath(); c.fill(); }
+  c.fillRect(x - 0.6 * s, y - 52 * s, 1.2 * s, 8 * s);
+}
+function drawBridge(c, e) {
+  const R = rng(e.seed), n = 12, pts = [], rail = [];
+  for (let i = 0; i < n; i++) { const t = i / (n - 1), x = e.x - e.w / 2 + e.w * t, y = e.y - Math.sin(Math.PI * t) * e.w * 0.14; pts.push([x, y]); rail.push([x, y - 8]); }
+  brush(c, pts, 2.6, INK(0.8), R, { dry: 0.2 }); brush(c, rail, 1.2, INK(0.6), R);
+  c.strokeStyle = INK(0.55); c.lineWidth = 1; c.beginPath(); for (let i = 1; i < n - 1; i += 2) { c.moveTo(pts[i][0], pts[i][1]); c.lineTo(rail[i][0], rail[i][1]); } c.stroke();
+  c.strokeStyle = INK(0.12); c.beginPath(); pts.forEach((p, i) => (i ? c.lineTo(p[0], 2 * e.y - p[1] + 4) : c.moveTo(p[0], 2 * e.y - p[1] + 4))); c.stroke();
+}
+function drawPerson(c, e) {
+  const R = rng(e.seed), x = e.x, y = e.y, dir = R() < 0.5 ? -1 : 1; blot(c, x, y - 15, 2, 2.2, INK(0.8));
+  c.fillStyle = QJ ? OCHRE(0.45) : INK(0.25); c.beginPath(); c.moveTo(x - 1.5, y - 13); c.lineTo(x + 1.5, y - 13); c.lineTo(x + 4, y); c.lineTo(x - 4, y); c.closePath(); c.fill();
+  c.strokeStyle = INK(0.75); c.lineWidth = 0.8; c.stroke(); c.beginPath(); c.moveTo(x + dir * 4, y - 12); c.lineTo(x + dir * 6, y + 1); c.stroke();
+}
+function drawReeds(c, e) {
+  const R = rng(e.seed), rr = (a, b) => a + R() * (b - a); c.lineCap = "round";
+  for (let i = 0, n = 8 + ((R() * 10) | 0); i < n; i++) { const x = e.x + rr(-30, 30), h = rr(25, 60), b = rr(-12, 12); c.strokeStyle = INK(rr(0.35, 0.6)); c.lineWidth = rr(0.7, 1.2); c.beginPath(); c.moveTo(x, e.y); c.quadraticCurveTo(x + b * 0.3, e.y - h * 0.6, x + b, e.y - h); c.stroke(); if (R() < 0.6) { c.beginPath(); c.moveTo(x + b * 0.4, e.y - h * 0.5); c.quadraticCurveTo(x + b * 0.4 + 8, e.y - h * 0.55, x + b * 0.4 + 12, e.y - h * 0.35); c.stroke(); } }
+  c.strokeStyle = INK(0.14); c.lineWidth = 1; for (let i = 0; i < 3; i++) { c.beginPath(); c.moveTo(e.x - 34 + i * 6, e.y + 3 + i * 3); c.lineTo(e.x + 30 - i * 4, e.y + 3 + i * 3); c.stroke(); }
+}
+function drawRipples(c, e) {
+  const R = rng(e.seed), n = Math.round(((e.x1 - e.x0) * (e.y1 - e.y0)) / 2600); c.lineCap = "round";
+  for (let i = 0; i < n; i++) { const f = Math.pow(R(), 1.7), y = e.y0 + (e.y1 - e.y0) * f, x = e.x0 + R() * (e.x1 - e.x0), l = 8 + R() * 34; c.strokeStyle = INK((0.05 + R() * 0.13) * (1 - f * 0.5)); c.lineWidth = 0.9 + R() * 0.6; c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + l / 2, y - 1.5 - R() * 1.5, x + l, y); c.stroke(); }
+}
+function drawPoem(c, e) {                                               // 竖排题诗，自右向左；落款与印章
+  const R = rng(e.seed), five = R() < 0.6, lines = [0, 1, 2, 3].map(() => poemLine(R, five)), fs = 24, lh = 27, cw = 34;
+  c.fillStyle = INK(0.82); c.textAlign = "center"; c.textBaseline = "middle"; c.font = `${fs}px "STKaiti","KaiTi","Kaiti SC","Songti SC",serif`;
+  lines.forEach((ln, i) => [...ln].forEach((ch, j) => c.fillText(ch, e.x - i * cw, e.y + j * lh)));
+  c.font = `${fs * 0.72}px "STKaiti","KaiTi","Kaiti SC","Songti SC",serif`; const sx = e.x - 4 * cw - 2; [...SIGN].forEach((ch, j) => c.fillText(ch, sx, e.y + 10 + j * lh * 0.75));
+  c.drawImage(SEALS[e.seed % SEALS.length], sx - 17, e.y + 14 + SIGN.length * lh * 0.75, 34, 34);
+}
+function drawElem(c, e) { ({ mtn: drawMountain, tree: drawTree, rock: drawRock, hut: drawHut, person: drawPerson, bridge: drawBridge, reeds: drawReeds, ripples: drawRipples, poem: drawPoem })[e.kind](c, e); }
+const zOf = (e) => (e.kind === "ripples" ? 0 : e.kind === "mtn" ? 1 + e.base / 2000 : e.kind === "poem" ? 9 : 3 + (e.y || 0) / 1000);
+
+/* ---------- 分块缓存与分层渲染 ---------- */
+let W = 0, H = 0, dpr = 1, u = 1, bandTop = 0, bandH = 0, mb = 0, paintTop = 0, rollW = 0, camMax = 0, budget = 0;
+const LAYERS = [{ f: 0.3, res: 0.55 }, { f: 0.58, res: 0.75 }, { f: 1, res: 1 }, { f: 1.28, res: 1 }];   // 视差系数与缓存分辨率
+const GEN = new Map(), CACHE = new Map(), cam = { x: 0, v: 0 }, stats = { renders: 0, ms: 0, maxMs: 0 }; let useTick = 0;
+function elemsOf(L, k) { const key = L + ":" + k; let g = GEN.get(key); if (!g) { g = gen(L, k); GEN.set(key, g); } return g; }
+function renderChunk(L, k) {                                            // 取相邻 ±2 段中与本段相交的物件一起画，再裁掉本段之外 → 无缝
+  const t0 = performance.now(), sc = u * LAYERS[L].res * dpr, cvs = document.createElement("canvas"); cvs.width = Math.ceil(CW * sc); cvs.height = Math.ceil(PH * sc);
+  const c = cvs.getContext("2d"); c.setTransform(sc, 0, 0, sc, -k * CW * sc, 0); c.beginPath(); c.rect(k * CW, 0, CW, PH); c.clip();
+  const items = []; for (let j = k - 2; j <= k + 2; j++) for (const e of elemsOf(L, j).E) if (e.x1 > k * CW && e.x0 < (k + 1) * CW) items.push(e);
+  items.sort((a, b) => zOf(a) - zOf(b) || a.seed - b.seed); for (const e of items) drawElem(c, e);
+  const ms = performance.now() - t0; stats.renders++; stats.ms += ms; stats.maxMs = Math.max(stats.maxMs, ms); return cvs;
+}
+function chunkAt(L, k, allow) {
+  const key = L + ":" + k; let e = CACHE.get(key);
+  if (!e && allow && budget > 0) { budget--; e = { cvs: renderChunk(L, k) }; CACHE.set(key, e); if (CACHE.size > 28) { let old = null; for (const [kk, v] of CACHE) if (!old || v.t < old[1].t) old = [kk, v]; CACHE.delete(old[0]); } }
+  if (e) e.t = ++useTick; return e;
+}
+const layerX = (L, wx) => W / 2 + (wx - cam.x * LAYERS[L].f) * u;
+const setLayerTf = (L) => ctx.setTransform(dpr * u, 0, 0, dpr * u, dpr * (W / 2 - cam.x * LAYERS[L].f * u), dpr * paintTop);
+
+/* ---------- 会呼吸的活物：云雾、瀑布、炊烟、渔舟、帆影、雁阵 ---------- */
+function drawLive(lv, t) {
+  if (lv.kind === "mist") { ctx.globalAlpha = 0.5 + 0.3 * Math.sin(t * 0.22 + lv.ph); ctx.drawImage(MIST, lv.x - lv.w / 2 + Math.sin(t * 0.045 + lv.ph) * 60, lv.y - lv.h / 2, lv.w, lv.h); ctx.globalAlpha = 1; }
+  else if (lv.kind === "fall") { ctx.strokeStyle = INK(0.18); ctx.lineWidth = 1; const span = lv.y1 - lv.y0; for (let i = 0; i < 9; i++) { const yy = lv.y0 + ((t * 70 + i * 53) % span), k = (yy - lv.y0) / span, xx = lv.x + (((i * 37) % 7) - 3) * lv.w * 0.1 * (1 + k * 0.6); ctx.beginPath(); ctx.moveTo(xx, yy); ctx.lineTo(xx, Math.min(lv.y1, yy + 22)); ctx.stroke(); } }
+  else if (lv.kind === "smoke") { ctx.lineWidth = 1.3; ctx.lineCap = "round"; let px = lv.x, py = lv.y; for (let j = 1; j <= 16; j++) { const yy = lv.y - j * 6, xx = lv.x + Math.sin(j * 0.45 - t * 0.9 + lv.ph) * j * 0.7 + j * j * 0.08; ctx.strokeStyle = INK(0.2 * (1 - j / 17)); ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(xx, yy); ctx.stroke(); px = xx; py = yy; } }
+  else if (lv.kind === "boat" || lv.kind === "sail") {
+    const sp = lv.kind === "sail" ? 0.02 : lv.sp, x = lv.x + Math.sin(t * sp + lv.ph) * lv.range, dir = Math.cos(t * sp + lv.ph) >= 0 ? 1 : -1, y = lv.y + Math.sin(t * 1.3 + lv.ph) * 1.2;
+    ctx.save(); ctx.translate(x, y); ctx.scale(dir * lv.s, lv.s);
+    ctx.fillStyle = INK(0.08); ctx.beginPath(); ctx.moveTo(-24, 3); ctx.quadraticCurveTo(0, 9, 26, 3); ctx.quadraticCurveTo(0, 5, -24, 3); ctx.fill();   // 倒影
+    ctx.fillStyle = INK(0.75); ctx.beginPath(); ctx.moveTo(-26, -2); ctx.quadraticCurveTo(0, 8, 28, -5); ctx.lineTo(24, -1); ctx.quadraticCurveTo(0, 4, -22, 0); ctx.closePath(); ctx.fill();
+    if (lv.kind === "sail") { ctx.fillStyle = INK(0.3); ctx.beginPath(); ctx.moveTo(2, -2); ctx.lineTo(2, -40); ctx.lineTo(-16, -6); ctx.closePath(); ctx.fill(); ctx.strokeStyle = INK(0.6); ctx.lineWidth = 1; ctx.stroke(); }
+    else {
+      ctx.fillStyle = QJ ? OCHRE(0.45) : INK(0.35); ctx.beginPath(); ctx.moveTo(-15, -3); ctx.quadraticCurveTo(-6, -15, 4, -3); ctx.closePath(); ctx.fill(); ctx.strokeStyle = INK(0.7); ctx.lineWidth = 1; ctx.stroke();   // 篷
+      blot(ctx, 11, -13, 2, 2.2, INK(0.8)); ctx.fillStyle = INK(0.45); ctx.beginPath(); ctx.moveTo(9, -11); ctx.lineTo(13, -11); ctx.lineTo(15, -3); ctx.lineTo(8, -3); ctx.closePath(); ctx.fill();   // 渔翁
+      ctx.strokeStyle = INK(0.6); ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(13, -9); ctx.lineTo(36, -26); ctx.stroke(); ctx.strokeStyle = INK(0.25); ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(36, -26); ctx.lineTo(38 + Math.sin(t * 1.3 + lv.ph), 2); ctx.stroke();
+      ctx.strokeStyle = INK(0.12); ctx.lineWidth = 1; for (let i = 1; i <= 3; i++) { ctx.beginPath(); ctx.moveTo(-28 - i * 12, 3 + i); ctx.lineTo(-20 - i * 12, 3 + i); ctx.stroke(); }   // 尾波
+    }
+    ctx.restore();
+  } else if (lv.kind === "birds") {
+    const X = lv.x + Math.sin(t * 0.02 + lv.ph) * 350, Y = lv.y + Math.sin(t * 0.07 + lv.ph) * 20; ctx.strokeStyle = INK(0.55); ctx.lineWidth = 1;
+    for (let i = 0; i < lv.n; i++) { const bx = X + (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 16, by = Y + Math.ceil(i / 2) * 9, fl = Math.sin(t * 7 + i * 1.7) * 2; ctx.beginPath(); ctx.moveTo(bx - 5, by - 2 + fl); ctx.quadraticCurveTo(bx - 2, by - 3, bx, by); ctx.quadraticCurveTo(bx + 2, by - 3, bx + 5, by - 2 + fl); ctx.stroke(); }
+  }
+}
+function drawLayers(t) {
+  for (let L = 0; L < 4; L++) {
+    const half = W / 2 / u, c0 = cam.x * LAYERS[L].f, k0 = Math.floor((c0 - half) / CW), k1 = Math.floor((c0 + half) / CW);
+    ctx.setTransform(1, 0, 0, 1, 0, 0); const yd = Math.round(paintTop * dpr), hd = Math.round((paintTop + PH * u) * dpr) - yd;
+    for (let k = k0; k <= k1; k++) { const ch = chunkAt(L, k, true); if (!ch) continue; const xa = Math.round(layerX(L, k * CW) * dpr), xb = Math.round(layerX(L, (k + 1) * CW) * dpr); ctx.drawImage(ch.cvs, xa, yd, xb - xa, hd); }   // 整数像素、首尾相接，块间无缝
+    setLayerTf(L); for (let k = k0 - 1; k <= k1 + 1; k++) for (const lv of elemsOf(L, k).live) drawLive(lv, t);
+    if (!CACHE.has(L + ":" + (k0 - 1))) chunkAt(L, k0 - 1, true);   // 预画阅读方向（向左）的下一段
+  }
+}
+
+/* ---------- 引首、隔水、包首；镶边与两端纸卷 ---------- */
+function drawPanel() {
+  if (layerX(2, -80) > W) return; setLayerTf(2);
+  ctx.fillStyle = "#26344a"; ctx.fillRect(900, -10, 160, PH + 20); ctx.fillStyle = "rgba(200,170,110,.32)";
+  for (let y = 22, r = 0; y < PH; y += 44, r++) for (let x = 916 + (r % 2) * 22; x < 1060; x += 44) { ctx.beginPath(); ctx.arc(x, y, 5, 0, TAU); ctx.fill(); }
+  ctx.fillStyle = "#e8d3a4"; ctx.fillRect(0, 0, 900, PH);                                              // 洒金笺
+  for (const [x, y, r, a] of FLECKS) blot(ctx, x, y, r, r * 0.7, `rgba(190,150,60,${a})`, x);
+  ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.font = `150px "Xingkai SC","STXingkai","STKaiti","KaiTi","Kaiti SC",serif`;
+  [...TITLE].forEach((ch, i) => { ctx.fillStyle = INK(0.12); ctx.fillText(ch, 772 - i * 172, 483); ctx.fillStyle = INK(0.88); ctx.fillText(ch, 770 - i * 172, 480); });   // 大字自右向左
+  ctx.font = `28px "STKaiti","KaiTi","Kaiti SC",serif`; ctx.fillStyle = INK(0.8); const sg = SIGNER_NAME + "题"; [...sg].forEach((ch, j) => ctx.fillText(ch, 110, 640 + j * 32));
+  ctx.drawImage(SEALS[4], 92, 650 + sg.length * 32, 38, 38); ctx.drawImage(SEALS[0], 790, 110, 72, 72);
+  ctx.fillStyle = "#c7cdc6"; ctx.fillRect(-60, 0, 60, PH); ctx.fillStyle = "rgba(120,135,125,.25)";                         // 隔水
+  for (let y = 30; y < PH; y += 60) { ctx.beginPath(); ctx.arc(-30, y, 9, 0, TAU); ctx.fill(); }
+  ctx.strokeStyle = "rgba(90,100,90,.45)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-58, 0); ctx.lineTo(-58, PH); ctx.moveTo(-2, 0); ctx.lineTo(-2, PH); ctx.stroke();
+}
+function drawMount() {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); const yb = paintTop + PH * u, per = 30, off = (((-cam.x * u) % per) + per) % per;
+  for (const [yy, top] of [[bandTop, true], [yb, false]]) {
+    ctx.fillStyle = "#2b3a4e"; ctx.fillRect(0, yy, W, mb); ctx.fillStyle = "rgba(214,184,120,.35)";
+    for (let x = off - per; x < W + per; x += per) { ctx.beginPath(); ctx.arc(x, yy + mb / 2, mb * 0.16, 0, TAU); ctx.fill(); ctx.fillRect(x + per / 2 - 1, yy + mb * 0.3, 2, mb * 0.4); }
+    ctx.fillStyle = "rgba(214,184,120,.6)"; ctx.fillRect(0, top ? yy + mb - 1.5 : yy, W, 1.5);
+  }
+  for (const side of [0, 1]) {                                          // 两端卷起的纸卷
+    const x = side ? W - rollW : 0, g = ctx.createLinearGradient(x, 0, x + rollW, 0); ["#4a3d2c", "#b9a684", "#efe2c4", "#8a765a", "#3e3224"].forEach((s, i) => g.addColorStop(i / 4, s));
+    ctx.fillStyle = g; ctx.fillRect(x, bandTop - 5, rollW, bandH + 10);
+    const sg = ctx.createLinearGradient(side ? x : x + rollW, 0, side ? x - 36 : x + rollW + 36, 0); sg.addColorStop(0, "rgba(40,28,16,.35)"); sg.addColorStop(1, "rgba(40,28,16,0)"); ctx.fillStyle = sg; ctx.fillRect(side ? x - 36 : x + rollW, bandTop, 36, bandH);
+  }
+}
+let STAMPS = [];
+function drawStamps(t) {
+  setLayerTf(2); ctx.globalCompositeOperation = "multiply";
+  for (const s of STAMPS) { const k = clamp((t - s.t0) / 0.35, 0, 1), sz = 64 * (1 + 0.35 * (1 - smooth(k))); ctx.globalAlpha = 0.25 + 0.7 * k; ctx.drawImage(SEALS[s.i % SEALS.length], s.x - sz / 2, s.y - sz / 2, sz, sz); }
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+}
+function render(t) {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#241911"); g.addColorStop(0.5, "#2f2117"); g.addColorStop(1, "#18110b"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.save(); ctx.beginPath(); ctx.rect(0, paintTop, W, PH * u); ctx.clip();
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = PAPER; ctx.fillRect(0, 0, cv.width, cv.height); { const tw = PAPER_TILE.width, st = tw - 1, ox = (((Math.round(-cam.x * u * dpr) % st) + st) % st) - st, oy = Math.round(paintTop * dpr); for (let x = ox; x < cv.width; x += st) for (let y = oy; y < cv.height; y += st) ctx.drawImage(PAPER_TILE, x, y); }   // 整数像素、原尺寸平铺：不重采样，无缝
+  budget = 2; drawLayers(t); drawStamps(t); drawPanel();
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); for (const [y, d] of [[paintTop, 1], [paintTop + PH * u, -1]]) { const ag = ctx.createLinearGradient(0, y, 0, y + d * PH * u * 0.18); ag.addColorStop(0, "rgba(140,100,40,.16)"); ag.addColorStop(1, "rgba(140,100,40,0)"); ctx.fillStyle = ag; ctx.fillRect(0, d > 0 ? y : y - PH * u * 0.18, W, PH * u * 0.18); }   // 旧纸泛黄
+  ctx.restore(); drawMount();
+}
+
+/* ---------- 卷号、排版、交互 ---------- */
+let clock = 0, auto = true, idle = 0, stamping = false, drag = null;
+function setSeed(s) {
+  SEED = s >>> 0 || 1; const R = rng(hash3(SEED, 7, 7)); QJ = R() < 0.5; TITLE = pick(R, TA) + pick(R, TB); SIGNER_NAME = pick(R, SIGNER);
+  SIGN = GAN[SEED % 10] + ZHI[SEED % 12] + pick(R, SEASON) + SIGNER_NAME + "写";                   // 干支纪年落款
+  SEALS = SEAL_TEXTS.map((t, i) => makeSeal(t, i % 2 === 1, rng(hash3(SEED, 11, i))));
+  FLECKS.length = 0; for (let i = 0; i < 220; i++) FLECKS.push([R() * 900, R() * PH, 1 + R() * 4, 0.25 + R() * 0.45]);
+  GEN.clear(); CACHE.clear();
+  try { STAMPS = JSON.parse(localStorage.getItem("shanshui:" + SEED) || "[]").map((st) => ({ ...st, t0: -10 })); } catch (e) { STAMPS = []; }
+  try { history.replaceState(null, "", "#" + SEED); } catch (e) {}
+  $("ttl").textContent = `《${TITLE}》 · ${QJ ? "浅绛" : "水墨"}`; cam.x = camMax; cam.v = 0; idle = 0;
+}
+function layout() {
+  const keep = cam.x >= camMax - 1; dpr = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const mob = W < 760, topR = mob ? 62 : 74, botR = ($("ctrl").offsetHeight || 40) + (mob ? 24 : 32);
+  bandTop = topR; bandH = Math.max(200, H - topR - botR); mb = Math.max(10, Math.round(bandH * 0.045)); paintTop = bandTop + mb; u = (bandH - 2 * mb) / PH; rollW = Math.max(12, Math.round(bandH * 0.03));
+  camMax = 1050 - (W / 2 - rollW) / u; if (keep || cam.x > camMax) cam.x = camMax;
+  buildPaper(dpr); CACHE.clear();
+}
+const toWorld = (X, Y) => [cam.x + (X - W / 2) / u, (Y - paintTop) / u];
+const saveStamps = () => { try { localStorage.setItem("shanshui:" + SEED, JSON.stringify(STAMPS.map(({ x, y, i }) => ({ x, y, i })))); } catch (e) {} };
+cv.addEventListener("pointerdown", (e) => {
+  idle = 0; cam.v = 0; const [wx, wy] = toWorld(e.clientX, e.clientY);
+  if (stamping && wy > 0 && wy < PH) { STAMPS.push({ x: wx, y: wy, i: STAMPS.length + 2, t0: clock }); saveStamps(); return; }
+  try { cv.setPointerCapture(e.pointerId); } catch (err) {} drag = { x: e.clientX, cam: cam.x, lx: e.clientX, lt: performance.now(), v: 0 }; cv.style.cursor = "grabbing";
+});
+cv.addEventListener("pointermove", (e) => {
+  if (!drag) return; idle = 0; const now = performance.now(), dx = e.clientX - drag.lx, dt = Math.max(1, now - drag.lt);
+  drag.v = lerp(drag.v, -(dx / u) / (dt / 1000), 0.4); drag.lx = e.clientX; drag.lt = now; cam.x = Math.min(camMax + 60, drag.cam - (e.clientX - drag.x) / u);
+});
+const endDrag = () => { if (drag) { cam.v = clamp(drag.v, -3000, 3000); drag = null; cv.style.cursor = ""; } };
+cv.addEventListener("pointerup", endDrag); cv.addEventListener("pointercancel", endDrag);
+cv.addEventListener("wheel", (e) => { e.preventDefault(); idle = 0; cam.v = 0; cam.x = Math.min(camMax + 60, cam.x + ((e.deltaX - e.deltaY) / u) * 0.9); }, { passive: false });   // 滚轮向下 = 继续向左展卷
+addEventListener("keydown", (e) => { if (e.key === "ArrowLeft") { cam.v = -900; idle = 0; } if (e.key === "ArrowRight") { cam.v = 900; idle = 0; } });
+$("bAuto").onclick = () => { auto = !auto; $("bAuto").classList.toggle("on", auto); };
+$("bNew").onclick = () => setSeed(1 + Math.floor(Math.random() * 999999));
+$("bStamp").onclick = () => { stamping = !stamping; $("bStamp").classList.toggle("on", stamping); cv.classList.toggle("stamp", stamping); };
+$("bHome").onclick = () => { cam.x = camMax; cam.v = 0; idle = 0; };
+function info() { if (clock - (info.t || -1) < 0.25) return; info.t = clock; $("info").innerHTML = `卷号 <b>${SEED}</b><br>已展 <b>${(Math.max(0, camMax - cam.x) / 1000).toFixed(1)}</b> 尺 · 已绘 <b>${stats.renders}</b> 段`; }
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now; clock += dt; idle += dt;
+  if (!drag) { cam.x += cam.v * dt; cam.v *= Math.exp(-dt * 2.6); if (auto && idle > 2.5 && Math.abs(cam.v) < 5) cam.x -= 22 * dt; }   // 卧游：缓缓向左展卷
+  if (!drag && cam.x > camMax) { cam.x = lerp(cam.x, camMax, 1 - Math.exp(-dt * 10)); cam.v = Math.min(cam.v, 0); }
+  render(clock); info(); requestAnimationFrame(frame);
+}
+addEventListener("resize", layout); layout();
+setSeed(+((location.hash.match(/\d+/) || [])[0] || 0) || 1 + Math.floor(Math.random() * 999999));
+requestAnimationFrame(frame);
+window.shanshui = {                                                     // 便于自动化验收
+  state: () => ({ seed: SEED, style: QJ ? "浅绛" : "水墨", title: TITLE, camX: +cam.x.toFixed(1), camMax: +camMax.toFixed(1), renders: stats.renders, avgMs: +(stats.ms / Math.max(1, stats.renders)).toFixed(1), maxMs: +stats.maxMs.toFixed(1), cache: CACHE.size }),
+  goto(x) { cam.x = x; cam.v = 0; idle = 0; }, auto(v) { auto = v; }, seed: setSeed, types: (a, b) => { const o = []; for (let k = a; k <= b; k++) o.push(typeOf(k)); return o; },
+  checksum(L, k) { const c = renderChunk(L, k), d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data; let h = 0; for (let i = 0; i < d.length; i += 97) h = (h * 31 + d[i]) >>> 0; return h; },
+};
+</script>
+</body>
+</html>

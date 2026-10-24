@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>天气卡片</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+    font-family: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #0e1420; transition: background 1s ease;
+  }
+  body.day { background: #dfeeff; }
+  .card {
+    position: relative; width: min(94vw, 420px); border-radius: 28px; overflow: hidden;
+    background: linear-gradient(165deg, #2b3a55, #16202f); color: #eaf0fa;
+    box-shadow: 0 24px 60px rgba(0,0,0,.45); transition: background 1s ease, color 1s ease;
+    isolation: isolate;
+  }
+  body.day .card { background: linear-gradient(165deg, #7fb3e8, #d8ecff); color: #1d2f45; }
+  #fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+  .inner { position: relative; z-index: 1; padding: 22px 22px 26px; transition: opacity .45s ease, transform .45s ease; }
+  .inner.swap { opacity: 0; transform: translateY(14px); }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tabs button {
+    border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.08); color: inherit;
+    border-radius: 999px; padding: 6px 14px; font-size: 13px; cursor: pointer;
+    transition: all .3s ease; backdrop-filter: blur(4px);
+  }
+  .tabs button.on { background: rgba(255,255,255,.9); color: #16202f; border-color: transparent; font-weight: 600; }
+  body.day .tabs button.on { background: #1d2f45; color: #fff; }
+  .head { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 18px; }
+  .city { font-size: 26px; font-weight: 600; letter-spacing: .04em; }
+  .sub { font-size: 12px; opacity: .75; margin-top: 4px; letter-spacing: .08em; }
+  .unit { border: 1px solid rgba(255,255,255,.35); background: transparent; color: inherit; border-radius: 999px; padding: 5px 12px; font-size: 13px; cursor: pointer; }
+  .now { display: flex; align-items: center; gap: 14px; margin: 14px 0 4px; }
+  .temp { font-size: 76px; font-weight: 200; line-height: 1; font-variant-numeric: tabular-nums; }
+  .desc { font-size: 15px; }
+  .badge { display: inline-block; margin-top: 6px; font-size: 12px; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.14); }
+  .stats { display: flex; gap: 10px; margin: 14px 0 18px; }
+  .stat { flex: 1; background: rgba(255,255,255,.1); border-radius: 14px; padding: 9px 12px; backdrop-filter: blur(4px); }
+  .stat b { display: block; font-size: 16px; font-weight: 600; }
+  .stat span { font-size: 11px; opacity: .7; }
+  .fore { background: rgba(255,255,255,.08); border-radius: 18px; padding: 14px 10px 8px; backdrop-filter: blur(4px); }
+  .fore h3 { font-size: 12px; font-weight: 500; opacity: .75; letter-spacing: .15em; margin: 0 6px 8px; }
+  .days { display: grid; grid-template-columns: repeat(5, 1fr); text-align: center; position: relative; }
+  .day { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 11px; position: relative; z-index: 1; }
+  .day .d { opacity: .8; }
+  .day .rng { font-variant-numeric: tabular-nums; }
+  .day .rng i { font-style: normal; opacity: .55; }
+  #line { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+  .tip { margin-top: 14px; font-size: 11px; opacity: .6; text-align: center; letter-spacing: .1em; }
+  @media (max-width: 390px) { .temp { font-size: 62px; } .card { border-radius: 22px; } }
+</style>
+</head>
+<body>
+<div class="card">
+  <canvas id="fx"></canvas>
+  <div class="inner" id="inner">
+    <div class="tabs" id="tabs"></div>
+    <div class="head">
+      <div><div class="city" id="city">—</div><div class="sub" id="sub">—</div></div>
+      <button class="unit" id="unitBtn">°C</button>
+    </div>
+    <div class="now">
+      <div class="temp" id="temp">0</div>
+      <div><div class="desc" id="desc">—</div><div class="badge" id="feel">—</div></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="wind">—</b><span>风速</span></div>
+      <div class="stat"><b id="hum">—</b><span>湿度</span></div>
+      <div class="stat"><b id="vis">—</b><span>能见度</span></div>
+    </div>
+    <div class="fore">
+      <h3>未来五天</h3>
+      <div class="days" id="days">
+        <svg id="line" preserveAspectRatio="none"></svg>
+      </div>
+    </div>
+    <div class="tip">数据为本地模拟 · 仅用于演示</div>
+  </div>
+</div>
+<script>
+  const DATA = [
+    { city: '北京', kind: 'sunny', t: 31, desc: '晴', feel: '紫外线较强', wind: '3 级', hum: '38%', vis: '20km',
+      days: [['今天', 33, 22, 'sunny'], ['周二', 34, 23, 'sunny'], ['周三', 30, 21, 'cloudy'], ['周四', 28, 20, 'rainy'], ['周五', 31, 22, 'sunny']] },
+    { city: '杭州', kind: 'rainy', t: 24, desc: '小雨', feel: '记得带伞', wind: '2 级', hum: '86%', vis: '6km',
+      days: [['今天', 26, 21, 'rainy'], ['周二', 25, 21, 'rainy'], ['周三', 27, 22, 'cloudy'], ['周四', 29, 23, 'sunny'], ['周五', 28, 22, 'cloudy']] },
+    { city: '哈尔滨', kind: 'snowy', t: -12, desc: '大雪', feel: '注意保暖', wind: '4 级', hum: '72%', vis: '3km',
+      days: [['今天', -9, -18, 'snowy'], ['周二', -11, -20, 'snowy'], ['周三', -8, -17, 'cloudy'], ['周四', -13, -21, 'snowy'], ['周五', -10, -19, 'sunny']] },
+    { city: '三亚', kind: 'cloudy', t: 29, desc: '多云', feel: '海风舒适', wind: '4 级', hum: '64%', vis: '18km',
+      days: [['今天', 30, 26, 'cloudy'], ['周二', 31, 26, 'sunny'], ['周三', 32, 27, 'sunny'], ['周四', 30, 26, 'rainy'], ['周五', 29, 25, 'cloudy']] }
+  ];
+  const $ = id => document.getElementById(id);
+  const cv = $('fx'), cx = cv.getContext('2d');
+  let W, H, unit = 'C', cur = 0, parts = [], t0 = performance.now();
+  function resize() { const r = cv.getBoundingClientRect(); W = cv.width = r.width * 2; H = cv.height = r.height * 2; }
+  new ResizeObserver(resize).observe(cv); resize();
+  const fmt = c => unit === 'C' ? c : Math.round(c * 9 / 5 + 32);
+  const icons = {
+    sunny: '<circle cx="12" cy="12" r="5" fill="#ffcf5c"/><g stroke="#ffcf5c" stroke-width="1.6" stroke-linecap="round"><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></g>',
+    rainy: '<path d="M6 15a4.5 4.5 0 1 1 .8-8.9A5.5 5.5 0 0 1 18 8.5 3.8 3.8 0 0 1 17.5 15z" fill="#9db8d6"/><g stroke="#6fb2ff" stroke-width="1.6" stroke-linecap="round"><path d="M8 18l-1 3M12 18l-1 3M16 18l-1 3"/></g>',
+    snowy: '<path d="M6 13a4.5 4.5 0 1 1 .8-8.9A5.5 5.5 0 0 1 18 6.5 3.8 3.8 0 0 1 17.5 13z" fill="#c8d8ea"/><g stroke="#bfe3ff" stroke-width="1.5" stroke-linecap="round"><path d="M8 16v4M6.8 17l2.4 2M9.2 17l-2.4 2M16 16v4M14.8 17l2.4 2M17.2 17l-2.4 2"/></g>',
+    cloudy: '<path d="M7 16a4.5 4.5 0 1 1 .6-8.9A5.5 5.5 0 0 1 18.5 9 4 4 0 0 1 18 16z" fill="#b9c9dd"/><circle cx="17" cy="5.5" r="3" fill="#ffd98a" opacity=".9"/>'
+  };
+  function seed(kind, n) {
+    parts = [];
+    for (let i = 0; i < n; i++) parts.push(mk(kind, true));
+  }
+  function mk(kind, init) {
+    const x = Math.random() * W, y = init ? Math.random() * H : -20;
+    if (kind === 'sunny') return { x, y: init ? Math.random() * H : -10, r: 1 + Math.random() * 2.4, v: .3 + Math.random() * .8, a: Math.random() * Math.PI * 2, kind };
+    if (kind === 'rainy') return { x, y, l: 8 + Math.random() * 14, v: 7 + Math.random() * 6, kind };
+    if (kind === 'snowy') return { x, y, r: 1 + Math.random() * 2.6, v: .8 + Math.random() * 1.2, p: Math.random() * Math.PI * 2, kind };
+    return { x, y: init ? Math.random() * H : -40, r: 40 + Math.random() * 60, v: .2 + Math.random() * .4, kind };
+  }
+  function step(dt) {
+    const kind = DATA[cur].kind;
+    parts.forEach(p => {
+      if (p.kind !== kind) { p.kind = kind; if (kind === 'sunny') Object.assign(p, mk('sunny', true)); }
+      if (kind === 'sunny') { p.y -= p.v * dt; p.a += dt; if (p.y < -8) Object.assign(p, mk('sunny')); }
+      if (kind === 'rainy') { p.y += p.v * dt; p.x += p.v * dt * .18; if (p.y > H + 20) Object.assign(p, mk('rainy')); }
+      if (kind === 'snowy') { p.y += p.v * dt; p.p += dt * 1.6; p.x += Math.sin(p.p) * .5; if (p.y > H + 10) Object.assign(p, mk('snowy')); }
+      if (kind === 'cloudy') { p.x += p.v * dt; if (p.x - p.r > W) p.x = -p.r; }
+    });
+  }
+  function draw(t) {
+    const kind = DATA[cur].kind, day = new Date().getHours() >= 6 && new Date().getHours() < 18;
+    if (!day) document.body.classList.remove('day'); else document.body.classList.add('day');
+    cx.clearRect(0, 0, W, H);
+    if (kind === 'sunny') {
+      const g = cx.createRadialGradient(W * .78, H * .1, 0, W * .78, H * .1, W * .5);
+      g.addColorStop(0, 'rgba(255,214,120,.5)'); g.addColorStop(1, 'rgba(255,214,120,0)');
+      cx.fillStyle = g; cx.fillRect(0, 0, W, H);
+      parts.forEach(p => { cx.globalAlpha = .35 + .35 * Math.sin(p.a); cx.fillStyle = '#ffe9b0'; cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, 7); cx.fill(); });
+      cx.globalAlpha = 1;
+    }
+    if (kind === 'rainy') {
+      cx.strokeStyle = 'rgba(140,190,255,.55)'; cx.lineWidth = 1.4; cx.beginPath();
+      parts.forEach(p => { cx.moveTo(p.x, p.y); cx.lineTo(p.x - p.l * .18, p.y - p.l); }); cx.stroke();
+    }
+    if (kind === 'snowy') {
+      cx.fillStyle = 'rgba(225,242,255,.9)';
+      parts.forEach(p => { cx.globalAlpha = .5 + .5 * Math.sin(p.p); cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, 7); cx.fill(); });
+      cx.globalAlpha = 1;
+    }
+    if (kind === 'cloudy') {
+      parts.forEach(p => { cx.globalAlpha = .1; cx.fillStyle = day ? '#ffffff' : '#8fa6c4'; cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, 7); cx.fill(); });
+      cx.globalAlpha = 1;
+    }
+    requestAnimationFrame(loop);
+  }
+  function loop(t) { const dt = Math.min((t - t0) / 16.7, 3); t0 = t; step(dt); draw(t); }
+  let shown = 0;
+  function countUp(target) {
+    const from = shown, st = performance.now();
+    (function run(now) {
+      const k = Math.min((now - st) / 900, 1), e = 1 - Math.pow(1 - k, 3);
+      $('temp').textContent = Math.round(from + (target - from) * e);
+      if (k < 1) requestAnimationFrame(run); else shown = target;
+    })(st);
+  }
+  function renderLine() {
+    const d = DATA[cur].days, svg = $('line'), box = $('days').getBoundingClientRect();
+    const w = box.width, h = 118, pad = 20;
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    const xs = d.map((_, i) => w * (i + .5) / 5), ys = d.map(x => {
+      const all = d.flatMap(v => [v[1], v[2]]);
+      return h - 24 - (x[1] - Math.min(...all)) / (Math.max(...all) - Math.min(...all)) * (h - 52);
+    });
+    svg.innerHTML = `<defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="#ffb45c"/><stop offset="1" stop-color="#ff7a9c"/></linearGradient></defs>
+      <polyline points="${xs.map((x, i) => x + ',' + ys[i]).join(' ')}" fill="none" stroke="url(#lg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/>
+      ${xs.map((x, i) => `<circle cx="${x}" cy="${ys[i]}" r="3" fill="#fff" stroke="#ff8a5c" stroke-width="1.6"/>`).join('')}`;
+  }
+  function render() {
+    const d = DATA[cur];
+    $('tabs').innerHTML = DATA.map((c, i) => `<button class="${i === cur ? 'on' : ''}" data-i="${i}">${c.city}</button>`).join('');
+    $('city').textContent = d.city;
+    $('sub').textContent = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
+    $('desc').textContent = d.desc;
+    $('feel').textContent = d.feel;
+    $('wind').textContent = d.wind; $('hum').textContent = d.hum; $('vis').textContent = d.vis;
+    $('unitBtn').textContent = '°' + unit;
+    countUp(fmt(d.t));
+    $('days').querySelectorAll('.day').forEach(n => n.remove());
+    d.days.forEach(([dn, hi, lo, ic], i) => {
+      const el = document.createElement('div');
+      el.className = 'day'; el.style.animation = `none`;
+      el.innerHTML = `<span class="d">${dn}</span><svg width="22" height="22" viewBox="0 0 24 24">${icons[ic]}</svg><span class="rng"><b>${fmt(hi)}°</b> <i>${fmt(lo)}°</i></span>`;
+      $('days').appendChild(el);
+    });
+    requestAnimationFrame(renderLine);
+  }
+  $('tabs').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const i = +b.dataset.i; if (i === cur) return;
+    cur = i;
+    const inner = $('inner');
+    inner.classList.add('swap');
+    setTimeout(() => { seed(DATA[cur].kind, DATA[cur].kind === 'cloudy' ? 5 : DATA[cur].kind === 'sunny' ? 40 : 90); render(); inner.classList.remove('swap'); }, 260);
+  });
+  $('unitBtn').addEventListener('click', () => { unit = unit === 'C' ? 'F' : 'C'; render(); });
+  addEventListener('resize', () => { seed(DATA[cur].kind, 90); renderLine(); });
+  seed(DATA[0].kind, 40); render(); requestAnimationFrame(loop);
+</script>
+</body>
+</html>

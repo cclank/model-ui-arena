@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>行情雷达 · Market Radar</title>
+<style>
+  :root { --bg: #070a10; --panel: #0e141e; --panel-2: #121a26; --line: rgba(255,255,255,.07); --fg: #e9eff8; --muted: #8b99ad; --dim: #58667a; --up: #ff5f6d; --down: #24d3a2; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 26px 14px; color: var(--fg);
+    background: radial-gradient(80% 60% at 50% 0%, #142033 0%, #070a10 62%, #04060a 100%);
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .app { width: min(96vw, 1000px); display: flex; flex-direction: column; gap: 14px; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: 15px; letter-spacing: .1em; }
+  .brand em { font-style: normal; font-size: 9px; letter-spacing: .28em; color: var(--dim); padding-left: 4px; }
+  .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--up); box-shadow: 0 0 10px var(--up); animation: pulse 1.8s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+  .status { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: .12em; color: var(--muted); }
+  .tag { font-size: 9.5px; letter-spacing: .16em; padding: 3px 8px; border-radius: 4px; border: 1px solid var(--line); color: var(--muted); }
+  .index { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; padding: 14px 18px; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.012)); }
+  .index span { font-size: 11px; letter-spacing: .14em; color: var(--muted); }
+  .index > b { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 26px; font-weight: 500; letter-spacing: -.01em; }
+  .index .chg { font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+  .idxstats { margin-left: auto; display: flex; gap: 18px; font-size: 11px; color: var(--dim); }
+  .panel { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 14px; }
+  .rows { display: flex; flex-direction: column; gap: 8px; }
+  .row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; text-align: left; padding: 12px 14px; border-radius: 12px; cursor: pointer;
+    background: var(--panel); border: 1px solid var(--line); color: inherit; font: inherit; transition: border-color .2s, background .2s, transform .2s; }
+  .row:hover { background: var(--panel-2); }
+  .row.on { border-color: rgba(255,95,109,.45); background: linear-gradient(180deg, rgba(255,95,109,.1), rgba(255,95,109,.02)); }
+  .rname { display: flex; flex-direction: column; gap: 3px; }
+  .rname b { font-size: 13.5px; font-weight: 500; letter-spacing: .04em; }
+  .rname span { font-size: 10px; letter-spacing: .16em; color: var(--dim); font-family: ui-monospace, Menlo, monospace; }
+  .spark { width: 84px; height: 30px; overflow: visible; }
+  .rprice { text-align: right; display: flex; flex-direction: column; gap: 3px; }
+  .rprice b { font-family: ui-monospace, Menlo, monospace; font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .rprice span { font-family: ui-monospace, Menlo, monospace; font-size: 11px; }
+  .up { color: var(--up); } .down { color: var(--down); }
+  .flash-up { animation: fu .6s ease-out; } .flash-down { animation: fd .6s ease-out; }
+  @keyframes fu { 0% { background: rgba(255,95,109,.26); } 100% { background: var(--panel); } }
+  @keyframes fd { 0% { background: rgba(36,211,162,.22); } 100% { background: var(--panel); } }
+  .chart { position: relative; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); padding: 14px 16px 10px; min-width: 0; }
+  .chead { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .chead b { font-size: 13px; font-weight: 500; letter-spacing: .05em; }
+  .chead span { font-size: 10.5px; letter-spacing: .1em; color: var(--dim); }
+  .cwrap { position: relative; height: 226px; }
+  #svg { width: 100%; height: 100%; display: block; }
+  .grid line { stroke: rgba(255,255,255,.055); stroke-dasharray: 3 5; }
+  .line { fill: none; stroke-width: 1.8; vector-effect: non-scaling-stroke; }
+  .axis { display: flex; justify-content: space-between; font-size: 9.5px; letter-spacing: .12em; color: var(--dim); font-family: ui-monospace, Menlo, monospace; padding-top: 6px; }
+  .cross { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,.45); opacity: 0; pointer-events: none; }
+  .dot { position: absolute; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.16), 0 0 14px rgba(255,255,255,.5); opacity: 0; pointer-events: none; }
+  .tip { position: absolute; transform: translate(-50%, -120%); padding: 6px 9px; border-radius: 7px; background: rgba(8,12,18,.95); border: 1px solid rgba(255,255,255,.13);
+    font-family: ui-monospace, Menlo, monospace; font-size: 11px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .12s; box-shadow: 0 8px 24px rgba(0,0,0,.55); }
+  .risk { font-size: 10.5px; line-height: 1.7; color: var(--dim); letter-spacing: .04em; padding: 0 4px; }
+  .risk b { color: var(--muted); font-weight: 500; margin-right: 6px; }
+  @media (max-width: 760px) {
+    .panel { grid-template-columns: 1fr; }
+    .index { gap: 10px 14px; } .index b { font-size: 22px; } .idxstats { margin-left: 0; gap: 12px; width: 100%; }
+    .cwrap { height: 190px; } .row { padding: 10px 12px; } .spark { width: 68px; height: 26px; }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div class="brand"><span class="pulse"></span>行情雷达<em>MARKET RADAR</em></div>
+      <div class="status"><span class="tag">本地模拟</span><span id="clock">--:--:--</span></div>
+    </header>
+    <section class="index">
+      <span>沪深 300</span><b id="idx">3,842.10</b><span class="chg up" id="idxchg">▲ +0.82%</span>
+      <div class="idxstats"><span>上涨 <b class="up" id="upCount">3</b></span><span>下跌 <b class="down" id="downCount">0</b></span><span>成交额 <b>86.2 亿</b></span></div>
+    </section>
+    <main class="panel">
+      <div class="rows" id="rows" role="list"></div>
+      <section class="chart">
+        <div class="chead"><b id="ctitle">宁德时代 · 分时</b><span id="cmeta">成交量 2.4 亿</span></div>
+        <div class="cwrap" id="cwrap">
+          <svg id="svg" viewBox="0 0 640 250" preserveAspectRatio="none"><g class="grid"><line x1="0" y1="62" x2="640" y2="62" /><line x1="0" y1="125" x2="640" y2="125" /><line x1="0" y1="188" x2="640" y2="188" /></g><defs><linearGradient id="fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5f6d" stop-opacity=".3" /><stop offset="1" stop-color="#ff5f6d" stop-opacity="0" /></linearGradient></defs><path id="area" /><path id="path" class="line" /></svg>
+          <i class="cross" id="cross"></i><i class="dot" id="cdot"></i><div class="tip" id="tip"></div>
+        </div>
+        <div class="axis"><span>09:30</span><span>10:30</span><span>11:30</span><span>14:00</span><span>15:00</span></div>
+      </section>
+    </main>
+    <footer class="risk"><b>风险提示</b>本页面为本地 mock 数据，仅用于界面演示，不构成任何投资建议；行情波动可能超出预期。</footer>
+  </div>
+<script>
+  (() => {
+    const $ = (id) => document.getElementById(id);
+    const rng = (seed) => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+    const STOCKS = [
+      { code: "300750", name: "宁德时代", base: 182.4, vol: "2.4 亿", seed: 11 },
+      { code: "600519", name: "贵州茅台", base: 1512.0, vol: "38.6 亿", seed: 29 },
+      { code: "002594", name: "比亚迪", base: 246.8, vol: "15.1 亿", seed: 47 }
+    ];
+    STOCKS.forEach((s) => {
+      const r = rng(s.seed); let p = s.base * (0.975 + r() * 0.03); s.series = [];
+      for (let i = 0; i < 48; i++) { p += (r() - 0.48) * s.base * 0.006; p = Math.max(s.base * 0.9, Math.min(s.base * 1.1, p)); s.series.push(p); }
+      s.prev = s.series[0]; s.price = s.series[s.series.length - 1];
+    });
+    let cur = 0, hoverI = -1;
+
+    const money = (v) => v.toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const pct = (s) => (s.price - s.prev) / s.prev * 100;
+    const cls = (v) => (v >= 0 ? "up" : "down");
+    const arrow = (v) => (v >= 0 ? "▲" : "▼");
+    const signed = (v, unit = "") => `${arrow(v)} ${v >= 0 ? "+" : ""}${v.toFixed(2)}${unit}`;
+
+    function spark(series, tone) {
+      const w = 84, h = 30, min = Math.min(...series), max = Math.max(...series), span = max - min || 1;
+      const d = series.map((v, i) => `${i ? "L" : "M"}${(i / (series.length - 1) * w).toFixed(1)},${(h - (v - min) / span * h).toFixed(1)}`).join(" ");
+      return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="${d}" fill="none" stroke="${tone}" stroke-width="1.4" vector-effect="non-scaling-stroke" /></svg>`;
+    }
+
+    function renderRows() {
+      $("rows").innerHTML = STOCKS.map((s, i) => {
+        const c = pct(s), tone = c >= 0 ? "#ff5f6d" : "#24d3a2";
+        return `<button class="row${i === cur ? " on" : ""}" data-i="${i}" role="listitem">
+          <div class="rname"><b>${s.name}</b><span>${s.code}</span></div>
+          ${spark(s.series, tone)}
+          <div class="rprice"><b class="${cls(c)}">${money(s.price)}</b><span class="${cls(c)}">${signed(c, "%")}</span></div></button>`;
+      }).join("");
+      const ups = STOCKS.filter((s) => pct(s) >= 0).length;
+      $("upCount").textContent = ups; $("downCount").textContent = STOCKS.length - ups;
+      const avg = STOCKS.reduce((a, s) => a + pct(s), 0) / STOCKS.length;
+      $("idx").textContent = money(3842.1 * (1 + avg / 100));
+      $("idxchg").textContent = signed(avg, "%"); $("idxchg").className = `chg ${cls(avg)}`;
+    }
+
+    function renderChart() {
+      const s = STOCKS[cur], series = s.series, W = 640, H = 250, P = 16;
+      const min = Math.min(...series), max = Math.max(...series), span = max - min || 1;
+      const x = (i) => (i / (series.length - 1) * W).toFixed(1);
+      const y = (v) => (P + (1 - (v - min) / span) * (H - P * 2)).toFixed(1);
+      const d = series.map((v, i) => `${i ? "L" : "M"}${x(i)},${y(v)}`).join(" ");
+      const c = pct(s), tone = c >= 0 ? "#ff5f6d" : "#24d3a2";
+      $("path").setAttribute("d", d); $("path").setAttribute("stroke", tone);
+      $("area").setAttribute("d", `${d} L${W},${H} L0,${H} Z`); $("area").setAttribute("fill", "url(#fill)");
+      document.querySelector("#fill stop").setAttribute("stop-color", tone);
+      $("ctitle").textContent = `${s.name} · 分时`;
+      $("cmeta").textContent = `现价 ${money(s.price)} · ${signed(c, "%")}`;
+      $("cmeta").className = c >= 0 ? "up" : "down";
+      moveTip(hoverI);
+    }
+
+    function moveTip(i) {
+      hoverI = i;
+      const cross = $("cross"), dot = $("cdot"), tip = $("tip"), wrap = $("cwrap");
+      if (i < 0) { cross.style.opacity = 0; dot.style.opacity = 0; tip.style.opacity = 0; return; }
+      const s = STOCKS[cur], series = s.series, W = wrap.clientWidth, H = wrap.clientHeight;
+      const min = Math.min(...series), max = Math.max(...series), span = max - min || 1;
+      const px = i / (series.length - 1) * W, py = (16 + (1 - (series[i] - min) / span) * (250 - 32)) / 250 * H;
+      cross.style.left = `${px}px`; cross.style.opacity = 1;
+      dot.style.left = `${px}px`; dot.style.top = `${py}px`; dot.style.opacity = 1;
+      tip.style.left = `${Math.min(Math.max(px, 52), W - 52)}px`; tip.style.top = `${py}px`; tip.style.opacity = 1;
+      const mins = i < 24 ? 570 + i * 5 : 780 + (i - 24) * 5;
+      tip.textContent = `${money(series[i])}  ${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
+    }
+
+    $("rows").addEventListener("click", (e) => {
+      const row = e.target.closest(".row"); if (!row) return;
+      cur = Number(row.dataset.i); hoverI = -1; renderRows(); renderChart();
+    });
+    $("cwrap").addEventListener("pointermove", (e) => {
+      const rect = $("cwrap").getBoundingClientRect();
+      const i = Math.round((e.clientX - rect.left) / rect.width * (STOCKS[cur].series.length - 1));
+      moveTip(Math.max(0, Math.min(47, i)));
+    });
+    $("cwrap").addEventListener("pointerleave", () => moveTip(-1));
+
+    setInterval(() => {
+      const d = new Date();
+      $("clock").textContent = d.toLocaleTimeString("zh-CN", { hour12: false });
+    }, 1000);
+
+    setInterval(() => {
+      STOCKS.forEach((s) => {
+        const drift = (Math.random() - 0.5) * s.base * 0.0022;
+        s.price = Math.max(s.base * 0.9, Math.min(s.base * 1.1, s.price + drift));
+        s.series[s.series.length - 1] = s.price;
+      });
+      renderRows(); renderChart();
+      const row = document.querySelector(`.row[data-i="${cur}"]`);
+      if (row) { row.classList.remove("flash-up", "flash-down"); void row.offsetWidth; row.classList.add(pct(STOCKS[cur]) >= 0 ? "flash-up" : "flash-down"); }
+    }, 1800);
+
+    renderRows(); renderChart();
+  })();
+</script>
+</body>
+</html>

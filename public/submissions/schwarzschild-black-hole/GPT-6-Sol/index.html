@@ -1,0 +1,117 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EVENT HORIZON · 施瓦西黑洞</title><style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#03060d;color:#edf5f6;font-family:Arial,"PingFang SC",sans-serif}canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}canvas:active{cursor:grabbing}.veil{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 35%,#0104087c 100%)}header{position:fixed;left:30px;top:25px;pointer-events:none}.kicker{font-size:10px;font-weight:700;letter-spacing:.37em;color:#deaf78}h1{font-family:Georgia,"Songti SC",serif;font-size:clamp(29px,4vw,48px);font-weight:400;letter-spacing:.09em;margin:9px 0 7px}header p{font-size:11px;color:#93a8b0;letter-spacing:.14em;margin:0}.panel{position:fixed;right:25px;top:25px;width:252px;background:#0c1822d9;border:1px solid #48606a77;border-radius:14px;padding:20px;box-shadow:0 15px 50px #0009;backdrop-filter:blur(14px)}.panel-title{font-size:10px;letter-spacing:.28em;color:#ddb682;margin-bottom:17px}.row{display:flex;justify-content:space-between;gap:15px;font-size:12px;color:#a1b4b9;margin:11px 0}.row strong{font-size:13px;color:#eaf5f2;font-variant-numeric:tabular-nums}.divider{height:1px;background:#49606b66;margin:18px 0}.field{display:block;margin:14px 0}.field span{display:flex;justify-content:space-between;font-size:11px;color:#c9d7d4;letter-spacing:.06em}.field output{color:#e5b581;font-variant-numeric:tabular-nums}input[type=range]{width:100%;accent-color:#d9ab72;margin:10px 0 0}select{width:100%;margin-top:10px;background:#162833;color:#eff5f2;border:1px solid #4c626c;border-radius:7px;padding:8px}.note{font-size:10px;color:#819ba3;line-height:1.6;margin:15px 0 0}.bottom{position:fixed;left:30px;bottom:27px;pointer-events:none;font-size:11px;color:#8ea5a7;letter-spacing:.1em;line-height:1.8}.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#182d38;border:1px solid #b88758;color:#f8dfbb;border-radius:8px;padding:10px 15px;font-size:12px;opacity:0;transition:opacity .3s;pointer-events:none}.toast.show{opacity:1}.error{display:none;position:fixed;inset:0;z-index:10;background:#071019e8;align-items:center;justify-content:center;padding:20px}.error.show{display:flex}.error-card{width:min(100%,430px);padding:34px;background:#10212a;border:1px solid #ae7958;border-radius:16px;text-align:center}.error h2{color:#f0d0aa;font-size:23px;font-weight:500}.error p{color:#b8cad0;line-height:1.7}.error button{background:#dcac74;color:#13202a;border:0;border-radius:8px;padding:11px 20px;cursor:pointer;font-weight:700}@media(max-width:680px){header{left:16px;top:16px}header p{max-width:210px;line-height:1.6}.panel{top:auto;bottom:12px;right:12px;width:min(48vw,220px);padding:12px}.panel-title{margin-bottom:9px}.row{font-size:10px;margin:7px 0}.row strong{font-size:11px}.divider{margin:10px 0}.field{margin:8px 0}.note{display:none}.bottom{left:16px;bottom:17px;width:44%;font-size:9px}}
+</style></head><body>
+<canvas id="view" aria-label="可拖拽、缩放的实时施瓦西黑洞"></canvas><div class="veil"></div><header><div class="kicker">GENERAL RELATIVITY / LIVE STUDY</div><h1>EVENT HORIZON</h1><p>施瓦西黑洞 · 光线测地线实时积分</p></header>
+<aside class="panel"><div class="panel-title">OBSERVER / 观测台</div><div class="row"><span>距离 · r / rₛ</span><strong id="distance">9.00</strong></div><div class="row"><span>时间膨胀 · √(1−1/r)</span><strong id="dilation">0.943</strong></div><div class="row"><span>轨道速度 · β</span><strong id="beta">0.236</strong></div><div class="divider"></div><label class="field"><span>吸积盘亮度 <output id="accretionValue">1.00</output></span><input id="accretion" type="range" min=".2" max="2.5" value="1" step=".05"></label><label class="field"><span>曝光 <output id="exposureValue">1.20</output></span><input id="exposure" type="range" min=".5" max="2.5" value="1.2" step=".05"></label><label class="field"><span>画质档位</span><select id="quality"><option value="high">精细 / 210 步</option><option value="low">省电 / 130 步</option></select></label><p class="note">光线逐像素数值积分。盘面发光含多普勒集束、引力红移与差速条纹。HDR 高亮提取、模糊和色调映射分步执行。</p></aside>
+<div class="bottom">拖拽旋转视角 · 滚轮缩放<br>触屏：单指旋转 · 双指缩放</div><div class="toast" id="toast">帧率偏低，已自动切换至省电画质</div><div class="error" id="error"><div class="error-card"><h2>观测暂时中断</h2><p id="errorText"></p><button id="retry">重新初始化</button></div></div>
+<script id="vertex" type="x-shader/x-vertex">#version 300 es
+precision highp float;
+out vec2 uv;
+void main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);uv=p;gl_Position=vec4(p*2.0-1.0,0.0,1.0);}
+</script>
+<script id="scene" type="x-shader/x-fragment">#version 300 es
+precision highp float;
+in vec2 uv;out vec4 outColor;
+uniform vec2 uResolution;uniform float uTime,uDistance,uYaw,uPitch,uAccretion,uHdr;uniform int uSteps;
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+vec3 diskColor(vec3 point,vec3 ray,float t){
+ float r=length(point.xz),beta=sqrt(.5/r);
+ vec3 flow=normalize(vec3(-point.z,0.0,point.x));
+ // Light travels disk -> camera opposite the traced ray; delta^3 is Doppler beaming.
+ float delta=sqrt(1.0-beta*beta)/(1.0-beta*dot(flow,-normalize(ray)));
+ // Gravitational redshift at the emission radius and T proportional to r^(-3/4).
+ float redshift=sqrt(1.0-1.0/r),temp=pow(3.0/r,.75);
+ float phi=atan(point.z,point.x),omega=1.6/pow(r,1.5);
+ float bands=.66+.22*sin(r*20.0-phi*5.0+t*omega*5.0)+.12*sin(r*47.0+phi*9.0-t*omega*11.0);
+ float inner=pow(3.0/r,1.8),outer=1.0-smoothstep(7.5,10.0,r);
+ vec3 heat=mix(vec3(1.7,.3,.08),vec3(2.3,1.32,.48),clamp(temp*1.1,0.0,1.0));
+ heat=mix(heat,vec3(.72,1.45,2.8),clamp((delta-1.0)*1.45,0.0,.8));
+ return heat*pow(delta,3.0)*redshift*inner*bands*outer*uAccretion*.85;
+}
+void main(){
+ vec2 q=(gl_FragCoord.xy-.5*uResolution)/uResolution.y;
+ float cp=cos(uPitch),sp=sin(uPitch),cy=cos(uYaw),sy=sin(uYaw);
+ vec3 p=uDistance*vec3(cp*sy,sp,cp*cy),forward=normalize(-p);
+ vec3 right=normalize(cross(forward,vec3(0.0,1.0,0.0))),up=cross(right,forward);
+ vec3 v=normalize(forward+q.x*right*1.25+q.y*up*1.25);
+ float h2=dot(cross(p,v),cross(p,v)),trans=1.0,closest=100.0;
+ vec3 color=vec3(0.0);bool captured=false;
+ // Null-geodesic reduced central-force equation in units r_s=1:
+ // d²r/dλ² = -1.5 h² r / r^5. Symplectic Euler updates v then p.
+ // Adaptive affine steps shrink near the photon sphere (r=1.5).
+ for(int i=0;i<260;i++){
+  if(i>=uSteps)break;
+  float r=length(p);closest=min(closest,r);
+  if(r<1.0){captured=true;break;}
+  if(r>28.0&&dot(p,v)>0.0)break;
+  float ds=clamp(.038*r,.022,.32);if(r<2.2)ds*=.62;
+  vec3 previous=p;
+  v+=(-1.5*h2/(r*r*r*r*r))*p*ds;
+  p+=v*ds;
+  if(previous.y*p.y<0.0){
+   vec3 hit=mix(previous,p,previous.y/(previous.y-p.y));float dr=length(hit.xz);
+   if(dr>=3.0&&dr<=10.0){color+=trans*diskColor(hit,v,uTime);trans*=.58;}
+  }
+ }
+ if(!captured){
+  vec3 dir=normalize(v);float star=step(.997,hash(floor(dir.xy*620.0+dir.z*57.0)));
+  float gas=pow(max(0.0,hash(floor(dir.xz*46.0))-.76),3.0);
+  color+=trans*(vec3(.012,.021,.039)+star*vec3(.5,.73,1.0)+gas*vec3(.035,.045,.09));
+ }
+ // Multiple disk crossings near r≈1.5 naturally brighten secondary images.
+ if(uHdr<.5)color*=.42;
+ outColor=vec4(color,1.0);
+}
+</script>
+<script id="extract" type="x-shader/x-fragment">#version 300 es
+precision highp float;in vec2 uv;out vec4 outColor;uniform sampler2D uTexture;
+void main(){vec3 c=texture(uTexture,uv).rgb;outColor=vec4(max(c-vec3(.65),vec3(0.0)),1.0);}
+</script>
+<script id="blur" type="x-shader/x-fragment">#version 300 es
+precision highp float;in vec2 uv;out vec4 outColor;uniform sampler2D uTexture;uniform vec2 uDirection;
+void main(){vec3 c=texture(uTexture,uv).rgb*.227027;c+=(texture(uTexture,uv+uDirection*1.384615).rgb+texture(uTexture,uv-uDirection*1.384615).rgb)*.316216;c+=(texture(uTexture,uv+uDirection*3.230769).rgb+texture(uTexture,uv-uDirection*3.230769).rgb)*.070270;outColor=vec4(c,1.0);}
+</script>
+<script id="tonemap" type="x-shader/x-fragment">#version 300 es
+precision highp float;in vec2 uv;out vec4 outColor;uniform sampler2D uScene,uBloom;uniform float uExposure;
+vec3 aces(vec3 x){return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.0,1.0);}
+void main(){vec3 c=texture(uScene,uv).rgb+texture(uBloom,uv).rgb*.9;c=aces(c*uExposure);outColor=vec4(pow(c,vec3(1.0/2.2)),1.0);}
+</script>
+<script>
+const canvas=document.querySelector("#view"),error=document.querySelector("#error"),errorText=document.querySelector("#errorText"),quality=document.querySelector("#quality"),toast=document.querySelector("#toast");let gl,programs,targets={},vao,hdr=false,running=true,distance=9,yaw=.12,pitch=.27,velX=0,velY=0,qualityMode="high",last=0,measureAt=0,frames=0,slowTime=0;const pointers=new Map();
+function fail(message){running=false;errorText.textContent=message;error.classList.add("show")}
+document.querySelector("#retry").onclick=()=>location.reload();
+canvas.addEventListener("webglcontextlost",e=>{e.preventDefault();fail("图形设备连接中断。请重新初始化；若问题持续，可尝试关闭其他图形程序。")});
+canvas.addEventListener("webglcontextrestored",()=>location.reload());
+function shader(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s)||"着色器编译失败");return s}
+function program(fragment){const p=gl.createProgram(),v=shader(gl.VERTEX_SHADER,document.querySelector("#vertex").textContent),f=shader(gl.FRAGMENT_SHADER,document.querySelector("#"+fragment).textContent);gl.attachShader(p,v);gl.attachShader(p,f);gl.linkProgram(p);gl.deleteShader(v);gl.deleteShader(f);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p)||"着色器链接失败");return p}
+function uniform(p,name){return gl.getUniformLocation(p,name)}
+function target(w,h,float){const texture=gl.createTexture(),fbo=gl.createFramebuffer();gl.bindTexture(gl.TEXTURE_2D,texture);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,float&&!gl.getExtension("OES_texture_float_linear")?gl.NEAREST:gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,float&&!gl.getExtension("OES_texture_float_linear")?gl.NEAREST:gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,float?gl.RGBA16F:gl.RGBA8,w,h,0,gl.RGBA,float?gl.HALF_FLOAT:gl.UNSIGNED_BYTE,null);gl.bindFramebuffer(gl.FRAMEBUFFER,fbo);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,texture,0);const ok=gl.checkFramebufferStatus(gl.FRAMEBUFFER)===gl.FRAMEBUFFER_COMPLETE;gl.bindFramebuffer(gl.FRAMEBUFFER,null);if(!ok){gl.deleteTexture(texture);gl.deleteFramebuffer(fbo);throw Error("浮点帧缓冲不可用")}return{texture,fbo,w,h}}
+function clearTargets(){for(const item of Object.values(targets)){gl.deleteTexture(item.texture);gl.deleteFramebuffer(item.fbo)}targets={}}
+function resize(){if(!gl)return;const ratio=Math.min(devicePixelRatio||1,1.5),scale=qualityMode==="high"?.85:.58,max=qualityMode==="high"?780:500,rawW=innerWidth*ratio*scale,rawH=innerHeight*ratio*scale,factor=Math.min(1,max/rawW),w=Math.max(2,Math.round(rawW*factor)),h=Math.max(2,Math.round(rawH*factor));if(canvas.width===w&&canvas.height===h&&targets.scene)return;canvas.width=w;canvas.height=h;clearTargets();
+ function build(float){targets.scene=target(w,h,float);const bw=Math.max(2,Math.round(w/3)),bh=Math.max(2,Math.round(h/3));targets.extract=target(bw,bh,float);targets.blurA=target(bw,bh,float);targets.blurB=target(bw,bh,float)}
+ try{build(hdr)}catch(e){clearTargets();hdr=false;build(false)}
+}
+function bind(p,out){gl.bindFramebuffer(gl.FRAMEBUFFER,out?out.fbo:null);gl.viewport(0,0,out?out.w:canvas.width,out?out.h:canvas.height);gl.useProgram(p)}
+function texture(unit,tex){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,tex)}
+function draw(now){if(!running)return;try{const dt=Math.min((now-last)/16.67||1,3);last=now;yaw+=velX*dt;pitch=Math.max(-1.15,Math.min(1.15,pitch+velY*dt));velX*=Math.pow(.91,dt);velY*=Math.pow(.91,dt);
+ document.querySelector("#distance").textContent=distance.toFixed(2);document.querySelector("#dilation").textContent=Math.sqrt(1-1/distance).toFixed(3);document.querySelector("#beta").textContent=Math.sqrt(1/(2*distance)).toFixed(3);
+ gl.bindVertexArray(vao);const scene=programs.scene,extract=programs.extract,blur=programs.blur,tonemap=programs.tonemap;
+ // Pass 1: geodesic scene -> HDR (RGBA16F) or RGBA8 fallback.
+ bind(scene,targets.scene);gl.uniform2f(uniform(scene,"uResolution"),canvas.width,canvas.height);gl.uniform1f(uniform(scene,"uTime"),now*.001);gl.uniform1f(uniform(scene,"uDistance"),distance);gl.uniform1f(uniform(scene,"uYaw"),yaw);gl.uniform1f(uniform(scene,"uPitch"),pitch);gl.uniform1f(uniform(scene,"uAccretion"),+document.querySelector("#accretion").value);gl.uniform1f(uniform(scene,"uHdr"),hdr?1:0);gl.uniform1i(uniform(scene,"uSteps"),qualityMode==="high"?210:130);gl.drawArrays(gl.TRIANGLES,0,3);
+ // Pass 2: extract highlights. Pass 3: separable Gaussian blur, horizontal then vertical.
+ bind(extract,targets.extract);texture(0,targets.scene.texture);gl.uniform1i(uniform(extract,"uTexture"),0);gl.drawArrays(gl.TRIANGLES,0,3);
+ bind(blur,targets.blurA);texture(0,targets.extract.texture);gl.uniform1i(uniform(blur,"uTexture"),0);gl.uniform2f(uniform(blur,"uDirection"),1/targets.blurA.w,0);gl.drawArrays(gl.TRIANGLES,0,3);
+ bind(blur,targets.blurB);texture(0,targets.blurA.texture);gl.uniform2f(uniform(blur,"uDirection"),0,1/targets.blurB.h);gl.drawArrays(gl.TRIANGLES,0,3);
+ // Pass 4: combine and ACES tone-map to the display.
+ bind(tonemap,null);texture(0,targets.scene.texture);texture(1,targets.blurB.texture);gl.uniform1i(uniform(tonemap,"uScene"),0);gl.uniform1i(uniform(tonemap,"uBloom"),1);gl.uniform1f(uniform(tonemap,"uExposure"),+document.querySelector("#exposure").value);gl.drawArrays(gl.TRIANGLES,0,3);
+ frames++;if(now-measureAt>1200){const fps=frames*1000/(now-measureAt);if(fps<18&&qualityMode==="high")slowTime+=now-measureAt;else slowTime=0;if(slowTime>2600){qualityMode="low";quality.value="low";resize();toast.classList.add("show");setTimeout(()=>toast.classList.remove("show"),3800);slowTime=0}measureAt=now;frames=0}
+ requestAnimationFrame(draw)
+ }catch(e){fail("渲染遇到问题："+e.message)}}
+canvas.addEventListener("pointerdown",e=>{canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});});
+canvas.addEventListener("pointermove",e=>{if(!pointers.has(e.pointerId))return;const old=pointers.get(e.pointerId),dx=e.clientX-old.x,dy=e.clientY-old.y;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1){velX=dx*.006;velY=-dy*.006;yaw+=velX;pitch=Math.max(-1.15,Math.min(1.15,pitch+velY))}else if(pointers.size===2){const pair=[...pointers.values()],d=Math.hypot(pair[0].x-pair[1].x,pair[0].y-pair[1].y),previous=Math.hypot((pair[0].x-(e.pointerId===[...pointers.keys()][0]?dx:0))-(pair[1].x-(e.pointerId===[...pointers.keys()][1]?dx:0)),(pair[0].y-(e.pointerId===[...pointers.keys()][0]?dy:0))-(pair[1].y-(e.pointerId===[...pointers.keys()][1]?dy:0)));if(previous>0)distance=Math.max(3.8,Math.min(22,distance*previous/d))}});
+for(const event of ["pointerup","pointercancel","lostpointercapture"])canvas.addEventListener(event,e=>pointers.delete(e.pointerId));
+canvas.addEventListener("wheel",e=>{e.preventDefault();distance=Math.max(3.8,Math.min(22,distance*Math.exp(e.deltaY*.001)))},{passive:false});
+quality.onchange=()=>{qualityMode=quality.value;resize()};for(const id of ["accretion","exposure"]){const input=document.querySelector("#"+id),output=document.querySelector("#"+id+"Value");input.oninput=()=>output.textContent=(+input.value).toFixed(2)}
+addEventListener("resize",resize);
+try{gl=canvas.getContext("webgl2",{alpha:false,antialias:false,depth:false,powerPreference:"high-performance"});if(!gl)throw Error("此浏览器或设备没有可用的 WebGL2。请更新浏览器或开启硬件加速。");hdr=!!gl.getExtension("EXT_color_buffer_float");programs={scene:program("scene"),extract:program("extract"),blur:program("blur"),tonemap:program("tonemap")};vao=gl.createVertexArray();resize();measureAt=performance.now();requestAnimationFrame(draw)}catch(e){fail("初始化失败："+e.message)}
+</script></body></html>

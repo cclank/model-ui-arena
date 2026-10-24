@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>股票监控面板</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:14px;
+         background:radial-gradient(130% 100% at 50% 0%, #101a2e, #060a14 75%); color:#e7edf8;
+         font-family:"Avenir Next","PingFang SC","Microsoft YaHei",sans-serif; overflow-x:hidden; }
+  .panel { width:min(440px,100%); background:linear-gradient(180deg,#151f33,#0c1322); border:1px solid #263552;
+           border-radius:20px; padding:16px 14px 14px; box-shadow:0 24px 60px rgba(0,0,0,.55); }
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+  .title { font-size:15px; letter-spacing:3px; color:#9db4dd; }
+  .live { display:flex; align-items:center; gap:6px; font-size:11.5px; color:#6fe3a8; }
+  .live i { width:8px; height:8px; border-radius:50%; background:#2fd98a; animation:blink 1.2s infinite; font-style:normal; }
+  @keyframes blink { 50% { opacity:.2; } }
+  .index { font-size:11.5px; color:#7e93ba; margin-bottom:10px; display:flex; gap:12px; font-variant-numeric:tabular-nums; }
+  .row { display:grid; grid-template-columns:1.15fr 1fr auto; align-items:center; gap:8px; background:#0f1729;
+         border:1px solid #223150; border-radius:14px; padding:10px 12px; margin-bottom:8px; cursor:pointer;
+         transition:border-color .2s, background .2s; }
+  .row.sel { border-color:#ffd166; background:#14203a; }
+  .name { font-size:14px; font-weight:600; }
+  .code { font-size:11px; color:#7287ad; margin-top:2px; }
+  .price { font-size:19px; font-weight:600; text-align:right; font-variant-numeric:tabular-nums; transition:color .4s; }
+  .chg { font-size:12px; text-align:right; margin-top:2px; font-variant-numeric:tabular-nums; }
+  .up { color:#ff5d73; } .down { color:#3ddc97; }
+  .flag { display:inline-block; font-size:10px; border-radius:6px; padding:1px 6px; margin-top:3px; }
+  .risk { background:rgba(255,93,115,.16); color:#ff8f9d; border:1px solid rgba(255,93,115,.35); }
+  .calm { background:rgba(61,220,151,.12); color:#7fe8bd; border:1px solid rgba(61,220,151,.28); }
+  .spark { width:86px; height:38px; }
+  .detail { background:#0f1729; border:1px solid #223150; border-radius:14px; padding:12px; }
+  .dHead { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+  .dTitle { font-size:13px; color:#9db4dd; letter-spacing:1px; }
+  .dVal { font-size:22px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .big { width:100%; height:120px; display:block; }
+  .legend { display:flex; justify-content:space-between; font-size:10.5px; color:#64789c; margin-top:6px; }
+</style>
+</head>
+<body>
+<div class="panel">
+  <div class="head">
+    <div class="title">STOCK PULSE</div>
+    <div class="live"><i></i><span id="clock">--:--:--</span> 实时</div>
+  </div>
+  <div class="index" id="indexBar"></div>
+  <div id="rows"></div>
+  <div class="detail">
+    <div class="dHead">
+      <div><div class="dTitle" id="dTitle">--</div><div class="code" id="dCode">--</div></div>
+      <div style="text-align:right"><div class="dVal" id="dVal">--</div><div class="chg" id="dChg">--</div></div>
+    </div>
+    <svg class="big" id="bigChart" viewBox="0 0 320 120" preserveAspectRatio="none"></svg>
+    <div class="legend"><span>09:30</span><span>11:30 / 13:00</span><span>15:00</span></div>
+  </div>
+</div>
+<script>
+  const $ = id => document.getElementById(id);
+  // mock 行情：4 支股票，hist 为 24 点日内走势
+  const mk = (base, vol) => Array.from({ length: 24 }, (_, i) => +(base + Math.sin(i / 3 + base) * vol + (Math.random() - 0.5) * vol).toFixed(2));
+  const STK = [
+    { name:'星宇科技', code:'SH 688123', base:128.4, vol:3.2, hist:mk(128.4, 3.2) },
+    { name:'蓝海能源', code:'SZ 300456', base:64.8,  vol:2.1, hist:mk(64.8, 2.1) },
+    { name:'晨光医药', code:'SH 603789', base:41.2,  vol:1.4, hist:mk(41.2, 1.4) },
+    { name:'锐驰智能', code:'BJ 832011', base:23.7,  vol:1.9, hist:mk(23.7, 1.9) }
+  ];
+  STK.forEach(s => { s.open = s.hist[0]; s.price = s.hist[s.hist.length - 1]; });
+  let sel = 0;
+  const sign = v => (v >= 0 ? '+' : '') + v.toFixed(2);
+  const cls = v => (v >= 0 ? 'up' : 'down');
+  const arrow = v => (v >= 0 ? '▲' : '▼');
+  // 迷你 sparkline（近 24 点）
+  function spark(s) {
+    const h = s.hist, mn = Math.min(...h), mx = Math.max(...h), sp = mx - mn || 1;
+    const pts = h.map((v, i) => `${(i / (h.length - 1) * 84 + 1).toFixed(1)},${(34 - (v - mn) / sp * 30).toFixed(1)}`).join(' ');
+    const c = s.price >= s.open ? '#ff5d73' : '#3ddc97';
+    return `<svg class="spark" viewBox="0 0 86 38"><polyline points="${pts}" fill="none" stroke="${c}" stroke-width="1.8" stroke-linejoin="round"/></svg>`;
+  }
+  function render() {
+    $('rows').innerHTML = STK.map((s, i) => {
+      const d = s.price - s.open, pct = d / s.open * 100, big = Math.abs(pct) > 3;
+      return `<div class="row ${i === sel ? 'sel' : ''}" data-i="${i}">
+        <div><div class="name">${s.name}</div><div class="code">${s.code}</div>
+          <span class="flag ${big ? 'risk' : 'calm'}">${big ? '⚠ 波动较大' : '平稳'}</span></div>
+        <div><div class="price ${cls(d)}" id="p${i}">${s.price.toFixed(2)}</div>
+          <div class="chg ${cls(d)}">${arrow(d)} ${sign(d)} / ${sign(pct)}%</div></div>
+        ${spark(s)}</div>`;
+    }).join('');
+    drawDetail();
+    $('indexBar').innerHTML = ['上证 3214.5 +0.62%', '深成 10458.2 -0.31%', '创业板 2093.7 +1.04%']
+      .map((t, i) => `<span class="${i === 1 ? 'down' : 'up'}">${t}</span>`).join('');
+  }
+  function drawDetail() {
+    const s = STK[sel], d = s.price - s.open, pct = d / s.open * 100;
+    $('dTitle').textContent = s.name + ' · 日内走势'; $('dCode').textContent = s.code;
+    $('dVal').textContent = s.price.toFixed(2); $('dVal').className = 'dVal ' + cls(d);
+    $('dChg').textContent = `${arrow(d)} ${sign(d)} (${sign(pct)}%)`; $('dChg').className = 'chg ' + cls(d);
+    const h = s.hist, mn = Math.min(...h), mx = Math.max(...h), sp = mx - mn || 1;
+    const px = i => 4 + i / (h.length - 1) * 312, py = v => 108 - (v - mn) / sp * 94;
+    const line = h.map((v, i) => `${i ? 'L' : 'M'}${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
+    const c = d >= 0 ? '#ff5d73' : '#3ddc97';
+    $('bigChart').innerHTML =
+      `<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}" stop-opacity=".3"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></linearGradient></defs>` +
+      [0.25, 0.5, 0.75].map(f => `<line x1="0" y1="${(112 * f).toFixed(0)}" x2="320" y2="${(112 * f).toFixed(0)}" stroke="#223150" stroke-width=".7"/>`).join('') +
+      `<path d="${line} L316,120 L4,120 Z" fill="url(#bg)"/><path d="${line}" fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="round"/>` +
+      `<circle cx="${px(h.length - 1).toFixed(1)}" cy="${py(h[h.length - 1]).toFixed(1)}" r="3.2" fill="${c}"/>`;
+  }
+  $('rows').onclick = e => { const r = e.target.closest('.row'); if (!r) return; sel = +r.dataset.i; render(); };
+  // 假流式更新：随机游走 + 价格变色闪烁
+  setInterval(() => {
+    STK.forEach((s, i) => {
+      const step = (Math.random() - 0.5) * s.vol * 0.6;
+      s.price = Math.max(1, +(s.price + step).toFixed(2));
+      s.hist.push(s.price); s.hist.shift();
+      const el = $('p' + i);
+      if (el) {
+        el.textContent = s.price.toFixed(2);
+        const d = s.price - s.open; el.className = 'price ' + cls(d);
+        el.style.color = step >= 0 ? '#ff8f9d' : '#7fe8bd';
+        setTimeout(() => { el.style.color = ''; }, 350);
+      }
+    });
+    drawDetail();
+    [...$('rows').children].forEach((row, i) => {
+      const s = STK[i]; row.querySelectorAll('.spark')[0].outerHTML = spark(s);
+      const d = s.price - s.open, pct = d / s.open * 100;
+      row.querySelector('.chg').textContent = `${arrow(d)} ${sign(d)} / ${sign(pct)}%`;
+      row.querySelector('.chg').className = 'chg ' + cls(d);
+    });
+  }, 1500);
+  setInterval(() => { const n = new Date(); $('clock').textContent = n.toTimeString().slice(0, 8); }, 1000);
+  render();
+</script>
+</body>
+</html>

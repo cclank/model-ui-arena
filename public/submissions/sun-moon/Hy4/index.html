@@ -1,0 +1,155 @@
+<!doctype html><html lang="zh-CN" data-page-node-id="REFhTdly3iXRHz1VKbVkMA"><head data-page-node-id="1wVtzxDwPWUwVECeEZv1ke">
+<meta charset="utf-8" data-page-node-id="Y2jD9EdW5FlwSflC5p1TKC"><meta name="viewport" content="width=device-width,initial-scale=1" data-page-node-id="Tq2wwdHkQH7CkKnUi46rRZ">
+<title>日出日落与月相</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#eef3f8;--card:#fff;--ink:#1e2632;--sub:#78849a;--line:#e2e8f0;--acc:#e2703a;--dim:#f4f7fb}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1118;--card:#161b25;--ink:#e8edf5;--sub:#8b95a8;--line:#262d3a;--acc:#ff9060;--dim:#1d232f}}
+body{min-height:100vh;display:flex;justify-content:center;padding:14px;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,"PingFang SC","Noto Sans CJK SC",sans-serif}
+.card{width:100%;max-width:400px;background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 18px 40px -22px rgba(0,0,0,.35);overflow:hidden}
+.hd{padding:14px 16px 10px}
+.hd h1{font-size:18px;font-weight:700}
+.hd p{font-size:11px;color:var(--sub);margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:5px;padding:0 14px 10px}
+.chips button{font:inherit;font-size:11px;padding:4px 9px;border:1px solid var(--line);background:var(--dim);color:var(--sub);border-radius:999px;cursor:pointer;transition:.15s}
+.chips button:hover,.chips button.on{border-color:var(--acc);color:var(--acc);background:transparent}
+.fm{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 14px 10px}
+.fm label{font-size:11px;color:var(--sub);display:block;margin-bottom:3px}
+.fm input{width:100%;height:31px;padding:0 8px;font:13px inherit;color:var(--ink);background:var(--dim);border:1px solid var(--line);border-radius:8px}
+.res{margin:0 14px 10px;padding:11px 12px;border-radius:13px;background:var(--dim);border:1px solid var(--line);font-size:12.5px;display:flex;flex-wrap:wrap;align-items:center}
+.res b{font-weight:700;color:var(--acc)}
+.res .dot{color:var(--sub);opacity:.55}
+.res .x{flex-basis:100%;margin-top:6px;font-size:11px;color:var(--sub)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.sky{margin:0 14px;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+.sky svg{display:block;width:100%;height:auto}
+.sl{padding:9px 14px 0;display:flex;align-items:center;gap:9px}
+.sl input{flex:1;accent-color:var(--acc)}
+.sl b{font-size:12px;font-variant-numeric:tabular-nums;color:var(--sub);min-width:40px}
+.foot{display:flex;align-items:center;gap:12px;padding:10px 14px 14px}
+.foot .mo{width:76px;height:76px;flex:0 0 auto}
+.foot .tx{font-size:11.5px;color:var(--sub);line-height:1.65}
+.foot .tx b{font-size:15px;color:var(--ink);display:block;margin-bottom:3px}
+</style></head><body data-page-node-id="7OhHtBj6ZK87uOrng5tZ34">
+<div class="card" data-page-node-id="8wyXEbhZZYrfZvYk3jsi4d">
+ <div class="hd" data-page-node-id="YcSLAS2PYdtrKaQu0JfuIX"><h1 data-page-node-id="VGDiEtFmeugUICRlrlFp17">日出日落与月相</h1><p data-page-node-id="dM6Q9yGZoKdnB8aRX5DBnJ">NOAA 太阳位置算法 · Meeus 月相理论 · 全部页内实时计算</p></div>
+ <div class="chips" id="ps" data-page-node-id="rAGmvaLlpKAr0fCzwWmDkq"></div>
+ <div class="fm" data-page-node-id="PxMwYm6qFFheaKBS5C5z0f">
+  <div data-page-node-id="gsGuThamjuYPDOMa5fgrc4"><label for="q-lat" data-page-node-id="fn6v8WAyFKTAQls6qrIDcy">纬度（-90 ~ 90）</label><input type="number" id="q-lat" step="0.0001" value="39.9042" data-page-node-id="UXbu8pvMns9RpE5hzisDdz"></div>
+  <div data-page-node-id="NBz2v5YCYLhGdt447hDpCX"><label for="q-lon" data-page-node-id="kmApBFqEvwwp0Fi9tRJ2jg">经度（-180 ~ 180）</label><input type="number" id="q-lon" step="0.0001" value="116.4074" data-page-node-id="WwCYcTvoZJZjZYcasCofdh"></div>
+  <div data-page-node-id="Mw0xUFgNttmlBJOA2uRWHd"><label for="q-date" data-page-node-id="GW3yPwBzal9BiCXOPT3AOU">日期</label><input type="date" id="q-date" data-page-node-id="Im3q6HXnMPJ5EGR2ndHREr"></div>
+  <div data-page-node-id="aHB2LeOqXA0TG3HMevEQkL"><label for="q-tz" data-page-node-id="qK3qBBMX13wk9OkD8Hp3YP">时区偏移（小时）</label><input type="number" id="q-tz" step="0.5" value="8" data-page-node-id="C4E9EWdifPiDveog3AugLR"></div>
+ </div>
+ <div class="res" id="q-result" data-page-node-id="gP73mEsuSURIZ1FjEiYKjI"></div>
+ <div class="sky" data-page-node-id="qtHM09FlAopmndoYnWgmRb"><svg id="sky" viewBox="0 0 340 190" data-page-node-id="IM7LkpG5DchRLGgmtdUKB3">
+  <defs data-page-node-id="AmbVUBa236ZyZYZU5ekBJs"><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1" data-page-node-id="qourA0Qbhc4W0dJHQP3on6"><stop id="k0" offset="0" data-page-node-id="BaLh5ZA2Ob6paPup7yR3WE"/><stop id="k1" offset=".74" data-page-node-id="cHxXAsC0BMkSD0izU41ZSM"/><stop id="k2" offset="1" data-page-node-id="IBs1V63EzhHtGYHvEAIfMd"/></linearGradient>
+   <radialGradient id="sg" data-page-node-id="ResinwwCNWF5AQDbCcSzkb"><stop offset="0" stop-color="#fff6d8" data-page-node-id="GeDQXgOxjct7pWMDCkIt9D"/><stop offset=".4" stop-color="#ffd166" stop-opacity=".8" data-page-node-id="DHxhE8F5TkuRohWM2J3esx"/><stop offset="1" stop-color="#ffb703" stop-opacity="0" data-page-node-id="KWM0RHtTVIraAyQjNeCUBh"/></radialGradient>
+   <clipPath id="cp" data-page-node-id="gOT0HjIWGOsOoLwzWzVFom"><rect x="0" y="0" width="340" height="150" data-page-node-id="zR6thmDQvBsJgYUfR8vlw5"/></clipPath></defs>
+  <rect width="340" height="190" fill="url(#sk)" data-page-node-id="RKVtuMrOab7nBiT4nOSIuk"/>
+  <g id="stars" data-page-node-id="XJs6TIHyttFFGLGtmf6ynl"></g>
+  <path id="arc" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="1.3" stroke-dasharray="3 3" clip-path="url(#cp)" data-page-node-id="0xXNpH0zVGdjGiQMe1F35F"/>
+  <path id="arc2" fill="none" stroke="#ffe08a" stroke-width="2.2" clip-path="url(#cp)" data-page-node-id="A7cBSNaqqItFfOZjT5SvqC"/>
+  <rect x="0" y="150" width="340" height="40" fill="#2c3a2a" opacity=".8" data-page-node-id="2Hcpr2nL4PUzhZnYFc3cBs"/>
+  <line x1="0" y1="150" x2="340" y2="150" stroke="#fff" stroke-opacity=".45" data-page-node-id="WAPPKDF5ZmFL4s1cjG2Zvw"/>
+  <g id="mk" data-page-node-id="rHzYxo6JhzDFzgXIuUpEGr"></g>
+  <g clip-path="url(#cp)" data-page-node-id="ajniPJhr7f5YtXquEtBrHq"><circle id="moon" r="8.5" fill="#f4f7ff" opacity="0" data-page-node-id="YXdyCsRsgPzec3FQzubgVB"/><circle id="moon2" r="8.5" fill="none" stroke="#fff" stroke-opacity=".35" data-page-node-id="oBWxUlzGyEkqCZvvf9vRjD"/>
+  <circle id="sun" r="10" fill="url(#sg)" data-page-node-id="9Jf0tZbRSPfJKMLAvUWTxO"/><circle id="sun2" r="4.6" fill="#fff3c4" data-page-node-id="gL7ReqEkaFlMaGeXtAbGqg"/></g>
+ </svg></div>
+ <div class="sl" data-page-node-id="mPZVPIunQ43n4C76nO8Cyu"><b id="tl" data-page-node-id="rDUvoJQuf1MmVbVEkKW07r">12:00</b><input type="range" id="tm" min="0" max="1439" step="1" value="720" data-page-node-id="Gw5Rt0D2tpBPZ5MhwFh67S"></div>
+ <div class="foot" data-page-node-id="qG2tcKdBR8csIAMAPqC8GJ"><svg class="mo" id="mo" viewBox="0 0 100 100" data-page-node-id="l3dZd1eHLV8wVAQcoOAIOV"></svg><div class="tx" id="ft" data-page-node-id="ZPBvKLyFxIU5nY969BRtBA"></div></div>
+</div>
+<script>
+const D2R=Math.PI/180,R2D=180/Math.PI,MS=864e5,norm=x=>((x%360)+360)%360,$=i=>document.getElementById(i);
+const jd=(y,m,d,h)=>Date.UTC(y,m-1,d)/MS+2440587.5+h/24;
+function solar(J,lon,tz){const c=(J-2451545)/36525,L0=(280.46646+c*(36000.76983+c*0.0003032))%360,M=357.52911+c*(35999.05029-0.0001537*c);
+ const e=0.016708634-c*(0.000042037+0.0000001267*c),om=(125.04-1934.136*c)*D2R;
+ const ob=23+(26+(21.448-c*(46.815+c*(0.00059-c*0.001813)))/60)/60+0.00256*Math.cos(om),y=Math.tan((ob/2)*D2R)**2;
+ const al=L0+Math.sin(M*D2R)*(1.914602-c*(0.004817+0.000014*c))+Math.sin(2*M*D2R)*(0.019993-0.000101*c)+Math.sin(3*M*D2R)*0.000289-0.00569-0.00478*Math.sin(om);
+ const dec=Math.asin(Math.sin(ob*D2R)*Math.sin(al*D2R))*R2D;
+ const eq=4*R2D*(y*Math.sin(2*L0*D2R)-2*e*Math.sin(M*D2R)+4*e*y*Math.sin(M*D2R)*Math.cos(2*L0*D2R)-0.5*y*y*Math.sin(4*L0*D2R)-1.25*e*e*Math.sin(2*M*D2R));
+ return{n:720-4*lon-eq+tz*60,dec};}
+const ha=(lat,dec)=>{const c=Math.cos(90.833*D2R)/(Math.cos(lat*D2R)*Math.cos(dec*D2R))-Math.tan(lat*D2R)*Math.tan(dec*D2R);
+ return c>1?{p:"极夜"}:c<-1?{p:"极昼"}:{h:Math.acos(c)*R2D};};
+function times(y,m,d,lat,lon,tz){let s=solar(jd(y,m,d,12-tz),lon,tz),H=ha(lat,s.dec);if(H.p)return H;
+ let r=s.n-H.h*4,t=s.n+H.h*4;
+ for(let i=0;i<2;i++){const a=solar(jd(y,m,d,r/60-tz),lon,tz),A=ha(lat,a.dec),b=solar(jd(y,m,d,t/60-tz),lon,tz),B=ha(lat,b.dec);
+  if(A.p||B.p)return A.p?A:B;r=a.n-A.h*4;t=b.n+B.h*4;}
+ return{r,t};}
+function moon(J){const T=(J-2451545)/36525,D=norm(297.8501921+445267.1114034*T-0.0018819*T*T),M=norm(357.5291092+35999.0502909*T-0.0001536*T*T),Mp=norm(134.9633964+477198.8675055*T+0.0087414*T*T);
+ const c=6.289*Math.sin(Mp*D2R)-2.100*Math.sin(M*D2R)+1.274*Math.sin((2*D-Mp)*D2R)+0.658*Math.sin(2*D*D2R)+0.214*Math.sin(2*Mp*D2R)+0.110*Math.sin(D*D2R);
+ return{k:(1+Math.cos((180-D-c)*D2R))/2,p:norm(D+c)/360};}
+function pname(p){const n=c=>Math.min(Math.abs(p-c),Math.abs(p-c-1),Math.abs(p-c+1))<=0.03;
+ if(n(0))return"新月";if(n(.25))return"上弦月";if(n(.5))return"满月";if(n(.75))return"下弦月";
+ return p<.25?"蛾眉月":p<.5?"盈凸月":p<.75?"亏凸月":"残月";}
+const fmt=v=>{const t=((Math.round(v)%1440)+1440)%1440;return String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0");};
+const dur=v=>Math.floor(v/60)+"小时"+String(Math.round(v)%60).padStart(2,"0")+"分";
+const alt=(lat,dec,H)=>Math.asin(Math.sin(lat*D2R)*Math.sin(dec*D2R)+Math.cos(lat*D2R)*Math.cos(dec*D2R)*Math.cos(H*D2R))*R2D;
+const X=H=>20+((H+180)%360)/360*300,Y=a=>150-Math.max(-14,a)/90*130;
+const CITY=[["北京",39.9042,116.4074,8],["上海",31.2304,121.4737,8],["乌鲁木齐",43.8256,87.6168,8],["伦敦",51.5074,-0.1278,1],
+ ["纽约",40.7128,-74.006,-4],["悉尼",-33.8688,151.2093,10],["开普敦",-33.9249,18.4241,2],["雷克雅未克",64.1466,-21.9426,0],["特罗姆瑟",69.6496,18.956,1]];
+$("ps").innerHTML=CITY.map((c,i)=>'<button data-i="'+i+'">'+c[0]+"</button>").join("");
+const now=new Date(),iso=n=>n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0");
+$("q-date").value=iso(now);$("tm").value=now.getHours()*60+now.getMinutes();
+let S={};
+function upd(){
+ const lat=+$("q-lat").value,lon=+$("q-lon").value,tz=+$("q-tz").value,v=$("q-date").value;
+ if(!v||!isFinite(lat)||!isFinite(lon)||!isFinite(tz))return;
+ const [y,m,d]=v.split("-").map(Number),T=times(y,m,d,lat,lon,tz),M=moon(jd(y,m,d,12-tz));
+ const po=T.p||"",k=Math.round(M.k*100),nm=pname(M.p),nn=solar(jd(y,m,d,12-tz),lon,tz).n,dec=solar(jd(y,m,d,12-tz),lon,tz).dec;
+ S={y,m,d,lat,lon,tz,T,M,k,nm,nn,dec};
+ let ex;
+ if(po)ex="极区现象：太阳整日"+(po==="极昼"?"不落（极昼）":"不升（极夜）")+" · 正午高度 "+(90-Math.abs(lat-dec)).toFixed(1)+"°";
+ else{const len=T.t-T.r,p2=times(y,m,d-1,lat,lon,tz);
+  ex="昼长 "+dur(len)+" · 较前日"+(p2.p?" —":(len>=(p2.t-p2.r)?"+":"")+Math.round(len-(p2.t-p2.r))+" 分")+" · 正午 "+fmt(nn)+" · 高度 "+(90-Math.abs(lat-dec)).toFixed(1)+"°";}
+ $("q-result").innerHTML="<span>日出：<b>"+(po||fmt(T.r))+"</b></span><span class=\"dot\"> · </span>"+
+  "<span>日落：<b>"+(po||fmt(T.t))+"</b></span><span class=\"dot\"> · </span><span>月相：<b>"+nm+"</b></span><span class=\"dot\"> · </span>"+
+  "<span>照亮：<b>"+k+"</b>%</span><span class=\"x\">"+ex+"</span>";
+ $("ft").innerHTML="<b>"+nm+" · 照亮 "+k+"%</b>相位角 "+(M.p*360).toFixed(1)+"° · 距"+(M.p<0.5?"下次满月":(M.p>0.5?"下次新月":"满月"))+
+  " 约 "+Math.round((M.p<0.5?0.5-M.p:1-M.p)*29.53)+" 天<br>"+ex;
+ drawSky();drawMoon();}
+function drawSky(){
+ const {lat,T,M,nn,dec}=S,t=+$("tm").value,H=(t-nn)*0.25,a=alt(lat,dec,H),night=a<-0.9;
+ $("tl").textContent=fmt(t);
+ let up="",dn="",fu=1;
+ for(let h=-180;h<=180;h+=4){const A=alt(lat,dec,h),x=X(h).toFixed(1),y=Y(A).toFixed(1);
+  dn+=(h===-180?"M":"L")+x+","+y;
+  if(A>-0.9){up+=(fu?"M":"L")+x+","+y;fu=0;}else fu=1;}
+ $("arc").setAttribute("d",dn);$("arc2").setAttribute("d",up||"M0,0");
+ const sx=X(H).toFixed(1),sy=Y(a).toFixed(1);
+ $("sun").setAttribute("cx",sx);$("sun").setAttribute("cy",sy);$("sun").style.opacity=night?0:1;
+ $("sun2").setAttribute("cx",sx);$("sun2").setAttribute("cy",sy);$("sun2").style.opacity=night?0:1;
+ const Hc=Math.max(-180,Math.min(180,H)),Hm=Hc>=0?Hc-180:Hc+180,ma=alt(lat,dec,Hm);
+ $("moon").setAttribute("cx",X(Hm).toFixed(1));$("moon").setAttribute("cy",Y(ma).toFixed(1));
+ $("moon2").setAttribute("cx",X(Hm).toFixed(1));$("moon2").setAttribute("cy",Y(ma).toFixed(1));
+ $("moon").style.opacity=(night&&ma>-4)?0.95:0;$("moon2").style.opacity=(night&&ma>-4)?0.6:0;
+ let mk="";
+ if(!T.p){const hr=(T.r-nn)*0.25,hs=(T.t-nn)*0.25,ym=Y(90-Math.abs(lat-dec));
+  const pt=(x,y,s)=>'<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="2.6" fill="#ffd166"/><text x="'+x.toFixed(1)+'" y="'+(y+13).toFixed(1)+'" font-size="8" fill="#ffe9b0" text-anchor="middle">'+s+"</text>";
+  mk=pt(X(hr),150,"日出")+pt(X(0),ym,"正午")+pt(X(hs),150,"日落");}
+ $("mk").innerHTML=mk;
+ let st="";for(let i=0;i<44;i++)st+='<circle cx="'+((i*73)%337+2)+'" cy="'+((i*47)%116+6)+'" r="'+(0.6+(i%3)*0.35)+'" fill="#fff" opacity="'+(0.22+(i%5)*0.13)+'"/>';
+ $("stars").innerHTML=st;$("stars").style.opacity=night?1:0;
+ const ST=[[0,10,16,40],[5,10,16,40],[6.3,238,158,112],[8,120,178,226],[16.5,120,178,226],[18.3,232,142,98],[19.7,18,30,88],[24,10,16,40]];
+ const h=t/60;let A=ST[0].slice(1),B=ST[0].slice(1),f=0;
+ for(let i=0;i<ST.length-1;i++)if(h>=ST[i][0]&&h<=ST[i+1][0]){A=ST[i].slice(1);B=ST[i+1].slice(1);f=(h-ST[i][0])/(ST[i+1][0]-ST[i][0]);}
+ const base=A.map((v,i)=>Math.round(v+(B[i]-v)*f)),mix=(t2,k)=>base.map(v=>Math.round(v+(t2-v)*k));
+ const rgb=c=>"rgb("+c[0]+","+c[1]+","+c[2]+")";
+ $("k0").setAttribute("stop-color",rgb(mix(18,.30)));$("k1").setAttribute("stop-color",rgb(base));$("k2").setAttribute("stop-color",rgb(mix(255,.34)));
+}
+function drawMoon(){
+ const {M,nm}=S,R=42,a=Math.max(0.7,R*Math.abs(1-2*M.k)),wax=M.p<0.5;
+ const s1=wax?1:0,s2=((M.k<0.5)===wax)?0:1;
+ $("mo").innerHTML='<defs><radialGradient id="mg" cx=".36" cy=".28"><stop offset="0" stop-color="#fffbe8"/><stop offset=".62" stop-color="#f3e6c4"/><stop offset="1" stop-color="#d9caa4"/></radialGradient>'+
+  '<radialGradient id="mh"><stop offset=".72" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#ffd9a0" stop-opacity=".35"/></radialGradient></defs>'+
+  '<circle cx="50" cy="50" r="47" fill="url(#mh)"/><circle cx="50" cy="50" r="'+R+'" fill="#1b2029"/>'+
+  '<path d="M50,8 A42,42 0 0 '+s1+' 50,92 A'+a.toFixed(1)+',42 0 0 '+s2+' 50,8 Z" fill="url(#mg)"/>'+
+  (M.k>0.08?'<circle cx="40" cy="41" r="5.5" fill="#b8ad93" opacity=".38"/><circle cx="59" cy="58" r="3.8" fill="#b8ad93" opacity=".32"/><circle cx="54" cy="34" r="2.7" fill="#b8ad93" opacity=".28"/>':"")+
+  '<circle cx="50" cy="50" r="43" fill="none" stroke="#0b0f16" stroke-opacity=".28"/>';
+}
+$("ps").onclick=e=>{const b=e.target.closest("button");if(!b)return;const c=CITY[+b.dataset.i];
+ [...$("ps").children].forEach(x=>x.classList.remove("on"));b.classList.add("on");
+ $("q-lat").value=c[1];$("q-lon").value=c[2];$("q-tz").value=c[3];upd();};
+["q-lat","q-lon","q-date","q-tz"].forEach(i=>{$(i).addEventListener("input",upd);$(i).addEventListener("change",upd);});
+$("tm").addEventListener("input",()=>{if(S.y)drawSky();});
+$("ps").children[0].classList.add("on");upd();
+</script></body></html>

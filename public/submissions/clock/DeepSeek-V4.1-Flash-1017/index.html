@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>此刻 · AURORA CLOCK</title>
+<style>
+  :root {
+    --bg-1: #16233c; --bg-2: #070b14; --bg-3: #04060b;
+    --fg: #eef3ff; --muted: #8d99b3; --dim: #4b5772;
+    --gold: #e8c684; --aqua: #6fe0cf; --line: rgba(255,255,255,.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; display: grid; place-items: center; overflow: hidden;
+    background: radial-gradient(120% 90% at 50% 0%, var(--bg-1) 0%, var(--bg-2) 55%, var(--bg-3) 100%);
+    color: var(--fg); -webkit-font-smoothing: antialiased;
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+    transition: background .9s ease;
+  }
+  body.night { --bg-1: #0d1730; --bg-2: #04070f; --bg-3: #010206; }
+  .stage { width: min(94vw, 900px); padding: 22px 14px; display: flex; flex-direction: column; gap: clamp(16px, 4vh, 38px); }
+  .brand { display: flex; align-items: center; justify-content: space-between; font-size: 11px; letter-spacing: .32em; color: var(--muted); text-transform: uppercase; }
+  .brand b { color: var(--fg); font-weight: 600; letter-spacing: .44em; }
+  .live { display: inline-flex; align-items: center; gap: 9px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--aqua); box-shadow: 0 0 10px var(--aqua); animation: breathe 2.4s ease-in-out infinite; }
+  @keyframes breathe { 0%, 100% { opacity: .35; transform: scale(.8); } 50% { opacity: 1; transform: scale(1); } }
+  .phase { border: 1px solid var(--line); border-radius: 999px; padding: 5px 13px; letter-spacing: .22em; font-size: 10px; color: var(--muted); transition: color .6s, border-color .6s; }
+  .clock { display: flex; align-items: center; justify-content: center; gap: clamp(22px, 6vw, 72px); flex-wrap: wrap; }
+  .dial-wrap { position: relative; width: min(72vw, 348px); aspect-ratio: 1; }
+  .dial-wrap::after { content: ""; position: absolute; inset: 22%; border-radius: 50%; background: radial-gradient(circle, rgba(232,198,132,.16), transparent 68%); filter: blur(18px); pointer-events: none; }
+  .dial { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 28px 52px rgba(0,0,0,.6)); }
+  #ticks { animation: tick-breathe 4.6s ease-in-out infinite; transform-origin: 200px 200px; }
+  @keyframes tick-breathe { 0%, 100% { opacity: .78; } 50% { opacity: 1; } }
+  .readout { min-width: 246px; display: flex; flex-direction: column; gap: 12px; }
+  .time { display: flex; align-items: flex-start; gap: 8px; line-height: .86; font-variant-numeric: tabular-nums; }
+  .hm { font-size: clamp(68px, 15vw, 104px); font-weight: 200; letter-spacing: -.055em; background: linear-gradient(180deg, #fff 18%, #b9c6e2 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .ss { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 22px; color: var(--gold); margin-top: 10px; letter-spacing: .02em; }
+  .ss.tick { animation: beat .5s ease-out; }
+  @keyframes beat { 0% { transform: translateY(-5px) scale(1.16); opacity: .45; } 100% { transform: none; opacity: 1; } }
+  .meta { display: flex; align-items: center; gap: 10px; font-size: 12.5px; letter-spacing: .14em; color: var(--muted); }
+  .meta i { width: 3px; height: 3px; border-radius: 50%; background: var(--dim); }
+  .bar { height: 2px; width: 100%; background: rgba(255,255,255,.07); border-radius: 2px; overflow: hidden; }
+  .bar span { display: block; height: 100%; width: 0; border-radius: 2px; background: linear-gradient(90deg, rgba(111,224,207,.5), var(--gold)); transition: width .45s ease; }
+  .hint { margin: 0; font-size: 12px; line-height: 1.8; color: var(--dim); letter-spacing: .06em; }
+  .hint b { color: var(--muted); font-weight: 500; }
+  @media (max-width: 720px) {
+    .clock { flex-direction: column; gap: 26px; }
+    .readout { align-items: center; text-align: center; min-width: 0; width: min(82vw, 360px); }
+    .meta { justify-content: center; }
+    .hm { font-size: 62px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .001ms !important; transition-duration: .001ms !important; } }
+</style>
+</head>
+<body>
+  <main class="stage">
+    <header class="brand">
+      <span class="live"><span class="dot"></span><b>此刻 AURORA</b></span>
+      <span class="phase" id="phase">日间</span>
+    </header>
+    <section class="clock" aria-label="时钟">
+      <div class="dial-wrap">
+        <svg class="dial" viewBox="0 0 400 400" role="img" aria-label="模拟时钟表盘">
+          <defs>
+            <radialGradient id="plate" cx="50%" cy="38%" r="68%">
+              <stop offset="0" stop-color="#141d31" />
+              <stop offset="1" stop-color="#070a12" />
+            </radialGradient>
+            <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#fff3d6" />
+              <stop offset=".45" stop-color="#e8c684" />
+              <stop offset="1" stop-color="#a97f3c" />
+            </linearGradient>
+            <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="3.2" result="b" />
+              <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          </defs>
+          <circle cx="200" cy="200" r="190" fill="none" stroke="rgba(255,255,255,.05)" />
+          <circle cx="200" cy="200" r="178" fill="url(#plate)" stroke="rgba(255,255,255,.1)" />
+          <circle cx="200" cy="200" r="163" fill="none" stroke="rgba(255,255,255,.055)" />
+          <circle id="dayArc" cx="200" cy="200" r="190" fill="none" stroke="url(#gold)" stroke-width="2.5"
+                  stroke-linecap="round" stroke-dasharray="0 1194" transform="rotate(-90 200 200)" opacity=".8" />
+          <g id="ticks"></g>
+          <g id="hourHand" transform="rotate(0 200 200)">
+            <rect x="196.2" y="116" width="7.6" height="84" rx="3.8" fill="#dbe4f6" />
+          </g>
+          <g id="minuteHand" transform="rotate(0 200 200)">
+            <rect x="197.4" y="76" width="5.2" height="124" rx="2.6" fill="#f6f9ff" />
+          </g>
+          <g id="secondHand" transform="rotate(0 200 200)">
+            <line x1="200" y1="228" x2="200" y2="58" stroke="#f4d396" stroke-width="2.2" stroke-linecap="round" filter="url(#soft)" />
+            <circle cx="200" cy="228" r="6.5" fill="#e8c684" />
+          </g>
+          <circle cx="200" cy="200" r="11" fill="#080c15" stroke="url(#gold)" stroke-width="1.8" />
+          <circle cx="200" cy="200" r="3.2" fill="#e8c684" />
+          <g id="orb"><circle cx="200" cy="10" r="6" fill="#ffd88a" filter="url(#soft)" /><circle cx="200" cy="10" r="2.4" fill="#fff6df" /></g>
+        </svg>
+      </div>
+      <div class="readout">
+        <div class="time"><span class="hm" id="hm">--:--</span><span class="ss" id="ss">--</span></div>
+        <div class="meta"><span id="date">—</span><i></i><span id="zone">本地时间</span></div>
+        <div class="bar" aria-hidden="true"><span id="fill"></span></div>
+        <p class="hint" id="hint">正在校准…</p>
+      </div>
+    </section>
+  </main>
+<script>
+  (() => {
+    const $ = (id) => document.getElementById(id);
+    const DEG = Math.PI / 180;
+    const ticks = $("ticks");
+    let marks = "";
+    for (let i = 0; i < 60; i++) {
+      const a = (i * 6 - 90) * DEG, major = i % 5 === 0;
+      const r1 = major ? 146 : 156, r2 = 171;
+      const p = (r) => [200 + Math.cos(a) * r, 200 + Math.sin(a) * r];
+      const [x1, y1] = p(r1), [x2, y2] = p(r2);
+      marks += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${major ? "#9aabc9" : "#3b4760"}" stroke-width="${major ? 2.8 : 1.1}" stroke-linecap="round" opacity="${major ? .95 : .6}" />`;
+    }
+    for (let h = 1; h <= 12; h++) {
+      const a = (h * 30 - 90) * DEG, x = 200 + Math.cos(a) * 124, y = 200 + Math.sin(a) * 124;
+      marks += `<text x="${x.toFixed(1)}" y="${(y + 4.6).toFixed(1)}" text-anchor="middle" font-size="13.5" fill="#7d8aa6" font-family="ui-monospace,Menlo,monospace">${h}</text>`;
+    }
+    ticks.innerHTML = marks;
+
+    const hourHand = $("hourHand"), minuteHand = $("minuteHand"), secondHand = $("secondHand");
+    const dayArc = $("dayArc"), orb = $("orb"), hm = $("hm"), ss = $("ss"), dateEl = $("date"), fill = $("fill"), hint = $("hint"), phase = $("phase");
+    const WEEK = ["日", "一", "二", "三", "四", "五", "六"];
+    const pad = (n) => String(n).padStart(2, "0");
+    let lastSec = -1, lastPhase = "";
+
+    const clock = () => {
+      const d = new Date();
+      const ms = d.getMilliseconds(), sec = d.getSeconds(), min = d.getMinutes(), hr = d.getHours();
+      const s = sec + ms / 1000, m = min + s / 60, h12 = (hr % 12) + m / 60;
+      hourHand.setAttribute("transform", `rotate(${(h12 * 30).toFixed(3)} 200 200)`);
+      minuteHand.setAttribute("transform", `rotate(${(m * 6).toFixed(3)} 200 200)`);
+      secondHand.setAttribute("transform", `rotate(${(s * 6).toFixed(2)} 200 200)`);
+
+      const dayFrac = (hr * 3600 + min * 60 + s) / 86400;
+      dayArc.setAttribute("stroke-dasharray", `${(dayFrac * 1194).toFixed(1)} 1194`);
+      orb.setAttribute("transform", `rotate(${(dayFrac * 360).toFixed(2)} 200 200)`);
+
+      if (sec !== lastSec) {
+        lastSec = sec;
+        hm.textContent = `${pad(hr)}:${pad(min)}`;
+        ss.textContent = pad(sec);
+        ss.classList.remove("tick"); void ss.offsetWidth; ss.classList.add("tick");
+        dateEl.textContent = `${d.getMonth() + 1} 月 ${d.getDate()} 日 · 周${WEEK[d.getDay()]}`;
+        fill.style.width = `${(dayFrac * 100).toFixed(2)}%`;
+
+        const night = hr < 6 || hr >= 18;
+        const label = night ? "夜间" : hr < 8 ? "清晨" : hr < 17 ? "日间" : "黄昏";
+        if (label !== lastPhase) {
+          lastPhase = label;
+          phase.textContent = label;
+          document.body.classList.toggle("night", night);
+        }
+        const hourNow = hr + min / 60;
+        const left = night ? (24 - hourNow + 6) % 24 : 18 - hourNow;
+        const mins = Math.max(0, Math.round(left * 60));
+        const span = mins >= 60 ? `${Math.floor(mins / 60)} 小时 ${pad(mins % 60)} 分` : `${mins} 分钟`;
+        hint.innerHTML = `${night ? "距天亮" : "距日落"}还剩 <b>${span}</b> · 今日已过 <b>${(dayFrac * 100).toFixed(0)}%</b>`;
+      }
+      requestAnimationFrame(clock);
+    };
+    requestAnimationFrame(clock);
+
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) lastSec = -1; });
+  })();
+</script>
+</body>
+</html>

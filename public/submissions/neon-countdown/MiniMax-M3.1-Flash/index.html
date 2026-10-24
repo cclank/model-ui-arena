@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>HYPERDRIVE · 倒计时</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--neon:#3ee9ff;--neon2:#ff3d9a;--glow:rgba(62,233,255,.55)}
+body{min-height:100dvh;display:grid;place-items:center;overflow:hidden;background:#06030f;color:#eaf6ff;
+font:400 16px/1.45 ui-sans-serif,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+transition:--neon .35s linear,--glow .35s linear}
+body[data-c=mid]{--neon:#ffc23d;--glow:rgba(255,194,61,.55)}
+body[data-c=hot]{--neon:#ff3d7f;--glow:rgba(255,61,127,.6)}
+body[data-c=done]{--neon:#ffffff;--glow:rgba(255,255,255,.75)}
+.bg{position:fixed;inset:0;z-index:0;background:
+radial-gradient(90% 60% at 50% 42%,color-mix(in srgb,var(--neon) 18%,transparent),transparent 70%),
+radial-gradient(60% 40% at 50% 100%,rgba(120,40,255,.22),transparent 70%),#06030f;transition:background .5s}
+.grid{position:fixed;left:-50%;right:-50%;bottom:-14%;height:58%;z-index:1;opacity:.4;
+background-image:linear-gradient(rgba(120,230,255,.35) 1px,transparent 1px),
+linear-gradient(90deg,rgba(120,230,255,.35) 1px,transparent 1px);
+background-size:52px 40px;transform:perspective(340px) rotateX(66deg);
+mask-image:linear-gradient(transparent,#000 42%);animation:run 1.6s linear infinite}
+@keyframes run{to{background-position:0 40px,0 0}}
+.scan{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.35;
+background:repeating-linear-gradient(0deg,rgba(0,0,0,.35) 0 1px,transparent 1px 3px)}
+.stage{position:relative;z-index:3;display:grid;place-items:center;gap:18px;padding:20px;width:100%}
+.dial{position:relative;width:min(78vw,330px);aspect-ratio:1;display:grid;place-items:center}
+svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.rbg{fill:none;stroke:rgba(255,255,255,.07);stroke-width:7}
+.rfg{fill:none;stroke:var(--neon);stroke-width:7;stroke-linecap:round;
+filter:drop-shadow(0 0 9px var(--glow));transition:stroke-dashoffset .95s cubic-bezier(.3,0,.2,1),stroke .35s}
+.rin{fill:none;stroke:var(--neon2);stroke-width:1.4;opacity:.5}
+.tk{stroke:rgba(255,255,255,.22);stroke-width:3;stroke-linecap:round;transition:stroke .2s,filter .2s}
+.tk.on{stroke:var(--neon);filter:drop-shadow(0 0 5px var(--glow))}
+.num{position:relative;font-size:clamp(96px,30vw,150px);font-weight:700;letter-spacing:-.04em;line-height:1;
+color:var(--neon);font-variant-numeric:tabular-nums;text-shadow:0 0 18px var(--glow),0 0 46px var(--glow);
+transition:color .3s,text-shadow .3s}
+.beat{animation:beat .62s cubic-bezier(.2,1.4,.4,1)}
+@keyframes beat{0%{transform:scale(1)}22%{transform:scale(1.22)}100%{transform:scale(1)}}
+.tag{position:absolute;bottom:22%;font-size:10px;letter-spacing:.4em;color:var(--neon);opacity:.75}
+.msg{font-size:13px;letter-spacing:.32em;color:var(--neon);min-height:20px;text-align:center;
+text-shadow:0 0 10px var(--glow);transition:color .3s}
+.done .msg{font-size:clamp(24px,7vw,34px);font-weight:800;letter-spacing:.2em;
+animation:pop .7s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
+.bar{width:min(78vw,330px);height:8px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden;
+box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+.bar i{display:block;height:100%;width:100%;border-radius:5px;
+background:linear-gradient(90deg,var(--neon2),var(--neon));box-shadow:0 0 14px var(--glow);
+transition:width .95s cubic-bezier(.3,0,.2,1)}
+.ctrl{display:flex;gap:10px;align-items:center}
+.btn{border:1px solid var(--neon);background:rgba(255,255,255,.04);color:var(--neon);border-radius:999px;
+padding:11px 26px;font:inherit;font-size:13px;font-weight:700;letter-spacing:.2em;cursor:pointer;
+text-shadow:0 0 8px var(--glow);transition:background .25s,transform .15s}
+.btn:hover{background:color-mix(in srgb,var(--neon) 22%,transparent)}
+.btn:active{transform:scale(.96)}
+.meta{font-size:10.5px;letter-spacing:.26em;color:rgba(220,235,255,.45)}
+.shake{animation:shake .34s linear infinite}
+@keyframes shake{0%,100%{transform:translate(0,0)}25%{transform:translate(-2px,1px)}50%{transform:translate(2px,-1px)}75%{transform:translate(-1px,-1px)}}
+.flash{position:fixed;inset:0;z-index:4;pointer-events:none;background:#fff;opacity:0}
+.flash.go{animation:fl .85s ease-out}
+@keyframes fl{0%{opacity:.9}100%{opacity:0}}
+.spark{position:fixed;z-index:5;pointer-events:none;width:5px;height:5px;border-radius:50%;
+background:var(--neon);box-shadow:0 0 10px var(--glow);animation:fly .95s cubic-bezier(.15,.8,.3,1) forwards}
+@keyframes fly{to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="grid"></div><div class="scan"></div>
+<div class="flash" id="flash"></div>
+<main class="stage" id="stage">
+  <div class="dial">
+    <svg viewBox="0 0 200 200">
+      <circle class="rbg" cx="100" cy="100" r="84"/>
+      <circle class="rin" cx="100" cy="100" r="92"/>
+      <circle class="rfg" id="rfg" cx="100" cy="100" r="84"/>
+      <g id="ticks"></g>
+    </svg>
+    <div class="num" id="num">10</div>
+    <div class="tag" id="tag">READY</div>
+  </div>
+  <p class="msg" id="msg">倒计时开始</p>
+  <div class="bar"><i id="bar"></i></div>
+  <div class="ctrl"><button class="btn" id="restart">重新开始</button></div>
+  <p class="meta" id="meta">10.0 SEC</p>
+</main>
+<script>
+const NS='http://www.w3.org/2000/svg';
+const $=id=>document.getElementById(id);
+const R=84,C=2*Math.PI*R;
+const stage=$('stage'),num=$('num'),rfg=$('rfg'),bar=$('bar'),msg=$('msg'),tag=$('tag'),meta=$('meta');
+rfg.style.strokeDasharray=C;rfg.style.strokeDashoffset=0;
+const TICKS=[];
+for(let i=0;i<10;i++){const a=(i*36-90)*Math.PI/180;
+const l=document.createElementNS(NS,'line');l.setAttribute('class','tk');
+l.setAttribute('x1',(100+Math.cos(a)*72).toFixed(2));l.setAttribute('y1',(100+Math.sin(a)*72).toFixed(2));
+l.setAttribute('x2',(100+Math.cos(a)*63).toFixed(2));l.setAttribute('y2',(100+Math.sin(a)*63).toFixed(2));
+$('ticks').appendChild(l);TICKS.push(l)}
+const TOTAL=10;
+let left=TOTAL,running=false,lastMark=-1,startAt=0,raf=0,finished=false;
+function setTheme(){
+document.body.dataset.c=left>3?'cool':left>1?'mid':left>0?'hot':'done';
+stage.classList.toggle('shake',left>0&&left<=3&&!finished)}
+function tick(){
+if(!running)return;
+const el=(performance.now()-startAt)/1000;
+left=Math.max(0,TOTAL-el);
+const shown=Math.ceil(left);
+rfg.style.strokeDashoffset=(C*(left/TOTAL)).toFixed(2);
+bar.style.width=((left/TOTAL)*100).toFixed(2)+'%';
+meta.textContent=left.toFixed(1)+' SEC';
+if(shown!==lastMark){lastMark=shown;num.textContent=shown;
+num.classList.remove('beat');void num.offsetWidth;num.classList.add('beat');
+TICKS.forEach((t,i)=>t.classList.toggle('on',i<shown));
+tag.textContent=finished?'DONE':(left>3?'RUN':left>1?'ALERT':left>0?'FINAL':'DONE');
+setTheme()}
+if(left<=0){finish();return}
+raf=requestAnimationFrame(tick)}
+function burst(){
+const cx=innerWidth/2,cy=innerHeight/2;
+for(let i=0;i<70;i++){const a=(i/70)*Math.PI*2+Math.random()*.3,d=120+Math.random()*280;
+const s=document.createElement('div');s.className='spark';
+s.style.left=cx+'px';s.style.top=cy+'px';
+s.style.setProperty('--dx',(Math.cos(a)*d).toFixed(0)+'px');
+s.style.setProperty('--dy',(Math.sin(a)*d).toFixed(0)+'px');
+s.style.animationDelay=(Math.random()*.16).toFixed(2)+'s';
+s.style.background=i%3===0?'#ff3d9a':'#fff';
+document.body.appendChild(s);setTimeout(()=>s.remove(),1400)}}
+function finish(){
+running=false;finished=true;lastMark=0;num.textContent='0';
+TICKS.forEach(t=>t.classList.add('on'));
+rfg.style.strokeDashoffset=0;bar.style.width='100%';
+msg.textContent='爆 发 完 成';tag.textContent='DONE';
+stage.classList.add('done');stage.classList.remove('shake');
+document.body.dataset.c='done';
+$('flash').classList.remove('go');void $('flash').offsetWidth;$('flash').classList.add('go');
+burst();meta.textContent='0.0 SEC'}
+function start(){
+running=true;finished=false;left=TOTAL;lastMark=-1;startAt=performance.now();
+stage.classList.remove('done');msg.textContent='倒计时开始';num.textContent='10';
+TICKS.forEach(t=>t.classList.remove('on'));
+rfg.style.strokeDashoffset=0;bar.style.width='100%';setTheme();
+cancelAnimationFrame(raf);raf=requestAnimationFrame(tick)}
+$('restart').addEventListener('click',start);
+start();
+</script>
+</body>
+</html>

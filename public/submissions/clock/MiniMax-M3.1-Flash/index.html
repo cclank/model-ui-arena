@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>MERIDIAN 时序 · 精密钟</title>
+<style>
+@property --sky1{syntax:"<color>";inherits:true;initial-value:#101a33}
+@property --sky2{syntax:"<color>";inherits:true;initial-value:#05070f}
+@property --glow{syntax:"<color>";inherits:true;initial-value:#7fc4ff}
+*{margin:0;padding:0;box-sizing:border-box}
+body{--ink:#eef3ff;--dim:#93a3c4;--line:rgba(255,255,255,.13);--acc:#ffc46b;--acc2:#ff6f8b;--veil:rgba(2,4,10,.74);
+min-height:100dvh;display:grid;place-items:center;padding:26px 16px;overflow-x:hidden;color:var(--ink);
+background:#05070f;font:400 16px/1.45 ui-sans-serif,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+transition:--sky1 1.6s ease,--sky2 1.6s ease,--glow 1.6s ease}
+body[data-p=night]{--sky1:#101a33;--sky2:#04060e;--glow:#7fc4ff;--acc:#8fb4ff;--acc2:#7d8cff;--veil:rgba(2,4,10,.74)}
+body[data-p=dawn]{--sky1:#4a3550;--sky2:#120a18;--glow:#ffb47a;--acc:#ffbf80;--acc2:#ff8fa3;--veil:rgba(10,4,14,.7)}
+body[data-p=day]{--sky1:#cfe6ff;--sky2:#8fbde8;--glow:#fff3d4;--acc:#ffb347;--acc2:#ff6f8b;--veil:rgba(18,38,66,.34)}
+body[data-p=dusk]{--sky1:#3b2154;--sky2:#0a0714;--glow:#ff8a5b;--acc:#ffb066;--acc2:#ff7a8f;--veil:rgba(8,4,16,.72)}
+.sky{position:fixed;inset:0;z-index:-3;background:radial-gradient(130% 82% at 50% -12%,var(--glow),transparent 58%),linear-gradient(178deg,var(--sky1),var(--sky2))}
+.aur{position:fixed;left:50%;top:30%;width:min(132vw,860px);aspect-ratio:1;border-radius:50%;z-index:-2;
+translate:-50% -50%;opacity:.16;filter:blur(38px);background:radial-gradient(circle,var(--glow),transparent 62%);
+animation:drift 30s ease-in-out infinite alternate;transition:opacity 1.6s}
+@keyframes drift{to{transform:translate3d(8%,-7%,0) scale(1.18)}}
+.veil{position:fixed;inset:0;z-index:-1;background:radial-gradient(120% 90% at 50% 42%,transparent 38%,var(--veil));transition:background 1.6s}
+.card{width:100%;max-width:400px;padding:20px 18px 16px;border-radius:30px;text-align:center;
+background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.02)),rgba(9,13,26,.74);border:1px solid var(--line);
+box-shadow:0 30px 70px -26px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.17);backdrop-filter:blur(20px) saturate(1.3)}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.brand{font-size:11px;letter-spacing:.34em;color:var(--dim);text-transform:uppercase;white-space:nowrap}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.14em;color:var(--acc);
+border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:rgba(255,255,255,.05);white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--acc);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25;transform:scale(.7)}}
+.dial{position:relative;width:min(74vw,272px);aspect-ratio:1;margin:0 auto 10px}
+svg{display:block;width:100%;height:100%;overflow:visible}
+#halo{fill:none;stroke:var(--glow);stroke-width:1.4;opacity:.5;animation:breathe 4.6s ease-in-out infinite}
+@keyframes breathe{50%{opacity:.16;stroke-width:2.4}}
+#ring{fill:none;stroke:var(--line);stroke-width:1}
+#arc{fill:none;stroke:var(--acc2);stroke-width:2.6;stroke-linecap:round;transform:rotate(-90deg);transform-origin:100px 100px;transition:stroke-dashoffset .95s cubic-bezier(.4,0,.2,1)}
+.sun{fill:var(--acc);opacity:.9}
+.moon{fill:none;stroke:var(--acc);stroke-width:2;opacity:.9}
+#ticks line{stroke:var(--dim);stroke-linecap:round}
+#ticks line.h{stroke:var(--ink);stroke-width:2}
+#nums text{fill:var(--ink);font:500 13px/1 ui-sans-serif,system-ui,sans-serif;text-anchor:middle;dominant-baseline:central}
+.hnd{stroke-linecap:round;transform-box:view-box;transform-origin:100px 100px}
+#hh{stroke:var(--ink);stroke-width:5}
+#mm{stroke:var(--acc);stroke-width:3}
+#ss{stroke:var(--acc2);stroke-width:1.4}
+#ss circle{fill:var(--acc2)}
+.cap{fill:var(--acc);stroke:var(--sky2);stroke-width:1.4}
+.digi{display:flex;align-items:baseline;justify-content:center;gap:4px;margin:2px 0 4px;font-variant-numeric:tabular-nums}
+.hh2{font-size:clamp(44px,15vw,58px);font-weight:250;letter-spacing:-.03em;line-height:1}
+.mm2{font-size:clamp(44px,15vw,58px);font-weight:250;letter-spacing:-.03em;line-height:1;color:var(--acc)}
+.col{font-size:clamp(26px,8vw,32px);font-weight:250;color:var(--acc2);line-height:1;opacity:.9}
+.dat{font-size:12.5px;color:var(--dim);letter-spacing:.06em}
+.zone{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.chip{font:inherit;font-size:11px;letter-spacing:.1em;padding:6px 12px;border-radius:999px;border:1px solid var(--line);
+color:var(--dim);background:rgba(255,255,255,.04);cursor:pointer;transition:color .3s,background .3s,border-color .3s}
+.chip[aria-pressed=true]{color:#0d1526;background:var(--acc);border-color:transparent;font-weight:600}
+.bar{margin-top:14px;height:3px;border-radius:2px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc2),var(--acc));border-radius:2px}
+.cap2{margin-top:9px;font-size:10.5px;letter-spacing:.2em;color:var(--dim)}
+</style>
+</head>
+<body data-p="night">
+<div class="sky"></div><div class="aur"></div><div class="veil"></div>
+<main class="card">
+  <div class="hd"><span class="brand">Meridian</span><span class="live"><i class="dot"></i>LIVE</span></div>
+  <div class="dial">
+    <svg viewBox="0 0 200 200" aria-label="模拟表盘">
+      <circle id="halo" cx="100" cy="100" r="96"/>
+      <circle id="ring" cx="100" cy="100" r="88"/>
+      <circle id="arc" cx="100" cy="100" r="92"/>
+      <g id="orb"></g>
+      <g id="ticks"></g><g id="nums"></g>
+      <line id="hh" class="hnd" x1="100" y1="100" x2="100" y2="52"/>
+      <line id="mm" class="hnd" x1="100" y1="100" x2="100" y2="34"/>
+      <line id="ss" class="hnd" x1="100" y1="100" x2="100" y2="26"/>
+      <circle class="cap" cx="100" cy="100" r="4.6"/>
+    </svg>
+  </div>
+  <div class="digi"><span class="hh2" id="dh">--</span><span class="mm2" id="dm">--</span><span class="col" id="ds">--</span></div>
+  <p class="dat" id="date">加载中</p>
+  <div class="zone" role="group" aria-label="时段">
+    <button class="chip" data-p="night">夜</button><button class="chip" data-p="dawn">晨</button>
+    <button class="chip" data-p="day">昼</button><button class="chip" data-p="dusk">暮</button>
+    <button class="chip" data-p="auto" aria-pressed="true">自动</button>
+  </div>
+  <div class="bar"><i id="prog"></i></div>
+  <p class="cap2" id="meta">—</p>
+</main>
+<script>
+const TICK=document.getElementById('ticks'),NUM=document.getElementById('nums'),NS='http://www.w3.org/2000/svg';
+for(let i=0;i<60;i++){const a=i*6*Math.PI/180,m=i%5===0,l=document.createElementNS(NS,'line');
+l.setAttribute('x1',100+Math.sin(a)*(m?68:72));l.setAttribute('y1',100-Math.cos(a)*(m?68:72));
+l.setAttribute('x2',100+Math.sin(a)*(m?60:66));l.setAttribute('y2',100-Math.cos(a)*(m?60:66));
+if(m)l.setAttribute('class','h');TICK.appendChild(l)}
+for(let h=1;h<=12;h++){const a=h*30*Math.PI/180,t=document.createElementNS(NS,'text');
+t.setAttribute('x',100+Math.sin(a)*48);t.setAttribute('y',100-Math.cos(a)*48);t.textContent=h;NUM.appendChild(t)}
+const $=id=>document.getElementById(id);
+const hh=$('hh'),mm=$('mm'),ss=$('ss'),dh=$('dh'),dm=$('dm'),ds=$('ds'),date=$('date'),prog=$('prog'),meta=$('meta');
+const arc=$('arc'),orb=$('orb');
+const CIRC=2*Math.PI*92;arc.style.strokeDasharray=CIRC;
+const sun=document.createElementNS(NS,'circle');sun.setAttribute('class','sun');sun.setAttribute('cx',100);sun.setAttribute('cy',14);sun.setAttribute('r',5.2);
+const moon=document.createElementNS(NS,'path');moon.setAttribute('class','moon');moon.setAttribute('d','M104 9a5.2 5.2 0 1 0 0 10.4A6.2 6.2 0 0 1 104 9z');
+const WD=['日','一','二','三','四','五','六'];
+const PERIOD={night:['夜','深夜 · 星轨低转'],dawn:['晨','破晓 · 曙光初启'],day:['昼','白昼 · 日光充盈'],dusk:['暮','黄昏 · 暮色四合']};
+let mode='auto',cur='',lastSec=-1;
+function periodOf(h){return h<5?'night':h<8?'dawn':h<17?'day':h<20?'dusk':'night'}
+function paintPeriod(p){if(p===cur)return;cur=p;document.body.dataset.p=p;
+orb.replaceChildren();orb.appendChild(p==='day'||p==='dawn'?sun:moon);
+document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.p===mode||(mode==='auto'&&c.dataset.p===p))));}
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{mode=c.dataset.p;
+if(mode==='auto'){cur='';paintPeriod(periodOf(new Date().getHours()))}else paintPeriod(mode)}));
+function setHand(el,deg){el.style.transform='rotate('+deg+'deg)'}
+let last=performance.now();
+function frame(now){const d=new Date(),ms=d.getMilliseconds()/1000;
+const s=d.getSeconds()+ms,mi=d.getMinutes()+s/60,h=d.getHours()%12+mi/60;
+setHand(hh,h*30);setHand(mm,mi*6);setHand(ss,s*6);
+const sec=d.getSeconds();
+if(sec!==lastSec){lastSec=sec;
+const p2=n=>String(n).padStart(2,'0');
+dh.textContent=p2(d.getHours());dm.textContent=p2(d.getMinutes());ds.textContent=p2(sec);
+date.textContent=d.getFullYear()+' 年 '+p2(d.getMonth()+1)+' 月 '+p2(d.getDate())+' 日 · 星期'+WD[d.getDay()];
+if(mode==='auto')paintPeriod(periodOf(d.getHours()));
+const info=PERIOD[document.body.dataset.p];
+meta.textContent=info[0]+' · '+info[1];
+prog.style.width=(((mi%1)*100)).toFixed(1)+'%';
+arc.style.strokeDashoffset=(CIRC*(1-sec/60)).toFixed(2);}
+last=now;requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>霓虹倒计时</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: radial-gradient(80% 60% at 50% 110%, #1b0f3b, #070312 70%);
+    font-family: "Avenir Next", "PingFang SC", sans-serif; color: #e9f4ff;
+    transition: background .6s ease;
+  }
+  body.urgent { background: radial-gradient(80% 60% at 50% 110%, #4a0d1f, #170208 70%); }
+  body.done { background: radial-gradient(80% 60% at 50% 110%, #0d3b2e, #02120c 70%); }
+  #fx { position: fixed; inset: 0; pointer-events: none; }
+  .grid {
+    position: fixed; inset: 40% -50% -10% -50%; pointer-events: none; opacity: .5;
+    background: repeating-linear-gradient(90deg, rgba(120,220,255,.14) 0 1px, transparent 1px 60px),
+                repeating-linear-gradient(0deg, rgba(120,220,255,.14) 0 1px, transparent 1px 44px);
+    transform: perspective(300px) rotateX(62deg);
+    mask-image: linear-gradient(to top, #000 30%, transparent 95%);
+    -webkit-mask-image: linear-gradient(to top, #000 30%, transparent 95%);
+  }
+  .stage { position: relative; width: min(78vw, 340px); aspect-ratio: 1; display: grid; place-items: center; }
+  svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: rgba(140,220,255,.12); stroke-width: 6; }
+  .ring-fg { fill: none; stroke: url(#ng); stroke-width: 6; stroke-linecap: round; filter: drop-shadow(0 0 8px rgba(90,230,255,.8)); }
+  .num {
+    font-size: min(30vw, 130px); font-weight: 800; line-height: 1;
+    background: linear-gradient(180deg, #fff, #7be3ff 55%, #3f8cff);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 18px rgba(90,220,255,.55)); font-variant-numeric: tabular-nums;
+  }
+  body.urgent .num { background: linear-gradient(180deg, #fff, #ffb199 55%, #ff3d5a); -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 0 22px rgba(255,70,90,.7)); }
+  body.done .num { background: linear-gradient(180deg, #fff, #a9ffd6 55%, #19c37d); -webkit-background-clip: text; background-clip: text; }
+  .stage.beat { animation: beat .45s cubic-bezier(.2,.9,.3,1.4); }
+  @keyframes beat { 0% { transform: scale(1); } 35% { transform: scale(1.07); } 100% { transform: scale(1); } }
+  .label { margin-top: 26px; font-size: 15px; letter-spacing: .5em; text-indent: .5em; color: #9fd8ff; text-transform: uppercase; }
+  .done-txt { display: none; margin-top: 22px; text-align: center; }
+  .done-txt h2 { font-size: 30px; letter-spacing: .3em; text-indent: .3em; color: #8affc9; text-shadow: 0 0 24px rgba(60,255,170,.6); }
+  .done-txt p { margin-top: 8px; font-size: 12px; color: rgba(233,244,255,.6); letter-spacing: .2em; }
+  body.done .done-txt { display: block; animation: rise .7s ease both; }
+  body.done .label { display: none; }
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
+  button {
+    margin-top: 26px; border: 1px solid rgba(120,220,255,.5); background: rgba(20,60,110,.25);
+    color: #bfeaff; font-size: 14px; letter-spacing: .3em; text-indent: .3em; padding: 12px 34px 12px 40px;
+    border-radius: 999px; cursor: pointer; transition: all .3s ease; backdrop-filter: blur(4px);
+  }
+  button:hover { background: rgba(60,140,255,.35); box-shadow: 0 0 24px rgba(90,200,255,.45); color: #fff; }
+  .shake { animation: shake .18s linear; }
+  @keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+  @media (max-width: 390px) { .label { font-size: 12px; letter-spacing: .35em; } }
+</style>
+</head>
+<body>
+<div class="grid"></div>
+<canvas id="fx"></canvas>
+<div class="stage" id="stage">
+  <svg viewBox="0 0 120 120">
+    <defs><linearGradient id="ng" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#37e2ff"/><stop offset="1" stop-color="#7a5cff"/>
+    </linearGradient></defs>
+    <circle class="ring-bg" cx="60" cy="60" r="52"/>
+    <circle class="ring-fg" id="ring" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="0"/>
+  </svg>
+  <div class="num" id="num">10</div>
+</div>
+<div class="label" id="label">T-MINUS 10 SECONDS</div>
+<div class="done-txt"><h2>任务完成</h2><p>MISSION ACCOMPLISHED · 完美命中</p></div>
+<button id="again">重新开始</button>
+<script>
+  const C = 2 * Math.PI * 52;
+  const $ = id => document.getElementById(id);
+  const cv = $('fx'), cx = cv.getContext('2d');
+  let W, H, dust = [], burst = [];
+  function resize() { W = cv.width = innerWidth; H = cv.height = innerHeight;
+    dust = Array.from({ length: 40 }, () => ({ x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.6 + .4, v: .15 + Math.random() * .4, p: Math.random() * 7 })); }
+  addEventListener('resize', resize); resize();
+  let start = 0, raf = 0, lastSec = -1;
+  function frame() {
+    const el = (performance.now() - start) / 1000, left = Math.max(0, 10 - el), sec = Math.ceil(left);
+    $('num').textContent = sec > 0 ? sec : 0;
+    $('ring').style.strokeDashoffset = C * (1 - left / 10);
+    document.body.classList.toggle('urgent', sec <= 3 && sec > 0);
+    if (sec !== lastSec && sec > 0) {
+      lastSec = sec;
+      $('stage').classList.remove('beat'); void $('stage').offsetWidth; $('stage').classList.add('beat');
+      $('label').textContent = sec <= 3 ? `最后 ${sec} 秒 · 稳住` : `T-MINUS ${sec} SECONDS`;
+      if (sec <= 3) { document.body.classList.remove('shake'); void document.body.offsetWidth; document.body.classList.add('shake'); }
+      beep(sec <= 3 ? 880 : 520, .07);
+    }
+    if (left <= 0 && !document.body.classList.contains('done')) finish();
+    cx.clearRect(0, 0, W, H);
+    dust.forEach(d => { d.y -= d.v; d.p += .02; if (d.y < -4) { d.y = H + 4; d.x = Math.random() * W; }
+      cx.globalAlpha = .25 + .35 * Math.sin(d.p); cx.fillStyle = '#9fd8ff'; cx.beginPath(); cx.arc(d.x, d.y, d.r, 0, 7); cx.fill(); });
+    cx.globalAlpha = 1;
+    burst.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += .05; p.life -= .012;
+      if (p.life > 0) { cx.globalAlpha = p.life; cx.fillStyle = p.c; cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, 7); cx.fill(); } });
+    cx.globalAlpha = 1;
+    burst = burst.filter(p => p.life > 0);
+    if (!document.body.classList.contains('done')) raf = requestAnimationFrame(frame);
+  }
+  function finish() {
+    document.body.classList.add('done');
+    cancelAnimationFrame(raf);
+    const rect = $('stage').getBoundingClientRect(), ox = rect.left + rect.width / 2, oy = rect.top + rect.height / 2;
+    const cols = ['#8affc9', '#37e2ff', '#ffd98a', '#ff8ad6', '#ffffff'];
+    for (let i = 0; i < 160; i++) {
+      const a = Math.random() * Math.PI * 2, v = 2 + Math.random() * 9;
+      burst.push({ x: ox, y: oy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, c: cols[i % cols.length], r: 1 + Math.random() * 2.6, life: 1 });
+    }
+    beep(1046, .25); setTimeout(() => beep(1318, .3), 140);
+    (function anim() {
+      burst.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += .05; p.life -= .01; });
+      cx.clearRect(0, 0, W, H);
+      burst.forEach(p => { if (p.life > 0) { cx.globalAlpha = p.life; cx.fillStyle = p.c; cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, 7); cx.fill(); } });
+      cx.globalAlpha = 1;
+      burst = burst.filter(p => p.life > 0);
+      if (burst.length) requestAnimationFrame(anim);
+    })();
+  }
+  let ac;
+  function beep(f, d) {
+    try {
+      ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(.12, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(.001, ac.currentTime + d);
+      o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + d);
+    } catch (e) {}
+  }
+  $('again').addEventListener('click', () => {
+    document.body.classList.remove('done', 'urgent');
+    burst = []; lastSec = -1; start = performance.now();
+    $('num').textContent = '10'; $('ring').style.strokeDashoffset = 0;
+    $('label').textContent = 'T-MINUS 10 SECONDS';
+    raf = requestAnimationFrame(frame);
+  });
+  start = performance.now(); raf = requestAnimationFrame(frame);
+</script>
+</body>
+</html>

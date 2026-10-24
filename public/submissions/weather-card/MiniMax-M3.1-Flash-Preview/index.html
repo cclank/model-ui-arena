@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>天气卡片</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--w:rgba(255,255,255,.74);--f:rgba(255,255,255,.46);--g:rgba(255,255,255,.1);--e:rgba(255,255,255,.18)}
+body{min-height:100vh;min-height:100svh;display:grid;place-items:center;padding:24px 16px;background:radial-gradient(130% 100% at 50% -10%,#1b2442 0%,#0a0e1d 58%,#05070f 100%);font:400 15px/1.45 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;color:#fff;-webkit-font-smoothing:antialiased}
+.wrap{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:13px}
+.card{position:relative;width:100%;border-radius:30px;overflow:hidden;padding:20px 19px 18px;box-shadow:0 34px 70px -26px rgba(0,0,0,.85),inset 0 1px 0 var(--e);transition:box-shadow .6s}
+.sky{position:absolute;inset:0;z-index:0;opacity:0;transition:opacity .85s ease}
+.sky.on{opacity:1}
+.fx{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;transition:opacity .5s ease}
+.in{position:relative;z-index:1;transition:opacity .28s ease,transform .28s ease}
+.card.go .in{opacity:0;transform:translateY(10px) scale(.994)}
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.loc{display:flex;align-items:center;gap:7px;font-size:19px;font-weight:650;letter-spacing:.5px}
+.loc svg{width:15px;height:15px;fill:var(--w);flex:none}
+.sub{margin-top:4px;font-size:11px;color:var(--w);letter-spacing:.4px}
+.tools{display:flex;align-items:center;gap:7px}
+.seg{display:flex;padding:2.5px;border-radius:999px;background:var(--g);border:1px solid var(--e);backdrop-filter:blur(6px)}
+.seg button{width:33px;height:24px;border:0;border-radius:999px;background:none;color:var(--w);font:600 12px/1 inherit;cursor:pointer;transition:.28s}
+.seg button.on{background:#fff;color:#16233d;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.icb{width:31px;height:31px;display:grid;place-items:center;border:1px solid var(--e);border-radius:50%;background:var(--g);color:#fff;cursor:pointer;transition:.28s}
+.icb:hover{background:rgba(255,255,255,.22)}
+.icb svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
+.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:13px 0 0}
+.now{display:flex;align-items:flex-start;font-weight:200;letter-spacing:-4px;line-height:.86}
+#t{font-size:78px;font-variant-numeric:tabular-nums;text-shadow:0 6px 28px rgba(0,0,0,.32)}
+.now i{font-style:normal;font-size:26px;font-weight:300;margin:8px 0 0 4px;letter-spacing:0}
+.side{text-align:right;padding-bottom:5px}
+#c{font-size:17px;font-weight:600;letter-spacing:.6px}
+.hl{display:block;margin-top:6px;font-size:12.5px;color:var(--w);font-variant-numeric:tabular-nums}
+.bar{margin-top:14px;height:3px;border-radius:3px;background:var(--g);position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:3px;background:linear-gradient(90deg,#8fd0ff,#ffd97a);transition:width .8s cubic-bezier(.4,0,.2,1)}
+.bar u{position:absolute;top:50%;width:9px;height:9px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 0 10px rgba(255,255,255,.9);transition:left .8s cubic-bezier(.4,0,.2,1);text-decoration:none}
+.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:15px}
+.chip{padding:8px 6px;border-radius:15px;background:var(--g);border:1px solid var(--e);backdrop-filter:blur(8px);text-align:center}
+.chip u{display:block;font-size:9px;letter-spacing:1.1px;color:var(--f);text-decoration:none}
+.chip b{display:block;margin-top:4px;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sec{margin-top:18px}
+.hd{display:flex;align-items:center;justify-content:space-between;font-size:10px;letter-spacing:1.7px;color:var(--f)}
+.hd em{font-style:normal;display:flex;gap:5px;letter-spacing:.3px;align-items:center}
+.hd em s{width:6px;height:6px;border-radius:50%;background:#fff;text-decoration:none}
+.hd em s.lo{background:var(--f)}
+.plot{position:relative;height:62px;margin-top:8px}
+.plot svg{position:absolute;inset:0;width:100%;height:100%}
+#dots{position:absolute;inset:0}
+.plot polyline{fill:none;stroke:#fff;stroke-opacity:.92;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.plot path{opacity:.26}
+.dot{position:absolute;width:7px;height:7px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 0 0 3.5px rgba(255,255,255,.16)}
+.days{display:grid;grid-template-columns:repeat(5,1fr);text-align:center}
+.days div{padding:6px 1px;border-radius:13px;transition:background .25s}
+.days div:hover{background:var(--g)}
+.days u{display:block;font-size:11px;color:var(--w);text-decoration:none}
+.days s{display:block;margin-top:4px;font-size:11.5px;text-decoration:none;font-variant-numeric:tabular-nums}
+.days s b{font-weight:600}
+.days s i{font-style:normal;color:var(--f);margin-left:3px}
+.hrow{display:grid;grid-template-columns:repeat(6,1fr);margin-top:9px;border-radius:16px;background:var(--g);border:1px solid var(--e);backdrop-filter:blur(8px);overflow:hidden}
+.hrow div{padding:9px 2px 8px;text-align:center;position:relative}
+.hrow div+div:before{content:"";position:absolute;left:0;top:20%;height:60%;width:1px;background:var(--e)}
+.hrow u{display:block;font-size:10px;color:var(--f);text-decoration:none}
+.g{display:block;width:11px;height:11px;border-radius:50%;margin:6px auto 5px;background:#ffd97a;box-shadow:0 0 8px rgba(255,217,122,.85)}
+.g.cloud{background:#e7eef7;box-shadow:0 0 8px rgba(231,238,247,.6)}
+.g.rain{background:#8fb6d8;box-shadow:0 0 8px rgba(143,182,216,.65)}
+.g.snow{background:#fff;box-shadow:0 0 9px rgba(255,255,255,.9)}
+.hrow b{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.pill{display:flex;gap:7px}
+.pill button{padding:8px 15px;border:1px solid var(--e);border-radius:999px;background:var(--g);backdrop-filter:blur(8px);color:var(--w);font:500 12.5px/1 inherit;letter-spacing:.5px;cursor:pointer;transition:.3s;display:flex;align-items:center;gap:7px}
+.pill button i{width:6px;height:6px;border-radius:50%;font-style:normal}
+.pill button.on{background:#fff;color:#101d34;border-color:#fff;box-shadow:0 8px 20px -8px rgba(0,0,0,.7)}
+.pill button:hover{transform:translateY(-1px)}
+.sun{position:absolute;top:-46px;right:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,#fffdf2 0%,#ffe9a8 34%,rgba(255,214,122,.26) 58%,transparent 74%);animation:breathe 7s ease-in-out infinite}
+.sun.n{background:radial-gradient(circle,#f6f9ff 0%,#c4d3f0 32%,rgba(160,185,235,.2) 58%,transparent 74%)}
+.rays{position:absolute;top:-96px;right:-90px;width:280px;height:280px;border-radius:50%;background:repeating-conic-gradient(rgba(255,255,255,.14) 0 5deg,transparent 5deg 16deg);-webkit-mask-image:radial-gradient(circle,#000 26%,transparent 66%);mask-image:radial-gradient(circle,#000 26%,transparent 66%);animation:spin 70s linear infinite;opacity:.6}
+.cl{position:absolute;left:-40%;border-radius:50%;background:rgba(255,255,255,.15);filter:blur(17px);animation:drift var(--d) linear infinite}
+.d{position:absolute;top:-14%;width:1.5px;height:30px;border-radius:2px;background:linear-gradient(180deg,rgba(255,255,255,0),rgba(214,238,255,.92));animation:fall var(--d) linear infinite}
+.f{position:absolute;top:-8%;width:var(--s);height:var(--s);border-radius:50%;background:#fff;box-shadow:0 0 6px rgba(255,255,255,.8);animation:snow var(--d) linear infinite}
+@keyframes fall{to{transform:translateY(520px)}}
+@keyframes snow{0%{transform:translate(0,0)}25%{transform:translate(15px,130px)}50%{transform:translate(-11px,260px)}75%{transform:translate(13px,390px)}100%{transform:translate(0,520px)}}
+@keyframes drift{from{transform:translateX(-20%)}to{transform:translateX(660%)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes breathe{50%{transform:scale(1.07);opacity:.85}}
+@media(max-width:374px){#t{font-size:66px}.chip b{font-size:12.5px}.days s{font-size:10.5px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="card" id="card">
+<div class="sky" id="s1"></div><div class="sky on" id="s2"></div>
+<div class="fx" id="fx"></div>
+<div class="in">
+<header>
+<div><div class="loc"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg><span id="city">上海</span></div>
+<div class="sub" id="stamp"></div></div>
+<div class="tools"><div class="seg" id="seg"><button data-u="c" class="on">°C</button><button data-u="f">°F</button></div>
+<button class="icb" id="th" aria-label="日夜切换"><svg viewBox="0 0 24 24"><path id="tp" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button></div>
+</header>
+<div class="hero"><div class="now"><span id="t">0</span><i>°C</i></div>
+<div class="side"><div id="c">晴</div><span class="hl" id="hl">最高 31° · 最低 21°</span></div></div>
+<div class="bar"><i id="pb"></i><u id="pd"></u></div>
+<div class="meta" id="meta"></div>
+<div class="sec"><div class="hd">未来 5 天<em><s></s>最高<s class="lo"></s>最低</em></div>
+<div class="plot"><svg viewBox="0 0 100 62" preserveAspectRatio="none"><path id="ar" fill="#fff"></path><polyline id="pl"></polyline></svg><div id="dots"></div></div>
+<div class="days" id="days"></div></div>
+<div class="sec"><div class="hd">逐时预报</div><div class="hrow" id="hrow"></div></div>
+</div>
+</div>
+<div class="pill" id="pill"></div>
+</div>
+<script>
+const D=[
+{n:'上海',k:'clear',c:'晴',t:27,hi:31,lo:21,w:11,wd:'东南风',h:62,fe:30,uv:6,uvt:'良',ht:[27,29,30,29,27,25],hg:['clear','clear','clear','cloud','cloud','cloud'],
+d5:[[31,21,'晴','clear'],[30,20,'多云','cloud'],[28,21,'阴','cloud'],[27,20,'小雨','rain'],[29,21,'多云','cloud']]},
+{n:'成都',k:'rain',c:'小雨',t:22,hi:25,lo:19,w:8,wd:'东北风',h:88,fe:24,uv:2,uvt:'弱',ht:[22,22,21,21,20,20],hg:['rain','rain','cloud','rain','cloud','rain'],
+d5:[[25,19,'小雨','rain'],[24,19,'中雨','rain'],[26,20,'多云','cloud'],[27,21,'晴','clear'],[23,18,'小雨','rain']]},
+{n:'哈尔滨',k:'snow',c:'小雪',t:-6,hi:-2,lo:-11,w:16,wd:'北风',h:74,fe:-12,uv:1,uvt:'弱',ht:[-6,-6,-7,-8,-9,-10],hg:['snow','snow','cloud','snow','snow','cloud'],
+d5:[[-2,-11,'小雪','snow'],[-4,-13,'中雪','snow'],[-1,-12,'阴','cloud'],[0,-9,'多云','cloud'],[-3,-12,'小雪','snow']]}];
+const G={clear:{d:'linear-gradient(155deg,#4aa8ef 0%,#2173c9 48%,#0b3d7e 100%)',n:'linear-gradient(155deg,#16255a 0%,#0d1533 55%,#05070f 100%)'},
+cloud:{d:'linear-gradient(155deg,#6d8db3 0%,#43608a 50%,#22344f 100%)',n:'linear-gradient(155deg,#1e2b48 0%,#131c33 55%,#080b14 100%)'},
+rain:{d:'linear-gradient(155deg,#5b7386 0%,#35495a 50%,#1a2733 100%)',n:'linear-gradient(155deg,#212e3c 0%,#131b26 55%,#070a0f 100%)'},
+snow:{d:'linear-gradient(155deg,#93aec4 0%,#5d7f9b 50%,#33506c 100%)',n:'linear-gradient(155deg,#2b3c55 0%,#1a2436 55%,#0a0e18 100%)'}};
+const MOON='M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z',SUN='M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2.6V5M12 19v2.4M2.6 12H5M19 12h2.4M5.6 5.6 7.3 7.3M16.7 16.7l1.7 1.7M5.6 18.4l1.7-1.7M16.7 7.3l1.7-1.7';
+const $=s=>document.querySelector(s),now=new Date(),hr=now.getHours(),WD=['周日','周一','周二','周三','周四','周五','周六'];
+const rnd=(a,b)=>Math.round((a+Math.random()*(b-a))*10)/10;
+let i=0,u=0,night=!(hr>=6&&hr<18),sky=2,prev=0,raf;
+const dots=[0,1,2,3,4].map(()=>{const e=document.createElement('i');e.className='dot';return e});
+dots.forEach(e=>$('#dots').appendChild(e));
+const cv=c=>u?Math.round(c*9/5+32):c;
+function paint(k){const g=G[k][night?'n':'d'],el=$('#s'+(sky===2?1:2));el.style.background=g;el.classList.add('on');$('#s'+sky).classList.remove('on');sky=sky===2?1:2}
+function part(k){let h='';
+if(k==='clear')h='<div class="rays"></div><div class="sun'+(night?' n':'')+'"></div>';
+if(k!=='clear')h+='<div class="cl" style="top:8%;width:120px;height:64px;--d:'+rnd(26,40)+'s"></div><div class="cl" style="top:42%;width:190px;height:86px;--d:'+rnd(34,54)+'s"></div>';
+if(k==='rain')for(let n=0;n<46;n++)h+='<i class="d" style="left:'+rnd(-4,103)+'%;--d:'+(.5+Math.random()*.6).toFixed(2)+'s;--t:-'+rnd(0,1.4).toFixed(2)+'s"></i>';
+if(k==='snow')for(let n=0;n<34;n++)h+='<i class="f" style="left:'+rnd(-4,103)+'%;--s:'+rnd(3,7)+'px;--d:'+rnd(5,11)+'s;--t:-'+rnd(0,7).toFixed(1)+'s"></i>';
+$('#fx').innerHTML=h}
+function count(v){const st=performance.now(),f=prev,t=$('#t');prev=v;cancelAnimationFrame(raf);
+(function s(x){const k=Math.min(1,(x-st)/700),e=1-Math.pow(1-k,3);t.textContent=Math.round(f+(v-f)*e);if(k<1)raf=requestAnimationFrame(s)})(st)}
+function render(){const d=D[i];
+$('#city').textContent=d.n;
+$('#stamp').textContent=(night?'夜间 ':'白天 ')+hr+'时 · '+(now.getMonth()+1)+'月'+now.getDate()+'日 '+WD[now.getDay()];
+$('#c').textContent=d.c+(night&&d.k==='clear'?' · 晴夜':'');
+$('.now i').textContent=u?'°F':'°C';
+count(cv(d.t));
+$('#hl').textContent='最高 '+cv(d.hi)+'° · 最低 '+cv(d.lo)+'°';
+$('#meta').innerHTML=[['风 · '+d.wd.slice(0,-1),d.w+' km/h'],['湿度',d.h+'%'],['体感',cv(d.fe)+'°'],['紫外线',d.uvt+' '+d.uv]].map(x=>'<div class="chip"><u>'+x[0]+'</u><b>'+x[1]+'</b></div>').join('');
+const p=Math.max(0,Math.min(1,(hr-6)/12));$('#pb').style.width=p*100+'%';$('#pd').style.left=p*100+'%';
+$('#tp').setAttribute('d',night?MOON:SUN);
+$('#hrow').innerHTML=d.ht.map((v,n)=>'<div><u>'+(n?(hr+n)%24+'时':'现在')+'</u><i class="g '+d.hg[n]+'"></i><b>'+cv(v)+'°</b></div>').join('');
+const L=['今天','明天',WD[(now.getDay()+1)%7],WD[(now.getDay()+2)%7],WD[(now.getDay()+3)%7]],hi=d.d5.map(a=>cv(a[0]));
+const mx=Math.max.apply(0,hi),mn=Math.min.apply(0,hi),y=v=>56-((v-mn)/((mx-mn)||1))*46;
+$('#pl').setAttribute('points',hi.map((v,n)=>(10+n*20)+','+y(v).toFixed(1)).join(' '));
+$('#ar').setAttribute('d','M10,'+y(hi[0]).toFixed(1)+hi.map((v,n)=>'L'+(10+n*20)+','+y(v).toFixed(1)).join('')+'L90,62L10,62Z');
+$('#days').innerHTML=d.d5.map((a,n)=>'<div><u>'+L[n]+'</u><s><b>'+cv(a[0])+'°</b><i>'+cv(a[1])+'°</i></s></div>').join('');
+dots.forEach((e,n)=>{e.style.left=(10+n*20)+'%';e.style.top=y(hi[n]).toFixed(1)+'px'})}
+function sync(){$('#pill').innerHTML=D.map((d,n)=>'<button data-i="'+n+'"'+(n===i?' class="on"':'')+'><i style="background:'+(d.k==='clear'?'#ffd97a':d.k==='snow'?'#fff':d.k==='rain'?'#8fb6d8':'#e7eef7')+'"></i>'+d.n+'</button>').join('')}
+$('#pill').onclick=e=>{const b=e.target.closest('button');if(!b||+b.dataset.i===i)return;i=+b.dataset.i;$('#card').classList.add('go');$('#fx').style.opacity=0;
+setTimeout(()=>{paint(D[i].k);part(D[i].k);render();sync();$('#fx').style.opacity=1;$('#card').classList.remove('go')},170)};
+$('#seg').onclick=e=>{const b=e.target.closest('button');if(!b)return;u=b.dataset.u==='f'?1:0;[].forEach.call($('#seg').children,x=>x.classList.toggle('on',x===b));render()};
+$('#th').onclick=()=>{night=!night;paint(D[i].k);part(D[i].k);render()};
+$('#fx').style.opacity=0;paint(D[0].k);part(D[0].k);render();sync();
+requestAnimationFrame(()=>$('#fx').style.opacity=1);
+</script>
+</body>
+</html>

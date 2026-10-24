@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>录音机</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:linear-gradient(160deg,#14161c,#1f222e);display:grid;place-items:center;font-family:-apple-system,"PingFang SC",sans-serif;color:#e8eaf2;padding:20px}
+.card{width:100%;max-width:380px;background:#262a38;border:1px solid #3a3f52;border-radius:24px;padding:28px 22px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.top{display:flex;justify-content:space-between;align-items:center;font-size:12px;letter-spacing:.2em;color:#8b90a5}
+.state{display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:999px;background:#31364a;color:#ffd166;font-weight:600}
+.rec .state{background:#3a1f24;color:#ff5d73}
+.rec .dot{background:#ff4d67;box-shadow:0 0 10px #ff4d67;animation:blink .9s infinite}
+.dot{width:8px;height:8px;border-radius:50%;background:#565b70}
+@keyframes blink{50%{opacity:.2}}
+.timer{font-variant-numeric:tabular-nums;text-align:center;font-size:64px;font-weight:200;letter-spacing:.05em;margin:22px 0 6px}
+.timer small{font-size:22px;color:#8b90a5}
+.bar{height:4px;background:#343950;border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff5d73,#ffd166);transition:width .3s}
+.wave{display:flex;align-items:flex-end;justify-content:center;gap:4px;height:74px;margin:20px 0 4px}
+.wave i{width:6px;border-radius:3px;background:#454b64;height:12%;transition:height .18s ease,background .3s}
+.rec .wave i{background:linear-gradient(180deg,#ff8fa3,#ff5d73);animation: bounce .9s ease-in-out infinite}
+@keyframes bounce{0%,100%{transform:scaleY(.5)}50%{transform:scaleY(1.25)}}
+.ctrl{display:flex;gap:12px;justify-content:center;margin-top:22px}
+.btn{flex:1;border:0;border-radius:16px;padding:15px 0;font-size:15px;font-weight:600;cursor:pointer;color:#e8eaf2;background:#343950;transition:.2s;letter-spacing:.05em}
+.btn:hover{transform:translateY(-2px)}
+.btn.main{background:linear-gradient(135deg,#ff5d73,#ff8f5e)}
+.btn.stop{background:#31364a;color:#ffd166}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.hint{text-align:center;font-size:12px;color:#8b90a5;height:16px;margin-top:12px}
+.hint.warn{color:#ffd166}
+.log{margin-top:20px;border-top:1px dashed #3a3f52;padding-top:14px;font-size:13px;color:#aeb3c8}
+.log h4{font-size:12px;color:#8b90a5;letter-spacing:.15em;margin-bottom:10px;font-weight:500}
+.item{display:flex;justify-content:space-between;background:#2e3346;border-radius:10px;padding:9px 12px;margin-bottom:8px}
+.item b{color:#ffd166;font-variant-numeric:tabular-nums}
+@media(max-width:390px){.timer{font-size:56px}.card{padding:22px 16px}}
+</style>
+</head>
+<body>
+<div class="card" id="app">
+  <div class="top"><span>VOICE MEMO</span><span class="state"><i class="dot"></i><span id="stxt">待机</span></span></div>
+  <div class="timer" id="timer">00<small>:</small>00</div>
+  <div class="bar"><i id="prog"></i></div>
+  <div class="wave" id="wave"></div>
+  <div class="ctrl">
+    <button class="btn main" id="bStart">Start</button>
+    <button class="btn" id="bPause" disabled>Pause</button>
+    <button class="btn stop" id="bStop" disabled>Stop</button>
+  </div>
+  <div class="hint" id="hint"></div>
+  <div class="log"><h4>本次录音摘要</h4><div id="logList"><div class="item"><span>暂无记录，点击 Start 开始</span></div></div></div>
+</div>
+<script>
+const wave=document.getElementById("wave");
+for(let i=0;i<28;i++)wave.appendChild(document.createElement("i"));
+const bars=[...wave.children],app=document.getElementById("app"),timerEl=document.getElementById("timer"),
+  stxt=document.getElementById("stxt"),prog=document.getElementById("prog"),hint=document.getElementById("hint"),
+  bS=document.getElementById("bStart"),bP=document.getElementById("bPause"),bT=document.getElementById("bStop"),
+  logList=document.getElementById("logList");
+let state="idle",sec=0,tick=null,waveT=null,armed=false,armT=null,seq=0;
+const p=v=>String(v).padStart(2,"0");
+function render(){timerEl.innerHTML=`${p(Math.floor(sec/60))}<small>:</small>${p(sec%60)}`;
+  prog.style.width=Math.min(100,(sec%60)/60*100)+"%";}
+function setState(s){
+  state=s;app.classList.toggle("rec",s==="rec");
+  stxt={idle:"待机",rec:"录音中",pause:"已暂停",done:"已完成"}[s];
+  bS.disabled=s==="rec";bP.disabled=(s!=="rec"&&s!=="pause");bT.disabled=(s==="idle"||s==="done");
+  if(s==="rec"){bP.textContent="Pause";
+    tick=setInterval(()=>{sec++;render();},1000);
+    waveT=setInterval(()=>{bars.forEach((b,i)=>{const h=18+Math.abs(Math.sin(Date.now()/240+i*.7))*70*Math.random();
+      b.style.height=h+"%";});},160);
+  }else{clearInterval(tick);clearInterval(waveT);
+    if(s==="idle"||s==="done"){sec=0;render();}
+    if(s!=="pause")bars.forEach(b=>b.style.height="12%");
+  }
+}
+function flash(msg,warn){hint.textContent=msg;hint.className="hint"+(warn?" warn":"");
+  clearTimeout(flash.t);flash.t=setTimeout(()=>{hint.textContent="";},2400);}
+bS.onclick=()=>{if(state==="pause"){setState("rec");flash("继续录音");return;}
+  sec=0;render();setState("rec");logList.innerHTML="";flash("开始录音…");};
+bP.onclick=()=>{setState("pause");flash("已暂停，Start 继续");};
+bT.onclick=()=>{
+  if(!armed){armed=true;bT.textContent="确认 Stop";flash("再次点击确认停止",true);
+    armT=setTimeout(()=>{armed=false;bT.textContent="Stop";},3000);return;}
+  clearTimeout(armT);armed=false;bT.textContent="Stop";
+  const d=`${p(Math.floor(sec/60))}:${p(sec%60)}`;seq++;
+  const item=document.createElement("div");item.className="item";
+  item.innerHTML=`<span>录音 #${seq} · ${sec>0?"正常结束":"空录音"}</span><b>${d}</b>`;
+  logList.prepend(item);setState("done");flash("已停止，摘要已生成");
+};
+render();
+</script>
+</body>
+</html>

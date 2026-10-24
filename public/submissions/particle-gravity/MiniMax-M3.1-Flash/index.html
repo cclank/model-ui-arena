@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>GRAVITY WELL · 粒子引力场</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:#03040c;color:#dce9ff;overflow:hidden;touch-action:none;cursor:crosshair;
+font:400 15px/1.45 ui-sans-serif,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+#bg{position:fixed;inset:0;z-index:0;background:
+radial-gradient(72% 52% at 50% 46%,rgba(80,40,160,.34),transparent 68%),
+radial-gradient(46% 34% at 18% 22%,rgba(0,120,190,.2),transparent 70%),
+radial-gradient(40% 30% at 84% 78%,rgba(190,40,120,.14),transparent 70%),#03040c}
+#c{position:fixed;inset:0;z-index:1;width:100%;height:100%;display:block}
+.hud{position:fixed;z-index:3;left:12px;top:12px;display:flex;flex-direction:column;gap:6px;
+padding:10px 13px;border-radius:13px;background:rgba(6,9,20,.62);border:1px solid rgba(140,180,255,.18);
+backdrop-filter:blur(10px);font-size:11px;color:#8fa4c8;letter-spacing:.06em;pointer-events:none}
+.hud .r{display:flex;gap:13px}
+.hud b{color:#e8f2ff;font-weight:600;font-variant-numeric:tabular-nums}
+.modes{position:fixed;z-index:3;right:12px;top:12px;display:flex;flex-direction:column;gap:6px}
+.mo{border:1px solid rgba(140,180,255,.22);background:rgba(6,9,20,.6);color:#9fb3d6;border-radius:10px;
+padding:8px 13px;font:inherit;font-size:11.5px;letter-spacing:.14em;cursor:pointer;backdrop-filter:blur(10px);
+transition:all .22s;text-align:right}
+.mo[aria-pressed=true]{background:rgba(120,190,255,.2);color:#fff;border-color:rgba(160,210,255,.6);
+box-shadow:0 0 16px rgba(90,170,255,.28)}
+.hint{position:fixed;z-index:3;left:50%;bottom:16px;translate:-50% 0;font-size:11px;letter-spacing:.18em;
+color:#7286a8;pointer-events:none;text-align:center;transition:opacity .6s}
+.hint.gone{opacity:0}
+.wave{position:fixed;z-index:2;border:1px solid rgba(150,210,255,.7);border-radius:50%;pointer-events:none;
+animation:wp .78s cubic-bezier(.2,.7,.4,1) forwards}
+@keyframes wp{from{transform:translate(-50%,-50%) scale(.2);opacity:.85}
+to{transform:translate(-50%,-50%) scale(1);opacity:0}}
+</style>
+</head>
+<body>
+<div id="bg"></div><canvas id="c"></canvas>
+<div class="hud">
+  <div class="r"><span>粒子 <b id="pc">0</b></span><span>能量 <b id="en">0</b></span><span>FPS <b id="fps">60</b></span></div>
+  <div class="r"><span>模式 <b id="md">引力</b></span><span>核心 <b id="cr">0</b></span></div>
+</div>
+<div class="modes">
+  <button class="mo" data-m="0" aria-pressed="true">引 力</button>
+  <button class="mo" data-m="1" aria-pressed="false">排 斥</button>
+  <button class="mo" data-m="2" aria-pressed="false">涡 旋</button>
+</div>
+<p class="hint" id="hint">点击 · 释放冲击波　|　按住拖动 · 临时引力牵引</p>
+<script>
+const cvs=document.getElementById('c'),ctx=cvs.getContext('2d');
+const $=id=>document.getElementById(id);
+let W=0,H=0,DPR=1,CX=0,CY=0;
+let P=[],waves=[],mode=0,energy=0,coreR=0,drag=null,attract=null;
+const N=340,G=64000,SOFT=2600;
+const MODES=['引力','排斥','涡旋'];
+const rnd=(a,b)=>a+Math.random()*(b-a);
+function resize(){DPR=Math.min(2,window.devicePixelRatio||1);
+W=innerWidth;H=innerHeight;cvs.width=W*DPR;cvs.height=H*DPR;
+ctx.setTransform(DPR,0,0,DPR,0,0);CX=W/2;CY=H/2;coreR=Math.min(W,H)*0.075}
+function spawn(p,first){
+const R=first?rnd(coreR*1.6,Math.min(W,H)*0.46):rnd(coreR*1.4,Math.min(W,H)*0.44);
+const a=rnd(0,6.2832),v=Math.sqrt(G*R);
+const dir=Math.random()<.5?1:-1;
+p.x=CX+Math.cos(a)*R;p.y=CY+Math.sin(a)*R;
+p.vx=-Math.sin(a)*v*dir*rnd(.62,.98);p.vy=Math.cos(a)*v*dir*rnd(.62,.98);
+p.z=rnd(.35,1);p.life=rnd(4,11);p.max=p.life;p.hue=rnd(185,275);p.spark=p.life<1.4}
+function init(){resize();P=[];
+for(let i=0;i<N;i++){const p={};spawn(p,true);P.push(p)}}
+function step(dt){
+let en=0;coreR*=0.995;coreR+=(Math.min(W,H)*0.075-coreR)*0.02;
+for(const w of waves)w.r+=w.max*dt*2.4;
+waves=waves.filter(w=>w.r<w.max*1.25);
+for(const p of P){
+let dx=CX-p.x,dy=CY-p.y,r2=dx*dx+dy*dy+SOFT,r=Math.sqrt(r2);
+let f=G/r2;
+if(mode===1)f=-f*1.15;
+else if(mode===2){const tx=-dy/r,ty=dx/r;p.vx+=tx*f*dt*1.9;p.vy+=ty*f*dt*1.9;f*=.22}
+p.vx+=dx/r*f*dt;p.vy+=dy/r*f*dt;
+if(attract&&attract.power>0){const ax=attract.x-p.x,ay=attract.y-p.y,ar=Math.sqrt(ax*ax+ay*ay+900);
+const af=attract.power/ar; p.vx+=ax/ar*af*dt;p.vy+=ay/ar*af*dt}
+for(const w of waves){const wx=p.x-w.x,wy=p.y-w.y,wd=Math.sqrt(wx*wx+wy*wy);
+const band=Math.abs(wd-w.r);if(band<70&&wd>1){const k=w.str*Math.pow(1-band/70,2);
+p.vx+=wx/wd*k*dt;p.vy+=wy/wd*k*dt}}
+p.vx*=0.997;p.vy*=0.997;
+p.x+=p.vx*dt;p.y+=p.vy*dt;
+p.life-=dt;
+const rr=Math.sqrt((p.x-CX)*(p.x-CX)+(p.y-CY)*(p.y-CY));
+if(p.life<=0||rr<coreR*0.55||rr>Math.max(W,H)*1.25||p.x<-200||p.x>W+200||p.y<-200||p.y>H+200){
+spawn(p,false);continue}
+en+=0.5*(p.vx*p.vx+p.vy*p.vy)*p.z}
+energy=energy*0.94+(en/6000)*0.06}
+function paint(){
+ctx.globalCompositeOperation='destination-out';
+ctx.fillStyle='rgba(0,0,0,.16)';ctx.fillRect(0,0,W,H);
+ctx.globalCompositeOperation='lighter';
+for(const p of P){const a=Math.max(0,Math.min(1,p.life/1.6));
+if(p.spark&&Math.random()<.45)continue;
+const s=p.z*1.7*(a>0?1:0.2);
+ctx.fillStyle='hsla('+p.hue+',95%,'+(62+p.z*22)+'%,'+(a*0.85)+')';
+ctx.beginPath();ctx.arc(p.x,p.y,s,0,6.2832);ctx.fill()}
+for(const w of waves){const t=1-w.r/w.max;
+ctx.strokeStyle='rgba(150,210,255,'+(t*.5)+')';ctx.lineWidth=2+t*3;
+ctx.beginPath();ctx.arc(w.x,w.y,w.r,0,6.2832);ctx.stroke()}
+const g=ctx.createRadialGradient(CX,CY,0,CX,CY,coreR*3.4);
+g.addColorStop(0,'rgba(255,255,255,.95)');g.addColorStop(.18,'rgba(180,200,255,.6)');
+g.addColorStop(.45,'rgba(120,90,255,.26)');g.addColorStop(1,'rgba(60,40,160,0)');
+ctx.fillStyle=g;ctx.beginPath();ctx.arc(CX,CY,coreR*3.4,0,6.2832);ctx.fill();
+ctx.strokeStyle='rgba(200,220,255,.55)';ctx.lineWidth=1.4;
+ctx.beginPath();ctx.arc(CX,CY,coreR*(1+Math.sin(performance.now()/380)*.1),0,6.2832);ctx.stroke();
+ctx.globalCompositeOperation='source-over'}
+let last=performance.now(),acc=0,show=0;
+function loop(t){const dt=Math.min(.04,(t-last)/1000);last=t;
+step(dt);paint();
+if(t-show>400){show=t;
+$('pc').textContent=P.length;$('en').textContent=Math.round(energy);
+$('fps').textContent=Math.round(1/Math.max(dt,.001));
+$('md').textContent=MODES[mode];$('cr').textContent=(coreR*10).toFixed(0)}
+requestAnimationFrame(loop)}
+function burst(x,y){waves.push({x,y,r:6,max:Math.max(W,H)*.34,str:340});
+const el=document.createElement('div');el.className='wave';
+const d=Math.max(W,H)*.34;el.style.width=el.style.height=d+'px';
+el.style.left=x+'px';el.style.top=y+'px';
+document.body.appendChild(el);setTimeout(()=>el.remove(),900);
+$('hint').classList.add('gone')}
+function down(e){const x=e.clientX,y=e.clientY;
+burst(x,y);drag={x,y};attract={x,y,power:900};
+cvs.setPointerCapture&&cvs.setPointerCapture(e.pointerId)}
+function move(e){if(!drag)return;
+drag.x=e.clientX;drag.y=e.clientY;attract.x=drag.x;attract.y=drag.y}
+function up(){drag=null;if(attract)attract.power=0}
+cvs.addEventListener('pointerdown',down);
+cvs.addEventListener('pointermove',move);
+addEventListener('pointerup',up);
+addEventListener('pointercancel',up);
+addEventListener('resize',init);
+document.querySelectorAll('.mo').forEach(b=>b.addEventListener('click',()=>{
+mode=+b.dataset.m;
+document.querySelectorAll('.mo').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+for(const p of P)spawn(p,true)}));
+init();requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Opus-5.5 · 星核引力场</title>
+<!-- 设计说明：
+1. 三维星核吸积盘：数千粒子按开普勒速度绕中心引力井公转（内快外慢的差速旋转），透视投影 + 相机缓慢环绕，远近大小与亮度自然分层。
+2. 物理用软化引力 a = GM·r/(r²+ε²)^1.5 与半隐式欧拉积分，运动连续不抖；坠入核心的粒子记为“吞噬”并在外缘重生，数量恒定。
+3. 光标投射到盘面形成临时力场：引力 / 斥力 / 漩涡三种模式（按钮或 1/2/3 切换），点击释放冲击波；触屏按住即施力、轻点即冲击。
+4. 粒子按速度分桶着色（冷蓝→青白→熔金），叠加发光与拖尾；HUD 实时显示粒子数、FPS、动能与吞噬数，帧率过低自动减量。 -->
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;overflow:hidden;background:#020309;color:#dfe7ff;font-family:-apple-system,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;touch-action:none;user-select:none;-webkit-user-select:none}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+.hud{position:fixed;top:16px;left:16px;padding:12px 14px;border-radius:14px;background:rgba(8,12,30,.5);border:1px solid rgba(140,170,255,.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-size:12px;min-width:176px;pointer-events:none}
+.hud h1{font-size:15px;font-weight:600;letter-spacing:3px;margin-bottom:8px;color:#fff}
+.hud div{display:flex;justify-content:space-between;gap:16px;line-height:1.75;color:#8e9cc4}.hud b{color:#e8eeff;font-weight:600;font-variant-numeric:tabular-nums}
+.bar{height:3px;border-radius:3px;background:rgba(255,255,255,.1);margin-top:6px;overflow:hidden}.bar i{display:block;height:100%;width:50%;background:linear-gradient(90deg,#4d7cff,#7ff5ff,#ffc56b);transition:width .3s}
+.modes{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:8px;padding:6px;border-radius:99px;background:rgba(8,12,30,.55);border:1px solid rgba(140,170,255,.18);backdrop-filter:blur(8px)}
+.modes button{font:inherit;font-size:13px;color:#aab6da;background:none;border:0;border-radius:99px;padding:8px 16px;cursor:pointer;transition:all .25s}
+.modes button.on{color:#07101f;background:linear-gradient(135deg,#9fe8ff,#ffd48a);font-weight:600;box-shadow:0 0 18px rgba(140,220,255,.45)}
+.tip{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);font-size:12px;color:#7d8ab0;letter-spacing:1px;white-space:nowrap;pointer-events:none}
+@media (max-width:420px){.hud{top:10px;left:10px;min-width:150px;padding:10px 12px}.modes button{padding:8px 12px}}
+</style>
+</head>
+<body>
+<canvas id="sky"></canvas><canvas id="cv"></canvas>
+<div class="hud">
+  <h1>星核引力场</h1>
+  <div>粒子<b id="hN">0</b></div><div>FPS<b id="hF">60</b></div><div>动能<b id="hE">0</b></div><div>吞噬<b id="hA">0</b></div><div>模式<b id="hM">引力</b></div>
+  <div class="bar"><i id="hBar"></i></div>
+</div>
+<div class="tip" id="tip">移动光标施加力场 · 点击释放冲击波</div>
+<div class="modes" id="modes"><button data-m="0" class="on">引力</button><button data-m="1">斥力</button><button data-m="2">漩涡</button></div>
+<script>
+const $ = (id) => document.getElementById(id);
+const cv = $("cv"), ctx = cv.getContext("2d"), sky = $("sky").getContext("2d");
+const MODES = ["引力", "斥力", "漩涡"], GM = 0.5, EPS2 = 0.0025, R_IN = 0.07, R_OUT = 1.15, TAU = Math.PI * 2;
+let W, H, DPR, F, N = 0, mode = 0, absorbed = 0, E0 = 0, energy = 0;
+const MAXN = matchMedia("(max-width:600px)").matches ? 1600 : 3000;
+const px = new Float32Array(MAXN), py = new Float32Array(MAXN), pz = new Float32Array(MAXN);
+const vx = new Float32Array(MAXN), vy = new Float32Array(MAXN), vz = new Float32Array(MAXN), sx = new Float32Array(MAXN), sy = new Float32Array(MAXN), sd = new Float32Array(MAXN);
+const cam = { az: 0.6, el: 0.46, dist: 2.7 }, ptr = { on: false, x: 0, y: 0, wx: 0, wz: 0, ok: false }, waves = [];
+// 在盘面（y=0，带少量厚度）放置粒子，初速为开普勒圆轨道速度加扰动
+function spawn(i, rMin = 0.18) {
+  const r = rMin + (R_OUT - rMin) * Math.pow(Math.random(), 0.8), a = Math.random() * TAU;
+  const v = Math.sqrt(GM / r) * (0.92 + Math.random() * 0.12), h = (Math.random() - 0.5) * 0.06 * (1 + r);
+  px[i] = Math.cos(a) * r; pz[i] = Math.sin(a) * r; py[i] = h;
+  vx[i] = -Math.sin(a) * v + (Math.random() - 0.5) * 0.05; vz[i] = Math.cos(a) * v + (Math.random() - 0.5) * 0.05; vy[i] = -h * 0.8;
+}
+function resize() {
+  DPR = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; F = Math.min(W, H) * 1.05;
+  cam.el = H > W * 1.2 ? 0.82 : 0.46; // 竖屏更俯视，让圆盘填满纵向空间
+  for (const c of [cv, sky.canvas]) { c.width = W * DPR; c.height = H * DPR; }
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); sky.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const g = sky.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
+  g.addColorStop(0, "#0b0f2a"); g.addColorStop(1, "#010207"); sky.fillStyle = g; sky.fillRect(0, 0, W, H);
+  for (let i = 0; i < (W * H) / 1800; i++) { sky.fillStyle = `rgba(${200 + Math.random() * 55},${210 + Math.random() * 45},255,${Math.random() * 0.7})`; sky.fillRect(Math.random() * W, Math.random() * H, Math.random() * 1.4 + 0.3, Math.random() * 1.4 + 0.3); }
+  ctx.fillStyle = "#020309"; ctx.fillRect(0, 0, W, H);
+}
+// 相机：绕 y 轴缓慢环绕的透视相机；basis() 返回相机位置与正交基
+function basis() {
+  const c = [Math.cos(cam.el) * Math.sin(cam.az) * cam.dist, Math.sin(cam.el) * cam.dist, Math.cos(cam.el) * Math.cos(cam.az) * cam.dist];
+  const f = c.map((v) => -v / cam.dist), r = [f[2], 0, -f[0]], rl = Math.hypot(r[0], r[2]); r[0] /= rl; r[2] /= rl;
+  const u = [r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]];
+  return { c, f, r, u };
+}
+function project(B, x, y, z) {
+  const dx = x - B.c[0], dy = y - B.c[1], dz = z - B.c[2], d = dx * B.f[0] + dy * B.f[1] + dz * B.f[2];
+  return [W / 2 + ((dx * B.r[0] + dy * B.r[1] + dz * B.r[2]) / d) * F, H / 2 - ((dx * B.u[0] + dy * B.u[1] + dz * B.u[2]) / d) * F, d];
+}
+// 把屏幕点反投影成射线，与盘面 y=0 求交，得到力场在世界中的位置
+function pickDisk(B, mx, my) {
+  const ox = (mx - W / 2) / F, oy = -(my - H / 2) / F, dir = [0, 1, 2].map((k) => B.f[k] + B.r[k] * ox + B.u[k] * oy);
+  if (Math.abs(dir[1]) < 1e-4) return null;
+  const t = -B.c[1] / dir[1];
+  return t > 0 ? [B.c[0] + dir[0] * t, B.c[2] + dir[2] * t] : null;
+}
+function setN(n) { for (let i = N; i < n; i++) spawn(i); N = n; $("hN").textContent = N; }
+const BUCKETS = 10, bucketIdx = Array.from({ length: BUCKETS }, () => []);
+const COLORS = Array.from({ length: BUCKETS }, (_, k) => { const t = k / (BUCKETS - 1); return t < 0.55 ? `rgb(${70 + t * 200},${110 + t * 250},255)` : `rgb(255,${255 - (t - 0.55) * 200},${255 - (t - 0.55) * 420})`; });
+let last = performance.now(), fpsT = 0, frames = 0, fps = 60, lowT = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(1 / 30, (now - last) / 1000); last = now;
+  cam.az += dt * 0.06;
+  const B = basis();
+  if (ptr.ok) { const w = pickDisk(B, ptr.x, ptr.y); if (w) { ptr.wx = w[0]; ptr.wz = w[1]; } else ptr.ok = false; }
+  const field = ptr.ok && ptr.on, k = mode === 1 ? -0.9 : 0.9;
+  let e = 0;
+  for (let b = 0; b < BUCKETS; b++) bucketIdx[b].length = 0;
+  for (let i = 0; i < N; i++) {
+    let x = px[i], y = py[i], z = pz[i];
+    const r2 = x * x + y * y + z * z, inv = GM / Math.pow(r2 + EPS2, 1.5);
+    let ax = -x * inv, ay = -y * inv - y * 1.2, az = -z * inv; // 盘面恢复力让粒子保持在薄盘内
+    if (field) {
+      const dx = ptr.wx - x, dz = ptr.wz - z, d2 = dx * dx + dz * dz + 0.01, s = 0.09 / Math.pow(d2, 1.5) * Math.exp(-d2 * 6);
+      if (mode === 2) { ax += -dz * s * 1.6 + dx * s * 0.15; az += dx * s * 1.6 + dz * s * 0.15; } else { ax += dx * s * k; az += dz * s * k; }
+    }
+    for (const w of waves) { // 冲击波：沿盘面传播的径向冲量壳层
+      const dx = x - w.x, dz = z - w.z, d = Math.sqrt(dx * dx + dz * dz) + 1e-4, band = Math.exp(-((d - w.r) ** 2) / 0.004);
+      if (band > 0.01) { ax += (dx / d) * band * 20 * w.s; az += (dz / d) * band * 20 * w.s; }
+    }
+    vx[i] += ax * dt; vy[i] += ay * dt; vz[i] += az * dt;
+    const sp2 = vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i];
+    if (sp2 > 16) { const f = 4 / Math.sqrt(sp2); vx[i] *= f; vy[i] *= f; vz[i] *= f; }
+    x += vx[i] * dt; y += vy[i] * dt; z += vz[i] * dt; px[i] = x; py[i] = y; pz[i] = z;
+    const r = Math.sqrt(x * x + z * z);
+    if (r < R_IN || r > 2.4) { if (r < R_IN) absorbed++; spawn(i, 0.7); continue; }
+    e += sp2;
+    const p = project(B, x, y, z);
+    if (p[2] < 0.2) continue;
+    sx[i] = p[0]; sy[i] = p[1];
+    const heat = Math.min(1, Math.sqrt(sp2) / 2.2 + (r < 0.3 ? (0.3 - r) * 2 : 0));
+    bucketIdx[Math.min(BUCKETS - 1, (heat * BUCKETS) | 0)].push(i); // 按“温度”分桶，批量绘制
+    sd[i] = p[2];
+  }
+  energy = e / Math.max(1, N); if (!E0) E0 = energy;
+  // 拖尾：用半透明底色覆盖上一帧
+  ctx.globalCompositeOperation = "source-over"; ctx.fillStyle = "rgba(2,3,9,0.24)"; ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = "lighter";
+  const scale = F * 0.0036;
+  for (let b = 0; b < BUCKETS; b++) {
+    const list = bucketIdx[b]; if (!list.length) continue;
+    ctx.fillStyle = COLORS[b]; ctx.globalAlpha = 0.45 + b * 0.05;
+    for (const i of list) { const s = Math.max(0.6, (scale / sd[i]) * (0.7 + b * 0.08)); ctx.fillRect(sx[i] - s / 2, sy[i] - s / 2, s, s); }
+  }
+  // 星核：脉动光晕 + 日冕
+  const c0 = project(B, 0, 0, 0), pulse = 1 + 0.08 * Math.sin(now / 320), cr = (F * 0.05 / c0[2]) * pulse;
+  ctx.globalAlpha = 1;
+  const g = ctx.createRadialGradient(c0[0], c0[1], 0, c0[0], c0[1], cr * 6);
+  g.addColorStop(0, "rgba(255,250,235,1)"); g.addColorStop(0.12, "rgba(255,210,140,.85)"); g.addColorStop(0.35, "rgba(255,140,70,.22)"); g.addColorStop(1, "rgba(120,80,255,0)");
+  ctx.fillStyle = g; ctx.fillRect(c0[0] - cr * 6, c0[1] - cr * 6, cr * 12, cr * 12);
+  // 冲击波与力场的可视化（投影到盘面的椭圆）
+  for (let j = waves.length - 1; j >= 0; j--) {
+    const w = waves[j]; w.r += dt * 0.8; w.s *= Math.exp(-dt * 1.5);
+    if (w.s < 0.03) { waves.splice(j, 1); continue; }
+    ctx.strokeStyle = `rgba(150,230,255,${w.s * 0.8})`; ctx.lineWidth = 1 + 2 * w.s; ctx.beginPath();
+    for (let a = 0; a <= 48; a++) { const p = project(B, w.x + Math.cos((a / 48) * TAU) * w.r, 0, w.z + Math.sin((a / 48) * TAU) * w.r); a ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }
+    ctx.stroke();
+  }
+  if (field) {
+    const p = project(B, ptr.wx, 0, ptr.wz), col = ["120,200,255", "255,120,120", "190,140,255"][mode];
+    const fg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 60); fg.addColorStop(0, `rgba(${col},.35)`); fg.addColorStop(1, `rgba(${col},0)`);
+    ctx.fillStyle = fg; ctx.fillRect(p[0] - 60, p[1] - 60, 120, 120);
+  }
+  // HUD 与自适应粒子数
+  frames++; fpsT += dt;
+  if (fpsT >= 0.5) {
+    fps = Math.round(frames / fpsT); frames = 0; fpsT = 0;
+    $("hF").textContent = fps; $("hE").textContent = (energy * 100).toFixed(1); $("hA").textContent = absorbed;
+    $("hBar").style.width = Math.min(100, (energy / (E0 * 2)) * 100) + "%";
+    lowT = fps < 40 ? lowT + 0.5 : 0;
+    if (lowT >= 2 && N > 700) { N = Math.round(N * 0.8); $("hN").textContent = N + " · 自适应"; lowT = 0; }
+  }
+}
+function setMode(m) {
+  mode = m; $("hM").textContent = MODES[m];
+  [...$("modes").children].forEach((b, i) => b.classList.toggle("on", i === m));
+}
+$("modes").addEventListener("click", (e) => { if (e.target.dataset.m) setMode(+e.target.dataset.m); });
+addEventListener("keydown", (e) => { if ("123".includes(e.key)) setMode(+e.key - 1); });
+cv.addEventListener("pointermove", (e) => { ptr.x = e.clientX; ptr.y = e.clientY; ptr.ok = true; if (e.pointerType === "mouse") ptr.on = true; });
+cv.addEventListener("pointerleave", () => { ptr.on = false; });
+cv.addEventListener("pointerdown", (e) => {
+  ptr.x = e.clientX; ptr.y = e.clientY; ptr.ok = true; ptr.on = true;
+  const w = pickDisk(basis(), e.clientX, e.clientY);
+  if (w) waves.push({ x: w[0], z: w[1], r: 0.02, s: 1 });
+  $("tip").style.opacity = 0.4;
+});
+addEventListener("pointerup", (e) => { if (e.pointerType !== "mouse") ptr.on = false; });
+addEventListener("resize", resize);
+resize(); setN(MAXN); requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>最炫倒计时</title>
+<style>
+@property --c { syntax: '<color>'; inherits: true; initial-value: #22d3ee; }
+:root { --s: min(88vw, 60vh, 440px); }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: #07050f; color: #f5fbff; overflow: hidden; font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; -webkit-tap-highlight-color: transparent; }
+#app { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; --c: #22d3ee; transition: --c .6s ease; }
+#app[data-phase="tense"] { --c: #fb7185; }
+#app[data-phase="done"] { --c: #fde047; }
+#bg { position: absolute; inset: -40%; background: radial-gradient(circle, var(--c) 0%, transparent 50%); opacity: .3; pointer-events: none; }
+#grid { position: absolute; inset: -60px; opacity: .1; pointer-events: none; background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 40px 40px; mask-image: radial-gradient(circle at 50% 45%, #000, transparent 70%); animation: drift 6s linear infinite; }
+@keyframes drift { to { transform: translate(40px, 40px); } }
+.wrap { position: relative; width: var(--s); display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.kicker { margin: 0; font-size: 12px; letter-spacing: .4em; text-transform: uppercase; opacity: .6; }
+.stage { position: relative; width: 100%; aspect-ratio: 1; }
+.ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.track { fill: none; stroke: rgba(255,255,255,.08); stroke-width: 12; }
+.arc { fill: none; stroke: url(#gBlue); stroke-width: 12; stroke-linecap: round; }
+.halo { stroke-width: 30; opacity: .2; }
+#app[data-phase="tense"] .arc { stroke: url(#gHot); }
+#app[data-phase="done"] .arc { stroke: url(#gGold); }
+.tk { stroke: rgba(255,255,255,.15); stroke-width: 5; stroke-linecap: round; transition: stroke .3s; }
+.tk.on { stroke: var(--c); }
+.head { position: absolute; inset: 0; pointer-events: none; will-change: transform; }
+.dot { position: absolute; left: calc(50% - 8px); top: calc(12.67% - 8px); width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 0 10px 3px var(--c), 0 0 28px 8px var(--c); }
+#app[data-phase="done"] .head { opacity: 0; }
+.num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: calc(var(--s) * .46); font-weight: 900; line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; text-shadow: 0 0 .03em #fff, 0 0 .18em var(--c); pointer-events: none; }
+#app[data-phase="done"] .num { color: #fff8d6; }
+.ping, .shock { position: absolute; inset: 10%; border-radius: 50%; border: 2px solid var(--c); pointer-events: none; }
+.shock { border-width: 6px; border-color: #fde047; }
+.spark { position: absolute; left: 50%; top: 50%; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; border-radius: 50%; background: currentColor; box-shadow: 0 0 12px currentColor; pointer-events: none; }
+.msg { margin: 0; min-height: 1.6em; font-size: 20px; font-weight: 800; letter-spacing: .12em; text-align: center; text-shadow: 0 0 14px var(--c); }
+#restart { appearance: none; cursor: pointer; font: inherit; font-size: 14px; font-weight: 700; letter-spacing: .3em; text-transform: uppercase; color: #fff; background: rgba(255,255,255,.04); border: 1px solid var(--c); border-radius: 999px; padding: 14px 32px; box-shadow: 0 0 18px -4px var(--c), inset 0 0 12px -6px var(--c); transition: transform .15s; }
+#restart:active { transform: scale(.94); }
+#restart:focus-visible { outline: 2px dashed var(--c); outline-offset: 4px; }
+#flash { position: absolute; inset: 0; opacity: 0; pointer-events: none; background: radial-gradient(circle at 50% 42%, #fff, #fde04766 35%, transparent 65%); }
+</style>
+</head>
+<body>
+<main id="app" data-phase="calm">
+  <div id="bg"></div>
+  <div id="grid"></div>
+  <div class="wrap">
+    <p class="kicker">T-Minus · 最炫倒计时</p>
+    <div class="stage" id="stage">
+      <svg class="ring" viewBox="0 0 300 300" aria-hidden="true">
+        <defs>
+          <linearGradient id="gBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#e879f9"/></linearGradient>
+          <linearGradient id="gHot" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fb7185"/><stop offset="1" stop-color="#fde047"/></linearGradient>
+          <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fde047"/><stop offset="1" stop-color="#fff7d6"/></linearGradient>
+        </defs>
+        <circle class="track" cx="150" cy="150" r="112"/>
+        <circle class="arc halo" id="halo" cx="150" cy="150" r="112" transform="rotate(-90 150 150)"/>
+        <circle class="arc" id="arc" cx="150" cy="150" r="112" transform="rotate(-90 150 150)"/>
+        <g id="ticks"></g>
+      </svg>
+      <i class="head" id="head"><b class="dot"></b></i>
+      <div class="num" id="num">10</div>
+    </div>
+    <p class="msg" id="msg">倒计时进行中</p>
+    <button id="restart" type="button">Restart</button>
+  </div>
+  <div id="flash"></div>
+</main>
+<script>
+(() => {
+  const NS = 'http://www.w3.org/2000/svg', TOTAL = 10000, C = 2 * Math.PI * 112;
+  const $ = id => document.getElementById(id);
+  const app = $('app'), stage = $('stage'), num = $('num'), arc = $('arc'), halo = $('halo'), head = $('head'), msg = $('msg'), bg = $('bg'), flash = $('flash'), tickG = $('ticks');
+  [arc, halo].forEach(c => c.setAttribute('stroke-dasharray', C));
+  const ticks = Array.from({ length: 10 }, (_, i) => {
+    const a = (i * 36 - 90) * Math.PI / 180, l = document.createElementNS(NS, 'line');
+    const pt = r => [150 + r * Math.cos(a), 150 + r * Math.sin(a)];
+    const [x1, y1] = pt(132), [x2, y2] = pt(146);
+    l.setAttribute('x1', x1); l.setAttribute('y1', y1); l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+    l.setAttribute('class', 'tk'); tickG.appendChild(l);
+    return l;
+  });
+  let t0 = null, last = -1, raf = 0;
+
+  function ring(cls, k, dur) {
+    const e = document.createElement('i');
+    e.className = cls; stage.appendChild(e);
+    e.animate([{ transform: 'scale(1)', opacity: 1 }, { transform: `scale(${k})`, opacity: 0 }], { duration: dur, easing: 'cubic-bezier(.2,.7,.3,1)' }).onfinish = () => e.remove();
+  }
+
+  function beat(s) {
+    const hot = s <= 3;
+    app.dataset.phase = hot ? 'tense' : 'calm';
+    num.textContent = s;
+    msg.textContent = hot ? `最后 ${s} 秒！` : '倒计时进行中';
+    ticks.forEach((t, i) => t.classList.toggle('on', i < s));
+    num.animate([{ transform: `scale(${hot ? 1.22 : 1.12})`, filter: 'brightness(2.2)' }, { transform: 'scale(1)', filter: 'brightness(1)' }], { duration: hot ? 480 : 640, easing: 'cubic-bezier(.16,1,.3,1)' });
+    ring('ping', hot ? 1.45 : 1.3, hot ? 600 : 900);
+    bg.animate([{ opacity: hot ? .75 : .5, transform: 'scale(1.1)' }, { opacity: .3, transform: 'scale(1)' }], { duration: hot ? 500 : 900, easing: 'ease-out' });
+    if (hot) stage.animate([{ transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(-2px)' }, { transform: 'translateX(0)' }], { duration: 240 });
+  }
+
+  function burst() {
+    const cols = ['#ffffff', '#f472b6', '#22d3ee', '#a3e635', '#fb7185', '#c4b5fd'], R0 = stage.clientWidth;
+    for (let i = 0; i < 56; i++) {
+      const e = document.createElement('i'), a = Math.random() * 6.2832, d = R0 * (0.22 + Math.random() * 0.36);
+      e.className = 'spark'; e.style.color = cols[i % cols.length]; stage.appendChild(e);
+      e.animate([{ transform: 'translate(0,0) scale(1.5)', opacity: 1 }, { transform: `translate(${Math.cos(a) * d}px,${Math.sin(a) * d}px) scale(.7)`, opacity: 0 }], { duration: 900 + Math.random() * 800, easing: 'cubic-bezier(.1,.7,.2,1)' }).onfinish = () => e.remove();
+    }
+  }
+
+  function finish() {
+    app.dataset.phase = 'done';
+    num.textContent = '0';
+    msg.textContent = '完成！时间到';
+    arc.style.strokeDashoffset = halo.style.strokeDashoffset = 0;
+    ticks.forEach(t => t.classList.add('on'));
+    num.animate([{ transform: 'scale(1.6)', filter: 'brightness(3)' }, { transform: 'scale(1)', filter: 'brightness(1)' }], { duration: 900, easing: 'cubic-bezier(.16,1,.3,1)' });
+    msg.animate([{ transform: 'scale(.4)', opacity: 0 }, { transform: 'scale(1.12)', opacity: 1, offset: .6 }, { transform: 'scale(1)', opacity: 1 }], { duration: 700, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    ring('shock', 2, 1100);
+    ring('ping', 1.6, 800);
+    flash.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 800 });
+    bg.animate([{ opacity: 1, transform: 'scale(1.2)' }, { opacity: .3, transform: 'scale(1)' }], { duration: 1200 });
+    stage.animate([{ transform: 'translate(-8px,4px) rotate(-1deg)' }, { transform: 'translate(7px,-5px) rotate(1deg)' }, { transform: 'translate(-4px,2px)' }, { transform: 'none' }], { duration: 480 });
+    burst();
+  }
+
+  function frame(now) {
+    if (t0 === null) t0 = now;
+    const left = Math.min(TOTAL, Math.max(0, TOTAL - (now - t0))), f = left / TOTAL;
+    arc.style.strokeDashoffset = halo.style.strokeDashoffset = C * (1 - f);
+    head.style.transform = `rotate(${360 * f}deg)`;
+    const s = Math.ceil(left / 1000);
+    if (s !== last) { last = s; if (s > 0) beat(s); }
+    if (left > 0) raf = requestAnimationFrame(frame); else finish();
+  }
+
+  $('restart').onclick = () => {
+    cancelAnimationFrame(raf);
+    document.querySelectorAll('.spark, .ping, .shock').forEach(e => e.remove());
+    t0 = null; last = -1;
+    app.dataset.phase = 'calm';
+    msg.textContent = '倒计时进行中';
+    raf = requestAnimationFrame(frame);
+  };
+  raf = requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

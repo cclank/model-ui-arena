@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>别处 · 天气卡片</title>
+<style>
+:root{--ink:#14202b;--card:#ffffffd4}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font:15px/1.4 "Avenir Next","PingFang SC",sans-serif;color:var(--ink);background:#8ec6ea;transition:background .6s ease;display:grid;place-items:center;padding:16px 10px}
+body.night{--ink:#eef4fb;--card:#101820cc}
+body.sun{background:linear-gradient(#7ec8f0,#f6e2b3)}
+body.rain{background:linear-gradient(#5d7088,#9aa8b8)}
+body.snow{background:linear-gradient(#d5e4f2,#f7fbff)}
+body.night.sun{background:linear-gradient(#0c1830,#24385c)}
+body.night.rain{background:linear-gradient(#0e141c,#1c2836)}
+body.night.snow{background:linear-gradient(#152033,#31445c)}
+.sky{position:fixed;inset:0;overflow:hidden;pointer-events:none}
+.sky i{position:absolute;display:block}
+body.sun .sky i{width:6px;height:6px;border-radius:50%;background:#fff6;animation:float 6s linear infinite}
+body.night.sun .sky i{width:2px;height:2px;background:#fff;animation:twinkle 2.4s ease-in-out infinite}
+body.rain .sky i{width:2px;height:18px;background:linear-gradient(#fff0,#fff);animation:fall .7s linear infinite}
+body.snow .sky i{width:6px;height:6px;border-radius:50%;background:#fff;animation:drift 5s linear infinite}
+@keyframes float{to{transform:translateY(-40px);opacity:0}}
+@keyframes twinkle{50%{opacity:.2}}
+@keyframes fall{to{transform:translateY(110vh)}}
+@keyframes drift{to{transform:translate(20px,110vh)}}
+.halo{position:absolute;width:180px;height:180px;border-radius:50%;right:-20px;top:-30px;background:radial-gradient(circle,#ffe7a4,transparent 68%);animation:spin 18s linear infinite}
+body.night .halo{background:radial-gradient(circle,#d7e4ff,#ffffff00 68%)}
+body.rain .halo,body.snow .halo{opacity:.35}
+@keyframes spin{to{transform:rotate(360deg)}}
+.card{width:min(420px,100%);position:relative;background:var(--card);border-radius:24px;padding:16px;backdrop-filter:blur(10px);box-shadow:0 20px 40px #0b1b2a22}
+.cities{display:flex;gap:6px}
+.cities button{flex:1;min-width:0;border:0;background:#ffffff2e;color:inherit;border-radius:999px;padding:8px 2px;cursor:pointer;white-space:nowrap;font-size:13px}
+.cities button.on{background:#14202b;color:#fff}
+body.night .cities button.on{background:#f4f7fb;color:#14202b}
+button:focus-visible,input:focus-visible{outline:2px solid #14202b;outline-offset:2px}
+.now{margin:14px 0 6px;transition:opacity .35s ease,transform .35s ease}
+.now.hide{opacity:0;transform:translateY(8px)}
+.temp{font-size:76px;line-height:.9;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.temp small{font-size:28px}
+.desc{font-size:18px;margin-top:4px}
+.meta{display:flex;gap:14px;color:#5c6b7a;font-size:13px;margin-top:6px}
+body.night .meta{color:#c5d0dc}
+.unit{margin-left:auto;border:1px solid #ffffff55;background:transparent;color:inherit;border-radius:999px;padding:6px 10px;cursor:pointer}
+.days{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:12px;text-align:center;font-size:12px}
+.days b{display:block;font-size:13px}
+.hi{font-variant-numeric:tabular-nums}
+.lo{color:#6d7c8b}
+svg{width:100%;height:54px;display:block;margin-top:4px}
+</style>
+</head>
+<body class="sun">
+<div class="sky" id="sky"><div class="halo"></div></div>
+<main class="card">
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="cities" id="cities"></div>
+    <button class="unit" id="unit" type="button">°C</button>
+  </div>
+  <section class="now" id="now">
+    <div class="temp"><span id="temp">26</span><small id="mark">°C</small></div>
+    <div class="desc" id="desc">晴</div>
+    <div class="meta"><span id="wind">风速 3 m/s</span><span id="hum">湿度 48%</span></div>
+  </section>
+  <div class="days" id="days"></div>
+  <svg id="chart" viewBox="0 0 100 36" role="img" aria-label="五日最高温折线"></svg>
+</main>
+<script>
+const CITIES=[
+  {name:"杭州",kind:"sun",temp:26,desc:"晴，偏南风",wind:3.2,hum:48,days:[["今天",27,18,"晴"],["周二",28,19,"晴"],["周三",25,17,"多云"],["周四",24,16,"阴"],["周五",23,15,"小雨"]]},
+  {name:"重庆",kind:"rain",temp:19,desc:"中雨，闷热",wind:4.6,hum:86,days:[["今天",20,16,"中雨"],["周二",21,17,"阵雨"],["周三",22,18,"小雨"],["周四",24,19,"阴"],["周五",26,20,"多云"]]},
+  {name:"哈尔滨",kind:"snow",temp:-8,desc:"小雪，北风",wind:6.1,hum:72,days:[["今天",-6,-14,"小雪"],["周二",-4,-12,"多云"],["周三",-7,-15,"晴"],["周四",-9,-18,"晴"],["周五",-5,-13,"阴"]]}
+];
+let idx=0, unit="C", shown=26;
+const $=id=>document.getElementById(id);
+const night=()=>{const h=new Date().getHours();return h<6||h>=18};
+function f(c){return unit==="C"?c:c*9/5+32}
+function paintSky(){
+  const k=CITIES[idx].kind;
+  document.body.className=(night()?"night ":"")+k;
+  const sky=$("sky");
+  [...sky.querySelectorAll("i")].forEach(n=>n.remove());
+  const n=k==="rain"?36:k==="snow"?22:14;
+  for(let i=0;i<n;i++){
+    const el=document.createElement("i");
+    el.style.left=`${(i*37)%100}%`;
+    el.style.top=k==="sun"&&!night()?`${10+(i%5)*12}%`:`${-10-(i%8)*12}%`;
+    el.style.animationDelay=`${(i%9)*0.18}s`;
+    el.style.animationDuration=k==="rain"?`${.55+(i%5)*.08}s`:k==="snow"?`${4+(i%4)}s`:"6s";
+    sky.appendChild(el);
+  }
+}
+function count(to){
+  const from=shown, t0=performance.now();
+  const step=t=>{
+    const k=Math.min(1,(t-t0)/420), v=from+(to-from)*(1-Math.pow(1-k,3));
+    $("temp").textContent=String(Math.round(v));
+    if(k<1) requestAnimationFrame(step); else shown=to;
+  };
+  requestAnimationFrame(step);
+}
+function render(animate){
+  const c=CITIES[idx];
+  $("cities").innerHTML=CITIES.map((x,i)=>`<button type="button" class="${i===idx?"on":""}" data-i="${i}">${x.name}</button>`).join("");
+  $("desc").textContent=c.desc;
+  $("wind").textContent=`风速 ${c.wind.toFixed(1)} m/s`;
+  $("hum").textContent=`湿度 ${c.hum}%`;
+  $("mark").textContent=unit==="C"?"°C":"°F";
+  $("unit").textContent=unit==="C"?"°C":"°F";
+  const highs=c.days.map(d=>d[1]), lows=c.days.map(d=>d[2]);
+  const min=Math.min(...lows)-1, max=Math.max(...highs)+1;
+  $("days").innerHTML=c.days.map(d=>`<div><b>${d[0]}</b><div>${d[3]}</div><div class="hi">${Math.round(f(d[1]))}°</div><div class="lo">${Math.round(f(d[2]))}°</div></div>`).join("");
+  const pts=highs.map((h,i)=>`${10+i*20},${4+(1-(h-min)/(max-min))*26}`).join(" ");
+  $("chart").innerHTML=`<polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>${highs.map((h,i)=>`<circle cx="${10+i*20}" cy="${4+(1-(h-min)/(max-min))*26}" r="1.5" fill="currentColor"/>`).join("")}`;
+  paintSky();
+  const target=f(c.temp);
+  if(animate) count(target); else {$("temp").textContent=String(Math.round(target)); shown=target}
+}
+$("cities").onclick=e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  const now=$("now"); now.classList.add("hide");
+  setTimeout(()=>{idx=+b.dataset.i; render(true); now.classList.remove("hide")},180);
+};
+$("unit").onclick=()=>{unit=unit==="C"?"F":"C"; render(true)};
+render(false);
+</script>
+</body>
+</html>

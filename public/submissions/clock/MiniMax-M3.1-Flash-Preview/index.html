@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>MERIDIAN 时序 · 精密钟</title>
+<style>
+@property --c1{syntax:"<color>";inherits:true;initial-value:#7fc4ff}
+@property --c2{syntax:"<color>";inherits:true;initial-value:#0d2740}
+@property --c3{syntax:"<color>";inherits:true;initial-value:#eaf6ff}
+*{margin:0;padding:0;box-sizing:border-box}
+body{--acc:#ffc46b;--acc2:#ff6b81;--ink:#eef4ff;--dim:#98a8c6;--line:rgba(255,255,255,.13);
+min-height:100dvh;display:grid;place-items:center;padding:24px 16px;overflow-x:hidden;color:var(--ink);background:#05070f;
+font:400 16px/1.45 ui-sans-serif,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+transition:--c1 1.4s ease,--c2 1.4s ease,--c3 1.4s ease}
+body[data-m=night]{--c1:#4361b0;--c2:#04060e;--c3:#a9c4ff;--acc:#8fb0ff;--acc2:#7d8cff}
+body[data-m=dusk]{--c1:#ff8a5b;--c2:#241a3d;--c3:#ffc39a;--acc:#ffb066;--acc2:#ff7a8f}
+body[data-m=dawn]{--c1:#ffa06b;--c2:#2b2350;--c3:#ffe0b8;--acc:#ffd08a;--acc2:#ff8fa3}
+body[data-m=day]{--c1:#7fc4ff;--c2:#0d2740;--c3:#eaf6ff}
+.sky{position:fixed;inset:0;z-index:-3;background:radial-gradient(132% 88% at 50% -10%,var(--c3),transparent 58%),linear-gradient(177deg,var(--c2) 0 40%,var(--c1) 168%)}
+.aura{position:fixed;left:50%;top:34%;width:min(128vw,820px);aspect-ratio:1;border-radius:50%;translate:-50% -50%;z-index:-2;opacity:.15;filter:blur(34px);background:radial-gradient(circle,var(--c3),transparent 62%);animation:drift 26s ease-in-out infinite alternate;transition:opacity 1.4s}
+@keyframes drift{to{transform:translate3d(7%,-6%,0) scale(1.16)}}
+.veil{position:fixed;inset:0;z-index:-1;background:radial-gradient(118% 88% at 50% 40%,transparent 40%,rgba(2,4,10,.74))}
+.card{width:100%;max-width:404px;padding:20px 18px 15px;border-radius:28px;text-align:center;background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.02));border:1px solid var(--line);box-shadow:0 28px 64px -24px rgba(0,0,0,.88),inset 0 1px 0 rgba(255,255,255,.16);backdrop-filter:blur(18px) saturate(1.25)}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.eb{font-size:9px;letter-spacing:.32em;color:var(--dim);text-transform:uppercase;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.chip{font:inherit;font-size:10px;letter-spacing:.14em;padding:6px 11px;border-radius:999px;border:1px solid var(--line);color:var(--acc);background:rgba(255,255,255,.05);cursor:pointer;white-space:nowrap;transition:background .3s}
+.chip:hover,.chip:active{background:rgba(255,255,255,.15)}
+.dial{position:relative;width:min(76vw,288px);aspect-ratio:1;margin:0 auto 8px}
+svg{display:block;width:100%;height:100%}
+#ring{fill:none;stroke:var(--acc);stroke-width:2.4;stroke-linecap:round;opacity:.9;transition:stroke 1.4s}
+#bead{fill:var(--acc);transition:fill 1.4s}
+#ticks line{stroke-linecap:round}
+#nums text{fill:var(--ink);font-weight:500;font-family:inherit}
+.hnd{stroke-linecap:round}
+#hH line{stroke:var(--ink);stroke-width:4.4}
+#mM line{stroke:var(--acc);stroke-width:3}
+#sS line{stroke:var(--acc2);stroke-width:1.3}
+#sS circle{fill:var(--acc2)}
+.cp,.cap{background:var(--acc);transition:background 1.4s}
+.cp{fill:var(--acc)}
+.cap{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;box-shadow:0 0 22px var(--acc);z-index:2}
+.dig{display:flex;align-items:baseline;justify-content:center;gap:1px;margin-top:6px;font-weight:200;font-variant-numeric:tabular-nums;font-size:clamp(40px,13.5vw,58px);line-height:1.06;letter-spacing:.01em;text-shadow:0 6px 34px rgba(0,0,0,.5)}
+.cl{padding:0 .03em;animation:blink 1s steps(1,end) infinite}
+.sm{font-size:.4em;font-weight:400;letter-spacing:.02em;color:var(--dim);white-space:nowrap}
+.cs{font-size:.8em;font-style:normal;color:var(--acc);margin-left:.12em}
+.ap{font-style:normal;font-size:.78em;margin-left:.32em;color:var(--acc2)}
+@keyframes blink{50%{opacity:.2}}
+.meta{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:13px}
+.meta>span{font-size:11px;letter-spacing:.08em;color:var(--dim);padding:0 9px}
+.meta>span+span{border-left:1px solid var(--line)}
+.meta b{font-weight:500;color:var(--ink)}
+.foot{display:flex;justify-content:center;gap:8px;margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}
+</style>
+</head>
+<body data-m="day">
+<div class="sky"></div><div class="aura"></div><div class="veil"></div>
+<main class="card">
+  <div class="hd"><div class="eb">Meridian · Atelier Horloge</div><button class="chip" id="ph">昼 · DAY</button></div>
+  <div class="dial">
+    <svg viewBox="0 0 200 200" aria-hidden="true">
+      <defs><radialGradient id="fc" cx="50%" cy="34%" r="72%"><stop offset="0" stop-color="#fff" stop-opacity=".13"/><stop offset=".62" stop-color="#fff" stop-opacity=".04"/><stop offset="1" stop-color="#000" stop-opacity=".36"/></radialGradient></defs>
+      <circle cx="100" cy="100" r="99" fill="none" stroke="#fff" stroke-opacity=".08" stroke-width="2.4"/>
+      <circle id="ring" cx="100" cy="100" r="99"/>
+      <circle id="bead" cx="100" cy="1" r="3.8"/>
+      <circle cx="100" cy="100" r="92" fill="url(#fc)" stroke="#fff" stroke-opacity=".14" stroke-width=".7"/>
+      <g id="ticks"></g><g id="nums"></g>
+      <g id="hH" class="hnd"><line x1="100" y1="112" x2="100" y2="52"/></g>
+      <g id="mM" class="hnd"><line x1="100" y1="118" x2="100" y2="38"/></g>
+      <g id="sS" class="hnd"><line x1="100" y1="126" x2="100" y2="32"/><circle cx="100" cy="41" r="2.9"/></g>
+      <circle class="cp" cx="100" cy="100" r="3"/>
+    </svg>
+    <div class="cap" id="cap"></div>
+  </div>
+  <div class="dig"><span id="hh">00</span><span class="cl">:</span><span id="mm">00</span><span class="sm">:<span id="ss">00</span><i class="cs" id="cs">.00</i><em class="ap" id="ap"></em></span></div>
+  <div class="meta"><span><b id="wk">—</b></span><span id="dt">—</span><span>第 <b id="dy">—</b> 天</span></div>
+  <div class="foot"><button class="chip" id="fmt">24H</button><button class="chip" id="au">AUTO</button><button class="chip" id="ms">停止</button></div>
+</main>
+<script>
+const E=s=>document.querySelector(s),p2=n=>String(n).padStart(2,'0'),W=['星期日','星期一','星期二','星期三','星期四','星期五','星期六'],
+KEYS=['dawn','day','dusk','night'],LAB={dawn:'晨 · DAWN',day:'昼 · DAY',dusk:'暮 · DUSK',night:'夜 · NIGHT'};
+const modeOf=h=>h<5||h>=21?'night':h<8?'dawn':h<17?'day':'dusk';
+let t='',M,i;for(i=0;i<60;i++){M=i%5===0;t+='<line x1="100" y1="'+(M?82:88)+'" x2="100" y2="92" transform="rotate('+i*6+' 100 100)" stroke="rgba(255,255,255,'+(M?.5:.16)+')" stroke-width="'+(M?1.7:.7)+'"/>'}
+E('#ticks').innerHTML=t;
+t='';for(i=1;i<=12;i++){const a=i*30*Math.PI/180;t+='<text x="'+(100+79*Math.sin(a)).toFixed(1)+'" y="'+(100-79*Math.cos(a)).toFixed(1)+'" text-anchor="middle" dominant-baseline="central" font-size="'+(i%3?10:12.5)+'" fill-opacity="'+(i%3?.55:.95)+'">'+i+'</text>'}
+E('#nums').innerHTML=t;
+const hH=E('#hH'),mM=E('#mM'),sS=E('#sS'),ring=E('#ring'),bead=E('#bead'),cap=E('#cap'),C=2*Math.PI*99;
+ring.setAttribute('stroke-dasharray',C.toFixed(2));
+let cur=modeOf(new Date().getHours()),auto=true,h12=false,frozen=null,last=-1,cache={};
+function put(id,v){if(cache[id]!==v){cache[id]=v;E(id).textContent=v}}
+function paint(){document.body.dataset.m=cur;E('#ph').textContent=LAB[cur];E('#au').textContent=auto?'AUTO':'LOCK';E('#au').style.opacity=auto?1:.6}
+function frame(){
+  const d=new Date(frozen===null?Date.now():frozen),s=d.getMilliseconds()/1000+d.getSeconds(),m=d.getMinutes()+s/60,h=d.getHours()%12+m/60;
+  hH.setAttribute('transform','rotate('+(h*30).toFixed(2)+' 100 100)');
+  mM.setAttribute('transform','rotate('+(m*6).toFixed(2)+' 100 100)');
+  sS.setAttribute('transform','rotate('+(s*6).toFixed(2)+' 100 100)');
+  if(Math.floor(s)!==last){
+    last=Math.floor(s);const p=(d.getHours()*60+m)/1440,a=p*6.28318-Math.PI/2;
+    ring.setAttribute('stroke-dashoffset',(C*(1-p)).toFixed(2));
+    bead.setAttribute('cx',(100+99*Math.cos(a)).toFixed(2));bead.setAttribute('cy',(100+99*Math.sin(a)).toFixed(2));
+    put('#hh',p2(h12?d.getHours()%12||12:d.getHours()));put('#mm',p2(d.getMinutes()));put('#ss',p2(d.getSeconds()));put('#cs','.'+p2(d.getMilliseconds()/10));
+    put('#ap',h12?(d.getHours()<12?'AM':'PM'):'');put('#wk',W[d.getDay()]);
+    put('#dt',d.getFullYear()+'.'+p2(d.getMonth()+1)+'.'+p2(d.getDate()));
+    put('#dy',Math.floor((d-new Date(d.getFullYear(),0,0))/864e5));
+    if(auto&&modeOf(d.getHours())!==cur){cur=modeOf(d.getHours());paint()}
+    if(cap.animate)cap.animate([{transform:'scale(1)',opacity:.95},{transform:'scale(2.3)',opacity:0}],{duration:820,easing:'cubic-bezier(.2,.7,.3,1)'});
+  }
+  requestAnimationFrame(frame);
+}
+E('#ph').onclick=()=>{auto=false;cur=KEYS[(KEYS.indexOf(cur)+1)%4];paint()};
+E('#au').onclick=()=>{auto=true;cur=modeOf(new Date().getHours());paint()};
+E('#fmt').onclick=()=>{h12=!h12;E('#fmt').textContent=h12?'12H':'24H';last=-1};
+E('#ms').onclick=e=>{frozen=frozen===null?Date.now():null;e.target.textContent=frozen===null?'停止':'继续'};
+paint();frame();
+</script>
+</body>
+</html>

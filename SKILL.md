@@ -15,16 +15,18 @@ Use this mode when user asks for "全部", "all themes", "全量" or equivalent.
 
 Required themes:
 1. `clock`
-2. `recorder`
-3. `weather-card`
-4. `stock-panel`
-5. `click-fireworks`
-6. `neon-countdown`
-7. `particle-gravity`
-8. `cheetah-trophy-run`
-9. `dslr-camera`
-10. `schwarzschild-black-hole`
-11. `carwash-decision`
+2. `weather-card`
+3. `stock-panel`
+4. `click-fireworks`
+5. `neon-countdown`
+6. `particle-gravity`
+7. `cheetah-trophy-run`
+8. `dslr-camera`
+9. `schwarzschild-black-hole`
+10. `carwash-decision`
+11. `pelican-bicycle`
+12. `kintsugi`
+13. `watch-movement`
 
 For each requested model, agent must generate and save one submission per theme.
 
@@ -49,15 +51,17 @@ All outputs must be saved under:
 
 Themes:
 1. `clock`
-2. `recorder`
-3. `weather-card`
-4. `stock-panel`
-5. `click-fireworks`
-6. `neon-countdown`
-7. `particle-gravity`
-8. `cheetah-trophy-run`
-9. `dslr-camera`
-10. `schwarzschild-black-hole`
+2. `weather-card`
+3. `stock-panel`
+4. `click-fireworks`
+5. `neon-countdown`
+6. `particle-gravity`
+7. `cheetah-trophy-run`
+8. `dslr-camera`
+9. `schwarzschild-black-hole`
+10. `pelican-bicycle`
+11. `kintsugi`
+12. `watch-movement`
 
 File name must be:
 
@@ -93,7 +97,7 @@ npm run prompt -- --theme <theme> --model <model_name> --max-lines <N> --languag
 
 ### Unlimited SVG theme prompt base
 
-Use this for `cheetah-trophy-run`:
+Use this for `cheetah-trophy-run` and `pelican-bicycle`:
 1. `prompts/base-svg.md`
 2. `prompts/themes/cheetah-trophy-run.md`
 
@@ -129,6 +133,20 @@ Generation command:
 npm run prompt -- --theme carwash-decision --model <model_name>
 ```
 
+### Creative-engineering theme prompt base (创意工程)
+
+Use this for `kintsugi`, `watch-movement` (and future story-driven creative tasks):
+1. `prompts/base-creative.md`
+2. `prompts/themes/<theme>.md`
+
+No line limit, zero dependencies. The theme file names the one algorithm that must be real (for `kintsugi`: runtime random fracture whose shards reassemble into the original bowl); faking it is disqualifying. Always open the live page to judge; screenshots are not enough for interactive work.
+
+Generation command:
+
+```bash
+npm run prompt -- --theme kintsugi --model <model_name>
+```
+
 ### Physics WebGL theme prompt base
 
 Use this for `schwarzschild-black-hole`:
@@ -154,7 +172,7 @@ npm run prompt -- --theme schwarzschild-black-hole --model <model_name> --langua
 
 ### Unlimited SVG theme
 
-1. Theme: `cheetah-trophy-run`
+1. Theme: `cheetah-trophy-run` / `pelican-bicycle`
 2. Single file: `index.html`
 3. Main artwork must be inline SVG
 4. No code line limit, prioritize best visual effect and semantic detail
@@ -199,11 +217,11 @@ No frontend code changes are required if file contract is followed.
    - target: `public/submissions/<theme>/<model>/`
    - delete existing files in that directory only
    - do not delete sibling model directories
-5. Save files to the exact submission path contract.
-6. Validate with:
+1. Save files to the exact submission path contract.
+2. Validate with:
    - `npm run build`
    - Open `/api/submissions` and confirm entries exist.
-7. Report saved paths and pass/fail status.
+1. Report saved paths and pass/fail status.
 
 ## 8. Validation Checklist
 
@@ -222,16 +240,18 @@ Target model: `gpt-5.3-codex`
 
 Create:
 1. `public/submissions/clock/gpt-5.3-codex/index.html`
-2. `public/submissions/recorder/gpt-5.3-codex/index.html`
-3. `public/submissions/weather-card/gpt-5.3-codex/index.html`
-4. `public/submissions/stock-panel/gpt-5.3-codex/index.html`
-5. `public/submissions/click-fireworks/gpt-5.3-codex/index.html`
-6. `public/submissions/neon-countdown/gpt-5.3-codex/index.html`
-7. `public/submissions/particle-gravity/gpt-5.3-codex/index.html`
-8. `public/submissions/cheetah-trophy-run/gpt-5.3-codex/index.html`
-9. `public/submissions/dslr-camera/gpt-5.3-codex/index.html`
-10. `public/submissions/schwarzschild-black-hole/gpt-5.3-codex/index.html`
-11. `public/submissions/carwash-decision/gpt-5.3-codex/response.md`
+2. `public/submissions/weather-card/gpt-5.3-codex/index.html`
+3. `public/submissions/stock-panel/gpt-5.3-codex/index.html`
+4. `public/submissions/click-fireworks/gpt-5.3-codex/index.html`
+5. `public/submissions/neon-countdown/gpt-5.3-codex/index.html`
+6. `public/submissions/particle-gravity/gpt-5.3-codex/index.html`
+7. `public/submissions/cheetah-trophy-run/gpt-5.3-codex/index.html`
+8. `public/submissions/dslr-camera/gpt-5.3-codex/index.html`
+9. `public/submissions/schwarzschild-black-hole/gpt-5.3-codex/index.html`
+10. `public/submissions/carwash-decision/gpt-5.3-codex/response.md`
+11. `public/submissions/pelican-bicycle/gpt-5.3-codex/index.html`
+12. `public/submissions/kintsugi/gpt-5.3-codex/index.html`
+13. `public/submissions/watch-movement/gpt-5.3-codex/index.html`
 
 ### Example B: Single custom reasoning task
 
@@ -244,6 +264,7 @@ If `<custom-theme>` is new, agent should:
 
 ## 10. Non-Negotiable Rules
 
+0. Retired themes (`recorder`, `lunar-calendar`, `sun-moon`) are hidden from the dashboard and must never be generated again, even in full-batch mode. Their historical submissions stay untouched under `public/submissions/<theme>/`.
 1. Do not change existing unrelated submissions.
 2. Do not rename themes without user approval.
 3. Do not introduce build-time dependencies for submissions.

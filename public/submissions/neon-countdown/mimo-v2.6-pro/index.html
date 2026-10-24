@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>最炫倒计时</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
+         background:radial-gradient(120% 100% at 50% 20%, #141033, #06040f 70%); overflow-x:hidden; padding:16px;
+         font-family:"Avenir Next","PingFang SC","Microsoft YaHei",sans-serif; color:#ecebff; }
+  .stage { position:relative; width:min(78vw,320px); aspect-ratio:1; }
+  svg { width:100%; height:100%; transform:rotate(-90deg); }
+  .track { fill:none; stroke:rgba(255,255,255,.08); stroke-width:9; }
+  .prog { fill:none; stroke:url(#ng); stroke-width:9; stroke-linecap:round; filter:url(#glow); }
+  .ticks line { stroke:rgba(180,190,255,.35); stroke-width:2; }
+  .ticks line.hot { stroke:#ff4d9a; filter:url(#glow); }
+  .center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; }
+  #num { font-size:clamp(78px,26vw,128px); font-weight:800; line-height:1; font-variant-numeric:tabular-nums;
+         color:#fff; text-shadow:0 0 8px #7af, 0 0 24px #48f, 0 0 52px #36f, 0 0 90px #24f;
+         animation:beat 1s ease-in-out infinite; }
+  #num.rush { color:#ffd9e6; text-shadow:0 0 8px #f6a, 0 0 26px #f37, 0 0 58px #f05, 0 0 96px #d03; animation-duration:.5s; }
+  @keyframes beat { 0%,100% { transform:scale(1); } 12% { transform:scale(1.12); } 30% { transform:scale(1); } }
+  #cap { font-size:13px; letter-spacing:6px; color:#9fa8ff; }
+  .pulse { position:absolute; inset:0; border-radius:50%; border:2px solid rgba(140,160,255,.5); opacity:0; pointer-events:none; }
+  .pulse.go { animation:ripple .8s ease-out; }
+  @keyframes ripple { 0% { transform:scale(.7); opacity:.9; } 100% { transform:scale(1.25); opacity:0; } }
+  .done { display:none; text-align:center; }
+  .done.show { display:block; animation:pop .5s ease; }
+  @keyframes pop { from { transform:scale(.6); opacity:0; } }
+  .done h2 { font-size:clamp(30px,9vw,44px); letter-spacing:6px;
+             background:linear-gradient(90deg,#ffd166,#ff8fab,#7af); -webkit-background-clip:text; background-clip:text; color:transparent;
+             text-shadow:0 0 34px rgba(255,160,120,.35); }
+  .done p { color:#9fa8ff; font-size:13px; letter-spacing:3px; margin-top:8px; }
+  .burst { position:fixed; inset:0; pointer-events:none; }
+  .spark { position:absolute; width:5px; height:5px; border-radius:50%; opacity:0; }
+  #restart { margin-top:6px; border:1px solid rgba(160,175,255,.5); background:rgba(120,140,255,.12); color:#dfe2ff;
+             font-family:inherit; font-size:13px; letter-spacing:3px; padding:10px 26px; border-radius:999px; cursor:pointer;
+             transition:background .2s, transform .15s; display:none; }
+  #restart.show { display:inline-block; }
+  #restart:hover { background:rgba(120,140,255,.28); }
+  #restart:active { transform:scale(.95); }
+</style>
+</head>
+<body>
+<div class="stage">
+  <svg viewBox="0 0 200 200">
+    <defs>
+      <linearGradient id="ng" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#48f"/><stop offset=".55" stop-color="#b3f"/><stop offset="1" stop-color="#f6a"/>
+      </linearGradient>
+      <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="2.6" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <circle class="track" cx="100" cy="100" r="86"/>
+    <g class="ticks" id="ticks"></g>
+    <circle class="prog" id="prog" cx="100" cy="100" r="86" stroke-dasharray="540" stroke-dashoffset="0"/>
+  </svg>
+  <div class="center">
+    <div id="num">10</div>
+    <div id="cap">COUNTDOWN</div>
+  </div>
+  <div class="pulse" id="pulse"></div>
+</div>
+<div class="done" id="done">
+  <h2>时间到！</h2>
+  <p>倒计时完成 · 全部就绪</p>
+</div>
+<button id="restart">RESTART</button>
+<div class="burst" id="burst"></div>
+<script>
+  const $ = id => document.getElementById(id);
+  const TOTAL = 10, CIRC = 2 * Math.PI * 86;
+  // 环形刻度 30 格，每秒点亮 3 格形成推进感
+  let tk = '';
+  for (let i = 0; i < 30; i++) {
+    const a = i * 12 * Math.PI / 180;
+    const x1 = 100 + 74 * Math.cos(a), y1 = 100 + 74 * Math.sin(a);
+    const x2 = 100 + 68 * Math.cos(a), y2 = 100 + 68 * Math.sin(a);
+    tk += `<line data-i="${i}" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>`;
+  }
+  $('ticks').innerHTML = tk;
+  const tickEls = [...$('ticks').children];
+  let t0 = 0, running = false, raf = 0;
+  function tickGlow(el) { el.classList.add('hot'); setTimeout(() => el.classList.remove('hot'), 380); }
+  function ripple() { const p = $('pulse'); p.classList.remove('go'); void p.offsetWidth; p.classList.add('go'); }
+  function finish() {
+    running = false;
+    $('num').textContent = '0';
+    $('num').classList.remove('rush');
+    $('cap').textContent = 'DONE';
+    $('done').classList.add('show');
+    $('restart').classList.add('show');
+    ripple();
+    // 爆发反馈：放射状粒子迸发
+    const b = $('burst'); b.innerHTML = '';
+    for (let i = 0; i < 48; i++) {
+      const s = document.createElement('div');
+      s.className = 'spark';
+      const a = Math.random() * Math.PI * 2, d = 90 + Math.random() * 240;
+      s.style.left = '50%'; s.style.top = '42%';
+      s.style.background = ['#ffd166','#ff8fab','#7af','#b3f','#6fe'][i % 5];
+      s.style.boxShadow = `0 0 12px ${s.style.background}`;
+      b.appendChild(s);
+      s.animate([
+        { transform:'translate(-50%,-50%) scale(1)', opacity:1 },
+        { transform:`translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d}px)) scale(.2)`, opacity:0 }
+      ], { duration: 900 + Math.random() * 500, easing:'cubic-bezier(.1,.7,.3,1)', fill:'forwards' });
+    }
+  }
+  function run() {
+    $('done').classList.remove('show');
+    $('restart').classList.remove('show');
+    $('num').classList.add('running');
+    $('cap').textContent = 'COUNTDOWN';
+    running = true; t0 = performance.now();
+    let lastN = TOTAL;
+    (function frame(t) {
+      if (!running) return;
+      const el = (t - t0) / 1000, left = Math.max(0, TOTAL - el);
+      const n = Math.ceil(left);
+      if (n !== lastN) { lastN = n; ripple(); tickGlow(tickEls[(n * 3) % 30]); tickGlow(tickEls[(n * 3 + 1) % 30]); tickGlow(tickEls[(n * 3 + 2) % 30]); }
+      $('num').textContent = n;
+      $('num').classList.toggle('rush', n <= 3 && n > 0);
+      $('prog').setAttribute('stroke-dashoffset', (CIRC * (1 - left / TOTAL)).toFixed(1));
+      if (left <= 0) { finish(); return; }
+      raf = requestAnimationFrame(frame);
+    })(t0);
+  }
+  $('restart').onclick = () => { cancelAnimationFrame(raf); run(); };
+  run();   // 页面加载后自动运行
+</script>
+</body>
+</html>

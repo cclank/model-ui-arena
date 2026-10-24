@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>晷影 · 本地时钟</title>
+<style>
+:root{color-scheme:light;--bg:#efe4d2;--bg2:#e4d3b8;--ink:#221910;--muted:#7a6856;--face:#fbf6ec;--rim:#d9c4a4;--accent:#9c3b24;--hand:#221910;--soft:#00000014}
+body[data-phase="night"]{color-scheme:dark;--bg:#10141b;--bg2:#1a2230;--ink:#f4ecdf;--muted:#b3a894;--face:#171d27;--rim:#314055;--accent:#e2b15a;--hand:#f4ecdf;--soft:#00000055}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:radial-gradient(120% 80% at 50% 0%,var(--bg2),var(--bg));color:var(--ink);font:16px/1.4 "Iowan Old Style",Palatino,Georgia,"Songti SC",serif;display:grid;place-items:center;padding:22px 16px;transition:background .8s linear,color .8s linear}
+.card{width:min(420px,100%);text-align:center}
+.kicker{font:11px ui-monospace,Menlo,monospace;letter-spacing:.28em;color:var(--accent)}
+h1{font-weight:500;font-size:28px;margin:6px 0 16px;letter-spacing:.14em}
+svg{width:min(320px,86vw);height:auto;display:block;margin:0 auto;filter:drop-shadow(0 18px 28px var(--soft))}
+.rim{fill:var(--face);stroke:var(--rim);stroke-width:6}
+.tick{stroke:var(--ink);stroke-linecap:round}
+.minor{stroke:var(--muted);stroke-width:1}
+.major{stroke-width:2.4}
+.hand{stroke:var(--hand);stroke-linecap:round}
+.sec{stroke:var(--accent)}
+.cap{fill:var(--accent)}
+.hub{fill:var(--face);stroke:var(--hand);stroke-width:2}
+.digits{margin-top:18px;display:flex;justify-content:center;align-items:baseline;gap:8px;font-variant-numeric:tabular-nums}
+.digits b{font-weight:500;font-size:56px;letter-spacing:-.03em}
+.digits span{font:18px ui-monospace,Menlo,monospace;color:var(--accent)}
+#date{margin:4px 0 0;color:var(--muted);font-size:14px}
+#phase{margin:8px 0 0;font-size:12px;letter-spacing:.22em;color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){body{transition:none}}
+</style>
+</head>
+<body data-phase="day">
+<main class="card">
+  <div class="kicker">LOCAL MERIDIAN</div>
+  <h1>晷影</h1>
+  <svg viewBox="0 0 200 200" role="img" aria-labelledby="clock-title">
+    <title id="clock-title">模拟时钟</title>
+    <circle class="rim" cx="100" cy="100" r="92"></circle>
+    <circle id="ring" cx="100" cy="100" r="86" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" transform="rotate(-90 100 100)"></circle>
+    <g id="ticks"></g>
+    <g id="hour" class="hand"><line x1="100" y1="104" x2="100" y2="62" stroke-width="4.5"></line></g>
+    <g id="minute" class="hand"><line x1="100" y1="112" x2="100" y2="38" stroke-width="2.4"></line></g>
+    <g id="second" class="hand sec"><line x1="100" y1="122" x2="100" y2="30" stroke-width="1.2"></line></g>
+    <circle class="cap" cx="100" cy="100" r="4.5"></circle>
+    <circle class="hub" cx="100" cy="100" r="2"></circle>
+  </svg>
+  <div class="digits"><b id="hm">--:--</b><span id="sec">--</span></div>
+  <p id="date"></p>
+  <p id="phase">白昼</p>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const ticks=$("ticks");
+for(let i=0;i<60;i++){
+  const major=i%5===0, r1=major?74:78, r2=84;
+  const a=(i/60)*Math.PI*2;
+  const l=document.createElementNS("http://www.w3.org/2000/svg","line");
+  l.setAttribute("x1",100+Math.sin(a)*r1); l.setAttribute("y1",100-Math.cos(a)*r1);
+  l.setAttribute("x2",100+Math.sin(a)*r2); l.setAttribute("y2",100-Math.cos(a)*r2);
+  l.setAttribute("class", major?"tick major":"tick minor");
+  ticks.appendChild(l);
+}
+const ring=$("ring"), C=2*Math.PI*86;
+ring.style.strokeDasharray=String(C);
+const wk="日一二三四五六";
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function paint(now){
+  const h=now.getHours(), m=now.getMinutes(), s=now.getSeconds(), ms=reduce?0:now.getMilliseconds();
+  const sec=s+ms/1000, min=m+sec/60;
+  $("hour").setAttribute("transform",`rotate(${((h%12)+min/60)*30} 100 100)`);
+  $("minute").setAttribute("transform",`rotate(${min*6} 100 100)`);
+  $("second").setAttribute("transform",`rotate(${sec*6} 100 100)`);
+  ring.style.strokeDashoffset=String(C*(1-sec/60));
+  $("hm").textContent=`${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+  $("sec").textContent=String(s).padStart(2,"0");
+  $("date").textContent=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 星期${wk[now.getDay()]}`;
+  const day=h>=6&&h<18;
+  document.body.dataset.phase=day?"day":"night";
+  $("phase").textContent=day?"白昼 · 06:00–18:00":"夜晚 · 灯火已换";
+  requestAnimationFrame(()=>paint(new Date()));
+}
+paint(new Date());
+</script>
+</body>
+</html>

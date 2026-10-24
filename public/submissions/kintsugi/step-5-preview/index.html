@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>金缮 · 裂处生金</title>
+<style>
+  :root {
+    --ink: #2b2620;
+    --paper: #efe9dd;
+    --paper2: #e3dccb;
+    --line: rgba(60, 48, 36, .25);
+    --gold: #c9a24a;
+    --gold2: #f2d98a;
+    --celadon: #9dbfa8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+    background:
+      radial-gradient(120% 80% at 50% 0%, #f6f1e4 0%, var(--paper) 45%, var(--paper2) 100%);
+    color: var(--ink);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  header {
+    display: flex; align-items: baseline; gap: 14px;
+    padding: 16px 22px 8px;
+  }
+  header h1 { font-size: 19px; letter-spacing: .32em; font-weight: 600; }
+  header .sub { font-size: 11.5px; letter-spacing: .18em; color: #8a7c64; }
+  header .epitaph { margin-left: auto; font-size: 12px; color: #8a5f2a; letter-spacing: .12em;
+    border-left: 2px solid var(--gold); padding-left: 10px; }
+  main { position: relative; flex: 1; min-height: 0; }
+  svg#stage { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  canvas#fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  #ctrls {
+    position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 10px; z-index: 6;
+    background: rgba(246, 241, 228, .92); border: 1px solid var(--line);
+    border-radius: 999px; padding: 8px 12px;
+    box-shadow: 0 6px 24px rgba(80, 60, 30, .12);
+    max-width: calc(100vw - 24px); flex-wrap: wrap; justify-content: center;
+  }
+  #ctrls .stat { font-size: 12px; color: #6b5f4b; letter-spacing: .06em; white-space: nowrap; }
+  #ctrls .stat b { color: #8a5f2a; font-weight: 600; font-variant-numeric: tabular-nums; }
+  #ctrls button {
+    font-family: inherit; font-size: 12.5px; letter-spacing: .14em;
+    border: 1px solid var(--line); background: #fffdf6; color: var(--ink);
+    border-radius: 999px; padding: 6px 16px; cursor: pointer;
+    transition: all .25s;
+  }
+  #ctrls button:hover { border-color: var(--gold); color: #8a5f2a; box-shadow: 0 2px 10px rgba(160, 120, 40, .18); }
+  #ctrls button:active { transform: translateY(1px); }
+  #ctrls button.primary { background: linear-gradient(180deg, #f4dd9d, #d9b65e); border-color: #b98f34; color: #4a3812; }
+  #ctrls button:disabled { opacity: .38; cursor: default; box-shadow: none; }
+  #hint {
+    position: absolute; left: 50%; bottom: 74px; transform: translateX(-50%);
+    font-size: 13px; letter-spacing: .2em; color: #8a5f2a;
+    background: rgba(255, 251, 240, .9); border: 1px solid rgba(160, 120, 40, .35);
+    padding: 8px 22px; border-radius: 999px; z-index: 7;
+    transition: opacity .5s; white-space: nowrap;
+    animation: breathe 2.6s ease-in-out infinite;
+  }
+  @keyframes breathe { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-4px); } }
+  #hint.off { opacity: 0; pointer-events: none; }
+  @media (max-width: 480px) {
+    header h1 { font-size: 16px; }
+    header .epitaph { display: none; }
+    #ctrls .stat { font-size: 11px; }
+    #hint { bottom: 92px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>金缮</h1>
+  <span class="sub">KINTSUGI · 以金续残缺</span>
+  <span class="epitaph">题跋：裂处非终局，光阴以金续之。</span>
+</header>
+<main>
+  <svg id="stage" viewBox="0 0 640 470" preserveAspectRatio="xMidYMid slice" aria-label="可打碎的金缮青瓷碗"></svg>
+  <canvas id="fx"></canvas>
+  <div id="hint">点击碗身任意一处，将其打碎</div>
+  <div id="ctrls">
+    <span class="stat">碎片 <b id="stFrags">—</b></span>
+    <span class="stat">裂纹 <b id="stCracks">0</b></span>
+    <span class="stat">修复 <b id="stFixs">0</b> 次</span>
+    <button id="btnFix" class="primary" disabled>修复</button>
+    <button id="btnReset">重新来过</button>
+  </div>
+</main>
+<script>
+/* =====================================================================
+ * 金缮：程序化断裂（半平面裁剪 Voronoi）+ 二维刚体 + 金线路径生长
+ * ===================================================================== */
+const SVGNS = 'http://www.w3.org/2000/svg';
+const stage = document.getElementById('stage');
+const fx = document.getElementById('fx'), fxc = fx.getContext('2d');
+const $ = id => document.getElementById(id);
+
+const VB = { w: 640, h: 470 };
+const DESK_Y = 388;                 // 案几台面线
+const BOWL = { cx: 320, cy: 292, rxA: 92, ryA: 62 };  // 碗体近似椭圆（种子采样域）
+const GOLD = '#c9a24a', GOLD_L = '#f2d98a', GOLD_D = '#8a6420';
+
+/* ---------- 音效（WebAudio 合成） ---------- */
+let AC = null;
+function audio() { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); return AC; }
+function noiseBuf(ac, dur) {
+  const b = ac.createBuffer(1, ac.sampleRate * dur, ac.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  return b;
+}
+function sfxBreak() {   // 瓷器碎裂：宽带噪声爆发 + 高频碎裂瞬态
+  try {
+    const ac = audio(), t = ac.currentTime;
+    const src = ac.createBufferSource(); src.buffer = noiseBuf(ac, 0.5);
+    const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2600; bp.Q.value = 0.8;
+    const g = ac.createGain(); g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+    src.connect(bp).connect(g).connect(ac.destination); src.start(t); src.stop(t + 0.5);
+    for (let i = 0; i < 5; i++) {  // 碎瓷叮当
+      const o = ac.createOscillator(), og = ac.createGain();
+      o.type = 'triangle'; o.frequency.value = 1500 + Math.random() * 2400;
+      og.gain.setValueAtTime(0.001, t + 0.02 + i * 0.045);
+      og.gain.exponentialRampToValueAtTime(0.16, t + 0.03 + i * 0.045);
+      og.gain.exponentialRampToValueAtTime(0.001, t + 0.26 + i * 0.045);
+      o.connect(og).connect(ac.destination); o.start(t + 0.02 + i * 0.045); o.stop(t + 0.3 + i * 0.045);
+    }
+  } catch (e) {}
+}
+function sfxTap() { // 碎片轻触桌面
+  try {
+    const ac = audio(), t = ac.currentTime;
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(900 + Math.random() * 500, t);
+    o.frequency.exponentialRampToValueAtTime(300, t + 0.12);
+    g.gain.setValueAtTime(0.001, t); g.gain.exponentialRampToValueAtTime(0.09, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + 0.15);
+  } catch (e) {}
+}
+function sfxBell() { // 修复完成钟音
+  try {
+    const ac = audio(), t = ac.currentTime;
+    [523.25, 659.25, 783.99].forEach((f, i) => {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.001, t + i * 0.06);
+      g.gain.exponentialRampToValueAtTime(0.12, t + 0.03 + i * 0.06);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 1.6);
+      o.connect(g).connect(ac.destination); o.start(t + i * 0.06); o.stop(t + 1.7);
+    });
+  } catch (e) {}
+}
+
+/* ---------- 碗形定义（侧视青瓷碗） ---------- */
+// 侧剖面关键点 + 入段二次贝塞尔控制点
+const BOWL_K = [ // [x, y, 入段控制 x, 入段控制 y] —— 外壁下行 → 圈足 → 内壁上行 → 口唇
+  [320 - 88, 228, 320 - 80, 242],   // 0 口左
+  [320 - 72, 282, 320 - 64, 256],   // 1 上侧左
+  [320 - 64, 312, 320 - 62, 296],   // 2 最宽左
+  [320 - 48, 338, 320 - 50, 322],   // 3 收腹左
+  [320 - 26, 358, 320 - 28, 346],   // 4 足肩左
+  [320 - 26, 380, 320 - 26, 368],   // 5 足底左
+  [320 + 26, 380, 320, 380],        // 6 足底右
+  [320 + 26, 358, 320 + 26, 368],   // 7 足肩右
+  [320 + 48, 338, 320 + 28, 346],   // 8 收腹右
+  [320 + 64, 312, 320 + 50, 322],   // 9 最宽右
+  [320 + 72, 282, 320 + 62, 296],   // 10 上侧右
+  [320 + 88, 228, 320 + 64, 256],   // 11 口右
+  [320 + 80, 242, 320 + 88, 240],   // 12 口唇右
+  [320 + 58, 306, 320 + 70, 262],   // 13 内壁右上
+  [320 + 42, 334, 320 + 50, 318],   // 14 内底右
+  [320, 342, 320 + 21, 337],        // 15 内底中
+  [320 - 42, 334, 320 - 21, 337],   // 16 内底左
+  [320 - 58, 306, 320 - 50, 318],   // 17 内壁左上
+  [320 - 80, 242, 320 - 70, 262],   // 18 口唇左
+];
+function quadSegments(fromIdx, toIdx) {
+  // 采样 K[fromIdx] → K[toIdx+1] 的各段（含控制点）
+  const pts = [];
+  for (let i = fromIdx + 1; i <= toIdx; i++) {
+    const [x1, y1, cx1, cy1] = BOWL_K[i];
+    const p0 = BOWL_K[i - 1];
+    const n = i === 5 || i === 6 ? 2 : 10;
+    for (let s = 1; s <= n; s++) {
+      const t = s / n, u = 1 - t;
+      pts.push([u * u * p0[0] + 2 * u * t * cx1 + t * t * x1, u * u * p0[1] + 2 * u * t * cy1 + t * t * y1]);
+    }
+  }
+  return pts;
+}
+function bowlPathPoints() {          // A：外轮廓（闭合后顶部为口部横线）
+  const head = [BOWL_K[0][0], BOWL_K[0][1]];
+  return [head, ...quadSegments(0, 11)];
+}
+function innerPathPoints() {         // B：内腔（口唇横线 + 内壁 + 内底）
+  const pts = [[BOWL_K[18][0], BOWL_K[18][1]]];
+  pts.push([BOWL_K[12][0], BOWL_K[12][1]]);          // 口唇横线：左 → 右
+  const seg = quadSegments(12, 18);                   // 口唇右 → 内壁 → 内底 → 内壁左 → 口唇左
+  return [...pts, ...seg];
+}
+const BOWL_PTS = bowlPathPoints();
+const INNER_PTS = innerPathPoints();
+const BOWL_AABB = BOWL_PTS.reduce((a, p) => ({ x0: Math.min(a.x0, p[0]), x1: Math.max(a.x1, p[0]), y0: Math.min(a.y0, p[1]), y1: Math.max(a.y1, p[1]) }), { x0: 1e9, x1: -1e9, y0: 1e9, y1: -1e9 });
+
+/* ---------- 静态层：案几 / 投影 / 碗形 clip ---------- */
+const defs = el('defs', null, stage);
+const gradients = {
+  celadon: lg([[0, '#cfe4d4'], [0.45, '#a8c9b3'], [1, '#7ba28c']], 0, 0, 1, 1),
+  celadonDark: lg([[0, '#8fb49d'], [1, '#5e8873']], 0, 0, 1, 1),
+  inner: lg([[0, '#6f9482'], [0.6, '#5b8271'], [1, '#416858']], 0, 0, 0.4, 1),
+  gold: lg([[0, GOLD_L], [0.5, GOLD], [1, GOLD_D]], 0, 0, 1, 0),
+  table: lg([[0, '#a08058'], [0.12, '#8a6a46'], [1, '#5f472e']], 0, 0, 0, 1),
+  floor: lg([[0, '#efe9dd'], [1, '#d9d0ba']], 0, 0, 0, 1),
+};
+function lg(stops, x1, y1, x2, y2) {
+  const id = uid();
+  const g = el('linearGradient', { id, x1, y1, x2, y2 });
+  stops.forEach(([o, c]) => g.appendChild(el('stop', { offset: o, 'stop-color': c })));
+  defs.appendChild(g); return 'url(#' + id + ')';
+}
+function uid() { return 'g' + (uid._n = (uid._n || 0) + 1); }
+
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(SVGNS, tag);
+  if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function pts2path(pts, close = true) { return 'M' + pts.map(p => p[0].toFixed(2) + ' ' + p[1].toFixed(2)).join('L') + (close ? 'Z' : ''); }
+
+// 案几与地面
+const gStat = el('g', { 'pointer-events': 'none' }, stage);
+el('rect', { x: 0, y: 0, width: VB.w, height: VB.h, fill: 'none' }, gStat);
+el('rect', { x: 0, y: 0, width: VB.w, height: DESK_Y + 4, fill: gradients.floor }, gStat);
+el('rect', { x: 0, y: DESK_Y, width: VB.w, height: VB.h - DESK_Y, fill: gradients.table }, gStat);
+el('path', { d: `M0 ${DESK_Y + 3} L${VB.w} ${DESK_Y + 3}`, stroke: 'rgba(40,28,14,.35)', 'stroke-width': 1.5 }, gStat);
+// 案几漆面微光
+for (let i = 0; i < 5; i++) {
+  el('ellipse', { cx: 90 + i * 130, cy: DESK_Y + 14 + (i % 2) * 26, rx: 90, ry: 7, fill: 'rgba(255,235,200,.05)' }, gStat);
+}
+
+// 碗形 clipPath（所有碎片共用）
+const clipBowl = el('clipPath', { id: 'clipBowl' }, defs);
+clipBowl.appendChild(el('path', { d: pts2path(BOWL_PTS) }));
+
+/* ---------- 完整碗（未碎状态） ---------- */
+const gShadow = el('g', { 'pointer-events': 'none' }, stage);   // 投影（碎时收缩）
+const gBowl = el('g', null, stage);                             // 完整碗
+const gFrags = el('g', null, stage);                            // 碎片层
+const gGold = el('g', { 'pointer-events': 'none' }, stage);     // 保留金线层（历史叠加）
+const gGoldNew = el('g', { 'pointer-events': 'none' }, stage);  // 本轮新金线
+const bowlBody = el('path', { d: pts2path(BOWL_PTS), fill: gradients.celadon }, gBowl);
+// 内腔（深青阴影，形成碗壁厚度与深度）
+el('path', { d: pts2path(INNER_PTS), fill: gradients.inner }, gBowl);
+// 口沿：深一线表现厚度
+el('path', { d: `M${BOWL.cx - 88} 228 Q${BOWL.cx} 246 ${BOWL.cx + 88} 228`, stroke: 'rgba(50,80,64,.45)', 'stroke-width': 3.5, fill: 'none' }, gBowl);
+// 釉面高光（左侧竖向）与环境反光（右下）
+el('path', { d: `M${BOWL.cx - 56} 252 Q${BOWL.cx - 70} 300 ${BOWL.cx - 46} 332`, stroke: 'rgba(255,255,255,.5)', 'stroke-width': 10, 'stroke-linecap': 'round', fill: 'none' }, gBowl);
+el('path', { d: `M${BOWL.cx - 22} 334 Q${BOWL.cx + 38} 340 ${BOWL.cx + 56} 316`, stroke: 'rgba(255,255,255,.15)', 'stroke-width': 6, 'stroke-linecap': 'round', fill: 'none' }, gBowl);
+// 圈足
+el('path', { d: `M${BOWL.cx - 26} 376 L${BOWL.cx - 23} 358 L${BOWL.cx + 23} 358 L${BOWL.cx + 26} 376 Z`, fill: gradients.celadonDark, stroke: 'rgba(50,80,64,.35)', 'stroke-width': 1 }, gBowl);
+// 足底釉痕
+el('path', { d: `M${BOWL.cx - 26} 378 L${BOWL.cx + 26} 378`, stroke: 'rgba(120,95,60,.55)', 'stroke-width': 3 }, gBowl);
+
+// 桌面投影
+const shadowEl = el('ellipse', { cx: BOWL.cx + 8, cy: DESK_Y + 3, rx: 108, ry: 10, fill: 'rgba(50,36,18,.28)' }, gShadow);
+
+/* ---------- 断裂算法：半平面裁剪 Voronoi ---------- */
+function polyCentroid(p) {
+  let a = 0, cx = 0, cy = 0;
+  for (let i = 0; i < p.length; i++) {
+    const [x0, y0] = p[i], [x1, y1] = p[(i + 1) % p.length];
+    const f = x0 * y1 - x1 * y0; a += f; cx += (x0 + x1) * f; cy += (y0 + y1) * f;
+  }
+  a *= 0.5; return [cx / (6 * a), cy / (6 * a)];
+}
+function polyBounds(p) {
+  return p.reduce((b, q) => ({ x0: Math.min(b.x0, q[0]), x1: Math.max(b.x1, q[0]), y0: Math.min(b.y0, q[1]), y1: Math.max(b.y1, q[1]) }), { x0: 1e9, x1: -1e9, y0: 1e9, y1: -1e9 });
+}
+
+/* ---------- 碗体判定：点是否在实体材料带内（A 外壁 − B 内腔） ---------- */
+function inPoly(pts, x, y) {
+  let inside = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const [xi, yi] = pts[i], [xj, yj] = pts[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+function inMaterial(x, y) {
+  if (!inPoly(BOWL_PTS, x, y)) return false;          // 碗外
+  if (!inPoly(INNER_PTS, x, y)) return true;          // 口唇 / 外壁 / 圈足实体
+  for (const [dx, dy] of [[5,0],[-5,0],[0,5],[0,-5],[4,4],[-4,4],[4,-4],[-4,-4]]) {
+    if (inPoly(BOWL_PTS, x + dx, y + dy) && !inPoly(INNER_PTS, x + dx, y + dy)) return true;  // 贴腔壁材料
+  }
+  return false;                                        // 内腔空气
+}
+
+// 生成种子：点击处最密，向四周渐疏；全部落在实体材料带内
+function makeSeeds(px, py) {
+  const seeds = [];
+  const add = (x, y) => {
+    if (!inMaterial(x, y)) return;
+    for (const s of seeds) { const dx = s[0] - x, dy = s[1] - y; if (dx * dx + dy * dy < 49) return; }
+    seeds.push([x, y]);
+  };
+  add(px, py);
+  // 内圈：紧贴点击点（裂纹最密处）
+  const r1 = 14 + Math.random() * 8, n1 = 6 + (Math.random() * 3 | 0);
+  for (let i = 0; i < n1; i++) {
+    const a = (i / n1) * Math.PI * 2 + Math.random(), r = r1 * (0.3 + Math.random() * 0.95);
+    add(px + Math.cos(a) * r, py + Math.sin(a) * r);
+  }
+  // 中圈
+  const r2 = 36 + Math.random() * 16, n2 = 10 + (Math.random() * 5 | 0);
+  for (let i = 0; i < n2; i++) {
+    const a = (i / n2) * Math.PI * 2 + Math.random() * 0.7, r = r2 * (0.45 + Math.random());
+    add(px + Math.cos(a) * r, py + Math.sin(a) * r);
+  }
+  // 材料带内蓝噪声撒点（两遍：先常规间距，不足再加密补点）
+  const target = 38 + (Math.random() * 12 | 0);
+  for (let pass = 0; pass < 2 && seeds.length < target; pass++) {
+    const minD = pass === 0 ? 17 : 11;
+    let guard = 0;
+    while (seeds.length < target && guard++ < 1600) {
+      const x = BOWL_AABB.x0 + 2 + Math.random() * (BOWL_AABB.x1 - BOWL_AABB.x0 - 4);
+      const y = BOWL_AABB.y0 + 2 + Math.random() * (BOWL_AABB.y1 - BOWL_AABB.y0 - 4);
+      if (!inMaterial(x, y)) continue;
+      let ok = true;
+      for (const s of seeds) { const dx = s[0] - x, dy = s[1] - y; if (dx * dx + dy * dy < minD * minD) { ok = false; break; } }
+      if (ok) seeds.push([x, y]);
+    }
+  }
+  return seeds;
+}
+function voronoiCells(seeds) {
+  const cells = [];
+  for (const s of seeds) {
+    let poly = [[BOWL_AABB.x0 - 40, BOWL_AABB.y0 - 40], [BOWL_AABB.x1 + 40, BOWL_AABB.y0 - 40], [BOWL_AABB.x1 + 40, BOWL_AABB.y1 + 40], [BOWL_AABB.x0 - 40, BOWL_AABB.y1 + 40]];
+    for (const o of seeds) {
+      if (o === s) continue;
+      // 垂直平分线半平面：保留离 s 更近的一侧
+      const mx = (s[0] + o[0]) / 2, my = (s[1] + o[1]) / 2;
+      const nx = o[0] - s[0], ny = o[1] - s[1];   // 法线指向 o
+      poly = halfplane(poly, mx, my, nx, ny);
+      if (!poly.length) break;
+    }
+    if (poly.length >= 3) cells.push(poly);
+  }
+  return cells;
+}
+function halfplane(poly, mx, my, nx, ny) {
+  const norm = (v) => { const l = Math.hypot(v[0], v[1]) || 1; return [v[0] / l, v[1] / l]; };
+  const n = norm([nx, ny]);
+  const side = (p) => (p[0] - mx) * n[0] + (p[1] - my) * n[1];  // <0 保留
+  const out = [];
+  for (let i = 0; i < poly.length; i++) {
+    const p = poly[i], q = poly[(i + 1) % poly.length];
+    const sp = side(p), sq = side(q);
+    if (sp < 0) out.push(p);
+    if ((sp < 0 && sq >= 0) || (sp >= 0 && sq < 0)) {
+      const t = sp / (sp - sq);
+      out.push([p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t]);
+    }
+  }
+  return out;
+}
+
+/* ---------- 碎片状态机 ---------- */
+const state = {
+  phase: 'idle',        // idle | breaking | settle | fixing | done
+  frags: [],            // 物理碎片
+  restT: 0, fixCount: 0,
+};
+const PHASE_MS = { settleWait: 1300, fly: 800, growMin: 240, growMax: 900 };
+
+function shatter(px, py) {
+  if (state.phase === 'settle' || state.phase === 'fixing') return;
+  audio();
+  clearFragments();
+  // 种子与 cell 一一对应（每 cell 必含其种子），不做剔除以免出现覆盖空洞
+  let seeds = makeSeeds(px, py);
+  let cells = voronoiCells(seeds);
+  if (cells.length < 16) { seeds = makeSeeds(px, py); cells = voronoiCells(seeds); }
+  if (cells.length < 16) { sayWarn(); return; }
+  // 每个碎片：质心、旋转后的局部多边形、物理量
+  state.frags = cells.map((poly, i) => {
+    const c = polyCentroid(poly);
+    const b = polyBounds(poly);
+    return {
+      poly, cx: c[0], cy: c[1],
+      x: 0, y: 0, vx: (Math.random() - 0.5) * 220 + (px - c[0]) * 2.6,   // 初速：向外炸开
+      vy: -(80 + Math.random() * 180) - Math.abs(px - c[0]) * 0.9,
+      rot: 0, vr: (Math.random() - 0.5) * 4,
+      w: b.x1 - b.x0, h: b.y1 - b.y0,
+      rest: false, onTable: false,
+      touched: false,
+      node: null, goldNode: null,
+    };
+  });
+  state.frags.forEach((f, i) => buildFragNode(f, i));
+  gBowl.style.display = 'none';
+  gGold.style.transition = 'opacity .45s'; gGold.style.opacity = '0';   // 旧金线随碗碎裂暂隐
+  shadowEl.setAttribute('rx', 96);
+  state.phase = 'breaking';
+  sfxBreak();
+  burst(px, py);
+  $('stFrags').textContent = state.frags.length;
+  $('stCracks').textContent = state.frags.length;  // 裂纹数 ≈ 内部边数，随修复推进更新
+  $('btnFix').disabled = true;
+  $('hint').classList.add('off');
+  lastT = performance.now(); physAcc = 0; physTime = 0;
+  requestAnimationFrame(physicsStep);
+}
+function clearFragments() {
+  state.frags.forEach(f => {
+    if (f.node) { const w = f.node.parentNode; w && w.parentNode === gFrags ? w.remove() : f.node.remove(); }   // 连同 clip 包裹层移除
+    f.goldNode && f.goldNode.remove();
+  });
+  state.frags = [];
+}
+function fragTint(f) { // 釉色随碗内位置插值
+  const t = Math.max(0, Math.min(1, (f.cy - (BOWL_AABB.y0)) / (BOWL_AABB.y1 - BOWL_AABB.y0)));
+  const r = Math.round(206 - 100 * t), g = Math.round(228 - 62 * t), b = Math.round(212 - 46 * t);
+  return `rgb(${r},${g},${b})`;
+}
+function buildFragNode(f, i) {
+  // 外层：clip 固定在碗空间（不随碎片旋转）；内层：物理 transform 目标
+  const g = el('g', { 'clip-path': 'url(#clipBowl)' }, gFrags);
+  const inner = el('g', null, g);
+  // 厚度断面：同一多边形下移 3px 的暗色层
+  el('path', { d: pts2path(f.poly), fill: '#6f8f7c', stroke: 'rgba(40,60,48,.5)', 'stroke-width': 0.6, transform: 'translate(3,4)' }, inner);
+  el('path', { d: pts2path(f.poly), fill: fragTint(f) }, inner);
+  // 断面细纹（新裂口的瓷质）
+  el('path', { d: pts2path(f.poly), fill: 'none', stroke: 'rgba(255,255,255,.35)', 'stroke-width': 0.7 }, inner);
+  // 高光小片（局部位移，随碎片走）
+  el('path', { d: `M${f.cx - 22} ${f.cy - 10} q22 -10 44 0 q-20 6 -44 0 Z`, fill: 'rgba(255,255,255,.30)' }, inner);
+  f.node = inner;
+}
+/* 固定步长物理（与帧率无关：低帧率/掉帧时按真实时间追赶，最多追 1s） */
+const PHYS_FIXED = 1 / 60;
+let physAcc = 0, physTime = 0;
+function physicsStep(t) {
+  if (state.phase !== 'breaking' && state.phase !== 'settle') return;
+  let dt = (t - lastT) / 1000; lastT = t;
+  if (!isFinite(dt) || dt < 0) dt = PHYS_FIXED;
+  physAcc = Math.min(physAcc + dt, 1);
+  let steps = 0;
+  while (physAcc >= PHYS_FIXED && steps < 60) { physStep(PHYS_FIXED); physAcc -= PHYS_FIXED; steps++; physTime += PHYS_FIXED; }
+  if (steps >= 60) physAcc = 0;
+  if (physTime > 5) { state.frags.forEach(f => { f.rest = true; f.vx = f.vy = f.vr = 0; }); }   // 兜底：5 秒模拟内必定静卧
+  for (const f of state.frags) {   // 每帧只写一次 transform
+    f.node.setAttribute('transform', `translate(${f.x.toFixed(2)} ${f.y.toFixed(2)}) rotate(${(f.rot * 180 / Math.PI).toFixed(1)} ${f.cx.toFixed(1)} ${f.cy.toFixed(1)})`);
+  }
+  if (state.frags.every(f => f.rest)) {
+    state.phase = 'settle';
+    $('btnFix').disabled = false;
+    $('hint').textContent = '碎片已静卧案上 · 静候片刻将自行修复';
+    $('hint').classList.remove('off');
+    setTimeout(() => $('hint').classList.add('off'), 2600);
+    clearTimeout(fixTimer);
+    fixTimer = setTimeout(() => { if (state.phase === 'settle') startFix(); }, 4200);
+    return;
+  }
+  requestAnimationFrame(physicsStep);
+}
+function physStep(dt) {
+  for (const f of state.frags) {
+    if (f.rest) continue;
+    f.vy += 980 * dt;                    // 重力
+    f.x += f.vx * dt; f.y += f.vy * dt;
+    f.rot += f.vr * dt;
+    // 与案几碰撞：取碎片多边形旋转后的最低点
+    const minY = rotMinY(f);
+    if (minY >= DESK_Y - 2) {
+      const pen = minY - (DESK_Y - 2);
+      f.y -= pen;                        // 修正穿透
+      if (f.vy > 60) { sfxTap(); f.touched = true; }
+      f.vy *= -0.32; f.vx *= 0.78; f.vr *= 0.5;
+      if (Math.abs(f.vy) < 26) f.vy = 0;
+      if (Math.abs(f.vx) < 6) f.vx = 0;
+      if (Math.abs(f.vr) < 0.3) f.vr = 0;
+      f.onTable = (Math.abs(f.vy) < 26);
+    }
+    // 画面外保护
+    if (f.y > VB.h + 60) { f.rest = true; }
+    if (f.x > VB.w + 60) { f.x = VB.w + 60; f.vx = -Math.abs(f.vx) * 0.4; }
+    if (f.x < -60) { f.x = -60; f.vx = Math.abs(f.vx) * 0.4; }
+    if (f.onTable && Math.abs(f.vx) < 1 && Math.abs(f.vy) < 1 && Math.abs(f.vr) < 0.05) f.rest = true;
+  }
+}
+function rotMinY(f) {
+  // 碎片绕质心旋转后多边形最低点
+  const r = f.rot, cos = Math.cos(r), sin = Math.sin(r);
+  let m = -1e9;
+  for (const p of f.poly) {
+    const dx = p[0] - f.cx, dy = p[1] - f.cy;
+    m = Math.max(m, f.cy + f.y + (-dx * sin + dy * cos));
+  }
+  return m;
+}
+let lastT = 0;
+
+/* ---------- 归位 + 金线生长 ---------- */
+let fixTimer = null;
+function sayWarn() {
+  $('hint').textContent = '这一次裂纹生成得太少了，再点一次试试';
+  $('hint').classList.remove('off');
+  setTimeout(() => $('hint').classList.add('off'), 1800);
+}
+function autoFixPrompt() {
+  if (state.phase === 'settle') { $('hint').textContent = '碎片已静卧案上，可点击「修复」或直接静候'; $('hint').classList.remove('off'); setTimeout(() => $('hint').classList.add('off'), 2600); }
+}
+function startFix() {
+  if (state.phase !== 'settle') return;
+  state.phase = 'fixing';
+  $('btnFix').disabled = true;
+  clearTimeout(fixTimer);
+  // 计算每碎片回归时长：离原位远的飞得久
+  const t0 = performance.now();
+  state.frags.forEach((f, i) => {
+    const dur = PHASE_MS.fly * (0.8 + Math.min(1.2, Math.hypot(f.x, f.y) / 500));
+    f.flyFrom = { x: f.x, y: f.y, rot: f.rot };
+    f.flyDur = dur; f.flyT0 = t0 + i * 4;
+  });
+  requestAnimationFrame(flyStep);
+  // 金线生长调度（在主要碎片归位后开始）
+  const growStart = t0 + PHASE_MS.fly + 120;
+  state.growStart = growStart;
+  requestAnimationFrame(goldGrowStep);
+}
+function flyStep(t) {
+  let done = true;
+  for (const f of state.frags) {
+    const p = Math.max(0, Math.min(1, (t - f.flyT0) / f.flyDur));
+    const e = 1 - Math.pow(1 - p, 3);       // easeOutCubic
+    f.x = f.flyFrom.x * (1 - e);
+    f.y = f.flyFrom.y * (1 - e);
+    f.rot = f.flyFrom.rot * (1 - e);
+    f.node.setAttribute('transform', `translate(${f.x.toFixed(2)} ${f.y.toFixed(2)}) rotate(${(f.rot * 180 / Math.PI).toFixed(2)} ${f.cx} ${f.cy})`);
+    if (p < 1) done = false;
+  }
+  if (!done) requestAnimationFrame(flyStep);
+  else {
+    state.frags.forEach(f => f.node.setAttribute('transform', ''));
+    // 归位完成：碗形重现的高光闪烁
+    sweepGold();
+  }
+}
+function goldGrowStep(t) {
+  // 每碎片沿自身 Voronoi 边界描金：dash 生长 + 错峰
+  if (!state.frags.length) return;
+  const dt = Math.max(0, (t - state.growStart));
+  const N = state.frags.length;
+  state.frags.forEach((f, i) => {
+    if (!f.goldNode) {
+      const per = f.perimeter || (f.perimeter = polyPerim(f.poly));
+      const g = el('g', { 'clip-path': 'url(#clipBowl)' }, gGoldNew);
+      // 液态金：三层描边
+      for (const [w, col, op] of [[3.2, GOLD_D, 0.9], [1.6, GOLD, 0.95], [0.5, GOLD_L, 0.9]]) {
+        el('path', {
+          d: pts2path(f.poly), fill: 'none',
+          stroke: col, 'stroke-width': w, 'stroke-opacity': op,
+          'stroke-dasharray': per, 'stroke-dashoffset': per,
+          'stroke-linecap': 'round',
+        }, g);
+      }
+      f.goldNode = g;
+    }
+    const d = Math.hypot(f.cx - 320, f.cy - 292);
+    const delay = (d / 110) * 0.55 * 1000;
+    const p = Math.max(0, Math.min(1, (dt - delay) / PHASE_MS.growMax));
+    const e = 1 - Math.pow(1 - p, 2.2);
+    for (const path of f.goldNode.children) {
+      path.setAttribute('stroke-dashoffset', (f.perimeter * (1 - e)).toFixed(2));
+    }
+    // 液态微流动
+    if (p >= 1 && p < 2) {
+      for (const path of f.goldNode.children) {
+        path.setAttribute('stroke-dasharray', f.perimeter + ' ' + f.perimeter);
+      }
+    }
+  });
+  const allDone = state.frags.every(f => {
+    const d = Math.hypot(f.cx - 320, f.cy - 292);
+    const delay = (d / 110) * 0.55 * 1000;
+    return dt - delay > PHASE_MS.growMax;
+  });
+  if (!allDone) requestAnimationFrame(goldGrowStep);
+  else {
+    // 固化：金线移入保留层
+    while (gGoldNew.firstChild) gGold.appendChild(gGoldNew.firstChild);
+    state.frags.forEach(f => { f.goldNode = null; });
+    state.phase = 'done';
+    state.fixCount++;
+    $('stFixs').textContent = state.fixCount;
+    $('stCracks').textContent = totalCracks();
+    sfxBell();
+    // 完美如初：完整碗形重现于碎片之上、金线之下（金缝留在碗上）
+    gFrags.after(gBowl);
+    gBowl.style.display = '';
+    gGold.style.opacity = '1';
+    $('hint').textContent = '完美如初，裂处生金。再点一次可再度打碎';
+    $('hint').classList.remove('off');
+    setTimeout(() => $('hint').classList.add('off'), 3400);
+  }
+}
+function polyPerim(p) { let s = 0; for (let i = 0; i < p.length; i++) { const a = p[i], b = p[(i + 1) % p.length]; s += Math.hypot(b[0] - a[0], b[1] - a[1]); } return s; }
+function totalCracks() { return state.fixCount * (state.frags.length - 1); }
+function sweepGold() {
+  // 金光扫过碗面
+  const g = el('g', { 'clip-path': 'url(#clipBowl)', 'pointer-events': 'none' }, gGoldNew);
+  const sg = el('linearGradient', { id: 'sweep', x1: 0, y1: 0, x2: 1, y2: 0 }, defs);
+  el('stop', { offset: 0, 'stop-color': '#fff', 'stop-opacity': 0 }, sg);
+  el('stop', { offset: 0.5, 'stop-color': GOLD_L, 'stop-opacity': 0.9 }, sg);
+  el('stop', { offset: 1, 'stop-color': '#fff', 'stop-opacity': 0 }, sg);
+  const r = el('rect', { x: -160, y: BOWL_AABB.y0 - 8, width: 110, height: VB.h, fill: 'url(#sweep)', 'pointer-events': 'none' }, g);
+  const anim = el('animate', { attributeName: 'x', from: -160, to: VB.w + 60, dur: '0.9s', fill: 'remove', calcMode: 'spline', keySplines: '0.3 0 0.2 1', keyTimes: '0;1' }, r);
+  r.addEventListener('endEvent', () => g.remove());
+  setTimeout(() => g.remove(), 1100);
+}
+
+/* ---------- 粒子层 ---------- */
+let P = [];
+function burst(x, y) {
+  for (let i = 0; i < 46; i++) {
+    const a = Math.random() * Math.PI * 2, v = 60 + Math.random() * 190;
+    P.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, life: 1, g: 500, r: 0.6 + Math.random() * 1.4, c: ['#e8f2e6', '#bcd6c4', '#fff8e0'][i % 3] });
+  }
+}
+function emitDust() {
+  if (Math.random() < 0.3) P.push({ x: Math.random() * VB.w, y: 30 + Math.random() * 60, vx: (Math.random() - 0.5) * 8, vy: 6 + Math.random() * 10, life: 1, g: 0, r: 0.5 + Math.random(), c: 'rgba(200,180,140,.5)' });
+}
+function particleTick() {
+  emitDust();
+  for (let i = P.length - 1; i >= 0; i--) {
+    const p = P[i];
+    p.vy += p.g * 0.016; p.x += p.vx * 0.016; p.y += p.vy * 0.016; p.life -= 0.012;
+    if (p.life <= 0 || p.y > VB.h + 10) P.splice(i, 1);
+  }
+  drawParticles();
+  requestAnimationFrame(particleTick);
+}
+function drawParticles() {
+  fxc.setTransform(1, 0, 0, 1, 0, 0);
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  if (fx.width !== fx.clientWidth * dpr) { fx.width = fx.clientWidth * dpr; fx.height = fx.clientHeight * dpr; }
+  const sx = fx.width / VB.w, sy = fx.height / VB.h;
+  fxc.clearRect(0, 0, fx.width, fx.height);
+  for (const p of P) {
+    fxc.globalAlpha = Math.max(0, p.life);
+    fxc.fillStyle = p.c;
+    fxc.beginPath(); fxc.arc(p.x * sx, p.y * sy, p.r * sx, 0, 7); fxc.fill();
+  }
+  fxc.globalAlpha = 1;
+}
+
+/* ---------- 交互 ---------- */
+stage.addEventListener('pointerdown', e => {
+  const pt = toSvg(e);
+  // 命中碗形才碎裂
+  if (pointInBowl(pt.x, pt.y) && state.phase === 'idle') shatter(pt.x, pt.y);
+  else if (state.phase === 'done' && pointInBowl(pt.x, pt.y)) shatter(pt.x, pt.y);
+});
+function toSvg(e) {
+  const r = stage.getBoundingClientRect();
+  const x = (e.clientX - r.left) / r.width * VB.w;
+  const y = (e.clientY - r.top) / r.height * VB.h;
+  return { x, y };
+}
+function pointInBowl(x, y) {
+  // 碗体椭圆 + 圈足矩形（稳定的近似命中域）
+  const dx = (x - BOWL.cx) / (BOWL.rxA + 8), dy = (y - (BOWL.cy + 4)) / (BOWL.ryA + 10);
+  if (dx * dx + dy * dy < 1) return true;
+  return Math.abs(x - BOWL.cx) < 34 && y > DESK_Y - 28 && y < DESK_Y + 2;
+}
+$('btnFix').addEventListener('click', () => { if (state.phase === 'settle') startFix(); });
+$('btnReset').addEventListener('click', () => {
+  clearFragments();
+  while (gGoldNew.firstChild) gGoldNew.firstChild.remove();
+  gGold.innerHTML = '';
+  state.phase = 'idle'; state.fixCount = 0;
+  $('stFixs').textContent = '0'; $('stCracks').textContent = '0'; $('stFrags').textContent = '—';
+  gBowl.style.display = '';
+  shadowEl.setAttribute('rx', 108);
+  $('btnFix').disabled = true;
+  $('hint').textContent = '点击碗身任意一处，将其打碎';
+  $('hint').classList.remove('off');
+});
+requestAnimationFrame(particleTick);
+</script>
+</body>
+</html>

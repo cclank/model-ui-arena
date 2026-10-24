@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>点击放烟花</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { height:100%; overflow:hidden; }
+  body { background:linear-gradient(180deg,#050818 0%,#0a1130 55%,#1b1546 100%);
+         font-family:"Avenir Next","PingFang SC","Microsoft YaHei",sans-serif; cursor:crosshair; }
+  canvas { display:block; width:100%; height:100%; }
+  .tip { position:fixed; top:22px; left:50%; transform:translateX(-50%); color:#cfd8ff; font-size:13px;
+         letter-spacing:3px; background:rgba(10,16,40,.55); border:1px solid rgba(140,160,255,.25);
+         padding:8px 18px; border-radius:999px; pointer-events:none; transition:opacity .6s; }
+  .stat { position:fixed; bottom:16px; left:50%; transform:translateX(-50%); color:#7487c0; font-size:11px;
+          letter-spacing:1px; pointer-events:none; font-variant-numeric:tabular-nums; }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="tip" id="tip">点击夜空 · 放一朵烟花</div>
+<div class="stat" id="stat"></div>
+<script>
+  const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  let W = 0, H = 0, dpr = 1;
+  function resize() {
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', resize); resize();
+  // ---- 粒子池：上限 2600，回收复用，避免连续点击内存增长 ----
+  const MAX = 2600, pool = [];
+  for (let i = 0; i < MAX; i++) pool.push({ live:false, x:0, y:0, vx:0, vy:0, life:0, max:1, r:1, hue:0, spark:false });
+  function take() { for (let i = 0; i < MAX; i++) if (!pool[i].live) return pool[i]; return null; }
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const PALETTE = [[0,100],[28,60],[190,90],[280,80],[330,90],[45,100],[140,80]];
+  // ---- 火箭：从底部升起到点击点，留尾迹，到顶爆炸 ----
+  const rockets = [];
+  function launch(tx, ty) {
+    const [h, s] = PALETTE[Math.floor(Math.random() * PALETTE.length)];
+    rockets.push({ x: tx + rnd(-20,20), y: H + 10, tx, ty, vx: (tx - (tx + rnd(-20,20))) * 0.02,
+                   vy: -(H - ty) / 52 - rnd(2,5), hue: h, sat: s, t: 0 });
+    if (rockets.length > 40) rockets.shift();
+    document.getElementById('tip').style.opacity = 0;
+  }
+  function explode(x, y, hue, sat) {
+    const n = Math.floor(rnd(70, 140)), power = rnd(3.2, 6.4), rBase = rnd(1.2, 2.6);
+    for (let i = 0; i < n; i++) {
+      const p = take(); if (!p) return;
+      const a = Math.random() * Math.PI * 2, sp = power * (0.35 + Math.random() * 0.65);
+      p.live = true; p.x = x; p.y = y; p.vx = Math.cos(a) * sp; p.vy = Math.sin(a) * sp;
+      p.life = 0; p.max = rnd(55, 110); p.r = rBase * (0.6 + Math.random() * 0.7);
+      p.hue = Math.random() < 0.82 ? hue : (hue + rnd(-24, 24) + 360) % 360;
+      p.spark = Math.random() < 0.3;
+    }
+    // 闪光核心 + 冲击环
+    flashes.push({ x, y, r: 2, hue, a: 1 });
+    for (let i = 0; i < 34; i++) {                    // 余烬柱
+      const p = take(); if (!p) break;
+      const a = Math.random() * Math.PI * 2, sp = power * rnd(0.05, 0.22);
+      p.live = true; p.x = x; p.y = y; p.vx = Math.cos(a) * sp; p.vy = Math.sin(a) * sp;
+      p.life = 0; p.max = rnd(120, 190); p.r = rnd(0.8, 1.5); p.hue = hue; p.spark = true;
+    }
+  }
+  const flashes = [];
+  let fps = 60, fAcc = 0, fCnt = 0, lastT = performance.now();
+  function frame(t) {
+    const dt = Math.min(2.4, (t - lastT) / 16.7); lastT = t;
+    fCnt++; fAcc += t - (frame.p || t); frame.p = t;
+    if (fAcc > 500) { fps = Math.round(1000 / (fAcc / fCnt)); fAcc = 0; fCnt = 0;
+      let live = 0; for (const p of pool) if (p.live) live++;
+      document.getElementById('stat').textContent = `粒子 ${live} · 火箭 ${rockets.length} · ${fps} FPS`; }
+    // 半透明清屏 = 拖尾余辉
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = 'rgba(5,8,24,0.22)';
+    ctx.fillRect(0, 0, W, H);
+    // 火箭推进
+    for (let i = rockets.length - 1; i >= 0; i--) {
+      const r = rockets[i]; r.t += dt;
+      r.x += r.vx * dt; r.y += r.vy * dt; r.vy += 0.075 * dt;
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = `hsla(${r.hue},${r.sat}%,75%,.9)`;
+      ctx.beginPath(); ctx.arc(r.x, r.y, 2.1, 0, 7); ctx.fill();
+      for (let k = 0; k < 3; k++) {                   // 上升尾焰
+        const p = take(); if (p) {
+          p.live = true; p.x = r.x + rnd(-1,1); p.y = r.y + rnd(0,4);
+          p.vx = rnd(-.4,.4); p.vy = rnd(.3,1.2); p.life = 0; p.max = rnd(14,30);
+          p.r = rnd(.7,1.4); p.hue = r.hue; p.spark = true;
+        }
+      }
+      if (r.y <= r.ty || r.vy > -0.5) { explode(r.x, r.y, r.hue, r.sat); rockets.splice(i, 1); }
+    }
+    // 粒子积分：重力 + 阻力 + 闪烁衰减
+    ctx.globalCompositeOperation = 'lighter';
+    for (const p of pool) {
+      if (!p.live) continue;
+      p.life += dt;
+      if (p.life >= p.max) { p.live = false; continue; }
+      p.vy += 0.052 * dt; p.vx *= 0.984; p.vy *= 0.984;
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      const k = 1 - p.life / p.max;
+      const flick = p.spark ? (Math.random() < 0.35 ? 0.25 : 1) : 1;
+      const a = k * k * flick;
+      ctx.fillStyle = p.spark
+        ? `hsla(${p.hue},40%,88%,${a})`
+        : `hsla(${p.hue},95%,${55 + 35 * k}%,${a})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * (0.5 + 0.7 * k), 0, 7);
+      ctx.fill();
+    }
+    // 闪光核心扩散
+    for (let i = flashes.length - 1; i >= 0; i--) {
+      const f = flashes[i]; f.r += 2.4 * dt; f.a -= 0.045 * dt;
+      if (f.a <= 0) { flashes.splice(i, 1); continue; }
+      ctx.strokeStyle = `hsla(${f.hue},100%,85%,${f.a})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 7); ctx.stroke();
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  // ---- 交互：任意位置点击 / 触摸放烟花 ----
+  function fireAt(cx, cy) { launch(cx, cy); }
+  cv.addEventListener('pointerdown', e => { fireAt(e.clientX, e.clientY); });
+  // 开场三连发
+  setTimeout(() => launch(W * 0.3, H * 0.32), 400);
+  setTimeout(() => launch(W * 0.7, H * 0.26), 750);
+  setTimeout(() => launch(W * 0.5, H * 0.4), 1100);
+</script>
+</body>
+</html>

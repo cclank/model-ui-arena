@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="Zxu68hyyxTNJJKAiuOL0VA">
+<head data-page-node-id="SDhKNDr9sx9O6Hr4fDW7s6">
+<meta charset="utf-8" data-page-node-id="5kycqRHuYfAySfVqg8EV0m">
+<meta name="viewport" content="width=device-width,initial-scale=1" data-page-node-id="MpAw9JTASAZ0RhWKY5hLwy">
+<title>点击放烟花</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#05060f;font-family:-apple-system,"PingFang SC",sans-serif}
+canvas{display:block;position:fixed;inset:0;cursor:crosshair}
+.hud{position:fixed;left:0;right:0;bottom:22px;text-align:center;color:#8b93c9;pointer-events:none;font-size:13px;letter-spacing:.14em}
+.hud b{color:#ffd166}
+.tip{position:fixed;top:26px;left:0;right:0;text-align:center;color:#eef1ff;pointer-events:none;
+  font-size:15px;letter-spacing:.3em;animation:float 3s ease-in-out infinite;text-shadow:0 0 16px rgba(125,211,252,.6)}
+@keyframes float{50%{transform:translateY(-6px);opacity:.75}}
+</style>
+</head>
+<body data-page-node-id="6XKiBNhwkSivYzpdF0qeGX">
+<canvas id="c" data-page-node-id="4mRGFkuPh1Q6DAsQxHqopT"></canvas>
+<div class="tip" data-page-node-id="hgp3W9WwiOCJHInrsZloIR">点 击 夜 空 · 绽 放 烟 花</div>
+<div class="hud" data-page-node-id="YLGzUdZdrrDQJ5g77Vn7Oc">已绽放 <b id="cnt" data-page-node-id="2EJIUHiCm9zV5kLYl3ZEEE">0</b> 朵 · 粒子 <b id="pn" data-page-node-id="ICl8xIAVnA7ftir9uttO1B">0</b> · FPS <b id="fps" data-page-node-id="Sjj52awCvvpdTZKJk3nUeH">60</b></div>
+<script>
+const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+let W,H,DPR,stars=[];
+function resize(){DPR=Math.min(2,window.devicePixelRatio||1);
+  W=cv.width=innerWidth*DPR;H=cv.height=innerHeight*DPR;
+  cv.style.width=innerWidth+"px";cv.style.height=innerHeight+"px";makeStars();}
+resize();addEventListener("resize",resize);
+function makeStars(){stars=[];for(let i=0;i<130;i++)stars.push({
+  x:Math.random()*W,y:Math.random()*H*.75,r:(Math.random()*1.3+.3)*DPR,
+  tw:Math.random()*Math.PI*2,sp:.5+Math.random()*1.5});}
+const PALETTES=[["#ff5d73","#ffb703","#fff3b0"],["#7dd3fc","#4361ee","#c77dff"],
+  ["#ff9ff3","#f368e0","#feca57"],["#00f5d4","#00bbf9","#9b5de5"],["#f9c74f","#f8961e","#f94144"]];
+let parts=[],count=0;
+const MAX=1600;
+function burst(x,y){
+  const pal=PALETTES[(Math.random()*PALETTES.length)|0],
+    n=60+((Math.random()*50)|0),base=2.4+Math.random()*2.6*DPR;
+  for(let i=0;i<n;i++){
+    if(parts.length>MAX)parts.shift();
+    const a=(i/n)*Math.PI*2+Math.random()*.12,v=base*(.45+Math.random()*.75);
+    parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,
+      col:pal[(Math.random()*pal.length)|0],life:1,decay:.008+Math.random()*.012,
+      r:(1.2+Math.random()*1.8)*DPR,trail:[],flick:Math.random()*6.28});
+  }
+  count++;document.getElementById("cnt").textContent=count;
+}
+cv.addEventListener("pointerdown",e=>{burst(e.clientX*DPR,e.clientY*DPR);});
+let last=performance.now(),fpsAcc=0,fpsN=0;
+function loop(now){
+  const dt=now-last;last=now;fpsAcc+=1000/Math.max(1,dt);fpsN++;
+  if(fpsN>=30){document.getElementById("fps").textContent=Math.round(fpsAcc/fpsN);fpsAcc=0;fpsN=0;}
+  // 半透明拖尾：不完全清屏，营造夜空余辉
+  ctx.fillStyle="rgba(5,6,15,.22)";ctx.fillRect(0,0,W,H);
+  // 星空
+  for(const s of stars){s.tw+=.03*s.sp;
+    const a=.35+Math.abs(Math.sin(s.tw))*.6;
+    ctx.globalAlpha=a;ctx.fillStyle="#dfe7ff";
+    ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.283);ctx.fill();}
+  ctx.globalAlpha=1;
+  // 地平线城市剪影
+  ctx.fillStyle="#0a0d1c";ctx.fillRect(0,H-40*DPR,W,40*DPR);
+  // 粒子
+  for(let i=parts.length-1;i>=0;i--){
+    const p=parts[i];
+    p.trail.push(p.x,p.y);if(p.trail.length>8)p.trail.splice(0,2);
+    p.x+=p.vx;p.y+=p.vy;p.vy+=.035*DPR;p.vx*=.985;p.vy*=.985;
+    p.life-=p.decay;p.flick+=.4;
+    if(p.life<=0){parts.splice(i,1);continue;}
+    const alpha=Math.max(0,p.life)*(0.6+0.4*Math.sin(p.flick));
+    if(p.trail.length>3){ctx.strokeStyle=p.col;ctx.globalAlpha=alpha*.35;ctx.lineWidth=p.r*.7;
+      ctx.beginPath();ctx.moveTo(p.trail[0],p.trail[1]);
+      for(let t=2;t<p.trail.length;t+=2)ctx.lineTo(p.trail[t],p.trail[t+1]);ctx.stroke();}
+    ctx.globalAlpha=alpha;ctx.fillStyle=p.col;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r*p.life+.4,0,6.283);ctx.fill();
+    ctx.globalAlpha=alpha*.25;ctx.beginPath();ctx.arc(p.x,p.y,p.r*3*p.life,0,6.283);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+  document.getElementById("pn").textContent=parts.length;
+  requestAnimationFrame(loop);
+}
+ctx.fillStyle="#05060f";ctx.fillRect(0,0,W,H);
+requestAnimationFrame(loop);
+setTimeout(()=>burst(W*.5,H*.38),600);
+</script>
+</body>
+</html>

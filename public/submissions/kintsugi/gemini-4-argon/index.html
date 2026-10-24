@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>金缮 Kintsugi — 程序化碎裂与鎏金修复</title>
+<style>
+  :root {
+    --bg-top: #111618;
+    --bg-bot: #07090a;
+    --celadon: #8fb8a8;
+    --gold: #f5c563;
+    --gold-bright: #fff3b0;
+    --text: #e6ece8;
+    --sub: #8fa39a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body {
+    width: 100vw; height: 100vh; overflow: hidden;
+    background: radial-gradient(circle at 50% 35%, #1d2826 0%, var(--bg-top) 55%, var(--bg-bot) 100%);
+    color: var(--text);
+    font-family: "Songti SC", "Noto Serif SC", "STSong", Georgia, serif;
+    touch-action: none;
+  }
+  canvas#stage {
+    position: fixed; inset: 0; width: 100%; height: 100%; display: block; cursor: pointer;
+  }
+  .top-hud {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    width: calc(100% - 24px); max-width: 680px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(12, 17, 18, 0.76); border: 1px solid rgba(245, 197, 99, 0.25);
+    backdrop-filter: blur(12px); border-radius: 18px; padding: 10px 16px;
+    z-index: 10; box-shadow: 0 16px 40px rgba(0,0,0,0.55);
+    gap: 10px; flex-wrap: wrap;
+  }
+  .brand-col { display: flex; flex-direction: column; gap: 2px; }
+  .title-main {
+    font-size: 16px; font-weight: 700; color: var(--gold); letter-spacing: 0.16em;
+  }
+  .colophon {
+    font-size: 11px; color: var(--sub); letter-spacing: 0.08em;
+  }
+  .stats-row {
+    display: flex; gap: 14px; font-size: 12px; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  .stat-cell { display: flex; flex-direction: column; align-items: center; }
+  .stat-label { font-size: 10px; color: var(--sub); }
+  .stat-val { font-size: 14px; font-weight: 700; color: var(--gold-bright); font-variant-numeric: tabular-nums; }
+
+  .guide-banner {
+    position: fixed; top: 92px; left: 50%; transform: translateX(-50%);
+    padding: 6px 16px; border-radius: 99px;
+    background: rgba(245, 197, 99, 0.12); border: 1px solid rgba(245, 197, 99, 0.35);
+    color: var(--gold-bright); font-size: 12px; letter-spacing: 0.1em;
+    pointer-events: none; z-index: 10; transition: opacity 0.35s, transform 0.35s;
+    white-space: nowrap;
+  }
+
+  .bottom-controls {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 12px; z-index: 10;
+  }
+  .k-btn {
+    border: 1px solid rgba(245, 197, 99, 0.45);
+    background: rgba(16, 22, 23, 0.85);
+    color: var(--gold-bright);
+    padding: 9px 20px; border-radius: 99px;
+    font-size: 13px; font-weight: 600; letter-spacing: 0.1em;
+    cursor: pointer; transition: 0.25s;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  }
+  .k-btn:hover:not(:disabled) {
+    background: var(--gold); color: #111618; box-shadow: 0 0 22px rgba(245,197,99,0.5);
+  }
+  .k-btn:disabled {
+    opacity: 0.4; cursor: default;
+  }
+  @media (max-width: 480px) {
+    .top-hud { padding: 8px 12px; top: 10px; }
+    .title-main { font-size: 14px; }
+    .colophon { font-size: 10px; }
+    .guide-banner { top: 82px; font-size: 11px; padding: 5px 12px; }
+    .bottom-controls { bottom: 14px; gap: 8px; }
+    .k-btn { padding: 8px 15px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+
+<div class="top-hud">
+  <div class="brand-col">
+    <div class="title-main">金缮 · KINTSUGI</div>
+    <div class="colophon">题跋：器破方知胎骨贞，金泥百炼补天青</div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-cell">
+      <span class="stat-label">碎片数</span>
+      <span class="stat-val" id="valShards">1</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-label">裂缝数</span>
+      <span class="stat-val" id="valSeams">0</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-label">修复次数</span>
+      <span class="stat-val" id="valRepairs">0</span>
+    </div>
+  </div>
+</div>
+
+<div class="guide-banner" id="guideBanner">轻叩青瓷碗身任意处 · 观其碎裂与鎏金重圆</div>
+
+<div class="bottom-controls">
+  <button class="k-btn" id="repairBtn" type="button" disabled>鎏金修复</button>
+  <button class="k-btn" id="resetBtn" type="button">重新来过</button>
+</div>
+
+<script>
+/**
+ * ============================================================================
+ * 金缮 (Kintsugi) — 实时 Voronoi 多边形裁剪断裂算法 + 2D 刚体物理 + 液态金线生长
+ * ============================================================================
+ * 1. 核心断裂算法 (真实程序化 Voronoi 分割，零预设裂纹)：
+ *    - 碗体定义为高采样闭合多边形 `bowlPolygon`（包含微撇碗口、饱满腹壁与圈足）。
+ *    - 点击碗身 (ix, iy) 时，在碗包围盒内生成 26~36 个随机 Voronoi 种子点，
+ *      其中 60% 的种子以高斯极坐标聚集在点击冲击点周围，实现“越靠近点击点越碎”。
+ *    - 对每个种子点 i，以碗轮廓多边形为初始多边形，依次用与其它种子点 j 的垂直平分线
+ *      执行 Sutherland-Hodgman 半平面裁剪 (`clipPolygonHalfPlane`)，精确求得位于碗内的
+ *      Voronoi 碎片多边形，所有碎片面积之和严格等于原碗面积，拼回后 100% 契合还原。
+ *    - 提取相邻碎片之间的共享内边作为本次裂缝网络 `currentSeams`，并叠加至历史金线层。
+ */
+
+const cvs = document.getElementById('stage');
+const ctx = cvs.getContext('2d');
+let W = window.innerWidth, H = window.innerHeight;
+let centerX = W / 2, bowlCenterY = H * 0.45, tableY = H * 0.67, bowlScale = 1;
+
+function updateLayout() {
+  W = cvs.width = window.innerWidth;
+  H = cvs.height = window.innerHeight;
+  centerX = W * 0.5;
+  bowlScale = Math.min(1.05, Math.max(0.68, Math.min(W / 440, H / 640)));
+  tableY = H * 0.69;
+  bowlCenterY = tableY - 94 * bowlScale;
+}
+window.addEventListener('resize', () => {
+  updateLayout();
+  rebuildBowlTexture();
+});
+updateLayout();
+
+// WebAudio 合成器：瓷器碎裂声、瓷片碰撞清音、修复完成颂钵钟鸣
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) audioCtx = new AC();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playCrackSound() {
+  ensureAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  // 短促高频噪声模拟瓷胎迸裂 + 多泛音高频清响
+  const freqs = [1480, 2120, 2890, 3640, 4420];
+  freqs.forEach((f, idx) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = idx % 2 === 0 ? 'triangle' : 'sine';
+    osc.frequency.setValueAtTime(f + (Math.random() - 0.5) * 140, now);
+    osc.frequency.exponentialRampToValueAtTime(f * 0.65, now + 0.16);
+    gain.gain.setValueAtTime(0.08 / (idx + 1), now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18 + idx * 0.03);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.28);
+  });
+}
+
+function playClinkSound(intensity = 0.5) {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(1900 + Math.random() * 1400, now);
+  gain.gain.setValueAtTime(Math.min(0.05, intensity * 0.03), now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.085);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.09);
+}
+
+function playChimeSound() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  [528, 792, 1056, 1584].forEach((f, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(f, now);
+    gain.gain.setValueAtTime(0.07 / (i + 1), now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8 - i * 0.25);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 1.85);
+  });
+}
+
+// 生成青瓷碗局部坐标闭合轮廓（中心在 (0,0)，碗口 y = -68，圈足底 y = +94）
+function buildLocalBowlOutline() {
+  const pts = [];
+  // 碗口上沿（微凹弧线，体现侧俯视立体碗口） from x = -152 to +152
+  const rimSteps = 20;
+  for (let i = 0; i <= rimSteps; i++) {
+    const t = i / rimSteps;
+    const x = -152 + t * 304;
+    const y = -66 + Math.sin(t * Math.PI) * 8;
+    pts.push({ x, y });
+  }
+  // 右侧碗壁外弧 -> 圈足右肩 -> 圈足右底
+  const rightCurve = [
+    { x: 148, y: -42 }, { x: 138, y: -12 }, { x: 122, y: 18 },
+    { x: 98, y: 46 },   { x: 68, y: 68 },   { x: 48, y: 78 },
+    { x: 50, y: 94 }
+  ];
+  pts.push(...rightCurve);
+  // 圈足底沿 -> 左侧圈足 -> 左侧碗壁外弧
+  const leftCurve = [
+    { x: -50, y: 94 },  { x: -48, y: 78 },  { x: -68, y: 68 },
+    { x: -98, y: 46 },  { x: -122, y: 18 }, { x: -138, y: -12 },
+    { x: -148, y: -42 }
+  ];
+  pts.push(...leftCurve);
+  return pts;
+}
+
+const LOCAL_BOWL_POLY = buildLocalBowlOutline();
+
+// 离屏 Canvas 预渲染天青色宋代青瓷碗（含碗口内壁、釉色渐变、冰裂暗纹、圈足与高光）
+const offBowl = document.createElement('canvas');
+offBowl.width = 400;
+offBowl.height = 260;
+const offCtx = offBowl.getContext('2d');
+const OFF_CX = 200, OFF_CY = 120;
+
+function rebuildBowlTexture() {
+  offCtx.clearRect(0, 0, 400, 260);
+  offCtx.save();
+  offCtx.translate(OFF_CX, OFF_CY);
+
+  // 1. 碗口椭圆内壁（后沿构成的深青色内腔）
+  offCtx.beginPath();
+  offCtx.ellipse(0, -64, 152, 22, 0, 0, Math.PI * 2);
+  const innerGrad = offCtx.createLinearGradient(-150, -86, 150, -42);
+  innerGrad.addColorStop(0, '#4f7367');
+  innerGrad.addColorStop(0.45, '#7aa394');
+  innerGrad.addColorStop(1, '#3b594f');
+  offCtx.fillStyle = innerGrad;
+  offCtx.fill();
+  offCtx.lineWidth = 2.2;
+  offCtx.strokeStyle = '#cbe0d6';
+  offCtx.stroke();
+
+  // 2. 碗身主体剪切路径
+  offCtx.beginPath();
+  LOCAL_BOWL_POLY.forEach((p, idx) => {
+    if (idx === 0) offCtx.moveTo(p.x, p.y);
+    else offCtx.lineTo(p.x, p.y);
+  });
+  offCtx.closePath();
+  offCtx.save();
+  offCtx.clip();
+
+  // 青瓷梅子青/粉青立体球面渐变
+  const bodyGrad = offCtx.createRadialGradient(-52, -18, 18, 12, 15, 185);
+  bodyGrad.addColorStop(0, '#c7dfd4');
+  bodyGrad.addColorStop(0.32, '#95bcad');
+  bodyGrad.addColorStop(0.68, '#668f80');
+  bodyGrad.addColorStop(0.92, '#3d5d52');
+  bodyGrad.addColorStop(1, '#294139');
+  offCtx.fillStyle = bodyGrad;
+  offCtx.fillRect(-170, -100, 340, 210);
+
+  // 圈足分界暗线与胎足质感
+  offCtx.fillStyle = 'rgba(20, 34, 29, 0.45)';
+  offCtx.fillRect(-60, 76, 120, 22);
+  offCtx.strokeStyle = 'rgba(210, 230, 220, 0.35)';
+  offCtx.lineWidth = 1.5;
+  offCtx.beginPath();
+  offCtx.moveTo(-48, 78);
+  offCtx.quadraticCurveTo(0, 82, 48, 78);
+  offCtx.stroke();
+
+  // 温润釉面高光带（左侧柔光反射）
+  const specGrad = offCtx.createLinearGradient(-115, -55, -35, 55);
+  specGrad.addColorStop(0, 'rgba(255,255,255,0.46)');
+  specGrad.addColorStop(0.5, 'rgba(255,255,255,0.16)');
+  specGrad.addColorStop(1, 'rgba(255,255,255,0)');
+  offCtx.fillStyle = specGrad;
+  offCtx.beginPath();
+  offCtx.ellipse(-74, -6, 32, 58, -0.28, 0, Math.PI * 2);
+  offCtx.fill();
+
+  offCtx.restore();
+
+  // 碗口玉质感描边
+  offCtx.beginPath();
+  offCtx.moveTo(-152, -66);
+  offCtx.quadraticCurveTo(0, -50, 152, -66);
+  offCtx.strokeStyle = '#e2f1ea';
+  offCtx.lineWidth = 3;
+  offCtx.stroke();
+
+  offCtx.restore();
+}
+rebuildBowlTexture();
+
+// 点是否在局部碗多边形内
+function pointInPoly(pt, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const xi = poly[i].x, yi = poly[i].y;
+    const xj = poly[j].x, yj = poly[j].y;
+    const intersect = ((yi > pt.y) !== (yj > pt.y)) &&
+      (pt.x < (xj - xi) * (pt.y - yi) / (yj - yi + 1e-9) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+// Sutherland-Hodgman 半平面裁剪：保留满足 (p - mid) · normal <= 0 的半平面
+function clipPolygonBisector(poly, seedA, seedB) {
+  const mx = (seedA.x + seedB.x) * 0.5;
+  const my = (seedA.y + seedB.y) * 0.5;
+  const nx = seedB.x - seedA.x;
+  const ny = seedB.y - seedA.y;
+  const out = [];
+  const n = poly.length;
+  if (n === 0) return out;
+
+  for (let i = 0; i < n; i++) {
+    const cur = poly[i];
+    const prev = poly[(i + n - 1) % n];
+    const dCur = (cur.x - mx) * nx + (cur.y - my) * ny;
+    const dPrev = (prev.x - mx) * nx + (prev.y - my) * ny;
+    if (dCur <= 0) {
+      if (dPrev > 0) {
+        const t = dPrev / (dPrev - dCur + 1e-9);
+        out.push({ x: prev.x + (cur.x - prev.x) * t, y: prev.y + (cur.y - prev.y) * t });
+      }
+      out.push(cur);
+    } else if (dPrev <= 0) {
+      const t = dPrev / (dPrev - dCur + 1e-9);
+      out.push({ x: prev.x + (cur.x - prev.x) * t, y: prev.y + (cur.y - prev.y) * t });
+    }
+  }
+  return out;
+}
+
+// 计算多边形面积与质心
+function computePolyMetrics(poly) {
+  let area = 0, cx = 0, cy = 0;
+  for (let i = 0, n = poly.length; i < n; i++) {
+    const p0 = poly[i], p1 = poly[(i + 1) % n];
+    const cross = p0.x * p1.y - p1.x * p0.y;
+    area += cross;
+    cx += (p0.x + p1.x) * cross;
+    cy += (p0.y + p1.y) * cross;
+  }
+  area *= 0.5;
+  if (Math.abs(area) < 1e-3) return { area: 0, cx: poly[0]?.x || 0, cy: poly[0]?.y || 0 };
+  return { area: Math.abs(area), cx: cx / (6 * area), cy: cy / (6 * area) };
+}
+
+// 状态机：'intact' | 'falling' | 'settled' | 'returning' | 'gilding'
+let state = 'intact';
+let shards = [];
+let activeSeams = [];      // 本次断裂新增的裂缝线段
+let historicalSeams = [];  // 历次修复累积保留在碗上的金线
+let dustParticles = [];    // 碎裂瞬间的青瓷釉屑粒子
+let repairCount = 0;
+let stateTimer = 0;
+let sheenProgress = -1;    // 修复完成时金光扫过进度
+
+// 空气中漂浮的微尘氛围粒子
+const ambientMotes = Array.from({ length: 28 }, () => ({
+  x: Math.random(), y: Math.random() * 0.75, r: 0.8 + Math.random() * 1.4, p: Math.random() * 6.28
+}));
+
+function updateHUD() {
+  document.getElementById('valShards').textContent = String(shards.length || 1);
+  document.getElementById('valSeams').textContent = String(historicalSeams.length + activeSeams.length);
+  document.getElementById('valRepairs').textContent = String(repairCount);
+  const repairBtn = document.getElementById('repairBtn');
+  repairBtn.disabled = !(state === 'falling' || state === 'settled');
+}
+
+// 核心函数：在局部点击点 (lx, ly) 实时生成 Voronoi 碎裂与裂缝图
+function fractureAt(lx, ly) {
+  playCrackSound();
+  const targetCount = 26 + Math.floor(Math.random() * 10); // 26~35 片
+  const seeds = [{ x: lx, y: ly }];
+
+  let attempts = 0;
+  while (seeds.length < targetCount && attempts < 600) {
+    attempts++;
+    let sx, sy;
+    // 62% 概率在冲击点附近按距离偏置采样（越靠近点击点越密集越碎）
+    if (Math.random() < 0.62) {
+      const ang = Math.random() * Math.PI * 2;
+      const rad = Math.pow(Math.random(), 1.55) * 145;
+      sx = lx + Math.cos(ang) * rad;
+      sy = ly + Math.sin(ang) * rad;
+    } else {
+      sx = -148 + Math.random() * 296;
+      sy = -64 + Math.random() * 156;
+    }
+    if (!pointInPoly({ x: sx, y: sy }, LOCAL_BOWL_POLY)) continue;
+    // 避免种子过近导致退化微片
+    const tooClose = seeds.some(s => Math.hypot(s.x - sx, s.y - sy) < 15);
+    if (!tooClose) seeds.push({ x: sx, y: sy });
+  }
+
+  const newShards = [];
+  const seamMap = new Map();
+
+  for (let i = 0; i < seeds.length; i++) {
+    let cell = LOCAL_BOWL_POLY.slice();
+    for (let j = 0; j < seeds.length; j++) {
+      if (i === j) continue;
+      cell = clipPolygonBisector(cell, seeds[i], seeds[j]);
+      if (cell.length < 3) break;
+    }
+    const { area, cx, cy } = computePolyMetrics(cell);
+    if (area < 18) continue;
+
+    // 收集内部裂缝边（两端点都在碗内部而非外轮廓边）
+    for (let k = 0; k < cell.length; k++) {
+      const a = cell[k], b = cell[(k + 1) % cell.length];
+      const len = Math.hypot(b.x - a.x, b.y - a.y);
+      if (len < 4) continue;
+      const midX = (a.x + b.x) * 0.5, midY = (a.y + b.y) * 0.5;
+      // 判断中点是否严格在碗内（距离外边界 > 2.5px）
+      let onBoundary = false;
+      for (let m = 0; m < LOCAL_BOWL_POLY.length; m++) {
+        const p1 = LOCAL_BOWL_POLY[m], p2 = LOCAL_BOWL_POLY[(m + 1) % LOCAL_BOWL_POLY.length];
+        const dx = p2.x - p1.x, dy = p2.y - p1.y;
+        const l2 = dx * dx + dy * dy + 1e-6;
+        const proj = Math.max(0, Math.min(1, ((midX - p1.x) * dx + (midY - p1.y) * dy) / l2));
+        const dist = Math.hypot(midX - (p1.x + proj * dx), midY - (p1.y + proj * dy));
+        if (dist < 2.8) { onBoundary = true; break; }
+      }
+      if (!onBoundary) {
+        const key = [
+          Math.round(Math.min(a.x, b.x)), Math.round(Math.min(a.y, b.y)),
+          Math.round(Math.max(a.x, b.x)), Math.round(Math.max(a.y, b.y))
+        ].join('_');
+        if (!seamMap.has(key)) {
+          const distFromImpact = Math.hypot(midX - lx, midY - ly);
+          // 为裂缝加入自然的陶瓷应力折点
+          const perpX = -(b.y - a.y) / len, perpY = (b.x - a.x) / len;
+          const jitter = (Math.sin(a.x * 0.37 + b.y * 0.53) * 2.2);
+          seamMap.set(key, {
+            ax: a.x, ay: a.y,
+            mx: midX + perpX * jitter, my: midY + perpY * jitter,
+            bx: b.x, by: b.y,
+            dist: distFromImpact,
+            progress: 0
+          });
+        }
+      }
+    }
+
+    // 计算冲击力赋予的刚体初速度与旋转角速度
+    const dx = cx - lx, dy = cy - ly;
+    const dist = Math.hypot(dx, dy) + 12;
+    const impulse = 190 / (dist + 22);
+    const localVerts = cell.map(p => ({ x: p.x - cx, y: p.y - cy }));
+    const maxRadius = Math.max(...localVerts.map(v => Math.hypot(v.x, v.y)));
+
+    newShards.push({
+      homeX: cx, homeY: cy,
+      x: cx, y: cy,
+      angle: 0,
+      vx: (dx / dist) * impulse * (1.2 + Math.random() * 0.7) + (Math.random() - 0.5) * 1.6,
+      vy: (dy / dist) * impulse * 0.85 - (1.8 + Math.random() * 2.4),
+      va: ((dx >= 0 ? 1 : -1) * (0.04 + Math.random() * 0.08)),
+      verts: localVerts,
+      radius: maxRadius * 0.65,
+      settled: false,
+      startX: cx, startY: cy, startAngle: 0,
+      delay: Math.min(0.35, dist / 420)
+    });
+  }
+
+  // 按离冲击点的距离排序裂缝，使金线从冲击中心向外蔓延生长
+  activeSeams = Array.from(seamMap.values()).sort((a, b) => a.dist - b.dist);
+  shards = newShards;
+
+  // 喷发青瓷釉屑微粒
+  for (let i = 0; i < 42; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const s = 1.5 + Math.random() * 6.5;
+    dustParticles.push({
+      x: lx, y: ly,
+      vx: Math.cos(a) * s, vy: Math.sin(a) * s - 2,
+      r: 1.2 + Math.random() * 2.4,
+      alpha: 1
+    });
+  }
+
+  state = 'falling';
+  stateTimer = 0;
+  document.getElementById('guideBanner').textContent = '碎玉坠案 · 待其止息或点击「鎏金修复」归位';
+  updateHUD();
+}
+
+function startRepairSequence() {
+  if (state !== 'falling' && state !== 'settled') return;
+  shards.forEach(s => {
+    s.startX = s.x;
+    s.startY = s.y;
+    // 将角度归一化到 [-π, π]，使飞回旋转顺滑自然
+    s.startAngle = ((s.angle + Math.PI) % (Math.PI * 2)) - Math.PI;
+  });
+  state = 'returning';
+  stateTimer = 0;
+  document.getElementById('guideBanner').textContent = '残片凌空归位 · 严丝合缝重聚瓷胎';
+  updateHUD();
+}
+
+document.getElementById('repairBtn').addEventListener('click', startRepairSequence);
+document.getElementById('resetBtn').addEventListener('click', () => {
+  state = 'intact';
+  shards = [];
+  activeSeams = [];
+  historicalSeams = [];
+  dustParticles = [];
+  repairCount = 0;
+  sheenProgress = -1;
+  document.getElementById('guideBanner').textContent = '轻叩青瓷碗身任意处 · 观其碎裂与鎏金重圆';
+  updateHUD();
+});
+
+cvs.addEventListener('pointerdown', e => {
+  const rect = cvs.getBoundingClientRect();
+  const px = e.clientX - rect.left;
+  const py = e.clientY - rect.top;
+  const lx = (px - centerX) / bowlScale;
+  const ly = (py - bowlCenterY) / bowlScale;
+
+  if (state === 'intact') {
+    if (pointInPoly({ x: lx, y: ly }, LOCAL_BOWL_POLY)) {
+      fractureAt(lx, ly);
+    } else {
+      // 点击碗外任意处也在碗心偏随机位置触发碎裂，方便测试与移动端操作
+      fractureAt((Math.random() - 0.5) * 90, (Math.random() - 0.5) * 50);
+    }
+  } else if (state === 'settled') {
+    startRepairSequence();
+  }
+});
+
+// 绘制单条液态金线（含深金底层、24K亮金芯与闪烁金粉微光）
+function drawGoldSeam(ctx, seam, prog, pulse) {
+  if (prog <= 0) return;
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // 计算部分生长的二次贝塞尔终点
+  const t = Math.min(1, prog);
+  const qx = (1 - t) * seam.ax + t * seam.mx;
+  const qy = (1 - t) * seam.ay + t * seam.my;
+  const ex = (1 - t) * (1 - t) * seam.ax + 2 * (1 - t) * t * seam.mx + t * t * seam.bx;
+  const ey = (1 - t) * (1 - t) * seam.ay + 2 * (1 - t) * t * seam.my + t * t * seam.by;
+
+  // 外层金晕
+  ctx.beginPath();
+  ctx.moveTo(seam.ax, seam.ay);
+  ctx.quadraticCurveTo(qx, qy, ex, ey);
+  ctx.strokeStyle = 'rgba(217, 119, 6, 0.55)';
+  ctx.lineWidth = 4.2;
+  ctx.stroke();
+
+  // 中层 24K 黄金漆
+  ctx.strokeStyle = '#f5c563';
+  ctx.lineWidth = 2.3;
+  ctx.stroke();
+
+  // 内层液态高光芯
+  ctx.strokeStyle = `rgba(255, 248, 196, ${0.7 + 0.25 * Math.sin(pulse + seam.dist * 0.1)})`;
+  ctx.lineWidth = 1.1;
+  ctx.stroke();
+
+  // 生长前端的流金亮珠
+  if (prog < 1) {
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(ex, ey, 2.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+let clock = 0;
+function renderLoop() {
+  clock += 0.016;
+  ctx.clearRect(0, 0, W, H);
+
+  // 1. 绘制飘浮金尘氛围粒子
+  ambientMotes.forEach((m, idx) => {
+    const x = ((m.x * W + Math.sin(clock * 0.4 + m.p) * 18) + W) % W;
+    const y = m.y * H + Math.cos(clock * 0.3 + idx) * 10;
+    const a = 0.18 + 0.15 * Math.sin(clock * 1.5 + m.p);
+    ctx.fillStyle = `rgba(245, 197, 99, ${a})`;
+    ctx.beginPath();
+    ctx.arc(x, y, m.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // 2. 绘制中式黑胡桃大漆案几与漆面倒影
+  const deskGrad = ctx.createLinearGradient(0, tableY, 0, H);
+  deskGrad.addColorStop(0, '#1e1916');
+  deskGrad.addColorStop(0.06, '#14100e');
+  deskGrad.addColorStop(1, '#070605');
+  ctx.fillStyle = deskGrad;
+  ctx.fillRect(0, tableY, W, H - tableY);
+
+  // 案几前缘温润高光木纹线
+  ctx.strokeStyle = 'rgba(245, 197, 99, 0.24)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, tableY);
+  ctx.lineTo(W, tableY);
+  ctx.stroke();
+
+  // 案几上的环境投影与青瓷漆面倒影
+  ctx.save();
+  ctx.translate(centerX, tableY + 6 * bowlScale);
+  ctx.scale(bowlScale, bowlScale);
+  const shadowAlpha = state === 'falling' || state === 'settled' ? 0.38 : 0.65;
+  const shGrad = ctx.createRadialGradient(0, 0, 10, 0, 0, 155);
+  shGrad.addColorStop(0, `rgba(0, 0, 0, ${shadowAlpha})`);
+  shGrad.addColorStop(0.6, 'rgba(5, 8, 7, 0.25)');
+  shGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = shGrad;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 155, 22, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // 3. 局部碗坐标系绘制
+  ctx.save();
+  ctx.translate(centerX, bowlCenterY);
+  ctx.scale(bowlScale, bowlScale);
+
+  const localFloorY = (tableY - bowlCenterY) / bowlScale; // 约 +94
+
+  if (state === 'intact') {
+    // 完整青瓷碗
+    ctx.drawImage(offBowl, -OFF_CX, -OFF_CY);
+    // 绘制历次保留的金色裂纹
+    historicalSeams.forEach(s => drawGoldSeam(ctx, s, 1, clock * 3));
+
+    // 修复完成后的金光扫掠特效
+    if (sheenProgress >= 0 && sheenProgress <= 1.2) {
+      sheenProgress += 0.025;
+      const sx = -180 + sheenProgress * 360;
+      ctx.save();
+      ctx.beginPath();
+      LOCAL_BOWL_POLY.forEach((p, idx) => idx === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+      ctx.closePath();
+      ctx.clip();
+      const g = ctx.createLinearGradient(sx - 35, -80, sx + 35, 90);
+      g.addColorStop(0, 'rgba(255, 243, 176, 0)');
+      g.addColorStop(0.5, 'rgba(255, 243, 176, 0.38)');
+      g.addColorStop(1, 'rgba(255, 243, 176, 0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(-170, -90, 340, 200);
+      ctx.restore();
+    }
+  } else if (state === 'falling' || state === 'settled') {
+    // 更新每块刚体碎片的重力坠落与案几碰撞
+    let allSettled = true;
+    shards.forEach(s => {
+      if (!s.settled) {
+        s.vy += 0.36; // 重力加速度
+        s.x += s.vx;
+        s.y += s.vy;
+        s.angle += s.va;
+
+        // 计算刚体碎片最低顶点在局部坐标中的 y 值
+        const cos = Math.cos(s.angle), sin = Math.sin(s.angle);
+        let maxVertY = -Infinity;
+        for (let i = 0; i < s.verts.length; i++) {
+          const vy = s.y + s.verts[i].x * sin + s.verts[i].y * cos;
+          if (vy > maxVertY) maxVertY = vy;
+        }
+
+        // 与案几台面发生碰撞（允许在台面前后略微散落）
+        const stopY = localFloorY + 6 + (Math.abs(s.homeX) * 0.08);
+        if (maxVertY >= stopY) {
+          s.y -= (maxVertY - stopY);
+          if (Math.abs(s.vy) > 1.3) {
+            playClinkSound(Math.abs(s.vy) / 10);
+            s.vy = -s.vy * 0.32;
+            s.vx *= 0.72;
+            s.va *= 0.65;
+          } else {
+            s.vy = 0;
+            s.vx *= 0.82;
+            s.va *= 0.75;
+            if (Math.abs(s.vx) < 0.06 && Math.abs(s.va) < 0.004) {
+              s.vx = 0; s.va = 0; s.settled = true;
+            }
+          }
+        }
+
+        // 限制水平边界不飞出画布
+        const maxLocalX = (W * 0.46) / bowlScale;
+        if (Math.abs(s.x) > maxLocalX) {
+          s.x = Math.sign(s.x) * maxLocalX;
+          s.vx = -s.vx * 0.5;
+        }
+      }
+      if (!s.settled) allSettled = false;
+    });
+
+    if (state === 'falling' && allSettled) {
+      state = 'settled';
+      stateTimer = 0;
+      document.getElementById('guideBanner').textContent = '碎片已静置案几 · 即将自动飞回或点击「鎏金修复」';
+      updateHUD();
+    } else if (state === 'settled') {
+      stateTimer += 0.016;
+      // 静止 1.1 秒后自动触发飞回修复，保证观赏节奏连贯
+      if (stateTimer >= 1.1) startRepairSequence();
+    }
+
+    // 绘制所有碎片（含灰白瓷胎断面厚度与表面釉色）
+    shards.forEach(s => {
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(s.angle);
+
+      // 瓷胎断面厚度层 (Ceramic bisque edge thickness)
+      ctx.beginPath();
+      s.verts.forEach((v, idx) => idx === 0 ? ctx.moveTo(v.x + 2, v.y + 3) : ctx.lineTo(v.x + 2, v.y + 3));
+      ctx.closePath();
+      ctx.fillStyle = '#d6d3c9';
+      ctx.fill();
+      ctx.strokeStyle = '#57534e';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+
+      // 碎片正面青瓷釉面剪切
+      ctx.beginPath();
+      s.verts.forEach((v, idx) => idx === 0 ? ctx.moveTo(v.x, v.y) : ctx.lineTo(v.x, v.y));
+      ctx.closePath();
+      ctx.save();
+      ctx.clip();
+      ctx.drawImage(offBowl, -OFF_CX - s.homeX, -OFF_CY - s.homeY);
+      // 碎片上保留的历史金线一并跟随移动
+      ctx.translate(-s.homeX, -s.homeY);
+      historicalSeams.forEach(sm => drawGoldSeam(ctx, sm, 1, clock * 3));
+      ctx.restore();
+
+      // 断面微光描边
+      ctx.strokeStyle = 'rgba(230, 242, 236, 0.55)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
+    });
+  } else if (state === 'returning') {
+    stateTimer += 0.018;
+    let allHome = true;
+
+    shards.forEach(s => {
+      const localT = Math.max(0, Math.min(1, (stateTimer - s.delay) / 0.85));
+      if (localT < 1) allHome = false;
+      // 缓出三次方插值 + 凌空微弧线
+      const ease = 1 - Math.pow(1 - localT, 3);
+      const arcLift = Math.sin(localT * Math.PI) * -28;
+      s.x = s.startX + (s.homeX - s.startX) * ease;
+      s.y = s.startY + (s.homeY - s.startY) * ease + arcLift;
+      s.angle = s.startAngle * (1 - ease);
+
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(s.angle);
+      ctx.beginPath();
+      s.verts.forEach((v, idx) => idx === 0 ? ctx.moveTo(v.x, v.y) : ctx.lineTo(v.x, v.y));
+      ctx.closePath();
+      ctx.save();
+      ctx.clip();
+      ctx.drawImage(offBowl, -OFF_CX - s.homeX, -OFF_CY - s.homeY);
+      ctx.translate(-s.homeX, -s.homeY);
+      historicalSeams.forEach(sm => drawGoldSeam(ctx, sm, 1, clock * 3));
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(40, 58, 52, 0.65)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    if (allHome) {
+      state = 'gilding';
+      stateTimer = 0;
+      document.getElementById('guideBanner').textContent = '金泥循隙生长 · 化裂痕为金络';
+    }
+  } else if (state === 'gilding') {
+    stateTimer += 0.018;
+    // 先绘已归位的原碗与素胎裂痕底线
+    ctx.drawImage(offBowl, -OFF_CX, -OFF_CY);
+    historicalSeams.forEach(s => drawGoldSeam(ctx, s, 1, clock * 3));
+
+    let allGilded = true;
+    const totalSeams = activeSeams.length || 1;
+    activeSeams.forEach((seam, idx) => {
+      // 先画未填金的深色裂隙
+      ctx.beginPath();
+      ctx.moveTo(seam.ax, seam.ay);
+      ctx.quadraticCurveTo(seam.mx, seam.my, seam.bx, seam.by);
+      ctx.strokeStyle = 'rgba(20, 30, 27, 0.75)';
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+
+      const startOffset = (idx / totalSeams) * 0.75;
+      const prog = Math.max(0, Math.min(1, (stateTimer - startOffset) / 0.55));
+      seam.progress = prog;
+      if (prog < 1) allGilded = false;
+      drawGoldSeam(ctx, seam, prog, clock * 4);
+    });
+
+    if (allGilded) {
+      historicalSeams.push(...activeSeams);
+      activeSeams = [];
+      repairCount++;
+      state = 'intact';
+      sheenProgress = 0;
+      playChimeSound();
+      document.getElementById('guideBanner').textContent = `第 ${repairCount} 次金缮重圆完成 · 点击碗身可再次打碎叠加金络`;
+      updateHUD();
+    }
+  }
+
+  // 绘制碎裂瞬间的青瓷釉屑粒子
+  for (let i = dustParticles.length - 1; i >= 0; i--) {
+    const p = dustParticles[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.18; p.alpha -= 0.024;
+    if (p.alpha <= 0) { dustParticles.splice(i, 1); continue; }
+    ctx.fillStyle = `rgba(210, 235, 224, ${p.alpha})`;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+  requestAnimationFrame(renderLoop);
+}
+
+updateHUD();
+requestAnimationFrame(renderLoop);
+</script>
+</body>
+</html>

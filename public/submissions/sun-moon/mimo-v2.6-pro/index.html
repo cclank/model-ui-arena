@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>日出日落与月相</title>
+<style>
+  :root { --bg:#0d1428; --card:#151f3a; --ink:#eaf0ff; --sub:#8fa3cc; --acc:#ffd166; --acc2:#7fd7ff; --line:#2a3a62; }
+  @media (prefers-color-scheme: light) { :root { --bg:#eef2f9; --card:#ffffff; --ink:#20304d; --sub:#6b7f9e; --acc:#c98a12; --acc2:#1a7fb8; --line:#d5dfef; } }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--ink); min-height:100vh; display:flex; justify-content:center; padding:14px 10px 26px;
+         font-family:"Avenir Next","PingFang SC","Microsoft YaHei",sans-serif; overflow-x:hidden; }
+  main { width:100%; max-width:430px; display:flex; flex-direction:column; gap:10px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:12px 13px; }
+  h1 { font-size:17px; letter-spacing:4px; }
+  .sub { color:var(--sub); font-size:11px; letter-spacing:1px; margin-top:2px; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chips button { border:1px solid var(--line); background:transparent; color:var(--ink); font-family:inherit; font-size:12px;
+                  padding:6px 11px; border-radius:999px; cursor:pointer; }
+  .chips button:hover { border-color:var(--acc); color:var(--acc); }
+  .chips button:focus-visible, input:focus-visible { outline:2px solid var(--acc); outline-offset:2px; }
+  .ins { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  label { display:flex; flex-direction:column; gap:3px; font-size:11px; color:var(--sub); letter-spacing:1px; }
+  input { font-family:inherit; font-size:13.5px; background:transparent; border:1px solid var(--line); border-radius:9px;
+          color:var(--ink); padding:7px 8px; width:100%; }
+  svg { display:block; width:100%; height:auto; }
+  .row { display:flex; gap:12px; align-items:center; }
+  .diskBox { width:112px; flex:none; }
+  .stats { flex:1; display:grid; grid-template-columns:1fr 1fr; gap:6px 10px; font-size:12px; }
+  .stats div { display:flex; justify-content:space-between; border-bottom:1px dashed var(--line); padding-bottom:3px; }
+  .stats b { color:var(--acc); font-variant-numeric:tabular-nums; font-weight:600; }
+  #q-result { font-size:13.5px; line-height:1.8; letter-spacing:.4px; border-left:3px solid var(--acc); padding-left:10px; }
+  .slider { display:flex; align-items:center; gap:8px; font-size:11px; color:var(--sub); letter-spacing:1px; }
+  .slider input { padding:0; border:0; }
+  .foot { color:var(--sub); font-size:10px; text-align:center; letter-spacing:1px; }
+</style>
+</head>
+<body>
+<main>
+  <section class="card">
+    <h1>日出日落 · 月相</h1>
+    <div class="sub">NOAA 太阳算法 ±2 分钟 · Meeus 月相 · 默认北京</div>
+  </section>
+  <section class="card chips" id="presets"></section>
+  <section class="card ins">
+    <label>纬度 LAT<input id="q-lat" type="number" min="-90" max="90" step="any" value="39.9042"></label>
+    <label>经度 LON<input id="q-lon" type="number" min="-180" max="180" step="any" value="116.4074"></label>
+    <label>日期 DATE<input id="q-date" type="date"></label>
+    <label>时区 TZ<input id="q-tz" type="number" step="0.5" value="8"></label>
+  </section>
+  <section class="card">
+    <svg id="dome" viewBox="0 0 360 168" aria-label="天穹太阳轨迹">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+          <stop id="sky0" offset="0" stop-color="#28376b"/><stop id="sky1" offset="1" stop-color="#5a73ad"/>
+        </linearGradient>
+        <radialGradient id="sunG"><stop offset="0" stop-color="#fff6d8"/><stop offset=".55" stop-color="#ffd166"/><stop offset="1" stop-color="#ffd166" stop-opacity="0"/></radialGradient>
+      </defs>
+      <rect x="0" y="0" width="360" height="168" rx="10" fill="url(#sky)"/>
+      <g id="stars" fill="#dce6ff"></g>
+      <path id="dayArc" fill="none" stroke="#ffffff" stroke-opacity=".35" stroke-width="1.2" stroke-dasharray="3 4"/>
+      <path id="nightArc" fill="none" stroke="#ffffff" stroke-opacity=".22" stroke-width="1" stroke-dasharray="2 5"/>
+      <line x1="10" y1="132" x2="350" y2="132" stroke="#ffffff" stroke-opacity=".5" stroke-width="1.4"/>
+      <text x="14" y="147" fill="#dce6ff" font-size="9">西</text><text x="338" y="147" fill="#dce6ff" font-size="9">东</text>
+      <g id="marks" font-size="9" fill="#eaf0ff" text-anchor="middle"></g>
+      <g id="moonG" opacity="0"><circle r="7" fill="#d8dfef"/><circle id="moonShade" r="7" fill="#26325a"/></g>
+      <g id="sunG2"><circle id="sunHalo" r="13" fill="url(#sunG)"/><circle id="sun" r="5.2" fill="#fff3c4"/></g>
+    </svg>
+    <div class="slider">0 时<input id="tslider" type="range" min="0" max="1439" value="720">24 时　<b id="tnow" style="color:var(--acc)">12:00</b></div>
+  </section>
+  <section class="card row">
+    <div class="diskBox">
+      <svg id="disk" viewBox="-62 -62 124 124" aria-label="月相盘">
+        <defs><radialGradient id="mg" cx=".38" cy=".35"><stop offset="0" stop-color="#2e3a63"/><stop offset="1" stop-color="#141c36"/></radialGradient></defs>
+        <circle r="52" fill="url(#mg)"/>
+        <g id="litG" fill="#f7f0cd"><path id="litP"/></g>
+        <circle r="52" fill="none" stroke="#0a0f22" stroke-width="2.5" stroke-opacity=".6"/>
+      </svg>
+    </div>
+    <div class="stats" id="stats"></div>
+  </section>
+  <section class="card"><div id="q-result"></div></section>
+  <div class="foot">所有数值由页面内代码实时计算 · 无接口无查表</div>
+</main>
+<script>
+  const $ = i => document.getElementById(i), D2R = Math.PI / 180, R2D = 180 / Math.PI, MS = 864e5;
+  // ============ 太阳：NOAA 算法（时差 + 赤纬，两次迭代求日出日落） ============
+  const jdOf = (y, m, d, ut) => Date.UTC(y, m - 1, d) / MS + 2440587.5 + ut / 24;
+  function solar(jd, lon, tz) {
+    const jc = (jd - 2451545) / 36525;
+    const L0 = (280.46646 + jc * (36000.76983 + jc * 0.0003032)) % 360, M = 357.52911 + jc * (35999.05029 - 0.0001537 * jc);
+    const e = 0.016708634 - jc * (0.000042037 + 0.0000001267 * jc);
+    const C = Math.sin(M * D2R) * (1.914602 - jc * (0.004817 + 0.000014 * jc)) + Math.sin(2 * M * D2R) * (0.019993 - 0.000101 * jc) + Math.sin(3 * M * D2R) * 0.000289;
+    const omega = (125.04 - 1934.136 * jc) * D2R, appLong = L0 + C - 0.00569 - 0.00478 * Math.sin(omega);
+    const obliq = 23 + (26 + (21.448 - jc * (46.815 + jc * (0.00059 - jc * 0.001813))) / 60) / 60 + 0.00256 * Math.cos(omega);
+    const decl = Math.asin(Math.sin(obliq * D2R) * Math.sin(appLong * D2R)) * R2D, y2 = Math.tan((obliq / 2) * D2R) ** 2;
+    const eqt = 4 * R2D * (y2 * Math.sin(2 * L0 * D2R) - 2 * e * Math.sin(M * D2R) + 4 * e * y2 * Math.sin(M * D2R) * Math.cos(2 * L0 * D2R)
+      - 0.5 * y2 * y2 * Math.sin(4 * L0 * D2R) - 1.25 * e * e * Math.sin(2 * M * D2R));
+    return { noon: 720 - 4 * lon - eqt + tz * 60, decl };
+  }
+  function hourAngle(lat, decl) {   // 太阳中心高度 -0.833°（含折射与视半径）
+    const c = Math.cos(90.833 * D2R) / (Math.cos(lat * D2R) * Math.cos(decl * D2R)) - Math.tan(lat * D2R) * Math.tan(decl * D2R);
+    return c > 1 ? { polar: "极夜" } : c < -1 ? { polar: "极昼" } : { ha: Math.acos(c) * R2D };
+  }
+  function sunTimes(y, m, d, lat, lon, tz) {
+    let s = solar(jdOf(y, m, d, 12 - tz), lon, tz), h = hourAngle(lat, s.decl);
+    if (h.polar) return { ...h, decl: s.decl, noon: s.noon };
+    let rise = s.noon - h.ha * 4, set = s.noon + h.ha * 4;
+    for (let i = 0; i < 2; i++) {
+      const sr = solar(jdOf(y, m, d, rise / 60 - tz), lon, tz), hr = hourAngle(lat, sr.decl);
+      const ss = solar(jdOf(y, m, d, set / 60 - tz), lon, tz), hs = hourAngle(lat, ss.decl);
+      if (hr.polar || hs.polar) return { ...(hr.polar ? hr : hs), decl: s.decl, noon: s.noon };
+      rise = sr.noon - hr.ha * 4; set = ss.noon + hs.ha * 4;
+    }
+    return { rise, set, decl: s.decl, noon: s.noon };
+  }
+  // ============ 月相：Meeus 48.4（相位角→照亮比，真距角→相位比例） ============
+  const norm = x => ((x % 360) + 360) % 360;
+  function moon(jd) {
+    const T = (jd - 2451545) / 36525;
+    const D = norm(297.8501921 + 445267.1114034 * T - 0.0018819 * T * T), M = norm(357.5291092 + 35999.0502909 * T - 0.0001536 * T * T),
+      Mp = norm(134.9633964 + 477198.8675055 * T + 0.0087414 * T * T);
+    const corr = 6.289 * Math.sin(Mp * D2R) - 2.100 * Math.sin(M * D2R) + 1.274 * Math.sin((2 * D - Mp) * D2R) + 0.658 * Math.sin(2 * D * D2R)
+      + 0.214 * Math.sin(2 * Mp * D2R) + 0.110 * Math.sin(D * D2R);
+    return { k: (1 + Math.cos((180 - D - corr) * D2R)) / 2, p: norm(D + corr) / 360 };
+  }
+  const NAMES = ["新月", "蛾眉月", "上弦月", "盈凸月", "满月", "亏凸月", "下弦月", "残月"];
+  function phaseName(p) {
+    const near = c => Math.min(Math.abs(p - c), Math.abs(p - c - 1), Math.abs(p - c + 1)) <= 0.03;
+    if (near(0)) return "新月"; if (near(0.25)) return "上弦月"; if (near(0.5)) return "满月"; if (near(0.75)) return "下弦月";
+    return p < 0.25 ? "蛾眉月" : p < 0.5 ? "盈凸月" : p < 0.75 ? "亏凸月" : "残月";
+  }
+  const fmt = min => { const t = ((Math.round(min) % 1440) + 1440) % 1440; return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`; };
+  // ============ 月相盘绘制（北半球视角，亮面形状随 p 连续变化） ============
+  function moonPath(p) {
+    const q = p <= 0.5 ? p : 1 - p, R = 52, x = Math.cos(2 * Math.PI * q), rx = Math.abs(x) * R, sw = x > 0 ? 0 : 1;
+    const d = `M 0 ${-R} A ${R} ${R} 0 0 1 0 ${R} A ${rx.toFixed(2)} ${R} 0 0 ${sw} 0 ${-R} Z`;
+    $("litP").setAttribute("d", d);
+    $("litG").setAttribute("transform", p > 0.5 ? "scale(-1,1)" : "");
+  }
+  // ============ 天穹绘制 ============
+  const CX = [24, 180, 336], Y0 = 132;
+  function qPoint(apex, t) { const cy = Y0 - 2 * apex; const u = 1 - t;
+    return [u * u * CX[0] + 2 * u * t * CX[1] + t * t * CX[2], u * u * Y0 + 2 * u * t * cy + t * t * Y0]; }
+  let stars = "";
+  for (let i = 0; i < 26; i++) stars += `<circle cx="${(i * 53) % 352 + 4}" cy="${(i * 37) % 96 + 4}" r="${i % 5 ? 0.7 : 1.2}"/>`;
+  $("stars").innerHTML = stars;
+  function drawSky(cur, st, lat) {
+    const H = (cur - st.noon) / 4 * D2R, dec = st.decl * D2R, phi = lat * D2R;
+    const alt = Math.asin(Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H)) * R2D;
+    const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+    const C = alt > 14 ? [[24, 44, 96], [96, 150, 214]] : alt > 2 ? [mix([40, 40, 90], [24, 44, 96], (alt - 2) / 12), mix([235, 150, 90], [96, 150, 214], (alt - 2) / 12)]
+      : alt > -6 ? [mix([16, 20, 55], [40, 40, 90], (alt + 6) / 8), mix([210, 105, 75], [235, 150, 90], (alt + 6) / 8)] : [[10, 14, 38], [26, 34, 68]];
+    const hex = c => "#" + c.map(v => v.toString(16).padStart(2, "0")).join("");
+    $("sky0").setAttribute("stop-color", hex(C[0])); $("sky1").setAttribute("stop-color", hex(C[1]));
+    $("stars").setAttribute("opacity", alt > 0 ? 0 : Math.min(1, -alt / 6));
+    $("dayArc").setAttribute("d", `M ${CX[0]} ${Y0} Q ${CX[1]} ${Y0 - 2 * (36 + 58 * Math.sin(Math.max(6, 90 - Math.abs(lat - st.decl)) * D2R))} ${CX[2]} ${Y0}`);
+    $("nightArc").setAttribute("d", `M ${CX[2]} ${Y0} Q ${CX[1]} ${Y0 - 70} ${CX[0]} ${Y0}`);
+    $("marks").innerHTML = ["日出", "正午", "日落"].map((s, i) => {
+      const [x, y] = qPoint(36 + 58 * Math.sin(Math.max(6, 90 - Math.abs(lat - st.decl)) * D2R), i / 2);
+      return `<circle cx="${x}" cy="${y}" r="2" fill="#ffd166"/><text x="${x}" y="${y - 7}">${s}</text>`;
+    }).join("");
+    const day = !st.polar && cur >= st.rise && cur <= st.set;
+    const apex = 36 + 58 * Math.sin(Math.max(6, 90 - Math.abs(lat - st.decl)) * D2R);
+    if (day && st.rise != null) {
+      const t = (cur - st.rise) / (st.set - st.rise), [x, y] = qPoint(apex, Math.min(1, Math.max(0, t)));
+      $("sunG2").setAttribute("transform", `translate(${x},${y})`); $("sunG2").setAttribute("opacity", 1); $("moonG").setAttribute("opacity", 0);
+    } else if (!st.polar) {
+      const nlen = (st.rise + 1440 - st.set) % 1440 || 1, tn = (((cur - st.set) % 1440) + 1440) % 1440 / nlen;
+      const [x, y] = qPoint(70, 1 - Math.min(1, Math.max(0, tn)));
+      $("moonG").setAttribute("transform", `translate(${x},${y})`); $("moonG").setAttribute("opacity", 1); $("sunG2").setAttribute("opacity", 0);
+    } else { $("sunG2").setAttribute("opacity", st.polar === "极昼" ? 1 : 0); $("moonG").setAttribute("opacity", st.polar === "极昼" ? 0 : 1); }
+  }
+  // ============ 主计算 ============
+  const CITIES = [["北京", 39.9042, 116.4074, 8], ["上海", 31.2304, 121.4737, 8], ["乌鲁木齐", 43.8256, 87.6168, 8], ["新德里", 28.6139, 77.209, 5.5],
+    ["伦敦", 51.5074, -0.1278, 1], ["悉尼", -33.8688, 151.2093, 10], ["雷克雅未克", 64.1466, -21.9426, 0], ["特罗姆瑟", 69.6496, 18.956, 1]];
+  $("presets").innerHTML = CITIES.map((c, i) => `<button data-i="${i}">${c[0]}</button>`).join("");
+  $("presets").onclick = e => { const b = e.target.closest("button"); if (!b) return;
+    const c = CITIES[+b.dataset.i]; $("q-lat").value = c[1]; $("q-lon").value = c[2]; $("q-tz").value = c[3]; compute(); };
+  function compute() {
+    const lat = +$("q-lat").value, lon = +$("q-lon").value, tz = +$("q-tz").value;
+    const [y, m, d] = ($("q-date").value || "").split("-").map(Number);
+    if (!y || [lat, lon, tz].some(Number.isNaN)) { $("q-result").textContent = "请输入有效的纬度、经度、日期与时区"; return; }
+    const st = sunTimes(y, m, d, lat, lon, tz), mo = moon(jdOf(y, m, d, 12 - tz));
+    const name = phaseName(mo.p), k = Math.round(mo.k * 100);
+    // 结果行（自动校验入口）
+    $("q-result").textContent = st.polar
+      ? `日出：${st.polar} · 日落：${st.polar} · 月相：${name} · 照亮：${k}%`
+      : `日出：${fmt(st.rise)} · 日落：${fmt(st.set)} · 月相：${name} · 照亮：${k}%`;
+    moonPath(mo.p);
+    $("moonShade").setAttribute("cx", 7 * Math.cos(2 * Math.PI * mo.p));  // 顶视小月牙随相位偏移
+    // 统计面板
+    const dayLen = st.polar ? (st.polar === "极昼" ? 1440 : 0) : st.set - st.rise;
+    const prev = sunTimes(...[new Date(Date.UTC(y, m - 1, d - 1)).getUTCFullYear(), new Date(Date.UTC(y, m - 1, d - 1)).getUTCMonth() + 1,
+      new Date(Date.UTC(y, m - 1, d - 1)).getUTCDate()].concat([lat, lon, tz]));
+    const prevLen = prev.polar ? (prev.polar === "极昼" ? 1440 : 0) : prev.set - prev.rise;
+    const noonAlt = 90 - Math.abs(lat - st.decl);
+    $("stats").innerHTML = [
+      ["日出", st.polar || fmt(st.rise)], ["日落", st.polar || fmt(st.set)],
+      ["昼长", dayLen === 1440 ? "极昼 24 时" : dayLen === 0 ? "极夜 0 时" : fmt(dayLen)],
+      ["较昨日", (dayLen - prevLen >= 0 ? "+" : "") + Math.round(dayLen - prevLen) + " 分"],
+      ["正午太阳高度", noonAlt.toFixed(1) + "°"], ["照亮比例", k + "%"],
+      ["黄金时刻", st.polar ? "-" : fmt(st.rise) + "~" + fmt(st.rise + 60)], ["相位比例 p", mo.p.toFixed(3)]
+    ].map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join("");
+    drawSky(+$("tslider").value, st, lat);
+  }
+  ["q-lat", "q-lon", "q-date", "q-tz"].forEach(id => { $(id).addEventListener("input", compute); $(id).addEventListener("change", compute); });
+  $("tslider").addEventListener("input", () => { $("tnow").textContent = fmt(+$("tslider").value); compute(); });
+  (() => { const n = new Date();
+    $("q-date").value = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
+    $("tslider").value = n.getHours() * 60 + n.getMinutes(); $("tnow").textContent = fmt(+$("tslider").value); compute(); })();
+</script>
+</body>
+</html>

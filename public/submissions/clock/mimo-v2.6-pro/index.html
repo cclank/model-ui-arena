@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="eYKe8XlJPkASFTWKB2TVFJ">
+<head data-page-node-id="aCgjE9rQPGCcahCyTIZs5r">
+<meta charset="UTF-8" data-page-node-id="8jMp1xFjvsdNvpIW4BXGye">
+<meta name="viewport" content="width=device-width, initial-scale=1" data-page-node-id="saRi5RDDoepNfWdLMcLdf4">
+<title>星轨时钟</title>
+<style>
+  :root { --bg1:#0d1424; --bg2:#1b2540; --panel:rgba(255,255,255,.06); --ink:#eef2ff; --sub:#8fa0c8; --accent:#ffd166; --hand:#ffffff; --sec:#ff5d73; --ring:rgba(255,255,255,.18); }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
+         background:radial-gradient(120% 90% at 50% 8%, var(--bg2), var(--bg1) 70%); color:var(--ink);
+         font-family:"Avenir Next","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+         transition:background .8s ease, color .8s ease; overflow-x:hidden; padding:16px; }
+  body.day { --bg1:#e9eef7; --bg2:#fdf6e6; --panel:rgba(20,30,60,.05); --ink:#1d2740; --sub:#6b7a9c; --accent:#e08a2e; --hand:#232f52; --sec:#e03e52; --ring:rgba(30,45,90,.16); }
+  .halo { position:fixed; inset:0; pointer-events:none; background:
+          radial-gradient(closest-side, rgba(255,209,102,.10), transparent 70%) center/420px 420px no-repeat;
+          animation:breathe 6s ease-in-out infinite; }
+  @keyframes breathe { 0%,100% { transform:scale(1); opacity:.75; } 50% { transform:scale(1.06); opacity:1; } }
+  .dial { width:min(74vw,320px); aspect-ratio:1; position:relative; filter:drop-shadow(0 18px 40px rgba(0,0,0,.35)); }
+  .dial svg { width:100%; height:100%; display:block; }
+  .plate { fill:var(--panel); stroke:var(--ring); stroke-width:1.4; }
+  .tickM { stroke:var(--sub); stroke-width:1; opacity:.5; }
+  .tickH { stroke:var(--ink); stroke-width:2.6; stroke-linecap:round; }
+  .num { fill:var(--sub); font-size:11px; font-weight:600; text-anchor:middle; dominant-baseline:central; letter-spacing:.5px; }
+  .handH, .handM { stroke:var(--hand); stroke-linecap:round; }
+  .handH { stroke-width:5.5; } .handM { stroke-width:3.2; }
+  .handS { stroke:var(--sec); stroke-width:1.6; stroke-linecap:round; }
+  .cap { fill:var(--sec); } .cap2 { fill:var(--bg1); }
+  .secGlow { stroke:var(--sec); stroke-width:6; opacity:.18; stroke-linecap:round; }
+  .digital { display:flex; align-items:baseline; gap:10px; font-variant-numeric:tabular-nums; }
+  #hhmm { font-size:clamp(34px,9vw,52px); font-weight:250; letter-spacing:3px; }
+  #ss { font-size:clamp(18px,5vw,26px); color:var(--sec); font-weight:500; letter-spacing:1px; }
+  .meta { display:flex; gap:14px; color:var(--sub); font-size:13px; letter-spacing:1px; flex-wrap:wrap; justify-content:center; }
+  .chip { background:var(--panel); border:1px solid var(--ring); border-radius:999px; padding:4px 12px; }
+  .chip b { color:var(--accent); font-weight:600; }
+</style>
+</head>
+<body data-page-node-id="bTi6cdecFk9BQJ3tVys4IU">
+<div class="halo" data-page-node-id="WQ3PmDzB7Th0JcDni9IqdZ"></div>
+<div class="dial" data-page-node-id="TKdLtFSzRNIAuGyMqRhyqG">
+  <svg viewBox="0 0 200 200" aria-label="模拟时钟" data-page-node-id="vxIkyFH0M2QZONwbyMBr2e">
+    <circle class="plate" cx="100" cy="100" r="94" data-page-node-id="mCcyH2FJQsJGcIfHfFEQzr"/>
+    <circle cx="100" cy="100" r="86" fill="none" stroke="var(--ring)" stroke-width=".8" stroke-dasharray="1 5" opacity=".8" data-page-node-id="B8Q9KzqdQKVGccvbJ4EB8X"/>
+    <g id="ticks" data-page-node-id="iCbVMQ1KShrz4FgtkHWkum"></g>
+    <line class="secGlow" id="sGlow" x1="100" y1="118" x2="100" y2="24" data-page-node-id="lLpv80zOlvI5JPHJljoPk6"/>
+    <line class="handH" id="hH" x1="100" y1="108" x2="100" y2="56" data-page-node-id="mwlRT5mqEVm7AAgrajqt1w"/>
+    <line class="handM" id="hM" x1="100" y1="112" x2="100" y2="34" data-page-node-id="IzO0GOGZgs49AB2hjy6eok"/>
+    <line class="handS" id="hS" x1="100" y1="120" x2="100" y2="26" data-page-node-id="VbFscKrW16sTXQzOfXwOs9"/>
+    <circle class="cap" cx="100" cy="100" r="4.6" data-page-node-id="g0JGNUIBdYQ2Sq6Tiev3ZB"/>
+    <circle class="cap2" cx="100" cy="100" r="1.9" data-page-node-id="fF4W2Aa4dbsDnFn3oJPbtx"/>
+  </svg>
+</div>
+<div class="digital" data-page-node-id="2aIX98dq879PQdHXo2BLCG"><span id="hhmm" data-page-node-id="zmg4Y4Q8YoDxBC1pTOWYvu">--:--</span><span id="ss" data-page-node-id="XLurumMMlLdL0W9mwfFLTy">--</span></div>
+<div class="meta" data-page-node-id="CjFa7ZRRdd2ypGW5ytL6EO">
+  <span class="chip" id="dateC" data-page-node-id="QmTVIIWuPdXVf2mwlKlL4Q">----年--月--日</span>
+  <span class="chip" id="weekC" data-page-node-id="kyl95MXsu6eBH5Cz3CumIA">星期-</span>
+  <span class="chip" data-page-node-id="3BiH06aPhJ9E0fJKRPb6sH">时段 <b id="phaseC" data-page-node-id="GukLdbXcrlHLac9BAC5DHA">--</b></span>
+</div>
+<script>
+  const $ = id => document.getElementById(id);
+  // 刻度生成：60 分刻度 + 12 时刻度 + 时标数字
+  const tg = $('ticks');
+  let tick = '';
+  for (let i = 0; i < 60; i++) {
+    const a = i * 6 * Math.PI / 180, isH = i % 5 === 0;
+    const r1 = isH ? 78 : 82, r2 = 86;
+    const x1 = 100 + r1 * Math.sin(a), y1 = 100 - r1 * Math.cos(a);
+    const x2 = 100 + r2 * Math.sin(a), y2 = 100 - r2 * Math.cos(a);
+    tick += `<line class="${isH ? 'tickH' : 'tickM'}" x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}"/>`;
+    if (isH) {
+      const rn = 66, nx = 100 + rn * Math.sin(a), ny = 100 - rn * Math.cos(a);
+      tick += `<text class="num" x="${nx.toFixed(2)}" y="${ny.toFixed(2)}">${i === 0 ? 12 : i / 5}</text>`;
+    }
+  }
+  tg.innerHTML = tick;
+  const WEEK = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+  const PHASE = [[0,'深夜'],[5,'凌晨'],[8,'上午'],[12,'中午'],[13,'下午'],[18,'晚上'],[23,'深夜']];
+  let lastSec = -1;
+  function phaseOf(h) { let p = PHASE[0][1]; for (const [b, n] of PHASE) if (h >= b) p = n; return p; }
+  function draw() {
+    const n = new Date();
+    const ms = n.getMilliseconds(), s = n.getSeconds(), m = n.getMinutes(), h = n.getHours() % 12;
+    // 平滑扫秒：秒针按毫秒插值，避免每秒跳动
+    const sAng = (s + ms / 1000) * 6;
+    $('hS').setAttribute('transform', `rotate(${sAng} 100 100)`);
+    $('sGlow').setAttribute('transform', `rotate(${sAng} 100 100)`);
+    $('hM').setAttribute('transform', `rotate(${m * 6 + s * 0.1} 100 100)`);
+    $('hH').setAttribute('transform', `rotate(${h * 30 + m * 0.5} 100 100)`);
+    if (s !== lastSec) {                       // 数字部分秒级刷新即可，减少 DOM 写
+      lastSec = s;
+      const pad = v => String(v).padStart(2, '0');
+      $('hhmm').textContent = `${pad(n.getHours())}:${pad(m)}`;
+      $('ss').textContent = pad(s);
+      $('dateC').textContent = `${n.getFullYear()}年${pad(n.getMonth() + 1)}月${pad(n.getDate())}日`;
+      $('weekC').textContent = WEEK[n.getDay()];
+      $('phaseC').textContent = phaseOf(n.getHours());
+      document.body.classList.toggle('day', n.getHours() >= 6 && n.getHours() < 18);
+    }
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+</script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>QUANTIX 行情终端 · A 股监控</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--up:#ff4d4f;--dn:#12c48b;--ink:#e9f0fb;--dim:#7f8ea8;--line:rgba(255,255,255,.09);--bg:#080b13}
+body{min-height:100dvh;display:grid;place-items:center;padding:22px 13px;overflow-x:hidden;background:
+radial-gradient(120% 80% at 50% -10%,#14203a 0%,transparent 60%),var(--bg);color:var(--ink);
+font:400 15px/1.45 ui-sans-serif,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+.panel{width:100%;max-width:404px;border-radius:24px;overflow:hidden;background:rgba(11,15,25,.82);
+border:1px solid var(--line);box-shadow:0 34px 70px -30px #000,inset 0 1px 0 rgba(255,255,255,.09);
+backdrop-filter:blur(14px)}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:13px 15px;border-bottom:1px solid var(--line)}
+.brand{font-size:12px;font-weight:700;letter-spacing:.2em}
+.brand span{color:var(--dim);font-weight:400;letter-spacing:.1em}
+.live{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--up);letter-spacing:.12em}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--up);animation:bl 1.5s ease-in-out infinite}
+@keyframes bl{50%{opacity:.2}}
+.tape{overflow:hidden;border-bottom:1px solid var(--line);background:rgba(255,255,255,.02)}
+.track{display:flex;gap:22px;width:max-content;padding:7px 0;animation:slide 34s linear infinite;font-size:11px;white-space:nowrap}
+.track span{color:var(--dim)}
+.track b{font-weight:600;font-variant-numeric:tabular-nums}
+@keyframes slide{to{transform:translateX(-50%)}}
+.rows{padding:6px 8px}
+.row{display:grid;grid-template-columns:1fr auto 74px;align-items:center;gap:9px;padding:10px 8px;
+border-radius:13px;cursor:pointer;border:1px solid transparent;transition:background .25s,border-color .25s}
+.row[aria-selected=true]{background:rgba(255,255,255,.055);border-color:var(--line)}
+.row:hover{background:rgba(255,255,255,.04)}
+.nm{font-size:14px;font-weight:600}
+.cd{font-size:10.5px;color:var(--dim);letter-spacing:.08em;margin-top:2px}
+.px{font-size:19px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;line-height:1.15}
+.ch{font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;margin-top:2px}
+.u{color:var(--up)}.d{color:var(--dn)}
+.spark{width:74px;height:26px;overflow:visible}
+.sl{fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.flash{animation:fl .55s ease-out}
+@keyframes fl{0%{background:rgba(255,255,255,.16)}100%{background:transparent}}
+.big{padding:2px 15px 12px}
+.big .cap{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;color:var(--dim);letter-spacing:.14em;margin-bottom:6px}
+.big .cap b{color:var(--ink);font-size:13px;letter-spacing:0}
+.chart{width:100%;height:132px;display:block;overflow:visible}
+.ga{fill:url(#gf)}
+.gl{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.vol{display:flex;align-items:flex-end;gap:3px;height:32px;margin-top:6px}
+.vol i{flex:1;background:rgba(255,255,255,.16);border-radius:2px 2px 0 0;min-height:2px}
+.cross{stroke:rgba(255,255,255,.35);stroke-width:1;stroke-dasharray:3 3}
+.tip{font:10px/1 ui-sans-serif,system-ui,sans-serif;fill:var(--dim)}
+.risk{padding:12px 15px 15px;border-top:1px solid var(--line)}
+.rhead{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--dim);letter-spacing:.14em;margin-bottom:8px}
+.badge{font-size:10px;letter-spacing:.1em;padding:3px 9px;border-radius:999px;font-weight:700}
+.warn{background:rgba(255,160,60,.16);color:#ffb45c;border:1px solid rgba(255,180,90,.32)}
+.ok{background:rgba(18,196,139,.14);color:var(--dn);border:1px solid rgba(18,196,139,.3)}
+.meter{height:6px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
+.meter i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#12c48b,#ffc75c,#ff4d4f);transition:width .5s ease}
+.note{font-size:11px;color:var(--dim);margin-top:8px;line-height:1.6}
+.note b{color:#ffb45c}
+.foot{display:flex;gap:7px;margin-top:11px}
+.btn{flex:1;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--dim);border-radius:11px;
+padding:9px;font:inherit;font-size:11.5px;cursor:pointer;transition:all .25s}
+.btn:hover{background:rgba(255,255,255,.09);color:var(--ink)}
+.btn[aria-pressed=true]{color:#0b1220;background:var(--ink);border-color:transparent;font-weight:700}
+</style>
+</head>
+<body>
+<div class="panel">
+  <div class="hd">
+    <div class="brand">QUANTIX<span> · 行情终端</span></div>
+    <div class="live"><i class="dot"></i>LIVE 盘中</div>
+  </div>
+  <div class="tape"><div class="track" id="tape"></div></div>
+  <div class="rows" id="rows" role="listbox" aria-label="自选股"></div>
+  <div class="big">
+    <div class="cap"><span id="ttl">分时走势</span><b id="pp">—</b></div>
+    <svg class="chart" id="chart" viewBox="0 0 340 132" preserveAspectRatio="none">
+      <defs><linearGradient id="gf" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="currentColor" stop-opacity=".35"/><stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+      </linearGradient></defs>
+      <g id="grid"></g><path class="ga" id="area"/><path class="gl" id="line"/>
+      <line class="cross" id="cross" y1="0" y2="132" style="display:none"/>
+      <circle id="cdot" r="4" style="display:none"/>
+      <text class="tip" id="ctip" style="display:none"></text>
+    </svg>
+    <div class="vol" id="vol"></div>
+  </div>
+  <div class="risk">
+    <div class="rhead"><span>波动率监控 · ATR(14)</span><span class="badge warn" id="badge">偏高</span></div>
+    <div class="meter"><i id="mi" style="width:62%"></i></div>
+    <p class="note" id="note">—</p>
+    <div class="foot">
+      <button class="btn" id="feed" aria-pressed="true">实时推送：开</button>
+      <button class="btn" id="pause" aria-pressed="false">暂停刷新</button>
+    </div>
+  </div>
+</div>
+<script>
+const NS='http://www.w3.org/2000/svg';
+const STOCKS=[
+ {n:'贵州茅台',c:'600519.SH',p:1682.50,seed:[1671,1676,1670,1679,1683,1688,1685,1691,1697,1694,1700,1706],vol:[.5,.62,.48,.7,.58,.66,.54,.72,.61,.68,.57,.64]},
+ {n:'宁德时代',c:'300750.SZ',p:186.40,seed:[181.2,182.6,181.9,184.1,183.4,185.2,184.6,186.9,187.8,186.2,185.4,186.9],vol:[.4,.55,.62,.5,.7,.58,.66,.52,.74,.6,.55,.68]},
+ {n:'中国平安',c:'601318.SH',p:42.18,seed:[42.6,42.3,42.5,42.1,42.0,42.4,42.2,41.9,42.1,42.3,42.0,42.24],vol:[.3,.45,.38,.52,.44,.6,.48,.55,.42,.5,.46,.58]}
+];
+const $=id=>document.getElementById(id);
+let sel=0,feed=true,paused=false,timer=null;
+const state=STOCKS.map(s=>({...s,hist:s.seed.slice(),open:s.seed[0],vols:s.vol.slice(),dir:0}));
+function fmt(v,d){return v.toFixed(d===undefined?2:d)}
+function pct(s){return (s.p/s.open-1)*100}
+function cls(v){return v>0?'u':v<0?'d':''}
+function sym(v){return v>0?'▲':v<0?'▼':'—'}
+function sparkline(s,el,w,h){const mn=Math.min(...s.hist),mx=Math.max(...s.hist),sp=(mx-mn)||1;
+const pts=s.hist.map((v,i)=>[i*(w/(s.hist.length-1)),h-((v-mn)/sp)*(h-4)-2]);
+const d='M'+pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' L');
+el.setAttribute('d',d);el.setAttribute('stroke',pct(s)>=0?'var(--up)':'var(--dn)');
+el.parentNode.style.color=pct(s)>=0?'var(--up)':'var(--dn)';
+return d}
+function buildRows(){const box=$('rows');box.replaceChildren();
+state.forEach((s,i)=>{const r=document.createElement('div');r.className='row';r.setAttribute('role','option');
+r.setAttribute('aria-selected',String(i===sel));
+r.innerHTML='<div><div class="nm">'+s.n+'</div><div class="cd">'+s.c+'</div></div>'+
+'<div><div class="px">'+fmt(s.p)+'</div><div class="ch '+cls(s.p-s.open)+'">'+sym(s.p-s.open)+' '+fmt(s.p-s.open)+' ('+fmt(pct(s),2)+'%)</div></div>'+
+'<svg class="spark" viewBox="0 0 74 26" preserveAspectRatio="none"><path class="sl" id="sp'+i+'"/></svg>';
+r.addEventListener('click',()=>{sel=i;buildRows();draw()});
+box.appendChild(r);
+sparkline(s,r.querySelector('.sl'),74,26)})}
+function draw(){const s=state[sel],mn=Math.min(...s.hist),mx=Math.max(...s.hist),sp=(mx-mn)||1;
+const W=340,H=132,pts=s.hist.map((v,i)=>[i*(W/(s.hist.length-1)),H-4-((v-mn)/sp)*(H-22)]);
+const d='M'+pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' L');
+const col=pct(s)>=0?'var(--up)':'var(--dn)';
+$('chart').style.color=col;
+$('line').setAttribute('d',d);$('line').setAttribute('stroke',col);
+$('area').setAttribute('d',d+' L'+W+','+H+' L0,'+H+' Z');
+const g=$('grid');g.replaceChildren();
+for(let i=0;i<=3;i++){const l=document.createElementNS(NS,'line');l.setAttribute('x1',0);l.setAttribute('x2',W);
+l.setAttribute('y1',(i*H/3).toFixed(1));l.setAttribute('y2',(i*H/3).toFixed(1));l.setAttribute('stroke','rgba(255,255,255,.07)');
+l.setAttribute('stroke-width','1');g.appendChild(l)}
+const mxV=Math.max(...s.vols);
+$('vol').innerHTML=s.vols.map(v=>'<i style="height:'+Math.round(v/mxV*100)+'%"></i>').join('');
+$('ttl').textContent=s.n+' · 分时走势';
+$('pp').innerHTML='<span class="'+cls(s.p-s.open)+'">'+fmt(s.p)+'  '+sym(s.p-s.open)+fmt(pct(s),2)+'%</span>';
+const vol=(Math.max(...s.hist)-Math.min(...s.hist))/s.p*100;
+const atr=Math.min(99,Math.max(4,vol*28));
+$('mi').style.width=atr.toFixed(0)+'%';
+const hi=atr>55;
+$('badge').textContent=hi?'高波动':'平稳';$('badge').className='badge '+(hi?'warn':'ok');
+$('note').innerHTML=hi?'区间振幅 <b>'+atr.toFixed(1)+'%</b>，注意回撤控制，持仓建议分批。':'区间振幅 <b>'+atr.toFixed(1)+'%</b>，波动温和，趋势通道完整。'}
+function tape(){const t=state.map(s=>'<span>'+s.n+' <b class="'+cls(s.p-s.open)+'">'+fmt(s.p)+' '+sym(s.p-s.open)+fmt(pct(s),2)+'%</b></span>').join('');
+$('tape').innerHTML=t+t}
+function tick(){if(paused||!feed)return;
+const i=Math.floor(Math.random()*state.length),s=state[i];
+const drift=(Math.random()-0.485)*s.p*0.0032;
+s.p=Math.max(0.5,s.p+drift);s.hist.push(s.p);if(s.hist.length>40)s.hist.shift();
+s.vols.push(Math.min(1,s.vols[s.vols.length-1]+(Math.random()-0.5)*0.2));
+if(s.vols.length>40)s.vols.shift();
+s.dir=drift>0?1:drift<0?-1:0;
+const r=$('rows').children[i];if(r){r.classList.remove('flash');void r.offsetWidth;r.classList.add('flash');
+const px=r.querySelector('.px'),ch=r.querySelector('.ch');
+px.textContent=fmt(s.p);ch.className='ch '+cls(s.p-s.open);
+ch.textContent=sym(s.p-s.open)+' '+fmt(s.p-s.open)+' ('+fmt(pct(s),2)+'%)';
+sparkline(s,r.querySelector('.sl'),74,26)}
+tape();if(i===sel||Math.random()<.5)draw()}
+function start(){clearInterval(timer);timer=setInterval(tick,1300)}
+$('feed').addEventListener('click',()=>{feed=!feed;$('feed').textContent='实时推送：'+(feed?'开':'关');
+$('feed').setAttribute('aria-pressed',String(feed));if(feed)start()});
+$('pause').addEventListener('click',()=>{paused=!paused;$('pause').textContent=paused?'继续刷新':'暂停刷新';
+$('pause').setAttribute('aria-pressed',String(paused))});
+$('chart').addEventListener('pointermove',e=>{const r=$('chart').getBoundingClientRect();
+const x=(e.clientX-r.left)/r.width*340, s=state[sel];
+const i=Math.max(0,Math.min(s.hist.length-1,Math.round(x/(340/(s.hist.length-1)))));
+$('cross').setAttribute('x1',x);$('cross').setAttribute('x2',x);$('cross').style.display='';
+$('cdot').setAttribute('cx',x);$('cdot').setAttribute('cy',60);$('cdot').style.display='';
+$('cdot').setAttribute('fill',pct(s)>=0?'var(--up)':'var(--dn)');
+$('ctip').setAttribute('x',Math.min(300,x+7));$('ctip').setAttribute('y',14);
+$('ctip').textContent=fmt(s.hist[i]);$('ctip').style.display=''});
+$('chart').addEventListener('pointerleave',()=>{$('cross').style.display='none';$('cdot').style.display='none';$('ctip').style.display='none'});
+buildRows();draw();tape();start();
+</script>
+</body>
+</html>

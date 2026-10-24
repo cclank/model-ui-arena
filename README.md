@@ -31,9 +31,9 @@ public/submissions/carwash-decision/gemini-3.1-pro-high/response.md
 
 硬性要求（按主题类型）：
 
-- 视觉主题（`clock` / `recorder` / `weather-card` / `stock-panel` / `click-fireworks` / `neon-countdown` / `particle-gravity` / `cheetah-trophy-run` / `dslr-camera` / `schwarzschild-black-hole`）文件名必须是 `index.html`
+- 视觉主题（`clock` / `weather-card` / `stock-panel` / `click-fireworks` / `neon-countdown` / `particle-gravity` / `cheetah-trophy-run` / `pelican-bicycle` / `dslr-camera` / `schwarzschild-black-hole`）文件名必须是 `index.html`
 - 问答主题（`carwash-decision`）文件名推荐 `response.md`（也支持 `answer.md` / `response.txt` / `answer.txt`）
-- 目录名必须是已支持主题之一（`clock` / `recorder` / `weather-card` / `stock-panel` / `click-fireworks` / `neon-countdown` / `particle-gravity` / `cheetah-trophy-run` / `dslr-camera` / `schwarzschild-black-hole` / `carwash-decision`）
+- 目录名必须是已支持主题之一（`clock` / `weather-card` / `stock-panel` / `click-fireworks` / `neon-countdown` / `particle-gravity` / `cheetah-trophy-run` / `pelican-bicycle` / `dslr-camera` / `schwarzschild-black-hole` / `carwash-decision`）
 - 一个模型一个目录（目录名就是模型名）
 - 反作弊：严禁查看 `public/submissions/<theme>/` 下其他模型目录；只能写入当前目标模型目录
 
@@ -87,24 +87,29 @@ model-ui-arena/
     base-svg.md                   # unlimited inline SVG task constraints
     base-replica.md               # unlimited hand-drawn replica task constraints
     base-webgl.md                 # unlimited physics WebGL task constraints
+    base-creative.md              # unlimited creative-engineering task constraints
     full-prompts.md               # full ready-to-use prompts
     themes/
       clock.md
-      recorder.md
       weather-card.md
       stock-panel.md
       click-fireworks.md
       neon-countdown.md
       particle-gravity.md
       cheetah-trophy-run.md
+      pelican-bicycle.md
       dslr-camera.md
       schwarzschild-black-hole.md
+      kintsugi.md
+      watch-movement.md
       carwash-decision.md
+      retired/                    # 已退役题目存档（recorder / lunar-calendar / sun-moon / shadow-puppet / ink-landscape）
   public/
     submissions/
       <theme>/<model>/<submission-file> # model outputs (html or text)
   scripts/
     build-prompt.mjs              # prompt composer CLI
+    retired/                      # 已退役题目的校验脚本存档
 ```
 
 ## Quick Start
@@ -145,16 +150,30 @@ Anti-cheating policy:
 ## Benchmark Themes
 
 - `clock`
-- `recorder`
 - `weather-card`
 - `stock-panel`
 - `click-fireworks`
 - `neon-countdown`
 - `particle-gravity`
 - `cheetah-trophy-run`
+- `pelican-bicycle`
 - `dslr-camera`
 - `schwarzschild-black-hole`
+- `kintsugi`（创意工程题：程序化断裂 + 金线修复，`prompts/base-creative.md`）
+- `watch-movement`（机芯：上弦、调时、齿轮全联动）
 - `carwash-decision`
+
+### 已退役主题（Retired）
+
+以下主题已退役：页面与 `/api/submissions` 不再显示，`npm run prompt` 拒绝生成，SKILL 全量批次不再包含。历史提交仍保留在 `public/submissions/<theme>/` 下，题目与校验脚本存档在 `prompts/themes/retired/`、`scripts/retired/`。
+
+- `recorder`（录音机）
+- `lunar-calendar`（农历日历）
+- `sun-moon`（日出日落与月相）
+- `shadow-puppet`（皮影戏《硅谷论剑》）
+- `ink-landscape`（山水长卷）
+
+退役由 `lib/submissions.ts` 中主题的 `retired: true` 标记控制，去掉标记即可恢复。
 
 ## Prompt Workflow
 
@@ -183,7 +202,7 @@ The benchmark page updates from filesystem scans.
 
 - Runtime: visual themes use `HTML + CSS + JavaScript`; carwash-decision is text reasoning
 - File count: exactly `1` per model per theme
-- Max lines: `180-220` for standard visual themes; `cheetah-trophy-run`, `dslr-camera` and `schwarzschild-black-hole` have no code line limit
+- Max lines: `180-220` for standard visual themes; `cheetah-trophy-run`, `pelican-bicycle`, `dslr-camera` and `schwarzschild-black-hole` have no code line limit
 - External dependencies: forbidden
 - Mobile baseline: width `390px`
 

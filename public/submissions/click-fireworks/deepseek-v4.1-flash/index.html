@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fireworks · 点击放烟花</title>
+<style>
+*{margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#04060d}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+.hud{position:fixed;left:18px;top:16px;color:#dfe8ff;font-family:"SF Pro Text",-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;pointer-events:none;transition:opacity .6s}
+.hud .t{font-size:13px;letter-spacing:.42em;opacity:.9}
+.hud .s{margin-top:6px;font-size:11.5px;letter-spacing:.14em;color:#8fa0c8}
+.hud.dim{opacity:.4}
+.count{position:fixed;right:18px;top:16px;color:#8fa0c8;font-family:ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.14em;pointer-events:none}
+.count b{color:#ffd76e;font-size:16px;margin-right:3px}
+.tip{position:fixed;left:0;right:0;bottom:22px;text-align:center;color:#6b7aa0;font-size:11px;letter-spacing:.3em;font-family:system-ui,sans-serif;pointer-events:none;transition:opacity .8s}
+.tip.hide{opacity:0}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="hud" id="hud"><div class="t">FIREWORKS · 夜空庆典</div><div class="s">多色 · 尾迹 · 余辉 · 不限连点</div></div>
+<div class="count"><b id="n">0</b>发已燃放</div>
+<div class="tip" id="tip">点击或触摸任意位置放烟花</div>
+<script>
+const cv=document.getElementById("cv"),ctx=cv.getContext("2d"),sky=document.createElement("canvas");
+let W=0,H=0,DPR=1,stars=[],particles=[],rockets=[],rings=[],count=0,last=performance.now();
+const MAXP=2400,rnd=(a=1,b=0)=>b+Math.random()*(a-b);
+function paintSky(sctx,w,h){
+  const g=sctx.createLinearGradient(0,0,0,h);
+  g.addColorStop(0,"#03050c");g.addColorStop(.55,"#081026");g.addColorStop(.85,"#101b3e");g.addColorStop(1,"#1b2a55");
+  sctx.fillStyle=g;sctx.fillRect(0,0,w,h);
+  const mg=sctx.createRadialGradient(w*.82,h*.16,2,w*.82,h*.16,Math.min(w,h)*.22);
+  mg.addColorStop(0,"rgba(220,232,255,.5)");mg.addColorStop(.25,"rgba(150,175,235,.14)");mg.addColorStop(1,"transparent");
+  sctx.fillStyle=mg;sctx.fillRect(0,0,w,h);
+  sctx.fillStyle="#e8eeff";sctx.globalAlpha=.9;sctx.beginPath();sctx.arc(w*.82,h*.16,Math.min(w,h)*.028,0,7);sctx.fill();
+  sctx.globalAlpha=.25;sctx.fillStyle="#aebbdd";
+  [[.82,.17,.011],[.815,.145,.007],[.83,.152,.005]].forEach(([cx,cy,r])=>{sctx.beginPath();sctx.arc(w*cx,h*cy,Math.min(w,h)*r,0,7);sctx.fill();});
+  sctx.globalAlpha=1;
+  const hz=h*.86;sctx.fillStyle="#050912";
+  for(let x=0;x<w;x+=w/26){const bh=(.5+((Math.sin(x)*9301)%1+1)/2)*h*.05; sctx.fillRect(x,hz,w/26+1,-bh);}
+  sctx.fillStyle="rgba(9,13,28,.85)";sctx.fillRect(0,hz,w,h-hz);
+  for(let i=0;i<Math.max(40,w/9);i++){const x=rnd(w),y=hz+8+rnd((h-hz)*.7);const gg=2+rnd(3);sctx.fillStyle=`rgba(255,${180+rnd(60)|0},120,${.05+rnd(.1)})`;sctx.fillRect(x,y,gg,gg);}
+}
+function rebuild(){DPR=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;
+  cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);
+  sky.width=cv.width;sky.height=cv.height;const sctx=sky.getContext("2d");sctx.setTransform(DPR,0,0,DPR,0,0);
+  paintSky(sctx,W,H);
+  stars=Array.from({length:Math.min(150,W/7)},()=>({x:rnd(W),y:rnd(H*.74),r:rnd(2.2,.8),tw:rnd(3.4,.6),p:rnd(7)}));}
+function burst(x,y,hue,power){
+  const n=(58+power*70)|0;
+  for(let i=0;i<n;i++){const a=rnd(Math.PI*2),sp=rnd(4.8,1)*power,m=.35+rnd(1)*power;
+    particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,s:.9+rnd(2.4,.4),hue:hue+rnd(30,-30),life:rnd(150,60),max:150,g:.028});}
+  rings.push({x,y,r:3,vr:2.3,life:26,max:26,hue});}
+function launch(x,y){const ty=Math.min(Math.max(y,H*.08),H*.62),g=.05;
+  rockets.push({x:x+rnd(30,-30),y:H+8,vy:-Math.sqrt(2*g*(H+8-ty))*rnd(1.08,.94),vx:rnd(.5,-.5),ty,hue:rnd(360),power:rnd(1.5,.85)});}
+function explode(r){burst(r.x,r.y,r.hue,r.power);if(r.power>.95&&Math.random()<.5)
+  setTimeout(()=>{burst(r.x+rnd(60,-60),r.y+rnd(50,-50),r.hue+rnd(90,-90),r.power*.6);},320*(1+Math.random()*.5));}
+function frame(t){const dt=Math.min(2.6,(t-last)/16.7);last=t;
+  ctx.globalCompositeOperation="source-over";ctx.globalAlpha=.24;ctx.drawImage(sky,0,0,W,H);ctx.globalAlpha=1;
+  for(const s of stars){const a=.2+.5*(.5+.5*Math.sin(t/620*s.tw+s.p));ctx.fillStyle=`rgba(228,236,255,${a.toFixed(3)})`;ctx.fillRect(s.x,s.y,s.r,s.r);}
+  ctx.globalCompositeOperation="lighter";
+  for(let i=rockets.length-1;i>=0;i--){const r=rockets[i];r.vy+=.05*dt;r.x+=r.vx*dt;r.y+=r.vy*dt;
+    particles.push({x:r.x,y:r.y,vx:rnd(.3,-.3),vy:rnd(.4,.1),s:1.4,hue:r.hue,life:22,max:22,g:.01});
+    ctx.fillStyle="rgba(255,244,214,.95)";ctx.beginPath();ctx.arc(r.x,r.y,1.8,0,7);ctx.fill();
+    if(r.vy>=-.35||r.y<=r.ty){explode(r);rockets.splice(i,1);}}
+  for(let i=particles.length-1;i>=0;i--){const p=particles[i];
+    p.vx*=.985;p.vy=p.vy*.985+p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;
+    if(p.life<=0){particles[i]=particles[particles.length-1];particles.pop();continue;}
+    const a=Math.min(1,p.life/p.max)*(.66+.34*Math.sin(p.life*.42+p.x*.1));
+    ctx.fillStyle=`hsla(${p.hue.toFixed(0)},100%,${(58+p.life/p.max*22).toFixed(0)}%,${a.toFixed(3)})`;
+    ctx.fillRect(p.x,p.y,p.s,p.s);}
+  for(let i=rings.length-1;i>=0;i--){const g=rings[i];g.r+=g.vr*dt;g.life-=dt;
+    if(g.life<=0){rings.splice(i,1);continue;}
+    ctx.strokeStyle=`hsla(${g.hue.toFixed(0)},100%,80%,${(g.life/g.max*.5).toFixed(3)})`;ctx.lineWidth=1.6;
+    ctx.beginPath();ctx.arc(g.x,g.y,g.r,0,7);ctx.stroke();}
+  if(particles.length>MAXP)particles.splice(0,particles.length-MAXP);
+  ctx.globalCompositeOperation="source-over";
+  requestAnimationFrame(frame);}
+function poke(e){const x=e.clientX,y=e.clientY;launch(x,y);
+  document.getElementById("hud").classList.add("dim");document.getElementById("tip").classList.add("hide");
+  document.getElementById("n").textContent=++count;}
+addEventListener("pointerdown",poke);
+addEventListener("resize",rebuild);rebuild();
+setInterval(()=>{if(document.visibilityState==="visible"&&particles.length<900&&Math.random()<.8)launch(rnd(W*.8,W*.1),rnd(H*.5,H*.1));},2600);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

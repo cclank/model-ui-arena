@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>钟表 · 昼与夜</title>
+<script>
+  var phaseOf = h => (h >= 19 || h < 5) ? 'night' : h < 8 ? 'dawn' : h < 17 ? 'day' : 'dusk';
+  document.documentElement.dataset.phase = phaseOf(new Date().getHours());
+</script>
+<style>
+  @property --sky-a { syntax: '<color>'; inherits: true; initial-value: #fbf6ee; }
+  @property --sky-b { syntax: '<color>'; inherits: true; initial-value: #ead9c0; }
+  @property --face { syntax: '<color>'; inherits: true; initial-value: #fffdf8; }
+  @property --ink { syntax: '<color>'; inherits: true; initial-value: #2b2521; }
+  @property --hand { syntax: '<color>'; inherits: true; initial-value: #2b2521; }
+  @property --accent { syntax: '<color>'; inherits: true; initial-value: #e0643a; }
+  @property --glow { syntax: '<color>'; inherits: true; initial-value: rgba(255, 214, 150, .6); }
+
+  :root {
+    transition: --sky-a 1.6s, --sky-b 1.6s, --face 1.6s, --ink 1.6s, --hand 1.6s, --accent 1.6s, --glow 1.6s;
+    --rim: color-mix(in srgb, var(--hand) 14%, transparent);
+    --tail: color-mix(in srgb, var(--accent) 30%, transparent);
+    --arc: color-mix(in srgb, var(--accent) 45%, transparent);
+    --mark: var(--accent);
+    --sec: var(--accent);
+  }
+  :root[data-phase="dawn"] { --sky-a: #f8d4c4; --sky-b: #e7b4c4; --face: #fff6f0; --ink: #3b2a36; --hand: #3b2a36; --accent: #e8775b; --glow: rgba(255, 186, 160, .6); }
+  :root[data-phase="day"] { --sky-a: #fbf6ee; --sky-b: #ead9c0; --face: #fffdf8; --ink: #2b2521; --hand: #2b2521; --accent: #e0643a; --glow: rgba(255, 214, 150, .6); }
+  :root[data-phase="dusk"] { --sky-a: #2f2a5c; --sky-b: #b9596b; --face: #f7e9dc; --ink: #fbeee4; --hand: #2c2140; --accent: #f2703f; --sec: #ffc08f; --glow: rgba(255, 140, 100, .45); }
+  :root[data-phase="night"] { --sky-a: #0a0f2c; --sky-b: #1c2453; --face: #141b3d; --ink: #e8ecff; --hand: #e8ecff; --accent: #ffb86b; --mark: #dfe6ff; --glow: rgba(110, 130, 255, .35); }
+
+  * { box-sizing: border-box; }
+  html { background: var(--sky-b); }
+  body {
+    margin: 0; min-height: 100vh; min-height: 100dvh; padding: 28px 16px;
+    display: grid; place-items: center; overflow-x: hidden;
+    background: linear-gradient(180deg, var(--sky-a), var(--sky-b));
+    color: var(--ink); font-family: "SF Pro Display", "PingFang TC", "Noto Sans TC", system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+  .wrap { position: relative; z-index: 1; width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 22px; text-align: center; }
+  .date { margin: 0; font-size: 14px; letter-spacing: .14em; opacity: .75; }
+
+  .dial { position: relative; width: min(78vw, 360px); aspect-ratio: 1; }
+  .face, .tail { position: absolute; inset: 8%; border-radius: 50%; }
+  .face { background: var(--face); box-shadow: 0 0 0 1px var(--rim), 0 30px 56px -28px rgba(0, 0, 0, .55); }
+  .tail { background: conic-gradient(from 0deg, transparent 0 290deg, var(--tail) 360deg); will-change: transform; }
+  .dial svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .major { stroke: var(--hand); stroke-width: 2.4; stroke-linecap: round; }
+  .minor { stroke: var(--hand); stroke-width: .8; opacity: .45; }
+  .num { fill: var(--hand); font: 600 8.5px/1 "Iowan Old Style", "Palatino Linotype", Georgia, serif; }
+  .brand { fill: var(--hand); opacity: .5; font: 500 4.4px/1 system-ui, sans-serif; letter-spacing: .8px; }
+  .hand { fill: var(--hand); }
+  .sec { stroke: var(--accent); stroke-width: 1.2; stroke-linecap: round; }
+  .hub { fill: var(--hand); }
+  .cap { fill: var(--accent); }
+  .ring { fill: none; stroke: var(--rim); stroke-width: 3; }
+  .day { fill: none; stroke: var(--arc); stroke-width: 3; stroke-linecap: round; }
+  .sun { fill: var(--mark); }
+
+  .time { margin: 0; font-size: clamp(56px, 19vw, 84px); font-weight: 300; line-height: 1; white-space: nowrap; }
+  .time small { font-size: .42em; font-weight: 400; color: var(--sec); margin-left: .14em; }
+  #t-colon { transition: opacity .3s; }
+  .meta { display: flex; align-items: center; gap: 12px; font-size: 14px; letter-spacing: .08em; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 12%, transparent); }
+  .pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .pct { opacity: .7; }
+
+  .orb { position: fixed; width: 80vmax; height: 80vmax; border-radius: 50%; pointer-events: none; background: radial-gradient(closest-side, var(--glow), transparent); will-change: transform; animation: drift 30s ease-in-out infinite alternate; }
+  .orb.a { left: -40vmax; top: -40vmax; }
+  .orb.b { right: -40vmax; bottom: -40vmax; animation-duration: 38s; animation-delay: -14s; }
+  .stars { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity 2s; background-image: radial-gradient(1.6px 1.6px at 12% 18%, #fff, transparent), radial-gradient(2px 2px at 78% 12%, #fff, transparent), radial-gradient(1.4px 1.4px at 46% 36%, #fffc, transparent), radial-gradient(1.8px 1.8px at 88% 52%, #fff, transparent), radial-gradient(1.4px 1.4px at 22% 74%, #fffa, transparent), radial-gradient(2px 2px at 64% 88%, #fff, transparent), radial-gradient(1.2px 1.2px at 35% 58%, #ffe9c4, transparent), radial-gradient(1.2px 1.2px at 92% 22%, #cfe0ff, transparent); }
+  :root[data-phase="night"] .stars { opacity: .9; }
+  @keyframes drift { from { transform: translate3d(-4%, -3%, 0) scale(1); } to { transform: translate3d(5%, 4%, 0) scale(1.15); } }
+  @media (prefers-reduced-motion: reduce) { .orb { animation: none; } }
+</style>
+</head>
+<body>
+<div class="orb a"></div><div class="orb b"></div><div class="stars"></div>
+<main class="wrap">
+  <p class="date" id="date"></p>
+  <div class="dial" role="img" aria-label="模拟时钟">
+    <div class="face"></div>
+    <div class="tail" id="tail"></div>
+    <svg viewBox="-100 -100 200 200">
+      <g id="ticks"></g>
+      <circle class="ring" r="96"/>
+      <path class="day" d="M-96 0A96 96 0 0 1 96 0"/>
+      <g id="sun"><circle class="sun" cx="0" cy="-96" r="3.4"/></g>
+      <text class="brand" x="0" y="44" text-anchor="middle">DAY · NIGHT</text>
+      <rect class="hand" id="h-hour" x="-2.6" y="-46" width="5.2" height="54" rx="2.6"/>
+      <rect class="hand" id="h-min" x="-1.8" y="-68" width="3.6" height="80" rx="1.8"/>
+      <line class="sec" id="h-sec" x1="0" y1="16" x2="0" y2="-78"/>
+      <circle class="hub" r="3"/>
+      <circle class="cap" r="1.3"/>
+    </svg>
+  </div>
+  <p class="time"><span id="t-h"></span><span id="t-colon">:</span><span id="t-m"></span><small id="t-s"></small></p>
+  <div class="meta"><span class="pill" id="phase"></span><span class="pct" id="pct"></span></div>
+</main>
+<script>
+  const $ = id => document.getElementById(id);
+  const ROMAN = ['XII', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'];
+  const PHASE = { dawn: '黎明', day: '白昼', dusk: '黄昏', night: '夜晚' };
+  const WEEK = '日一二三四五六';
+  const pad = n => String(n).padStart(2, '0');
+
+  let dial = '';
+  for (let i = 0; i < 60; i++) {
+    const major = i % 5 === 0;
+    dial += `<line class="${major ? 'major' : 'minor'}" x1="0" y1="-83" x2="0" y2="${major ? -72 : -79}" transform="rotate(${i * 6})"/>`;
+  }
+  for (let i = 0; i < 12; i++) {
+    const a = i * Math.PI / 6;
+    dial += `<text class="num" x="${(58 * Math.sin(a)).toFixed(2)}" y="${(-58 * Math.cos(a)).toFixed(2)}" text-anchor="middle" dominant-baseline="central">${ROMAN[i]}</text>`;
+  }
+  $('ticks').innerHTML = dial;
+
+  const el = {
+    hour: $('h-hour'), min: $('h-min'), sec: $('h-sec'), tail: $('tail'), sun: $('sun'),
+    date: $('date'), phase: $('phase'), pct: $('pct'),
+    th: $('t-h'), tm: $('t-m'), ts: $('t-s'), colon: $('t-colon')
+  };
+  const last = {};
+
+  function frame() {
+    const d = new Date(), h = d.getHours(), m = d.getMinutes(), s = d.getSeconds();
+    const t = s + d.getMilliseconds() / 1000;
+    el.sec.setAttribute('transform', `rotate(${t * 6})`);
+    el.tail.style.transform = `rotate(${t * 6}deg)`;
+    el.min.setAttribute('transform', `rotate(${(m + t / 60) * 6})`);
+    el.hour.setAttribute('transform', `rotate(${((h % 12) + (m + t / 60) / 60) * 30})`);
+
+    if (s !== last.s) {
+      last.s = s;
+      el.ts.textContent = pad(s);
+      el.colon.style.opacity = s % 2 ? 0.2 : 1;
+    }
+    if (m !== last.m) {
+      last.m = m;
+      el.th.textContent = pad(h);
+      el.tm.textContent = pad(m);
+      const phase = phaseOf(h), frac = (h * 60 + m) / 1440;
+      if (phase !== last.phase) {
+        last.phase = phase;
+        document.documentElement.dataset.phase = phase;
+        el.phase.textContent = PHASE[phase];
+      }
+      el.pct.textContent = `今日已过 ${Math.round(frac * 100)}%`;
+      el.sun.setAttribute('transform', `rotate(${(frac * 24 - 12) * 15})`);
+      el.date.textContent = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 周${WEEK[d.getDay()]}`;
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>90+7' Glory Sprint — Cheetah Championship Poster</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: radial-gradient(circle at 50% 20%, #162447, #060b16 75%);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #f8fafc; padding: 12px; overflow-x: hidden;
+  }
+  .poster-frame {
+    width: 100%; max-width: 960px; border-radius: 24px;
+    background: #080f1e; border: 1px solid rgba(251, 191, 36, 0.35);
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.75), 0 0 40px rgba(245, 158, 11, 0.15);
+    overflow: hidden; position: relative;
+  }
+  svg.main-stage { width: 100%; height: auto; display: block; }
+  .streak { animation: streakMove 0.9s infinite linear; }
+  @keyframes streakMove {
+    0% { transform: translateX(40px); opacity: 0.2; }
+    50% { opacity: 0.95; }
+    100% { transform: translateX(-90px); opacity: 0.1; }
+  }
+  .confetti { animation: floatDown 3.2s infinite ease-in-out alternate; }
+  @keyframes floatDown {
+    0% { transform: translateY(-8px) rotate(-8deg); }
+    100% { transform: translateY(10px) rotate(12deg); }
+  }
+  .trophy-gleam { animation: gleamPulse 2.2s infinite ease-in-out; transform-origin: 675px 195px; }
+  @keyframes gleamPulse {
+    0%, 100% { transform: scale(0.92); opacity: 0.75; }
+    50% { transform: scale(1.12); opacity: 1; }
+  }
+  .caption-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 18px; background: linear-gradient(90deg, #0b1326, #172544, #0b1326);
+    border-top: 1px solid rgba(251, 191, 36, 0.25); font-size: 12px; color: #cbd5e1;
+  }
+  .caption-bar strong { color: #fbbf24; letter-spacing: 0.08em; }
+  @media (max-width: 480px) {
+    body { padding: 6px; }
+    .caption-bar { font-size: 11px; padding: 8px 12px; flex-wrap: wrap; gap: 4px; }
+  }
+</style>
+</head>
+<body>
+<div class="poster-frame">
+  <svg class="main-stage" viewBox="0 0 960 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="猎豹高举大力神杯绝杀冲刺海报">
+    <defs>
+      <linearGradient id="nightSky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#050914"/>
+        <stop offset="55%" stop-color="#0d1b38"/>
+        <stop offset="100%" stop-color="#102a45"/>
+      </linearGradient>
+      <radialGradient id="stadiumGlow" cx="62%" cy="32%" r="58%">
+        <stop offset="0%" stop-color="#fde047" stop-opacity="0.38"/>
+        <stop offset="45%" stop-color="#38bdf8" stop-opacity="0.16"/>
+        <stop offset="100%" stop-color="#050914" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="beamGrad" x1="0" y1="0" x2="0.5" y2="1">
+        <stop offset="0%" stop-color="#e0f2fe" stop-opacity="0.42"/>
+        <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="turfGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#064e3b"/>
+        <stop offset="35%" stop-color="#047857"/>
+        <stop offset="100%" stop-color="#022c22"/>
+      </linearGradient>
+      <linearGradient id="cheetahCoat" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#fde68a"/>
+        <stop offset="45%" stop-color="#f59e0b"/>
+        <stop offset="85%" stop-color="#d97706"/>
+        <stop offset="100%" stop-color="#92400e"/>
+      </linearGradient>
+      <linearGradient id="cheetahChest" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#fffbeb"/>
+        <stop offset="100%" stop-color="#fde68a"/>
+      </linearGradient>
+      <linearGradient id="jerseyGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#dc2626"/>
+        <stop offset="60%" stop-color="#991b1b"/>
+        <stop offset="100%" stop-color="#450a0a"/>
+      </linearGradient>
+      <linearGradient id="goldCup" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#fffbeb"/>
+        <stop offset="22%" stop-color="#fde047"/>
+        <stop offset="50%" stop-color="#eab308"/>
+        <stop offset="78%" stop-color="#ca8a04"/>
+        <stop offset="100%" stop-color="#78350f"/>
+      </linearGradient>
+      <radialGradient id="goldGlobe" cx="38%" cy="32%" r="65%">
+        <stop offset="0%" stop-color="#ffffff"/>
+        <stop offset="28%" stop-color="#fef08a"/>
+        <stop offset="65%" stop-color="#eab308"/>
+        <stop offset="100%" stop-color="#854d0e"/>
+      </radialGradient>
+      <linearGradient id="malachite" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#065f46"/>
+        <stop offset="35%" stop-color="#10b981"/>
+        <stop offset="65%" stop-color="#047857"/>
+        <stop offset="100%" stop-color="#064e3b"/>
+      </linearGradient>
+      <filter id="neonGlow" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="5" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+
+    <!-- 1. 背景夜空与体育场穹顶 -->
+    <rect width="960" height="620" fill="url(#nightSky)"/>
+    <rect width="960" height="620" fill="url(#stadiumGlow)"/>
+
+    <!-- 体育场顶棚与聚光灯阵列 -->
+    <g id="stadium-lights" opacity="0.88">
+      <path d="M0 95 Q480 -10 960 95 L960 130 Q480 35 0 130 Z" fill="#0b1528" stroke="#1e293b" stroke-width="2"/>
+      <polygon points="80,65 260,500 430,500 140,65" fill="url(#beamGrad)"/>
+      <polygon points="840,55 540,500 740,500 900,55" fill="url(#beamGrad)"/>
+      <polygon points="480,35 360,500 620,500 530,35" fill="url(#beamGrad)" opacity="0.65"/>
+      <!-- 灯珠 -->
+      <g fill="#fff" filter="url(#neonGlow)">
+        <circle cx="95" cy="74" r="6"/><circle cx="120" cy="70" r="6"/><circle cx="145" cy="66" r="6"/>
+        <circle cx="485" cy="40" r="6"/><circle cx="510" cy="40" r="6"/><circle cx="535" cy="42" r="6"/>
+        <circle cx="835" cy="64" r="6"/><circle cx="860" cy="68" r="6"/><circle cx="885" cy="73" r="6"/>
+      </g>
+    </g>
+
+    <!-- 观众席看台与欢呼人群剪影 + 闪光灯 -->
+    <g id="crowd-stands">
+      <path d="M0 320 Q480 275 960 320 L960 445 L0 445 Z" fill="#0c172e"/>
+      <path d="M0 365 Q480 330 960 365 L960 445 L0 445 Z" fill="#112240"/>
+      <!-- 看台层叠光带 -->
+      <path d="M0 362 Q480 327 960 362" fill="none" stroke="#38bdf8" stroke-width="2" stroke-opacity="0.45"/>
+      <path d="M0 405 Q480 380 960 405" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-opacity="0.55"/>
+      <!-- 观众欢呼剪影与看台闪光点 -->
+      <g fill="#fde047" opacity="0.75">
+        <circle cx="72" cy="350" r="2.2"/><circle cx="134" cy="378" r="1.8"/><circle cx="195" cy="346" r="2.5"/>
+        <circle cx="268" cy="388" r="2"/><circle cx="332" cy="352" r="2.8"/><circle cx="410" cy="370" r="1.8"/>
+        <circle cx="580" cy="348" r="2.4"/><circle cx="645" cy="382" r="2.1"/><circle cx="730" cy="355" r="2.6"/>
+        <circle cx="815" cy="390" r="2"/><circle cx="888" cy="360" r="2.5"/><circle cx="925" cy="382" r="1.8"/>
+      </g>
+      <g fill="#bae6fd" opacity="0.7">
+        <circle cx="105" cy="392" r="2"/><circle cx="230" cy="364" r="2.4"/><circle cx="375" cy="395" r="2.2"/>
+        <circle cx="515" cy="360" r="2.5"/><circle cx="695" cy="368" r="2.2"/><circle cx="848" cy="350" r="2.4"/>
+      </g>
+    </g>
+
+    <!-- 2. 决赛大比分牌 (90+7'  3:2) -->
+    <g id="scoreboard" transform="translate(52, 86)">
+      <rect x="0" y="0" width="252" height="114" rx="16" fill="#070d1c" stroke="#fbbf24" stroke-width="2.5" filter="url(#neonGlow)"/>
+      <rect x="6" y="6" width="240" height="102" rx="12" fill="#0b152b" stroke="#1e3a8a" stroke-width="1"/>
+      <!-- 顶部 FINAL 补时条 -->
+      <rect x="16" y="14" width="220" height="28" rx="6" fill="#dc2626"/>
+      <circle cx="32" cy="28" r="5" fill="#fde047"/>
+      <text x="45" y="33" fill="#ffffff" font-size="13" font-weight="800" letter-spacing="1.5">STOPPAGE TIME</text>
+      <text x="226" y="34" fill="#fde047" font-size="18" font-weight="900" text-anchor="end" font-family="monospace">90+7'</text>
+      <!-- 主比分 3 : 2 -->
+      <text x="42" y="82" fill="#94a3b8" font-size="15" font-weight="800">CHE</text>
+      <text x="126" y="88" fill="#fde047" font-size="40" font-weight="900" text-anchor="middle" font-family="monospace" filter="url(#neonGlow)">3 : 2</text>
+      <text x="210" y="82" fill="#94a3b8" font-size="15" font-weight="800" text-anchor="end">UTD</text>
+      <text x="126" y="102" fill="#38bdf8" font-size="10" font-weight="700" text-anchor="middle" letter-spacing="2">LAST-SECOND WINNER</text>
+    </g>
+
+    <!-- 3. 绿茵草坪与球场白线 -->
+    <g id="pitch-turf">
+      <rect x="0" y="435" width="960" height="185" fill="url(#turfGrad)"/>
+      <!-- 交替草皮条纹 -->
+      <polygon points="0,435 160,435 90,620 0,620" fill="#065f46" opacity="0.35"/>
+      <polygon points="280,435 450,435 410,620 210,620" fill="#065f46" opacity="0.35"/>
+      <polygon points="580,435 760,435 770,620 560,620" fill="#065f46" opacity="0.35"/>
+      <!-- 边线与禁区弧线 -->
+      <line x1="0" y1="452" x2="960" y2="452" stroke="rgba(255,255,255,0.45)" stroke-width="3"/>
+      <path d="M120 452 L35 620 M780 452 L910 620" stroke="rgba(255,255,255,0.35)" stroke-width="4" fill="none"/>
+      <ellipse cx="480" cy="525" rx="220" ry="38" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="3"/>
+    </g>
+
+    <!-- 4. 速度线与黄金残影 (Speed Lines & Afterimage) -->
+    <g id="speed-lines" class="streak">
+      <line x1="40" y1="270" x2="310" y2="270" stroke="#fde047" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/>
+      <line x1="15" y1="315" x2="265" y2="315" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" opacity="0.65"/>
+      <line x1="70" y1="355" x2="340" y2="355" stroke="#fde047" stroke-width="4" stroke-linecap="round" opacity="0.55"/>
+      <line x1="25" y1="405" x2="290" y2="405" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+      <line x1="95" y1="225" x2="360" y2="225" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+      <!-- 猎豹高速冲刺重影轮廓 -->
+      <path d="M210 385 C270 330 355 295 435 280 C375 335 300 385 210 430 Z" fill="#f59e0b" opacity="0.18"/>
+      <path d="M165 400 C225 345 310 310 390 295 C330 350 255 400 165 445 Z" fill="#38bdf8" opacity="0.12"/>
+    </g>
+
+    <!-- 地面冲刺阴影 -->
+    <ellipse cx="475" cy="542" rx="195" ry="22" fill="rgba(0,0,0,0.55)"/>
+
+    <!-- 5. 飞溅草屑与泥土轨迹 -->
+    <g id="turf-divots">
+      <path d="M165 538 Q220 515 285 542" fill="none" stroke="#022c22" stroke-width="8" stroke-linecap="round"/>
+      <path d="M180 546 Q250 528 330 548" fill="none" stroke="#10b981" stroke-width="3" stroke-dasharray="10 8"/>
+      <!-- 飞起草叶与土块 -->
+      <polygon points="210,515 224,504 228,518" fill="#10b981"/>
+      <polygon points="245,500 262,488 258,506" fill="#34d399"/>
+      <polygon points="185,526 198,514 204,528" fill="#059669"/>
+      <polygon points="278,522 292,510 296,525" fill="#10b981"/>
+      <circle cx="235" cy="518" r="4" fill="#78350f"/>
+      <circle cx="268" cy="508" r="3.5" fill="#92400e"/>
+    </g>
+
+    <!-- 6. 猎豹主体（高速前倾冲刺 + 双爪高举大力神杯） -->
+    <g id="cheetah-hero">
+      <!-- 猎豹标志性修长S型长尾（带黑环与白色尾尖，向后上方甩出动势弧线） -->
+      <path d="M295 365 C215 385 145 345 92 275 C68 242 52 252 68 286 C112 365 195 415 292 392 Z"
+            fill="url(#cheetahCoat)" stroke="#451a03" stroke-width="3"/>
+      <!-- 尾尖白毛与黑色尾环 -->
+      <path d="M68 255 C55 248 56 268 72 288 L86 274 Z" fill="#fffbeb"/>
+      <path d="M84 268 L98 286 M112 298 L124 316 M146 328 L155 348 M185 352 L192 374" stroke="#1c1917" stroke-width="7" stroke-linecap="round"/>
+
+      <!-- 左后腿（远端蹬地支撑腿） -->
+      <path d="M312 375 C275 410 245 455 205 495 L230 508 C272 472 308 430 342 390 Z"
+            fill="#b45309" stroke="#451a03" stroke-width="2.5"/>
+      <!-- 右后腿（强力后蹬发力肌肉群 + 球袜 + 战靴） -->
+      <path d="M335 362 C290 402 255 452 215 512 L248 525 C292 475 338 428 382 385 Z"
+            fill="url(#cheetahCoat)" stroke="#451a03" stroke-width="3"/>
+      <!-- 猎豹后腿黑色斑点 -->
+      <circle cx="322" cy="402" r="5.5" fill="#1c1917"/>
+      <circle cx="304" cy="422" r="6" fill="#1c1917"/>
+      <circle cx="335" cy="418" r="5" fill="#1c1917"/>
+      <circle cx="288" cy="445" r="5.5" fill="#1c1917"/>
+      <!-- 金红足球战靴与钉底 -->
+      <path d="M208 510 L252 522 L242 542 L188 534 Q185 520 208 510 Z" fill="#dc2626" stroke="#fde047" stroke-width="2.5"/>
+      <line x1="196" y1="536" x2="194" y2="544" stroke="#fde047" stroke-width="3"/>
+      <line x1="212" y1="539" x2="210" y2="547" stroke="#fde047" stroke-width="3"/>
+      <line x1="232" y1="541" x2="230" y2="549" stroke="#fde047" stroke-width="3"/>
+
+      <!-- 猎豹流线型躯干与冠军球衣 -->
+      <path d="M290 368 C345 310 430 278 518 268 L545 332 C465 352 395 385 335 398 Z"
+            fill="url(#cheetahCoat)" stroke="#451a03" stroke-width="3"/>
+      <!-- 腹部浅色毛皮 -->
+      <path d="M338 396 C400 382 465 352 532 334 L522 348 C455 372 395 396 338 396 Z" fill="url(#cheetahChest)"/>
+      <!-- 红色冠军战袍与 10 号金字 -->
+      <path d="M368 315 C418 286 472 272 522 268 L542 332 C486 346 432 365 384 378 Z"
+            fill="url(#jerseyGrad)" stroke="#fbbf24" stroke-width="2.5"/>
+      <path d="M405 296 L432 365" stroke="#fbbf24" stroke-width="4" opacity="0.8"/>
+      <text x="458" y="332" fill="#fde047" font-size="30" font-weight="900" transform="rotate(-14 458 332)" font-family="sans-serif">10</text>
+      <!-- 白色运动短裤 -->
+      <path d="M292 362 C322 334 352 318 376 314 L390 376 C358 386 325 395 298 392 Z"
+            fill="#f8fafc" stroke="#cbd5e1" stroke-width="2.5"/>
+      <line x1="312" y1="382" x2="375" y2="322" stroke="#dc2626" stroke-width="4"/>
+
+      <!-- 左前臂（远端高举托住奖杯底部的手臂） -->
+      <path d="M505 268 C555 245 602 222 648 198 L662 224 C615 252 565 278 518 296 Z"
+            fill="#d97706" stroke="#451a03" stroke-width="2.5"/>
+      <!-- 左前爪 -->
+      <ellipse cx="656" cy="208" rx="16" ry="12" transform="rotate(-22 656 208)" fill="#f59e0b" stroke="#451a03" stroke-width="2.5"/>
+
+      <!-- 猎豹猫科头部（流线型头骨、圆耳、金色瞳孔、标志性黑色泪痕 Tear Marks） -->
+      <g id="cheetah-head" transform="translate(505, 185)">
+        <!-- 后耳与前耳 -->
+        <path d="M12 24 C4 4 22 -4 34 14 Z" fill="#1c1917"/>
+        <path d="M16 20 C12 8 22 4 28 14 Z" fill="#fef3c7"/>
+        <path d="M30 20 C24 -2 48 -4 54 18 Z" fill="url(#cheetahCoat)" stroke="#451a03" stroke-width="2.5"/>
+        <path d="M35 17 C32 5 45 4 48 17 Z" fill="#1c1917"/>
+        <!-- 头骨与吻部轮廓 -->
+        <path d="M8 42 C10 14 42 8 72 16 C92 22 112 34 116 46 C118 56 108 66 92 68 C96 78 82 86 62 82 C40 78 16 68 8 42 Z"
+              fill="url(#cheetahCoat)" stroke="#451a03" stroke-width="3"/>
+        <!-- 白色吻部与下颌 -->
+        <path d="M78 50 C96 48 114 50 115 58 C112 68 94 72 74 68 Z" fill="#fffbeb"/>
+        <path d="M62 72 C78 70 94 74 90 82 C78 86 60 82 56 75 Z" fill="#fffbeb"/>
+        <!-- 兴奋呐喊的嘴部与犬齿 -->
+        <path d="M76 58 Q96 60 106 56 Q100 74 76 72 Z" fill="#7f1d1d" stroke="#1c1917" stroke-width="2"/>
+        <polygon points="96,58 100,66 103,58" fill="#ffffff"/>
+        <polygon points="92,71 96,64 99,71" fill="#ffffff"/>
+        <!-- 黑色鼻头 -->
+        <polygon points="108,40 117,44 111,52 104,46" fill="#1c1917"/>
+        <!-- 锐利琥珀金猫眼 -->
+        <path d="M62 32 Q76 26 84 36 Q72 42 62 32 Z" fill="#fef08a" stroke="#1c1917" stroke-width="2.5"/>
+        <ellipse cx="74" cy="34" rx="2.5" ry="5" fill="#1c1917"/>
+        <circle cx="75" cy="32" r="1.2" fill="#ffffff"/>
+        <!-- 猎豹最核心识别特征：从内眼角延伸至嘴角的粗黑泪痕 (Black Tear Stripe) -->
+        <path d="M80 37 C90 45 96 54 92 64" fill="none" stroke="#1c1917" stroke-width="5.5" stroke-linecap="round"/>
+        <path d="M64 34 C58 44 62 56 72 64" fill="none" stroke="#1c1917" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- 额头与脸颊猎豹黑斑 -->
+        <circle cx="38" cy="28" r="3.5" fill="#1c1917"/>
+        <circle cx="48" cy="24" r="3" fill="#1c1917"/>
+        <circle cx="52" cy="34" r="3.5" fill="#1c1917"/>
+        <circle cx="34" cy="42" r="4" fill="#1c1917"/>
+        <circle cx="46" cy="48" r="3.5" fill="#1c1917"/>
+        <circle cx="26" cy="54" r="4" fill="#1c1917"/>
+      </g>
+
+      <!-- 右前臂（近端肌肉饱满的前肢，向上托举大力神杯底座） -->
+      <path d="M510 296 C565 282 618 258 668 218 L684 244 C632 288 574 318 515 328 Z"
+            fill="url(#cheetahCoat)" stroke="#451a03" stroke-width="3"/>
+      <!-- 前肢猎豹黑斑 -->
+      <circle cx="556" cy="304" r="5" fill="#1c1917"/>
+      <circle cx="578" cy="295" r="5.5" fill="#1c1917"/>
+      <circle cx="602" cy="282" r="5" fill="#1c1917"/>
+      <circle cx="625" cy="268" r="4.5" fill="#1c1917"/>
+      <circle cx="645" cy="252" r="4.5" fill="#1c1917"/>
+      <!-- 护腕与右前爪紧紧托住奖杯 -->
+      <rect x="646" y="218" width="18" height="28" rx="5" transform="rotate(-35 655 232)" fill="#dc2626" stroke="#fde047" stroke-width="2"/>
+      <ellipse cx="676" cy="222" rx="17" ry="12" transform="rotate(-25 676 222)" fill="url(#cheetahCoat)" stroke="#451a03" stroke-width="2.5"/>
+      <path d="M682 214 L692 212 M685 220 L695 219 M684 227 L693 227" stroke="#1c1917" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+
+    <!-- 7. 金色大力神杯 (World Cup Trophy：金色地球 + 双人螺旋托举 + 绿色孔雀石底座) -->
+    <g id="world-cup-trophy" transform="translate(672, 148) rotate(12)">
+      <!-- 奖杯背后的冠军圣光 -->
+      <circle class="trophy-gleam" cx="0" cy="-12" r="86" fill="url(#stadiumGlow)"/>
+      <g stroke="#fef08a" stroke-width="2" opacity="0.75">
+        <line x1="-78" y1="-45" x2="-45" y2="-28"/>
+        <line x1="78" y1="-45" x2="45" y2="-28"/>
+        <line x1="0" y1="-105" x2="0" y2="-72"/>
+      </g>
+      <!-- 底座金环与双层绿色孔雀石环 (Malachite green base bands) -->
+      <path d="M-32 62 L32 62 L38 78 L-38 78 Z" fill="url(#goldCup)" stroke="#78350f" stroke-width="2"/>
+      <rect x="-34" y="48" width="68" height="8" rx="3" fill="url(#malachite)" stroke="#fef08a" stroke-width="1.2"/>
+      <rect x="-31" y="34" width="62" height="14" rx="3" fill="url(#goldCup)" stroke="#78350f" stroke-width="1.5"/>
+      <rect x="-32" y="24" width="64" height="8" rx="3" fill="url(#malachite)" stroke="#fef08a" stroke-width="1.2"/>
+      <!-- 双人螺旋向上托举的雕塑轮廓 (Two human figures spiraling up to hold the globe) -->
+      <path d="M-28 24 C-32 -2 -42 -28 -36 -52 C-26 -35 -16 -12 -10 24 Z" fill="url(#goldCup)" stroke="#78350f" stroke-width="2"/>
+      <path d="M28 24 C32 -2 42 -28 36 -52 C26 -35 16 -12 10 24 Z" fill="url(#goldCup)" stroke="#78350f" stroke-width="2"/>
+      <!-- 中央螺旋金柱与衣褶凹槽 -->
+      <path d="M-14 24 C-18 -8 -12 -32 0 -42 C12 -32 18 -8 14 24 Z" fill="url(#goldCup)" stroke="#854d0e" stroke-width="1.8"/>
+      <!-- 两侧欢呼托举人形头部象征圆球 -->
+      <circle cx="-22" cy="-14" r="6" fill="#fef08a" stroke="#854d0e" stroke-width="1.5"/>
+      <circle cx="22" cy="-14" r="6" fill="#fef08a" stroke="#854d0e" stroke-width="1.5"/>
+      <!-- 顶部金色地球球体 (Golden Globe with continent reliefs) -->
+      <circle cx="0" cy="-58" r="34" fill="url(#goldGlobe)" stroke="#78350f" stroke-width="2.2"/>
+      <!-- 地球大洲浮雕纹理与经纬弧线 -->
+      <path d="M-22 -68 Q-6 -78 14 -66 Q24 -54 8 -44 Q-12 -46 -22 -68 Z" fill="#ca8a04" opacity="0.55"/>
+      <path d="M-12 -38 Q6 -32 20 -46" fill="none" stroke="#fef9c3" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- 地球高光星芒 -->
+      <circle cx="-12" cy="-70" r="7" fill="#ffffff" opacity="0.88"/>
+      <path d="M-12 -84 L-9 -73 L2 -70 L-9 -67 L-12 -56 L-15 -67 L-26 -70 L-15 -73 Z" fill="#ffffff"/>
+    </g>
+
+    <!-- 8. 地面高速滚动的决赛足球与轨迹 -->
+    <g id="rolling-football" transform="translate(615, 512)">
+      <!-- 足球滚动风轨 -->
+      <path d="M-140 12 Q-70 -2 0 10" fill="none" stroke="#fef08a" stroke-width="3" stroke-dasharray="12 8" opacity="0.75"/>
+      <path d="M-110 26 Q-55 18 -5 24" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="8 6" opacity="0.7"/>
+      <ellipse cx="4" cy="32" rx="34" ry="8" fill="rgba(0,0,0,0.55)"/>
+      <!-- 足球球体 -->
+      <circle cx="0" cy="0" r="30" fill="#f8fafc" stroke="#1e293b" stroke-width="2.5"/>
+      <!-- 经典五边形与六边形拼接纹路 -->
+      <polygon points="0,-12 11,-4 7,9 -7,9 -11,-4" fill="#0f172a"/>
+      <polygon points="0,-30 8,-22 -8,-22" fill="#0f172a"/>
+      <polygon points="28,-8 22,6 18,-4" fill="#0f172a"/>
+      <polygon points="-28,-8 -18,-4 -22,6" fill="#0f172a"/>
+      <polygon points="14,25 4,20 18,14" fill="#0f172a"/>
+      <polygon points="-14,25 -18,14 -4,20" fill="#0f172a"/>
+      <line x1="0" y1="-12" x2="0" y2="-22" stroke="#0f172a" stroke-width="2.5"/>
+      <line x1="11" y1="-4" x2="22" y2="-4" stroke="#0f172a" stroke-width="2.5"/>
+      <line x1="-11" y1="-4" x2="-22" y2="-4" stroke="#0f172a" stroke-width="2.5"/>
+      <line x1="7" y1="9" x2="14" y2="18" stroke="#0f172a" stroke-width="2.5"/>
+      <line x1="-7" y1="9" x2="-14" y2="18" stroke="#0f172a" stroke-width="2.5"/>
+      <!-- 金色决赛花纹点缀 -->
+      <circle cx="0" cy="-2" r="18" fill="none" stroke="#eab308" stroke-width="1.8" stroke-dasharray="6 6"/>
+    </g>
+
+    <!-- 9. 漫天庆祝金色彩带与礼花碎片 (Golden Confetti) -->
+    <g id="celebration-confetti" class="confetti">
+      <rect x="340" y="75" width="16" height="7" rx="2" transform="rotate(28 340 75)" fill="#fde047"/>
+      <rect x="425" y="110" width="14" height="6" rx="2" transform="rotate(-40 425 110)" fill="#f59e0b"/>
+      <rect x="520" y="62" width="18" height="7" rx="2" transform="rotate(18 520 62)" fill="#38bdf8"/>
+      <rect x="780" y="95" width="16" height="7" rx="2" transform="rotate(-25 780 95)" fill="#fde047"/>
+      <rect x="845" y="165" width="15" height="6" rx="2" transform="rotate(42 845 165)" fill="#ef4444"/>
+      <rect x="760" y="245" width="18" height="7" rx="2" transform="rotate(-15 760 245)" fill="#fde047"/>
+      <rect x="865" y="295" width="14" height="6" rx="2" transform="rotate(35 865 295)" fill="#38bdf8"/>
+      <rect x="140" y="235" width="16" height="6" rx="2" transform="rotate(-22 140 235)" fill="#fde047"/>
+      <rect x="260" y="190" width="15" height="6" rx="2" transform="rotate(15 260 190)" fill="#f59e0b"/>
+      <path d="M385 148 Q405 130 420 154 Q435 175 455 158" fill="none" stroke="#fde047" stroke-width="4" stroke-linecap="round"/>
+      <path d="M790 135 Q815 118 825 145 Q835 168 860 152" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+      <path d="M565 112 Q585 95 602 120" fill="none" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round"/>
+    </g>
+
+    <!-- 10. 冠军海报底部金属铭牌 -->
+    <g id="poster-title" transform="translate(715, 548)">
+      <rect x="0" y="0" width="215" height="50" rx="10" fill="rgba(7,13,28,0.86)" stroke="#fbbf24" stroke-width="1.5"/>
+      <text x="107" y="22" fill="#fde047" font-size="14" font-weight="900" text-anchor="middle" letter-spacing="2">CHAMPIONS 90+7'</text>
+      <text x="107" y="40" fill="#e2e8f0" font-size="11" font-weight="600" text-anchor="middle" letter-spacing="1">FINAL SCORE 3 : 2 · GOLDEN CUP</text>
+    </g>
+  </svg>
+  <div class="caption-bar">
+    <span><strong>CHAMPIONSHIP FINALE</strong> · 90+7' 补时绝杀 3:2 夺冠庆典</span>
+    <span>SVG Vector Art · Zero External Assets</span>
+  </div>
+</div>
+</body>
+</html>
